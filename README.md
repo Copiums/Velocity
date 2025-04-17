@@ -11,4 +11,24 @@
 [![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/ZJVQavdk)
 [![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/c/Copiumic)
 
+## Tutorial
+1. Copy and paste this script
+2. Execute the provided loadstring below.
+```
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Copiums/Velocity/main/NewMainScript.lua", true))()
+```
+
+## Developers & Credits
+[7GrandDad](https://github.com/7GrandDadPGN) - The original and lead maintainer of what this vape mod is based of. All credits to him and subscribe to his channel
+[wluc] - The original owner and founder of Velocity
+[null.wtf] - One of the originial developers of Velocity
+[lr85000] - One of the originial developers of Velocity
+[zenith] - One of the originial developers of Velocity
+[Copium] - The new developer/owner of Velocity
+[xzxkw] - A Developer of Velocity
+[Youtube](https://youtube.com/c/7GrandDadVape)
+<br/>
+
+
+
 
