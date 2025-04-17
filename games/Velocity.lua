@@ -1,3 +1,35 @@
+--[[
+
+    ____   ____     .__                .__  __          
+    \   \ /   /____ |  |   ____   ____ |__|/  |_ ___.__.
+     \   Y   // __ \|  |  /  _ \_/ ___\|  \   __<   |  |
+      \     /\  ___/|  |_(  <_> )  \___|  ||  |  \___  |
+       \___/  \___  >____/\____/ \___  >__||__|  / ____|
+                  \/                 \/          \/      
+
+       The #1 Roblox Bedwars Vape Config on the market.
+
+        - luc - modules / organizer
+	- null.wtf - modules 
+	- copium - modules
+	- sammz - modules
+	- lr - modules
+        - blanked - modules
+        - gamesense - modules
+        - sown - modules
+        - relevant - modules
+        - nick - first UI
+
+
+
+       _  _                       _                 __ _  _       _                     _    _          
+     _| |<_> ___ ___  ___  _ _  _| |    ___  ___   / /| |<_>._ _ | |__ _ _  ___  _ _  _| |_ <_> ___ ___ 
+    / . || |<_-</ | '/ . \| '_>/ . | _ / . |/ . | / / | || || ' || / /| | |/ ._>| '_>  | |  | |<_-</ ._>
+    \___||_|/__/\_|_.\___/|_|  \___|<_>\_. |\_. |/_/  |_||_||_|_||_\_\|__/ \___.|_|    |_|  |_|/__/\___.
+                                       <___'<___'                                                       
+
+]]--
+
 local velo: table = {};
 shared.nuker_range = 30;
 shared.velocity_client = true;
@@ -780,23 +812,33 @@ velo.run(function()
 end)
 
 velo.run(function()
-
 	local KnitInit: boolean, Knit: any;
+	local success: boolean?
 	for i = 1, 7 do
-		task.wait(0.07)
-		KnitInit, Knit = pcall(function()
-			return debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 6);
-		end);
-		if KnitInit then break; end;
-	end;
+	    	task.wait(0.07)
+	   	success, Knit = pcall(function()
+	        	return debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 6)
+	    	end)
+	
+	    	if success and Knit then
+	        	KnitInit = true
+	        	break
+	    	end
+	end
 
 	cheatengine = not KnitInit;
 
-	if not cheatengine and not debug.getupvalue(Knit.Start, 1) then
-		repeat task.wait() until debug.getupvalue(Knit.Start, 1);
+	if not cheatengine then
+	    	local start: any = debug.getupvalue(Knit.Start, 1)
+	   	if not start then
+	        	repeat
+	            		task.wait();
+	            		start = debug.getupvalue(Knit.Start, 1);
+	        	until start;
+	   	 end;
 	end;
 
-	local engine_loader: any = loadfile('newvape/libraries/constructor.lua')() :: table;
+	local engine_loader: function = loadfile('newvape/libraries/constructor.lua')();
 	local Flamework: any = ({pcall(function() return require(replicatedStorage['rbxts_include']['node_modules']['@flamework'].core.out).Flamework end)})[2];
 	local InventoryUtil: any = ({pcall(function() return require(replicatedStorage.TS.inventory['inventory-util']).InventoryUtil end)})[2];
 	local Client: any = ({pcall(function() return require(replicatedStorage.TS.remotes).default.Client end)})[2] or {Get = function() end};
@@ -893,7 +935,6 @@ velo.run(function()
 			GuitarHeal = Knit.Controllers.GuitarController.performHeal,
 			HannahKill = debug.getproto(Knit.Controllers.HannahController.KnitStart, 2),
 			HarvestCrop = Knit.Controllers.CropController.KnitStart,
-			--KaliyahPunch = debug.getproto(debug.getproto(Knit.Controllers.DragonSlayerController.KnitStart, 2), 1),
 			MageSelect = debug.getproto(Knit.Controllers.MageController.registerTomeInteraction, 1),
 			MinerDig = debug.getproto(Knit.Controllers.MinerController.setupMinerPrompts, 1),
 			PickupItem = Knit.Controllers.ItemDropController.checkForPickup,
