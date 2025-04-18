@@ -21,12 +21,12 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Copiums/Velocity/main
 ## Developers & Credits
 
 - [7GrandDad](https://github.com/7GrandDadPGN) – The original and lead maintainer of what this vape mod is based on. All credits to him — subscribe to his channel!
-- **wluc** – The original owner and founder of Velocity
-- **null.wtf** – One of the original developers of Velocity
-- **lr85000** – One of the original developers of Velocity
-- **zenith** – One of the original developers of Velocity
-- **Copium** – The new developer/owner of Velocity
-- **xzxkw** – A developer of Velocity  
+- [wluc](https://github.com/warprbx) – The original owner and founder of Velocity
+- [null.wtf](https://github.com/null-wtf) – One of the original developers of Velocity
+- [lr85000](https://github.com/kiurgjirkgk) – One of the original developers of Velocity
+- [zenith](https://github.com/AtTheZenith) – One of the original developers of Velocity
+- [Copium](https://github.com/Copiums) – The new leading developer/owner of Velocity (that's me!)
+- [xzxkw](https://github.com/Sail100) – A developer of Velocity  
 - [YouTube](https://www.youtube.com/@Copiumic)
 
 
