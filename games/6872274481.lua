@@ -28,6 +28,18 @@
     \___||_|/__/\_|_.\___/|_|  \___|<_>\_. |\_. |/_/  |_||_||_|_||_\_\|__/ \___.|_|    |_|  |_|/__/\___.
                                        <___'<___'                                                       
 
-	(also I am adding comments for this file only idk why)
 ]]--
-loadstring(readfile("newvape/games/Velocity.lua"))();
+
+local velo: table = {};
+local vape: table = shared.vape
+local function notif(...: any): void
+        return vape:CreateNotification(...);
+end;
+
+velo.run = function(x : Function)
+        return x();
+end;
+
+velo.run(function()
+        loadstring(readfile("newvape/games/Velocity.lua"))();
+end)
