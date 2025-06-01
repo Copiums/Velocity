@@ -9696,3 +9696,1389 @@ velo.run(function()
 	})
 end)
 
+--[[
+
+
+██╗░░░██╗███████╗██╗░░░░░░█████╗░░█████╗░██╗████████╗██╗░░░██╗
+██║░░░██║██╔════╝██║░░░░░██╔══██╗██╔══██╗██║╚══██╔══╝╚██╗░██╔╝
+╚██╗░██╔╝█████╗░░██║░░░░░██║░░██║██║░░╚═╝██║░░░██║░░░░╚████╔╝░
+░╚████╔╝░██╔══╝░░██║░░░░░██║░░██║██║░░██╗██║░░░██║░░░░░╚██╔╝░░
+░░╚██╔╝░░███████╗███████╗╚█████╔╝╚█████╔╝██║░░░██║░░░░░░██║░░░
+░░░╚═╝░░░╚══════╝╚══════╝░╚════╝░░╚════╝░╚═╝░░░╚═╝░░░░░░╚═╝░░░
+
+	- The Velocity Universal Custom Modules starts here.
+	- reformatted and fixed by: Copium
+]]
+
+velo.run(function()
+    local Envision: table = {["Enabled"] = false};
+	local color: () -> {Hue: number, Sat: number, Value: number} = function()
+		return {Hue = 0, Sat = 0, Value = 0};
+	end;
+    local motionblur: table = {["Enabled"] = false};
+    local motionblurtarget: table = {["Enabled"] = false};
+    local motionblurintensity: table = {["Value"] = 8.5};
+    local blur: any = {};
+    local sparkle: table = {["Enabled"] = false};
+    local sparklesparent: table = {["Value"] = 'Head'};
+    local sparklescolor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 0};
+    local sparklesobject: any;
+    local sparklestask: any;
+    local fire: table = {["Enabled"] = false};
+    local fireparent: table = {["Value"] = 'Head'};
+    local fireflame: table = {["Value"] = 25};
+    local firecolor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 0};
+    local firecolor2: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 0};
+    local fireobject: any;
+    local firetask: any;
+    local trails: table = {["Enabled"] = false};
+    local traildistance: table = {["Value"] = 7};
+	local trailparts: table = setmetatable({}, {__index = table, insert = table.insert, remove = table.remove, length = function(self) return #self end});
+    local lastpos: any;
+    local lastpart: any;
+	local trailcolor: table = color();
+	local function isAlive(v: Player): Boolean
+		if v.Character and v.Character:FindFirstChild("Humanoid") then
+			if v.Character.Humanoid.Health > 0 and v.Character:FindFirstChild("HumanoidRootPart") then
+				return true;
+			end;
+		end;
+		return false;
+	end; 
+    local createtrailpart = function()
+        local part: Part = Instance.new("Part", workspace)
+        part["Anchored"] = true
+        part["Material"] = Enum["Material"]["Neon"]
+        part["Size"] = Vector3["new"](2, 1, 1)
+        part["Shape"] = Enum["PartType"]["Ball"]
+        part["CFrame"] = lplr["Character"]["PrimaryPart"]["CFrame"]
+        part["CanCollide"] = false
+        part["Color"] = Color3.fromHSV(trailcolor["Hue"], trailcolor["Sat"], trailcolor["Value"])
+		lastpart = part
+        lastpos = part["Position"]
+		table.insert(trailparts, part)
+		task.delay(2.5, function()
+			tweenService:Create(part, TweenInfo.new(0.8, Enum.EasingStyle.Quad), {Transparency = 1}):Play()
+			repeat task.wait() until (part.Transparency == 1);
+			part:Destroy();
+		end);
+		return part;
+    end;
+    local lightfire = function()
+        pcall(task.cancel, firetask)
+        fireobject = Instance.new('Fire')
+        fireobject["Color"] = Color3.fromHSV(firecolor["Hue"], firecolor["Sat"], firecolor["Value"])
+        fireobject["SecondaryColor"] = Color3.fromHSV(firecolor2["Hue"], firecolor2["Sat"], firecolor2["Value"])
+        fireobject["Heat"] = fireflame["Value"]
+        firetask = task.spawn(function()
+            repeat task.wait()
+                pcall(function() fireobject["Parent"] = (gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and lplr.Character or lplr.Character[fireparent["Value"]] end)
+                task.wait();
+            until false;
+        end);
+    end;
+    local addsparkle = function()
+        pcall(task.cancel, sparklestask)
+        local sparkle: Sparkles = Instance.new('Sparkles')
+        sparkle["Color"] = Color3.fromHSV(sparklescolor["Hue"], sparklescolor["Sat"], sparklescolor["Value"])
+        sparklesobject = sparkle
+        sparklestask = task.spawn(function()
+            repeat task.wait()
+                pcall(function() sparkle.Parent = (gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and lplr.Character or lplr.Character[sparklesparent["Value"]] end)
+                task.wait();
+            until false;
+        end);
+    end;
+    Envision = vape.Legit:CreateModule({
+        ["Name"] = "Envision",
+        ["HoverText"] = HoverText("Let's you customize visuals!"),
+        ["Function"] = function(callback: boolean): void
+            if callback then
+				if not sparkle.Connections then
+					sparkle.Connections = {}
+				end
+				if not fire.Connections then
+					fire.Connections = {}
+				end
+				if not trails.Connections then
+					trails.Connections = {}
+				end
+				task.spawn(function()
+					if motionblur["Enabled"] then
+						task.spawn(function()
+							repeat task.wait() 
+							until (isAlive(lplr) or not motionblur["Enabled"])
+						end)
+						table.insert(motionblur.Connections, lplr.Character.PrimaryPart:GetPropertyChangedSignal('CFrame'):Connect(function()
+							if motionblurtarget["Enabled"] and vapeTargetInfo.Targets.Killaura == nil then 
+								return;
+							end;
+							if blur["Parent"] == nil then 
+								blur = Instance.new('BlurEffect', lightingService);
+								Debris:AddItem(blur, 0);
+							end;
+							blur["Size"] = motionblurintensity["Value"];
+						end));
+						table.insert(motionblur.Connections, lplr.CharacterAdded:Connect(function()
+							motionblur["ToggleButton"]();
+							motionblur["ToggleButton"]();
+						end));
+					end;										
+					if sparkle["Enabled"] then
+						task.spawn(function() addsparkle() end) 
+						table.insert(sparkle.Connections, lplr.CharacterAdded:Connect(addsparkle));
+					else
+						pcall(task.cancel, sparklestask);
+						pcall(function() sparklesobject:Destroy() end);
+					end;
+					if fire["Enabled"] then
+						task.spawn(function() lightfire() end);
+						table.insert(fire.Connections, lplr.CharacterAdded:Connect(lightfire));
+					else
+						if fireobject then
+							fireobject:Destroy();
+						end;
+					end;
+					if trails["Enabled"] then
+						task.spawn(function()
+							repeat task.wait()
+								if isAlive(lplr) and (lastpos == nil or (lplr.Character.PrimaryPart.Position - lastpos).Magnitude > traildistance["Value"]) then
+									createtrailpart();
+								end;
+							until not trails["Enabled"] or not Envision["Enabled"];
+						end)
+					end;
+				end)
+            else
+                if fireobject then
+					fireobject:Destroy();
+				end;
+                pcall(task.cancel, sparklestask);
+                pcall(function() sparklesobject:Destroy() end);
+				trailparts = {};
+            end;
+        end;
+    })
+    motionblur = Envision:CreateToggle({
+        ['Name'] = 'Motion Blur',
+        ['HoverText'] = 'motion blur',
+        ['Default'] = false,
+        ['Function'] = function() end
+    })
+    motionblurintensity = Envision:CreateSlider({
+        ['Name'] = 'Intensity',
+        ['Min'] = 2,
+        ['Max'] = 10,
+        ['Default'] = 8.5,
+        ['Function'] = function() end
+    })
+    trails = Envision:CreateToggle({
+        ['Name'] = 'Trails Effect',
+        ['HoverText'] = 'Only works when killaura is active.',
+        ['Default'] = false,
+        ['Function'] = function() end
+    })
+    traildistance = Envision:CreateSlider({
+        ['Name'] = 'Distance',
+        ['Min'] = 3,
+        ['Max'] = 10,
+        ['Function'] = function() end
+    })
+	trailcolor = Envision:CreateColorSlider({
+		["Name"] ="Trail Color",
+		["Function"] = function()
+			for i,v in trailparts do 
+				v.Color = Color3.fromHSV(trailcolor["Hue"], trailcolor["Sat"], trailcolor["Value"]);
+			end;
+		end,
+	})
+    fire = Envision:CreateToggle({
+        ['Name'] = 'Fire Effect',
+        ['HoverText'] = 'Only works when killaura is active.',
+        ['Default'] = false,
+        ['Function'] = function() end
+    })
+    fireparent = Envision:CreateDropdown({
+        ['Name'] = 'Parent',
+        ['List'] = {'PrimaryPart', 'Head'},
+        ['Function'] = function() end
+    })
+    fireflame = Envision:CreateSlider({
+        ['Name'] = 'Flame', 
+        ['Min'] = 1,
+        ['Max'] = 25,
+        ['Default'] = 25,
+        ['Function'] = function(value)
+            if fireobject and fire["Enabled"] then 
+                fireobject["Heat"] = value
+            end;
+        end;
+    })
+    firecolor = Envision:CreateColorSlider({
+        ['Name'] = 'Color',
+        ['Function'] = function()
+            if fireobject and fire["Enabled"] then 
+                fireobject["Color"] = Color3.fromHSV(firecolor['Hue'], firecolor['Sat'], firecolor['Value'])
+            end;
+        end;
+    })
+    firecolor2 = Envision:CreateColorSlider({
+        ['Name'] = 'Color 2',
+        ['Function'] = function()
+            if fireobject and fire['Enabled'] then 
+                fireobject["SecondaryColor"] = Color3.fromHSV(firecolor2['Hue'], firecolor2['Sat'], firecolor2['Value'])
+            end;
+        end;
+    })
+    sparkle = Envision:CreateToggle({
+        ['Name'] = 'Sparkle Effect',
+        ['HoverText'] = 'sparkles effect.',
+        ['Default'] = false,
+        ['Function'] = function() end
+    })
+    sparklesparent = Envision:CreateDropdown({
+        ['Name'] = 'Sparkles Parent',
+        ['List'] = {'PrimaryPart', 'Head'},
+        ['Function'] = function() end
+    })
+    sparklescolor = Envision:CreateColorSlider({
+        ['Name'] = 'Sparkles Color',
+        ['Function'] = function()
+            if sparklesobject then
+                sparklesobject["Color"] = Color3.fromHSV(sparklescolor['Hue'], sparklescolor['Sat'], sparklescolor['Value'])
+            end;
+        end;
+    })
+end)
+
+velo.run(function()
+	local Cape: table = {["Enabled"] = false};
+	local Texture: any;
+	local part: any, motor: any
+	local CapeMode: table = {["Value"] = "Velocity"}
+	local capeModeMap: table = {
+		["Vape"] = "rbxassetid://13380453812",
+		["Portal"] = "rbxassetid://14694086869",
+		["Copium"] = "rbxassetid://14694061995",
+		["Velocity"] = "rbxassetid://16728149213",
+		["Azura"] = "rbxassetid://128937881305197",
+		["Ape"] = "rbxassetid://93367474508586",
+		["Laserware"] = "rbxassetid://125791563280089",
+		["Snoopy"] = "rbxassetid://89328429998004",
+		["Render"] = "rbxassetid://17140106485"
+	}
+	local function createMotor(char)
+		if motor then 
+			motor:Destroy() 
+		end
+		part.Parent = gameCamera
+		motor = Instance.new('Motor6D')
+		motor.MaxVelocity = 0.08
+		motor.Part0 = part
+		motor.Part1 = char.Character:FindFirstChild('UpperTorso') or char.RootPart
+		motor.C0 = CFrame.new(0, 2, 0) * CFrame.Angles(0, math.rad(-90), 0)
+		motor.C1 = CFrame.new(0, motor.Part1.Size.Y / 2, 0.45) * CFrame.Angles(0, math.rad(90), 0)
+		motor.Parent = part
+	end
+	
+	Cape = vape.Legit:CreateModule({
+		["Name"] = 'Cape',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				part = Instance.new('Part')
+				part.Size = Vector3.new(2, 4, 0.1)
+				part.CanCollide = false
+				part.CanQuery = false
+				part.Massless = true
+				part.Transparency = 0
+				part.Material = Enum.Material.SmoothPlastic
+				part.Color = Color3.new()
+				part.CastShadow = false
+				part.Parent = gameCamera
+				local capesurface = Instance.new('SurfaceGui')
+				capesurface.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+				capesurface.Adornee = part
+				capesurface.Parent = part
+	
+				if Texture.Value:find('.webm') then
+					local decal = Instance.new('VideoFrame')
+					decal.Video = getcustomasset(Texture.Value)
+					decal.Size = UDim2.fromScale(1, 1)
+					decal.BackgroundTransparency = 1
+					decal.Looped = true
+					decal.Parent = capesurface
+					decal:Play()
+				else
+					local decal = Instance.new('ImageLabel')
+					decal.Image = Texture.Value ~= '' and (Texture.Value:find('rbxasset') and Texture.Value or assetfunction(Texture.Value)) or 'rbxassetid://14637958134'
+					decal.Size = UDim2.fromScale(1, 1)
+					decal.BackgroundTransparency = 1
+					decal.Parent = capesurface
+				end
+				Cape:Clean(part)
+				Cape:Clean(entitylib.Events.LocalAdded:Connect(createMotor))
+				if entitylib.isAlive then
+					createMotor(entitylib.character)
+				end
+	
+				repeat
+					if motor and entitylib.isAlive then
+						local velo = math.min(entitylib.character.RootPart.Velocity.Magnitude, 90)
+						motor.DesiredAngle = math.rad(6) + math.rad(velo) + (velo > 1 and math.abs(math.cos(tick() * 5)) / 3 or 0)
+					end
+					capesurface["Enabled"] = (gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude > 0.6
+					part.Transparency = (gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude > 0.6 and 0 or 1
+					task.wait()
+				until not Cape["Enabled"]
+			else
+				part = nil
+				motor = nil
+			end
+		end,
+		["Tooltip"] = 'Add\'s a cape to your character'
+	})
+	Texture = Cape:CreateTextBox({
+		["Name"] = 'Texture'
+	})
+	CapeMode = Cape:CreateDropdown({
+		["Name"] ='Mode',
+		["List"] = {
+			'Vape',
+			'Render',
+			'Portal',
+			'Copium',
+			'Azura',
+			'Ape',
+			'Laserware',
+			'Snoopy',
+			'Velocity'
+		},
+		["HoverText"] = 'A cape mod.',
+		["Value"] = 'Velocity',
+		["Function"] = function(val) 
+			if capeModeMap[val] then
+                		Texture["Value"] = capeModeMap[val]
+            		end
+		end
+	})
+end)
+
+velo.run(function()
+    local SkidRoaster: table = {["Enabled"] = false}
+    local Mode: table = {["Value"] = "Custom"}
+    local delay: table = {["Value"] = 3.3}
+    SkidRoaster = vape.Categories.Utility:CreateModule({
+        ["Name"] = "🤡",
+        ["Function"] = function(callback: boolean): void
+            if callback then
+                task.spawn(function()
+                    repeat
+                        if Mode["Value"] == "Custom" then
+                            notif("Vape", #SkidPhrases.ListEnabled > 0 and SkidPhrases.ListEnabled[math.random(1, #SkidPhrases.ListEnabled)] or "Voidware still pasting in 2025 be like 💀🤡", delay["Value"], 'warning')
+                            task.wait(delay["Value"])
+                        else
+                            notif("Vape", "Snoopy more like shitnoopy!", 3, 'warning')
+                            task.wait(delay["Value"])
+                            notif("Vape", "Skidding = NN", 3, 'warning')
+                            task.wait(delay["Value"])
+                            notif("Vape", "Moon on top!", 3, 'warning')
+                            task.wait(delay["Value"])
+                            notif("Vape", "Snoopy + Grass = skids", 3, 'warning')
+                            task.wait(delay["Value"])
+                            notif("Vape", "Pistonware? nah bro. Pisstonware", 3, 'warning')
+                            task.wait(delay["Value"])
+			    notif("Vape", "Piston loves underaged girls and boys", 3, 'warning')
+                            task.wait(delay["Value"])
+                            notif("Vape", "Acronis = NN", 3)
+                            task.wait(delay["Value"])
+                            notif("Vape", "Vape private?? 💀🤡", 3, 'warning')
+                            task.wait(delay["Value"])
+                            notif("Vape", "Mysticware? = Mysticshit", 3, 'warning')
+                            task.wait(delay["Value"])
+                            notif("Vape", "Really bro? Tryna skid? KYS", 3, 'warning')
+                            task.wait(delay["Value"])
+                            notif("Vape", "Imagine skidding and then call yourself a coder 🤡", 3, 'warning')
+                            task.wait(delay["Value"])
+                            notif("Vape", "Ercho and Abyss still pasting in 2026 💀", 3, 'warning')
+                            task.wait(delay["Value"])
+                            notif("Vape", "How to not get doxxed? Don't be like Snoopy please...", 3, 'warning')
+                            task.wait(delay["Value"])
+                            notif("Vape", "Complexware?? Simpleware and Skiddedware", 3, 'warning')
+                            task.wait(delay["Value"])
+                            notif("Vape", "Remember, Skid Client and Nebulaware are shit.", 3, 'warning')
+                            task.wait(delay["Value"])
+			    notif("Vape", "Keep pasting cocosploit/Aurora.", 3, 'warning')
+                            task.wait(delay["Value"])
+			    notif("Vape", "Voidware = garbage paste made by autistic child", 3, 'warning')
+                            task.wait(delay["Value"])
+                            notif("Vape", "W Zenith, W null.wtf, W blanked", 3, 'warning')
+                            task.wait(delay["Value"])
+			    notif("Vape", "Packet on top fellas, discord.gg/packet", 3, 'warning')
+                            task.wait(delay["Value"])
+			    notif("Vape", "Velocity & Night on top RAH", 3, 'warning')
+                            task.wait(delay["Value"])
+                        end;
+                    until not SkidRoaster["Enabled"];
+                end);
+            end;
+        end,
+        HoverText = "Roasts skids",
+    })
+    Mode = SkidRoaster:CreateDropdown({
+        ["Name"] = "Mode",
+        ["List"] = {"Custom", "Copium"},
+        ["Function"] = function() end
+    })
+    SkidPhrases = SkidRoaster:CreateTextList({
+        ["Name"] = "Phrases",
+        ["TempText"] = "SkidRoaster Phrases",
+    })
+    delay = SkidRoaster:CreateSlider({
+        ["Name"] = "Delay",
+        ["Min"] = 2,
+        ["Max"] = 5,
+        ["Default"] = 2,
+        ["Function"] = function() end
+    })
+end)
+
+-- credits: Render
+velo.run(function()
+	local ChatMimic: table = {["Enabled"] = true}
+	local ChatShowSender: table = {["Enabled"] = true}
+	local customblocklist: any = {ObjectList = {}}
+	local blacklisted: table = {
+		'niga', 
+		'niger', 
+		'retard', 
+		'ah', 
+		'monkey', 
+		'black', 
+		'hitler', 
+		'nazi', 
+		'vape', 
+		'gay',
+		'voidware',
+		'trans',
+		'fatherless',
+		'motherless',
+		'noob',
+		'shit', 
+		'cum', 
+		'dick', 
+		'pussy', 
+		'cock'
+	};
+	local lastsent: table = {};
+	local messages: table = {};
+	local sendmessage: (msg: string) -> void = function(msg: string)
+		if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+			textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(msg);
+		else
+			replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, 'All');
+		end;
+	end;
+	ChatMimic = vape.Categories.Utility:CreateModule({
+		["Name"] = 'ChatMimic',
+		["HoverText"] = 'Mimics others in chat.',
+		["Function"] = function(callback: boolean): void
+			if callback then 
+				table.insert(ChatMimic.Connections, vapeStore.MessageReceived.Event:Connect(function(plr, text)
+					task.wait();
+					if plr == lplr or lastsent[plr] and lastsent[plr] > tick() then 
+						return ;
+					end;
+					text = text:gsub('/bedwars', '/tptolobby');
+					text = text:gsub('/lobby', '/tptolobby');
+					local begin: any = (ChatShowSender["Enabled"] and '['..plr.DisplayName..']: ' or '');
+					messages[plr] = (messages[plr] or {})
+					if table.find(messages[plr], text) then 
+						return;
+					end;
+					for i,v in blacklisted do 
+						if text:lower():find(v) then 
+							return;
+						end;
+					end;
+					for i: any, v: any in next, ({'hack', 'exploit'}) do 
+						if text:lower():find(v) and (text:lower():find('i\'m') or text:lower():find('me') or text:lower():find('i am')) then
+							return;
+						end;
+					end;
+					for i: any, v: any in next, customblocklist.ObjectList or {} do
+						if text:lower():find(v) and v ~= '' then 
+							return; 
+						end;
+					end;
+					sendmessage(begin..''..text);
+					table.insert(messages, text);
+					lastsent[plr] = tick() + 0.45;
+				end));
+			end;
+		end;
+	})
+	ChatShowSender = ChatMimic:CreateToggle({
+		["Name"] = 'Show Sender',
+		["Default"] = true,
+		["Function"] = function() end
+	})
+	customblocklist = ChatMimic:CreateTextList({
+		["Name"] = 'Blacklisted',
+		["TempText"] = 'Blacklisted Characters',
+		["AddFunction"] = function() end,
+		["RemoveFunction"] = function() end
+	})
+end)
+
+velo.run(function()
+	local playerattach: table = {["Enabled"] = false};
+	local playerattachrange: table = {["Value"] = 50}
+	local playerattachpersist: table = {};
+	local playerattachplayers: table = {};
+	playerattach = vape.Categories.Velocity:CreateModule({
+		["Name"] = 'PlayerAttach',
+		["HoverText"] = 'Attach to players',
+		["Function"] = function(callback: boolean): void
+			if callback then 
+				local plrs: any = entitylib.AllPosition({
+					Range = playerattachrange.Value,
+					Wallcheck = playerattachplayers.Walls["Enabled"] or nil,
+					Part = 'RootPart',
+					Players = playerattachplayers.Players["Enabled"],
+					NPCs = playerattachplayers.NPCs["Enabled"]
+				});
+				local found_player: boolean = false;
+				local targetEntity: any;
+				for i: any, v: any in next, plrs do
+					if v and v.RootPart then
+						targetEntity = v;
+						found_player = true;
+						break;
+					end;
+				end;
+
+				if not found_player then
+					return;
+				end;
+				task.spawn(function()
+					repeat
+						task.wait(0.1)
+						if not entitylib.isAlive and not lplr.Character then 
+							return;
+						end;
+						if targetEntity and targetEntity.RootPart then
+							lplr.Character.PrimaryPart.CFrame = targetEntity.RootPart.CFrame;
+						else
+							return;
+						end;
+					until not playerattach["Enabled"];
+				end);
+			end;
+		end;
+	})
+	playerattachrange = playerattach:CreateSlider({
+		["Name"] = "Range",
+		["Min"] = 1,
+		["Max"] = 100,
+		["Default"] = 50,
+		["Function"] = function(val)
+			playerattachrange["Value"] = val;
+		end;
+	})
+	playerattachpersist = playerattach:CreateToggle({
+		["Name"] = "Persist",
+		["Default"] = false,
+		["Function"] = function(val)
+			playerattachpersist["Enabled"] = val;
+		end;
+	})
+	playerattachplayers = playerattach:CreateTargets({
+		["Players"] = true, 
+		["NPCs"] = true
+	});
+end)
+
+velo.run(function()
+    	local AirJump: table = {["Enabled"] = false}
+	local Mode: table = {["Value"] = "State"}
+	local Power: table = {["Value"] = 50}
+	AirJump = vape.Categories.Velocity:CreateModule({
+		["Name"] = "AirJump",
+        	["HoverText"] = HoverText("Let's you jump in the air."),
+		["Function"] = function(callback: boolean): void
+			if callback then
+				local connection: any = inputService["JumpRequest"]:Connect(function()
+					if Mode["Value"] == "State" then
+						lplr["Character"]["Humanoid"]:ChangeState("Jumping")
+					else
+						lplr["Character"]["HumanoidRootPart"]["Velocity"] += Vec3(0, Power["Value"], 0)
+					end
+				end)
+                		AirJump["Connection"] = connection
+			else
+               			 if AirJump["Connection"] then
+                    			AirJump["Connection"]:Disconnect()
+                    			AirJump["Connection"] = nil
+                		end
+			end
+		end,
+        	["Default"] = false,
+        	["ExtraText"] = function()
+            		return Mode["Value"]
+        	end
+	})
+	Mode = AirJump:CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {
+			"State",
+			"Velocity"
+		},
+		["Default"] = "State",
+		["HoverText"] = HoverText("Mode to customize the jumping ability."),
+		["Function"] = function() end
+	})
+	Power = AirJump:CreateSlider({
+		["Name"] = "Power",
+		["Min"] = 1,
+		["Max"] = 100,
+		["HoverText"] = HoverText("Power to boost the velocity."),
+		["Function"] = function() end,
+		["Default"] = 50
+	})
+end)
+
+velo.run(function()
+    	local Loader: table = {["Enabled"] = false}
+    	local Font: table = {["Value"] = "FredokaOne"}
+    	local Color: table = {
+        	["Hue"] = 0,
+        	["Sat"] = 0,
+        	["Value"] = 0
+    	}
+   	local Size: table = {["Value"] = 10}
+	local Chat: table = {["Enabled"] = true}
+    	local Vape: table = {["Enabled"] = true}
+	local function Round(number: number): number
+		local remainder = number % 0.1
+		if remainder >= 0.05 then
+			return number + (0.1 - remainder)
+		else
+			return number - remainder
+		end
+	end
+	Loader = vape.Categories.Velocity:CreateModule({
+		["Name"] = "Loader",
+		["Function"] = function(callback: boolean): void
+			if callback then
+				task.spawn(function()
+                    			local Time: string? = string.format("%.1f", Round(tick() - LoadTime))
+					if Chat["Enabled"] then
+						game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",  {
+							Text = "[Velocity] [" .. VelocityVersion .. "]:\n- Loaded in " .. Time .. " seconds.\n- Logged in as " .. lplr["Name"] .. ".",
+							Color = Color3.fromHSV(Color["Hue"], Color["Sat"], Color["Value"]),
+							Font = Enum["Font"][Font["Value"]],
+							FontSize = Enum["FontSize"]["Size" .. Size["Value"]] or Enum.FontSize.Size12 
+						})
+					end                                                                          
+                    			--if vape.Modules['Luminescents'].Enabled then
+						--vape.Modules['Luminescents']:Toggle()
+				    	--end
+				    	task.wait()
+				    	--vape.Modules['Luminescents']:Toggle(true)
+                    			if Vape["Enabled"] then
+                        			notif("[Velocity] [" .. VelocityVersion .. "]", "Loaded in " .. Time .. " seconds. Logged in as " .. lplr["Name"] .. ".", 5, 'warning')
+                    			end
+				end)
+			end
+		end,
+	})
+    	Font = Loader:CreateDropdown({
+		["Name"] = "Font",
+		["List"] = GetItems("Font"),
+		["HoverText"] = HoverText("Font of the text."),
+		["Function"] = function()
+			if Loader["Enabled"] then
+				Loader["ToggleButton"]()
+				Loader["ToggleButton"]()
+			end
+		end
+	})
+    	Color = Loader:CreateColorSlider({
+        	["Name"] = "Color",
+        	["HoverText"] = HoverText("Color of the text."),
+        	["Function"] = function() end
+    	})
+    	Size = Loader:CreateTextBox({
+        	["Name"] = "Size",
+        	["TempText"] = "Size",
+        	["HoverText"] = HoverText("Size of the text."),
+        	["Function"] = function(callback: boolean): void 
+           	 	if callback and Loader["Enabled"] then 
+				Loader["ToggleButton"]()
+				Loader["ToggleButton"]()
+            		end
+        	end
+    	})
+	Chat = Loader:CreateToggle({
+		["Name"] = "Chat",
+		["HoverText"] = HoverText("Sends a notification via chat."),
+		["Function"] = function() end,
+		["Default"] = true
+	})
+    	Vape = Loader:CreateToggle({
+		["Name"] = "Vape",
+		["HoverText"] = HoverText("Sends a notification via vape."),
+		["Function"] = function() end,
+		["Default"] = true
+	})
+end)
+
+velo.run(function()
+    	local boost_jump: table = {["Enabled"] = false};
+	local boost_jump_m: table = {["Value"] = 'Toggle'};
+	local boost_jump_b: table = {["Value"] = 'Velocity'};
+	local boost_jump_vb: table = {["Value"] = 600};
+	local boost_jump_cf: table = {["Value"] = 1000};
+	local boost_jump_twb: table = {["Value"] = 1000};
+	local boost_jump_twd: table = {["Value"] = 4};
+	local boost_jump_k: table = {["Value"] = 7};
+	local boost_jump_r: table = {["Value"] = 300};
+	local boost_jump_s: table = {["Enabled"] = true};
+	boost_jump = vape.Categories.Velocity:CreateModule({
+		["Name"] ='BoostJump',
+        	["HoverText"] = 'Boosts you high up in the air.',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				local bj = {};
+				bj.__index = bj;
+				function bj.n(v : Number, c : Number, t : Number, d : Number, r : Number, k : Number, b : Number, m : Number, h : Boolean, l : Boolean, z : Number)
+					local self = setmetatable({}, bj);
+					self.v = v;
+					self.c = c;
+					self.t = t;
+					self.d = d;
+					self.r = r;
+					self.k = k;
+					self.b = b;
+					self.m = m;
+					self.h = h;
+					self.l = l;
+					self.z = z;
+					return self;
+				end;
+				function bj:s()
+					local v = self.v;
+					local c = self.c;
+					local t = self.t;
+					local d = self.d;
+					local r = self.r;
+					local k = self.k;
+					local b = self.b;
+					local m = self.m;
+					local z = self.z;
+					local h = self.h;
+					local l = self.l;
+					local bj_meta = {
+						__index = function(self, x)
+							if x == 'on' then
+								return function()
+									task.spawn(function()
+										if m == 'Toggle' then
+											if b == 'Velocity' then
+												entitylib.character.HumanoidRootPart.Velocity += Vec3(z, v, z);
+												notif("BoostJump", "Boosted " .. v .. " studs in the air.", 3)
+												boost_jump.ToggleButton(l);
+											elseif b == 'CFrame' then
+												entitylib.character.HumanoidRootPart.CFrame += Vec3(z, c, z);
+												notif("BoostJump", "Teleported " .. c .. " studs in the air.", 3)
+												boost_jump.ToggleButton(l);
+											else
+												tweenService:Create(entitylib.character.HumanoidRootPart, TweenInfo.new(d), {
+													CFrame = entitylib.character.HumanoidRootPart.CFrame + Vec3(z, t, z)
+												}):Play();
+												notif("BoostJump", "Tweened " .. t .. " studs in the air.", 3)
+												boost_jump.ToggleButton(l);
+											end;
+										else
+											repeat
+												if b == 'Velocity' then
+													entitylib.character.HumanoidRootPart.Velocity += Vec3(z, h and v - r or v, z);
+												elseif b == 'CFrame' then
+													entitylib.character.HumanoidRootPart.CFrame += Vec3(z, h and c - r or c, z);
+												else
+													tweenService:Create(entitylib.character.HumanoidRootPart, TweenInfo.new(d), {
+														CFrame = entitylib.character.HumanoidRootPart.CFrame + Vec3(z, h and t - r or t, z)
+													}):Play();
+												end;
+												task.wait(k);
+											until not boost_jump["Enabled"];
+										end;
+									end);
+								end;
+							end;
+						end;
+					};
+					local bj_val = setmetatable({}, bj_meta);
+					bj_val:on();
+				end;
+				local new_bj = bj.n(
+					boost_jump_vb["Value"],
+					boost_jump_cf["Value"],
+					boost_jump_twb["Value"],
+					boost_jump_twd["Value"] / 10,
+					boost_jump_r["Value"],
+					boost_jump_k["Value"] / 10,
+					boost_jump_b["Value"],
+					boost_jump_m["Value"],
+					boost_jump_s["Enabled"],
+					false, 0
+				);
+				new_bj:s();
+			end
+		end,
+        	["Default"] =false,
+        	["ExtraText"] = function()
+            		return boost_jump_m["Value"];
+        	end;
+	})
+	boost_jump_m = boost_jump:CreateDropdown({
+		["Name"] ='Repeat',
+		["List"] = {
+			'Toggle',
+			'Keep'
+		},
+		["Default"] ='Toggle',
+		["HoverText"] = 'Mode to keep the module on while boosting.',
+		["Function"] = function() end
+	})
+	boost_jump_b = boost_jump:CreateDropdown({
+		["Name"] ='Boost',
+		["List"] = {
+			'Velocity',
+			'CFrame',
+			'Tween'
+		},
+		["Default"] ='Velocity',
+		["HoverText"] = 'Mode to get boosted in the air.',
+		["Function"] = function() end
+	})
+	boost_jump_vb = boost_jump:CreateSlider({
+		["Name"] ='Velocity Boost',
+		["Min"] =1,
+		["Max"] =600,
+		["HoverText"] = 'Amount of velocity to boost your character.',
+		["Function"] = function() end,
+		["Default"] =600
+	})
+	boost_jump_cf = boost_jump:CreateSlider({
+		["Name"] ='CFrame Boost',
+		["Min"] =1,
+		["Max"] =1000,
+		["HoverText"] = 'Amount of cframe to boost your character.',
+		["Function"] = function() end,
+		["Default"] =1000
+	})
+	boost_jump_twb = boost_jump:CreateSlider({
+		["Name"] ='Tween Boost',
+		["Min"] =1,
+		["Max"] =1500,
+		["HoverText"] = 'Position to end the tween.',
+		["Function"] = function() end,
+		["Default"] =1000
+	})
+	boost_jump_twd = boost_jump:CreateSlider({
+		["Name"] ='Tween Duration',
+		["Min"] =1,
+		["Max"] =10,
+		["HoverText"] = 'Duration of the tweening that boosts your character.',
+		["Function"] = function() end,
+		["Default"] =4
+	})
+	boost_jump_k = boost_jump:CreateSlider({
+		["Name"] ='Keep Delay',
+		["Min"] =1,
+		["Max"] =15,
+		["HoverText"] = 'Delay to reboost when using \'Keep\' mode.',
+		["Function"] = function() end,
+		["Default"] =7
+	})
+	boost_jump_r = boost_jump:CreateSlider({
+		["Name"] ='Reduce',
+		["Min"] =1,
+		["Max"] =400,
+		["HoverText"] = 'Amount to reduce the boost power when using \'Keep\' mode.',
+		["Function"] = function() end,
+		["Default"] =300
+	})
+	boost_jump_s = boost_jump:CreateToggle({
+		["Name"] ='Safe',
+		["HoverText"] = 'Reduces the boost power when using \'Keep\' mode.',
+		["Function"] = function() end,
+		["Default"] =true
+	})
+end)
+
+velo.run(function()
+	local CustomCursor: table = {["Enabled"] = false}
+	local Icon: table = {["Value"] = "Triangle"}
+    	local Image: table = {["Value"] = ""}
+	local Custom: table = {["Enabled"] = false}
+    	local Old: table = {
+		["CS:GO"] = "rbxassetid://14789879068",
+		["Old Roblox"] = "rbxassetid://13546344315",
+		["dx9ware"] = "rbxassetid://12233942144",
+		["Aimbot"] = "rbxassetid://8680062686",
+		["Triangle"] = "rbxassetid://14790304072",
+		["Crosshair"] = "rbxassetid://9943168532",
+		["Arrow"] = "rbxassetid://14790316561"
+	}
+	CustomCursor = vape.Categories.Velocity:CreateModule({
+		["Name"] = "CustomCursor",
+		["HoverText"] = HoverText("Modifies your cursor's image."),
+		["Function"] = function(callback: boolean): void
+			if callback then
+				task.spawn(function()
+					repeat
+						if Custom["Enabled"] then
+							inputService["MouseIcon"] = "rbxassetid://" .. Image["Value"]
+						else
+							inputService["MouseIcon"] = Old[Icon["Value"]]
+						end
+                        			task.wait(0)
+					until not CustomCursor["Enabled"]
+				end)
+			else
+				inputService["MouseIcon"] = ""
+				task.wait()
+				inputService["MouseIcon"] = ""
+			end
+		end
+	})
+	Icon = CustomCursor:CreateDropdown({
+		["Name"] = "Icon",
+		["List"] = {
+	            "CS:GO",
+	            "Old Roblox",
+	            "dx9ware",
+	            "Aimbot",
+	            "Triangle",
+		    "Crosshair",
+	            "Arrow"
+	        },
+        	["Default"] = "Triangle",
+        	["HoverText"] = HoverText("Icon to replace your cursor."),
+		["Function"] = function() end
+	})
+    	Image = CustomCursor:CreateTextBox({
+		["Name"] = "Image ID",
+		["TempText"] = "Image ID",
+        	["HoverText"] = HoverText("Custom Image ID for your cursor."),
+		["FocusLost"] = function(enter) 
+			if CustomCursor["Enabled"] then 
+				CustomCursor["ToggleButton"]()
+				CustomCursor["ToggleButton"]()
+			end
+		end
+	})
+	Custom = CustomCursor:CreateToggle({
+		["Name"] = "Custom Icon",
+        	["HoverText"] = HoverText("Let's you insert a custom Image ID."),
+		["Function"] = function() end,
+        	["Default"] = false
+	})
+end)
+
+velo.run(function()
+	local ZoomUnlocker: table = {["Enabled"] = false}
+	local ZoomUnlockerMode: table = {["Value"] = 'Infinite'}
+	local ZoomUnlockerZoom: table = {["Value"] = 500}
+	local ZoomConnection, OldZoom = nil, nil
+	ZoomUnlocker = vape.Categories.Velocity:CreateModule({
+		["Name"] ='ZoomUnlocker',
+        	["HoverText"] = 'Unlocks the abillity to zoom more.',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				OldZoom = lplr["CameraMaxZoomDistance"]
+				ZoomUnlocker = runService.Heartbeat:Connect(function()
+					if ZoomUnlockerMode["Value"] == 'Infinite' then
+						lplr["CameraMaxZoomDistance"] = 9e9
+					else
+						lplr["CameraMaxZoomDistance"] = ZoomUnlockerZoom["Value"]
+					end
+				end)
+			else
+				if ZoomUnlocker then ZoomUnlocker:Disconnect() end
+				lplr["CameraMaxZoomDistance"] = OldZoom
+				OldZoom = nil
+			end
+		end,
+        	["Default"] =false,
+		["ExtraText"] = function()
+            		return ZoomUnlockerMode["Value"]
+        	end
+	})
+	ZoomUnlockerMode = ZoomUnlocker:CreateDropdown({
+		["Name"] ='Mode',
+		["List"] = {
+			'Infinite',
+			'Custom'
+		},
+		["HoverText"] = 'Mode to unlock the zoom.',
+		["Value"] = 'Infinite',
+		["Function"] = function() end
+	})
+	ZoomUnlockerZoom = ZoomUnlocker:CreateSlider({
+		["Name"] ='Zoom',
+		["Min"] =13,
+		["Max"] =1000,
+		["HoverText"] = 'Amount to unlock the zoom.',
+		["Function"] = function() end,
+		["Default"] =500
+	})
+end)
+
+velo.run(function()
+	local ScriptHub: table = {["Enabled"] = false};
+	local Script: table = {["Value"] = "Dex"};
+	ScriptHub = vape.Categories.Velocity:CreateModule({
+		["Name"] = "ScriptHub",
+		["HoverText"] = "Loads Scripts",
+		["Function"] = function(callback: boolean): void
+			if callback then
+				if Script["Value"] == "Dex" then
+					task.spawn(function()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
+					end);
+				elseif Script["Value"] == "InfiniteYield" then
+					task.spawn(function()
+						loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))() 
+					end);
+				end;
+				ScriptHub.ToggleButton()
+			end;
+		end;
+	})
+	Script = ScriptHub:CreateDropdown({
+		["Name"] ='Mode',
+		["List"] = {
+			'Dex',
+			'InfiniteYield'
+		},
+		["Default"] ='Dex',
+		["HoverText"] = 'Mode to execute script.',
+		["Function"] = function() end;
+	});	
+end)
+
+velo.run(function()
+	local GameWeather: table = {["Enabled"] = false}
+	local GameWeatherMode: table = {["Value"] = "Snow"}
+	local SnowflakesSpread: table = {["Value"] = 35}
+	local SnowflakesRate: table = {["Value"] = 28}
+	local SnowflakesHigh: table = {["Value"] = 100}
+	GameWeather = vape.Categories.Velocity:CreateModule({
+		["Name"] ='GameWeather',
+		["HoverText"] = 'Changes the weather.',
+		["Function"] = function(callback: boolean): void 
+			if callback then
+				task.spawn(function()
+					if game_weather_m["Value"] == 'Snow' then
+						-- vape gametheme code
+						local snowpart = Instance.new("Part")
+						snowpart.Size = Vector3.new(240,0.5,240)
+						snowpart.Name ="SnowParticle"
+						snowpart.Transparency = 1
+						snowpart.CanCollide = false
+						snowpart.Position = Vector3.new(0,120,286)
+						snowpart.Anchored = true
+						snowpart.Parent = workspace
+						local snow: ParticleEmitter = Instance.new("ParticleEmitter")
+						snow.RotSpeed = NumberRange.new(300)
+						snow.VelocitySpread = SnowflakesSpread["Value"]
+						snow.Rate = SnowflakesRate["Value"]
+						snow.Texture = "rbxassetid://8158344433"
+						snow.Rotation = NumberRange.new(110)
+						snow.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,0.16939899325371,0),NumberSequenceKeypoint.new(0.23365999758244,0.62841498851776,0.37158501148224),NumberSequenceKeypoint.new(0.56209099292755,0.38797798752785,0.2771390080452),NumberSequenceKeypoint.new(0.90577298402786,0.51912599802017,0),NumberSequenceKeypoint.new(1,1,0)})
+						snow.Lifetime = NumberRange.new(8,14)
+						snow.Speed = NumberRange.new(8,18)
+						snow.EmissionDirection = Enum.NormalId.Bottom
+						snow.SpreadAngle = Vector2.new(35,35)
+						snow.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0,0),NumberSequenceKeypoint.new(0.039760299026966,1.3114800453186,0.32786899805069),NumberSequenceKeypoint.new(0.7554469704628,0.98360699415207,0.44038599729538),NumberSequenceKeypoint.new(1,0,0)})
+						snow.Parent = snowpart
+						local windsnow = Instance.new("ParticleEmitter")
+						windsnow.Acceleration = Vector3.new(0,0,1)
+						windsnow.RotSpeed = NumberRange.new(100)
+						windsnow.VelocitySpread = SnowflakesSpread["Value"]
+						windsnow.Rate = SnowflakesRate["Value"]
+						windsnow.Texture = "rbxassetid://8158344433"
+						windsnow.EmissionDirection = Enum.NormalId.Bottom
+						windsnow.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,0.16939899325371,0),NumberSequenceKeypoint.new(0.23365999758244,0.62841498851776,0.37158501148224),NumberSequenceKeypoint.new(0.56209099292755,0.38797798752785,0.2771390080452),NumberSequenceKeypoint.new(0.90577298402786,0.51912599802017,0),NumberSequenceKeypoint.new(1,1,0)})
+						windsnow.Lifetime = NumberRange.new(8,14)
+						windsnow.Speed = NumberRange.new(8,18)
+						windsnow.Rotation = NumberRange.new(110)
+						windsnow.SpreadAngle = Vector2.new(35,35)
+						windsnow.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0,0),NumberSequenceKeypoint.new(0.039760299026966,1.3114800453186,0.32786899805069),NumberSequenceKeypoint.new(0.7554469704628,0.98360699415207,0.44038599729538),NumberSequenceKeypoint.new(1,0,0)})
+						windsnow.Parent = snowpart
+						repeat task.wait(0)
+							if entitylib.isAlive then 
+								snowpart.Position = entitylib.character.HumanoidRootPart.Position + Vec3(0, SnowflakesHigh.Value, 0)
+							end
+						until not vapeInjected
+					else
+						-- creds to AntiMonacoGang
+						repeat task.wait(0)
+							local Player = game:GetService('Players').LocalPlayer
+							local Camera = workspace.CurrentCamera
+							repeat wait() until Player.Character ~= nil
+							local Torso = Player.Character:WaitForChild("UpperTorso")
+							local RainSound = Instance.new("Sound", Camera)
+							RainSound.SoundId = "http://www.roblox.com/asset/?ID=236148388"
+							RainSound.Looped = true
+							RainSound:Play()
+							function Particle(cframe)
+								local Spread = Vector3.new(math.random(-100, 100), math.random(-100, 100), math.random(-100, 100))
+								local Part = Instance.new("Part", Camera)
+								local Smoke = Instance.new("Smoke", Part)
+								Part.CanCollide = false
+								Part.Transparency = 0.25
+								Part.Reflectance = 0.15
+								Smoke.RiseVelocity = -25
+								Smoke.Opacity = 0.25
+								Smoke.Size = 25
+								Part.BrickColor = BrickColor.new("Steel blue")
+								Part.FormFactor = Enum.FormFactor.Custom
+								Part.Size = Vector3.new(0.15, 2, 0.15)
+								Part.CFrame = CFrame.new(cframe.p + (cframe:vectorToWorldSpace(Vector3.new(0, 1, 0)).unit * 150) + Spread) * CFrame.Angles(0, math.atan2(cframe.p.X, cframe.p.Z) + math.pi, 0)
+								game:GetService("Debris"):AddItem(Part, 3)
+								Instance.new("BlockMesh", Part)
+								Part.Touched:Connect(function(Hit)
+									Part:Destroy()
+								end)
+							end
+							function Roof(cframe)
+								return workspace:FindPartOnRayWithIgnoreList(Ray.new(cframe.p, cframe.p * Vector3.new(0, 150, 0)), {Player.Character})
+							end
+							-- if Camera ~= nil and Torso ~= nil then
+								if Roof(Torso.CFrame) == nil then
+									for _ = 1, 5 do
+										if (Camera.CFrame.p - Torso.CFrame.p).Magnitude > 100 then
+											Particle(Camera.CFrame)
+											Particle(Torso.CFrame)
+										else
+											Particle(Torso.CFrame)
+										end
+									end
+									RainSound.Volume = 0.05
+								else
+									RainSound.Volume = 0.05
+									if Roof(Camera.CFrame) == nil then
+										for _ = 1, 5 do
+											Particle(Camera.CFrame)
+										end
+									end
+								end
+								RainSound:Destroy()
+							-- end
+						until (not GameWeather["Enabled"])
+					end
+				end)
+			else
+				for _, v in next, workspace:GetChildren() do
+					if v.Name == "SnowParticle" then
+						v:Remove()
+					end
+				end
+			end
+		end
+	})
+	game_weather_m = GameWeather:CreateDropdown({
+		["Name"] ='Mode',
+		["List"] = {
+			'Snow',
+			'Rain'
+		},
+		["Default"] ='Snow',
+		["HoverText"] = 'Mode to change the weather.',
+		["Function"] = function() end;
+	});
+	SnowflakesSpread = GameWeather:CreateSlider({
+		["Name"] ="Snow Spread",
+		["Min"] =1,
+		["Max"] =100,
+		["Function"] = function() end,
+		["Default"] =35
+	})
+	SnowflakesRate = GameWeather:CreateSlider({
+		["Name"] ="Snow Rate",
+		["Min"] =1,
+		["Max"] =100,
+		["Function"] = function() end,
+		["Default"] =28
+	})
+	SnowflakesHigh = GameWeather:CreateSlider({
+		["Name"] ="Snow High",
+		["Min"] =1,
+		["Max"] =200,
+		["Function"] = function() end,
+		["Default"] =100
+	})
+end)
+
+velo.run(function()
+	local WaterMark: table = {["Enabled"] = false}
+	local WaterMarkBGT: table = {["Value"] = 1}
+	local WaterMarkZI: table = {["Value"] = 10}
+	local WaterMarkPOS: table = {["Value"] = 36}
+	local WaterMarkTST: table = {["Value"] = 0}
+    	local WaterMarkFont: table = {["Value"] = Enum.Font.SourceSansBold}
+	local WaterMarkColor: table = {["Hue"] = 1, ["Sat"] = 1, ["Value"] = 0.55}
+	local ScreenGui: ScreenGui = Instance.new("ScreenGui")
+	local TextLabel: TextLabel = Instance.new("TextLabel")
+	local UICorner: UICorner = Instance.new("UICorner")
+	ScreenGui.Parent = lplr:WaitForChild("PlayerGui")
+	ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	TextLabel.Parent = ScreenGui
+	TextLabel.Size = UDim2.new(1, 0, 0, 36)
+	TextLabel.BackgroundTransparency = WaterMarkBGT["Value"]
+	TextLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	TextLabel.ZIndex = WaterMarkZI["Value"]
+	TextLabel.TextStrokeTransparency = WaterMarkTST["Value"]
+	TextLabel.TextScaled = true
+	TextLabel.Font = WaterMarkFont["Value"]
+	TextLabel.TextColor3 = Color3.fromHSV(WaterMarkColor["Hue"], WaterMarkColor["Sat"], WaterMarkColor["Value"])
+	TextLabel.Position = UDim2.new(0, 0, 0, -WaterMarkPOS["Value"])
+	UICorner.Parent = TextLabel
+	UICorner.CornerRadius = UDim.new(0, 10)
+	WaterMark = vape.Categories.Velocity:CreateModule({
+		["Name"] ="TextMark",
+		["Function"] = function(callback: boolean): void
+			if callback then
+				TextLabel.Text = "Velocity [V1.0]"
+                TextLabel.Font = WaterMarkFont["Value"]
+			else
+				TextLabel.Text = ""
+                TextLabel.Font = WaterMarkFont["Value"]
+			end
+		end
+	})
+    	WaterMarkFont = WaterMark:CreateDropdown({
+		["Name"] ="Font",
+		["List"] = GetItems("Font"),
+		["HoverText"] = "Font of the text.",
+		["Function"] = function()
+			if WaterMark["Enabled"] then
+				WaterMark.ToggleButton()
+				WaterMark.ToggleButton()
+			end
+		end
+	})
+	WaterMarkColor = WaterMark:CreateColorSlider({
+		["Name"] ="Color",
+		["Function"] = function() 
+			if TextLabel then
+				TextLabel.TextColor3 = Color3.fromHSV(WaterMarkColor["Hue"], WaterMarkColor["Sat"], WaterMarkColor["Value"])
+			end
+		end
+	})
+	WaterMarkPOS = WaterMark:CreateSlider({
+		["Name"] ="Position",
+		["Min"] =1,
+		["Max"] =45, 
+		["Function"] = function(val) end,
+		["Default"] =36
+	})
+	WaterMarkBGT = WaterMark:CreateSlider({
+		["Name"] ="Background Transparency",
+		["Min"] =0,
+		["Max"] =1, 
+		["Function"] = function(val) end,
+		["Default"] =1
+	})
+	WaterMarkTST = WaterMark:CreateSlider({
+		["Name"] ="Stroke Transparency",
+		["Min"] =0,
+		["Max"] =1, 
+		["Function"] = function(val) end,
+		["Default"] =0
+	})
+	WaterMarkZI = WaterMark:CreateSlider({
+		["Name"] ="ZIndex",
+		["Min"] =7,
+		["Max"] =15, 
+		["Function"] = function(val) end,
+		["Default"] =10
+	})
+end)
+	
+velo.run(function()
+    local og: table = {}                                                        
+    local function default()
+        og = {
+            Brightness = lightingService.Brightness,
+            ColorShift_Top = lightingService.ColorShift_Top,
+            ColorShift_Bottom = lightingService.ColorShift_Bottom,
+            OutdoorAmbient = lightingService.OutdoorAmbient,
+            ClockTime = lightingService.ClockTime,
+            FogColor = lightingService.FogColor,
+            FogStart = lightingService.FogStart,
+            FogEnd = lightingService.FogEnd,
+            ExposureCompensation = lightingService.ExposureCompensation,
+            ShadowSoftness = lightingService.ShadowSoftness,
+            Ambient = lightingService.Ambient
+        }
+    end;
+    local Luminescents: table = {["Enabled"] = false};
+    local Blurs: any;
+    local ColorCorrectionEffect: any;
+    local SkyColor: table = {["Value"] = 1};
+    local light: any;
+    local on: boolean = false;
+	Luminescents = vape.Legit:CreateModule({
+		["Name"] = 'Luminescents',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				repeat task.wait() until game:IsLoaded()
+                Blurs = Instance.new("BlurEffect");
+                Blurs.Parent = lightingService;
+                Blurs.Size = 5;
+                ColorCorrectionEffect = Instance.new("ColorCorrectionEffect");
+                ColorCorrectionEffect.Parent = lightingService;
+                ColorCorrectionEffect.Saturation = -0.2;
+                ColorCorrectionEffect.TintColor = Color3.fromRGB(255, 224, 219);
+                lightingService.ClockTime = 8.7;
+                lightingService.FogEnd = 1000;
+                lightingService.FogStart = 0;
+                lightingService.ExposureCompensation = 0.30;
+                lightingService.ShadowSoftness = 0;
+                lightingService.Ambient = Color3.fromRGB(59, 33, 27);
+                lightingService.ColorShift_Bottom = Color3.fromHSV(SkyColor["Hue"], SkyColor["Sat"], SkyColor["Value"]);
+                lightingService.ColorShift_Top = Color3.fromHSV(SkyColor["Hue"], SkyColor["Sat"], SkyColor["Value"]);
+                lightingService.OutdoorAmbient = Color3.fromHSV(SkyColor["Hue"], SkyColor["Sat"], SkyColor["Value"]);
+                lightingService.FogColor = Color3.fromHSV(SkyColor["Hue"], SkyColor["Sat"], SkyColor["Value"]);
+            else
+                if ColorCorrectionEffect and ColorCorrectionEffect.Parent then 
+                    ColorCorrectionEffect:Destroy();
+                end;
+                if Blurs and Blurs.Parent then 
+                    Blurs:Destroy();
+                end;
+                for k, v in pairs(og) do
+                    lightingService[k] = v;
+                end;
+            end;
+        end;
+    })
+    SkyColor = Luminescents:CreateColorSlider({
+        ["Name"] ='Color',
+        ["Function"] = function(hue, sat, val)
+            if light then
+                lightingService.ColorShift_Bottom = Color3.fromHSV(SkyColor["Hue"], SkyColor["Sat"], SkyColor["Value"]);
+                lightingService.ColorShift_Top = Color3.fromHSV(SkyColor["Hue"], SkyColor["Sat"], SkyColor["Value"]);
+                lightingService.OutdoorAmbient = Color3.fromHSV(SkyColor["Hue"], SkyColor["Sat"], SkyColor["Value"]);
+                lightingService.FogColor = Color3.fromHSV(SkyColor["Hue"], SkyColor["Sat"], SkyColor["Value"]);
+            end;
+        end;
+    })
+end)
+
+	
