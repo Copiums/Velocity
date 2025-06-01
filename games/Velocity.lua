@@ -8146,3 +8146,2739 @@ end)
 	- reformatted and fixed by: Copium
 ]]
 
+velo.run(function()
+        local ViewModel: table = {["Enabled"] = false}
+        local Mode: table = {["Value"] = "Classic"}
+        local Material: table = {["Value"] = "Neon"}
+        local ColorSlider: table = {
+                ["Hue"] = 0,
+                ["Sat"] = 0,
+                ["Value"] = 0
+        }
+        local Trans: table = {["Value"] = 0}
+        local Trans1: table = {["Value"] = 15}
+        local Depth: table = {["Value"] = 8}
+        local Horizontal: table = {["Value"] = 8}
+        local Vertical: table = {["Value"] = 8}
+        local RotX: table = {["Value"] = 0}
+        local RotY: table = {["Value"] = 0}
+        local RotZ: table = {["Value"] = 0}
+        local Color: table = {["Enabled"] = true}
+        local MaterialToggle: table = {["Enabled"] = true}
+        local Third: table = {["Enabled"] = true}
+        local Attributes: table = {["Enabled"] = true}
+        local Anim: table = {["Enabled"] = false}
+        local Old: table = {
+                ["Custom"] = {},
+                ["Anim"] = nil,
+                ["C1"] = nil,
+                ["Cam"] = nil
+        }
+        local Modes: table = {
+                ["Normal"] = function(part: object, original: highlight): void
+                        local highlight: instance = original or Instance.new("Highlight")
+                        highlight["FillColor"] = Color3.fromHSV(ColorSlider["Hue"], ColorSlider["Sat"], ColorSlider["Value"])
+                        highlight["FillTransparency"] = Trans["Value"] / 100
+                        highlight["OutlineColor"] = Color3.fromHSV(ColorSlider["Hue"], ColorSlider["Sat"], ColorSlider["Value"])
+                        highlight["OutlineTransparency"] = Trans1["Value"] / 100
+                        highlight["DepthMode"] = Enum["HighlightDepthMode"]["AlwaysOnTop"]
+                        highlight["Parent"] = part
+                        table.insert(Old["Custom"], highlight)
+                        if Color["Enabled"] then
+                                part["TextureID"] = ""
+                                if MaterialToggle["Enabled"] then
+                                        part["Material"] = Enum["Material"][Material["Value"]]
+                                end
+                        end
+                end,
+                ["Classic"] = function(part: object): void
+                        if Color["Enabled"] then
+                                part["TextureID"] = ""
+                                if MaterialToggle["Enabled"] then
+                                        part["Material"] = Enum["Material"][Material["Value"]]
+                                end
+                                part["Color"] = Color3.fromHSV(ColorSlider["Hue"], ColorSlider["Sat"], ColorSlider["Value"])
+                        end
+                end
+        }
+        local function Main()
+                local exist: boolean, handle: camera = pcall(function()
+                        return handle and handle:IsA("Part") and handle or gameCamera["Viewmodel"]:FindFirstChildWhichIsA("Accessory")["Handle"]
+                end)
+                if exist then
+                        Modes[Mode["Value"]](handle)
+                end
+                local exist2: boolean, handle2: object = pcall(function()
+                        for _, v in next, lplr["Character"]:GetChildren() do
+                                if v:IsA("Accessory") and v["Name"] == handle["Parent"]["Name"] and v:GetAttribute("InvItem") then
+                                        return v["Handle"]
+                                end
+                        end
+                end)
+                if exist2 and handle2 and Third["Enabled"] and Mode["Value"] == "Classic"  then
+                        Modes[Mode["Value"]](handle2)
+                end
+        end
+        local oldviewmodelC1 = gameCamera["Viewmodel"]["RightHand"]["RightWrist"]["C1"]
+        ViewModel = vape.Categories.Velocity:CreateModule({
+                ["Name"] = "ViewModel",
+                ["HoverText"] = "Customizes the viewmodel.",
+                ["Function"] = function(callback: boolean): void
+                        if callback then
+                                Old["Cam"] = gameCamera:WaitForChild("Viewmodel")
+                                task.spawn(function()
+                                        Main()
+                                end)
+                                table.insert(ViewModel["Connections"], Old["Cam"]["ChildAdded"]:Connect(Main))
+                                Old["Anim"] = store["ViewmodelController"]["playAnimation"]
+                                store["ViewmodelController"]["playAnimation"] = function(self, animid, details)
+                                        if animid == store["AnimationType"]["FP_WALK"] and Attributes["Enabled"] and Anim["Enabled"] then
+                                                return
+                                        end
+                                        return Old["Anim"](self, animid, details)
+                                end
+                                if Attributes["Enabled"] then
+                                        lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", -Depth["Value"] / 10)
+                                        lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", Horizontal["Value"] / 10)
+                                        lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_VERTICAL_OFFSET", Vertical["Value"] / 10)
+                                        pcall(function()
+                                                Old["C1"] = Old["Cam"]["RightHand"]["RightWrist"]["C1"]
+                                        end)
+                                end
+                        else
+                                if Old["Anim"] then
+                                        store["ViewmodelController"]["playAnimation"] = Old["Anim"]
+                                        Old["Anim"] = nil
+                                end
+                                if Old["C1"] then
+                                        pcall(function()
+                                                gameCamera["Viewmodel"]["RightHand"]["RightWrist"]["C1"] = Old["C1"]
+                                        end)
+                                        Old["C1"] = nil
+                                end
+                                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", 0)
+                                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", 0)
+                                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_VERTICAL_OFFSET", 0)
+                                for _, v in next, Old["Custom"] do
+                                        pcall(function()
+                                                v:Destroy()
+                                        end)
+                                end
+                                table.clear(Old["Custom"])
+                                Old["Cam"] = nil
+                        end
+                end
+        })
+        Mode = ViewModel:CreateDropdown({
+                ["Name"] = "Mode",
+                ["List"] = {
+                        "Normal",
+                        "Classic"
+                },
+                ["Default"] = "Classic",
+                ["HoverText"] = "Mode to customize the viewmodel.",
+                ["Function"] = function(value)
+                        if ViewModel["Enabled"] then
+                                ViewModel["ToggleButton"]()
+                                ViewModel["ToggleButton"]()
+                        end
+                end
+        })
+        Material = ViewModel:CreateDropdown({
+                ["Name"] = "Material",
+                ["List"] = GetItems("Material"),
+                ["Default"] = "Neon",
+                ["HoverText"] = "Material to add to the viewmodel.",
+                ["Function"] = function()
+                        if ViewModel["Enabled"] then
+                                Main()
+                        end
+                end
+        })
+        ColorSlider = ViewModel:CreateColorSlider({
+                ["Name"] = "Color",
+                ["HoverText"] = "Color of the viewmodel.",
+                ["Function"] = function()
+                        if ViewModel["Enabled"] then
+                                Main()
+                        end
+                end
+        })
+        Trans = ViewModel:CreateSlider({
+                ["Name"] = "Fill Transparency",
+                ["Min"] = 0,
+                ["Max"] = 100,
+                ["HoverText"] = "Transparency of the fill color.",
+                ["Function"] = function()
+                        if ViewModel["Enabled"] then
+                                Main()
+                        end
+                end,
+                ["Default"] = 15
+        })
+        Trans1 = ViewModel:CreateSlider({
+                ["Name"] = "Outline Transparency",
+                ["Min"] = 0,
+                ["Max"] = 100,
+                ["HoverText"] = "Transparency of the outline color.",
+                ["Function"] = function()
+                        if ViewModel["Enabled"] then
+                                Main()
+                        end
+                end,
+                ["Default"] = 0
+        })
+        Depth = ViewModel:CreateSlider({
+                ["Name"] = "Depth",
+                ["Min"] = 0,
+                ["Max"] = 24,
+                ["HoverText"] = "Depth value of the viewmodel.",
+                ["Function"] = function(val)
+                        if ViewModel["Enabled"] and Attributes["Enabled"] then
+                                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", -(val / 10))
+                        end
+                end,
+                ["Default"] = 8
+        })
+        Horizontal = ViewModel:CreateSlider({
+                ["Name"] = "Horizontal",
+                ["Min"] = 0,
+                ["Max"] = 24,
+                ["HoverText"] = "Horizontal value of the viewmodel.",
+                ["Function"] = function(val)
+                        if ViewModel["Enabled"] and Attributes["Enabled"] then
+                                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", (val / 10))
+                        end
+                end,
+                ["Default"] = 8
+        })
+        Vertical = ViewModel:CreateSlider({
+                ["Name"] = "Vertical",
+                ["Min"] = 0,
+                ["Max"] = 24,
+                ["HoverText"] = "Vertical value of the viewmodel.",
+                ["Function"] = function(val)
+                        if ViewModel["Enabled"] and Attributes["Enabled"] then
+                                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_VERTICAL_OFFSET", (val / 10))
+                        end
+                end,
+                ["Default"] = 8
+        })
+        RotX = ViewModel:CreateSlider({
+                ["Name"] = "Rotation X",
+                ["Min"] = 0,
+                ["Max"] = 360,
+                ["HoverText"] = "Rotation (X) of the viewmodel.",
+                ["Function"] = function(val)
+                        if ViewModel["Enabled"] and Attributes["Enabled"] then
+                                gameCamera["Viewmodel"]["RightHand"]["RightWrist"]["C1"] = oldviewmodelC1 * CFrame.Angles(math.rad(RotX["Value"]), math.rad(RotY["Value"]), math.rad(RotZ["Value"]))
+                        end
+                end,
+                ["Default"] = 0
+        })
+        RotY = ViewModel:CreateSlider({
+                ["Name"] = "Rotation Y",
+                ["Min"] = 0,
+                ["Max"] = 360,
+                ["HoverText"] = "Rotation (Y) of the viewmodel.",
+                ["Function"] = function(val)
+                        if ViewModel["Enabled"] and Attributes["Enabled"] then
+                                gameCamera["Viewmodel"]["RightHand"]["RightWrist"]["C1"] = oldviewmodelC1 * CFrame.Angles(math.rad(RotX["Value"]), math.rad(RotY["Value"]), math.rad(RotZ["Value"]))
+                        end
+                end,
+                ["Default"] = 0
+        })
+        RotZ = ViewModel:CreateSlider({
+                ["Name"] = "Rotation Z",
+                ["Min"] = 0,
+                ["Max"] = 360,
+                ["HoverText"] = "Rotation (Z) of the viewmodel.",
+                ["Function"] = function(val)
+                        if ViewModel["Enabled"] and Attributes["Enabled"] then
+                                gameCamera["Viewmodel"]["RightHand"]["RightWrist"]["C1"] = oldviewmodelC1 * CFrame.Angles(math.rad(RotX["Value"]), math.rad(RotY["Value"]), math.rad(RotZ["Value"]))
+                        end
+                end,
+                ["Default"] = 0
+        })
+        Color = ViewModel:CreateToggle({
+                ["Name"] = "Color",
+                ["HoverText"] = "Colors the viewmodel.",
+                ["Function"] = function()
+                        if ViewModel["Enabled"] then
+                                Main()
+                        end
+                end,
+                ["Default"] = true
+        })
+        MaterialToggle = ViewModel:CreateToggle({
+                ["Name"] = "Material",
+                ["HoverText"] = "Customizes the material.",
+                ["Function"] = function()
+                        if ViewModel["Enabled"] then
+                                Main()
+                        end
+                end,
+                ["Default"] = true
+        })
+        Third = ViewModel:CreateToggle({
+                ["Name"] = "Third Person",
+                ["HoverText"] = "Customizes the viewmodel in third person.",
+                ["Function"] = function()
+                        if ViewModel["Enabled"] then
+                                Main()
+                        end
+                end,
+                ["Default"] = true
+        })
+        Attributes = ViewModel:CreateToggle({
+                ["Name"] = "Attributes",
+                ["HoverText"] = "Customizes the size and rotation of the viewmodel.",
+                ["Function"] = function()
+                        if ViewModel["Enabled"] then
+                                ViewModel["ToggleButton"]()
+                                ViewModel["ToggleButton"]()
+                        end
+                end,
+                ["Default"] = true
+        })
+        Anim = ViewModel:CreateToggle({
+                ["Name"] = "No Animation",
+                ["HoverText"] = "Removes the bobbing animation.",
+                ["Function"] = function()
+                        if ViewModel["Enabled"] and Attributes["Enabled"] then
+                                ViewModel["ToggleButton"]()
+                                ViewModel["ToggleButton"]()
+                        end
+                end,
+                ["Default"] = false
+        })
+end)
+
+velo.run(function()
+        local custom_armour: table = {};
+        local custom_armour_c: table = {};
+        local custom_armour_b: table = {};
+        local custom_armour_h: table = {};
+        local custom_armour_p: table = {};
+        hl = function(x)
+                for _, v in next, x:GetDescendants() do
+                        if v:IsA('Highlight') and v.Name == 'Rainbow' then
+                                return true;
+                        end;
+                end;
+                return false;
+        end
+        custom_armour = vape.Categories.Velocity:CreateModule({
+                ["Name"] ='CustomArmour',
+                ["HoverText"] = 'Customizes the color of your armour.',
+                ["Function"] = function(callback: boolean): void
+                        if callback then
+                                local ca = {};
+                                ca.__index = ca;
+                                function ca.n(a : Number, b : Number, c : Number, d : Number, e : Boolean, f : Boolean, g : Boolean)
+                                        local self = setmetatable({}, ca);
+                                        self.a = a;
+                                        self.b = b;
+                                        self.c = c;
+                                        self.d = d;
+                                        self.e = e;
+                                        self.f = f;
+                                        self.g = g;
+                                        return self;
+                                end;
+                                function ca:s()
+                                        local a = self.a;
+                                        local b = self.b;
+                                        local c = self.c;
+                                        local d = self.d;
+                                        local e = self.e;
+                                        local f = self.f;
+                                        local g = self.g;
+                                        local ca_meta = {
+                                                __index = function(self, x)
+                                                        if x == 'on' then
+                                                                return function()
+                                                                        RunLoops:BindToRenderStep('CustomArmour', function()
+                                                                                for _, v in next, lplr.Character:GetChildren() do
+                                                                                        -- if not hl(v) then
+                                                                                                local elelele = v:FindFirstChildOfClass('Highlight')
+                                                                                                if not elelele then
+                                                                                                        if v.Name:find('boot') and e then
+                                                                                                                local h = Instance.new('Highlight');
+                                                                                                                h.Parent = v;
+                                                                                                                h.DepthMode = 'Occluded';
+                                                                                                                h["Enabled"] = callback;
+                                                                                                                h.FillColor = Color3.fromHSV(a, b, c);
+                                                                                                                h.FillTransparency = d;
+                                                                                                                h.Name ='velo_ca_boots';
+                                                                                                                h.OutlineTransparency = 1;
+                                                                                                                h.Adornee = v.Handle;
+                                                                                                        end;
+                                                                                                        if v.Name:find('helmet') and f then
+                                                                                                                local h = Instance.new('Highlight');
+                                                                                                                h.Parent = v;
+                                                                                                                h.DepthMode = 'Occluded';
+                                                                                                                h["Enabled"] = callback;
+                                                                                                                h.FillColor = Color3.fromHSV(a, b, c);
+                                                                                                                h.FillTransparency = d;
+                                                                                                                h.Name ='velo_ca_helmet';
+                                                                                                                h.OutlineTransparency = 1;
+                                                                                                                h.Adornee = v.Handle;
+                                                                                                        end;
+                                                                                                        if v.Name:find('chestplate') and g then
+                                                                                                                local h = Instance.new('Highlight');
+                                                                                                                h.Parent = v;
+                                                                                                                h.DepthMode = 'Occluded';
+                                                                                                                h["Enabled"] = callback;
+                                                                                                                h.FillColor = Color3.fromHSV(a, b, c);
+                                                                                                                h.FillTransparency = d;
+                                                                                                                h.Name ='velo_ca_chestplate';
+                                                                                                                h.OutlineTransparency = 1;
+                                                                                                                h.Adornee = v.Handle;
+                                                                                                        end;
+                                                                                                end
+                                                                                        -- end;
+                                                                                end;
+                                                                        end);                                    
+                                                                end;
+                                                        end;
+                                                end;
+                                        };
+                                        local ca_val = setmetatable({}, ca_meta);
+                                        ca_val:on();
+                                end;
+                                local ca_vd = ca.n(
+                                        custom_armour_c["Hue"],
+                                        custom_armour_c["Sat"],
+                                        custom_armour_c.Val,
+                                        custom_armour_t["Value"],
+                                        custom_armour_b["Enabled"],
+                                        custom_armour_h["Enabled"],
+                                        custom_armour_p["Enabled"]
+                                );
+                                ca_vd:s();
+                        else
+                                local ca = {};
+                                ca.__index = ca;
+                                function ca.n()
+                                        local self = setmetatable({}, ca);
+                                        return self;
+                                end;
+                                function ca:s()
+                                        local ca_meta = {
+                                                __index = function(self, x)
+                                                        if x == 'on' then
+                                                                return function()
+                                                                        --RunLoops:UnbindFromRenderStep('CustomArmour')
+                                                                        for _, v in next, lplr.Character:GetDescendants() do
+                                                                                if v:IsA('Highlight') then
+                                                                                        if v.Name == 'velo_ca_boots' then
+                                                                                                v:Destroy();
+                                                                                        end;
+                                                                                        if v.Name == 'velo_ca_helmet' then
+                                                                                                v:Destroy();
+                                                                                        end;
+                                                                                        if v.Name == 'velo_ca_chestplate' then
+                                                                                                v:Destroy();
+                                                                                        end;
+                                                                                end;
+                                                                        end;
+                                                                end;
+                                                        end;
+                                                end;
+                                        };
+                                        local ca_val = setmetatable({}, ca_meta);
+                                        ca_val:on();
+                                end;
+                                local ca_vd = ca.n();
+                                ca_vd:s();
+                        end;
+                end;
+        });
+        custom_armour_c = custom_armour:CreateColorSlider({
+                ["Name"] ='Color',
+                ["Function"] = function(h, s, v)
+                        custom_armour_c["Hue"] = h;
+                        custom_armour_c["Sat"] = s;
+                        custom_armour_c.Val = v;
+                        if custom_armour["Enabled"] then
+                                for _, v in next, lplr.Character:GetDescendants() do
+                                        if v.Name == 'velo_ca_boots' and v:IsA('Highlight') then
+                                                v.FillColor = Color3.fromHSV(custom_armour_c["Hue"], custom_armour_c["Sat"], custom_armour_c.Val);
+                                        end;
+                                        if v.Name == 'velo_ca_helmet' and v:IsA('Highlight') then
+                                                v.FillColor = Color3.fromHSV(custom_armour_c["Hue"], custom_armour_c["Sat"], custom_armour_c.Val);
+                                        end;
+                                        if v.Name == 'velo_ca_chestplate' and v:IsA('Highlight') then
+                                                v.FillColor = Color3.fromHSV(custom_armour_c["Hue"], custom_armour_c["Sat"], custom_armour_c.Val);
+                                        end;
+                                end;
+                        end;
+                end;
+        });
+        custom_armour_t = custom_armour:CreateSlider({
+                ["Name"] ='Transparency',
+                ["Min"] =0,
+                ["Max"] =100,
+                ["HoverText"] = 'Transparency of the color.',
+                ["Function"] = function() end,
+                ["Double"] =100,
+                ["Default"] =0;
+        });
+        custom_armour_b = custom_armour:CreateToggle({
+                ["Name"] ='Boots',
+                ["HoverText"] = 'Customizes the boots.',
+                ["Function"] = function() end,
+                ["Default"] =true;
+        });
+        custom_armour_h = custom_armour:CreateToggle({
+                ["Name"] ='Helmet',
+                ["HoverText"] = 'Customizes the helmet.',
+                ["Function"] = function() end,
+                ["Default"] =true;
+        });
+        custom_armour_p = custom_armour:CreateToggle({
+                ["Name"] ='Chestplate',
+                ["HoverText"] = 'Customizes the chestplate.',
+                ["Function"] = function() end,
+                ["Default"] =true;
+        });
+end);
+
+velo.run(function()
+	local RemotesConnect: table = {["Enabled"] = false}
+	local RemotesConnectDelay: table = {["Value"] = 10}
+	local RemotesConnectParty: table = {["Enabled"] = true}
+	local RemotesConnectDragon: table = {["Enabled"] = true}
+	local RemotesConnectParty1: table = {["Enabled"] = true}
+	local RemotesConnectDragon1: table = {["Enabled"] = true}
+	local RemoteConnectMelody: table = {["Enabled"] = true}
+	local PartyConnection: any, DragonConnection: any;
+	local MelodyExploit: table = {};
+	local MelodyTick: number = tick();
+	local getguitar = function()
+		for i: any, v: any in replicatedStorage.Inventories:GetChildren() do 
+			if v["Name"] == lplr["Name"] and v:FindFirstChild('guitar') then 
+				return {tool = v.guitar, itemType = 'guitar'};
+			end;
+		end;
+	end;
+
+	RemotesConnect = vape.Categories.Velocity:CreateModule({
+		["Name"] ='RemotesConnect',
+        ["HoverText"] = 'Spams remotes.',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				task.spawn(function()
+					pcall(function()
+						repeat task.wait()
+							if RemoteConnectMelody["Enabled"] then
+								if isAlive(lplr, true) and tick() > MelodyTick and getguitar() and lplr.Character:GetAttribute('Health') < lplr.Character:GetAttribute('MaxHealth') then 
+									bedwars.Client:Get('PlayGuitar'):SendToServer({healTarget = lplr});
+									bedwars.Client:Get('StopPlayingGuitar'):SendToServer();
+									melodytick = tick() + 0.45;
+								end;
+								task.wait();
+							end;
+							if RemotesConnectParty["Enabled"] then
+								bedwars.AbilityController:useAbility('PARTY_POPPER');
+							end;
+							if RemotesConnectDragon["Enabled"] then
+								if RemotesConnectDragon1["Enabled"] then
+									DragonConnection = workspace.ChildAdded:Connect(function(x)
+										if x:IsA'Model' and x.Name == 'DragonBreath' then
+											x:Destroy();
+										end;
+									end);
+								end;
+								bedwars.Client:Get('DragonBreath'):SendToServer({player = lplr});
+							end;
+							task.wait(RemotesConnectDelay["Value"] / 10);
+						until not RemotesConnect["Enabled"];
+					end);
+				end);
+			else
+				if PartyConnection then
+					PartyConnection:Disconnect();
+				end;
+				if DragonConnection then
+					DragonConnection:Disconnect();
+				end;
+			end
+		end,
+        ["Default"] =false
+	})
+	RemotesConnectDelay = RemotesConnect:CreateSlider({
+		["Name"] ='Delay',
+		["Min"] =0,
+		["Max"] =50,
+		["HoverText"] = 'Delay to Spam the Remotes',
+		["Function"] = function() end,
+		["Default"] =10
+	})
+	RemoteConnectMelody = RemotesConnect:CreateToggle({
+		["Name"] ='Melody',
+		["HoverText"] = 'Spams the Melody Remote',
+		["Function"] = function() end,
+		["Default"] =true
+	})
+	RemotesConnectParty = RemotesConnect:CreateToggle({
+		["Name"] ='Party Popper',
+		["HoverText"] = 'Spams the Party Popper Remote',
+		["Function"] = function() end,
+		["Default"] =true
+	})
+	RemotesConnectDragon = RemotesConnect:CreateToggle({
+		["Name"] ='Dragon',
+		["HoverText"] = 'Spams the Dragon Breath Remote',
+		["Function"] = function() end,
+		["Default"] =true
+	})
+	RemotesConnectDragon1 = RemotesConnect:CreateToggle({
+		["Name"] ='Hide Dragon',
+		["HoverText"] = 'Hides the Dragon Breath Effect (CS)',
+		["Function"] = function() end,
+		["Default"] =true
+	})
+end)
+
+velo.run(function()
+	local custom_char: table = {["Enabled"] = false};
+	local custom_char_headless: table = {["Enabled"] = false};
+	local custom_char_fc: table = {};
+	local custom_char_oc: table = {};
+	local custom_char_ft: table = {};
+	local custom_char_ot: table = {};
+	local y, z, z1 = nil, nil, nil;
+	local function isAlive(v: Player): Boolean
+		if v.Character and v.Character:FindFirstChild("Humanoid") then
+			if v.Character.Humanoid.Health > 0 and v.Character:FindFirstChild("HumanoidRootPart") then
+				return true;
+			end;
+		end;
+		return false;
+	end;
+	custom_char = vape.Categories.Velocity:CreateModule({
+		Name = 'CustomCharacter',
+		HoverText = 'Customizes your character.',
+		Function = function(callback)
+			if callback then
+				if custom_char_headless["Enabled"] then
+					task.spawn(function()
+						repeat task.wait()
+							local old: any, yz: any = nil, nil;
+							local x: any = old;
+							if isAlive(lplr) and lplr.Character and lplr.Character:FindFirstChild("Head") then
+								lplr["Character"]["Head"]["Transparency"] = 1
+								y = lplr["Character"]["Head"]:FindFirstChild('face');
+								if yz then
+									old = yz;
+									y1["Parent"] = workspace;
+								end;
+								for _, v in pairs(lplr.Character:GetChildren()) do
+									if v:IsA'Accessory' then
+										v["Handle"]["Transparency"] = 0;
+									end;
+								end;
+							end;
+						until not custom_char_headless["Enabled"];
+					end);
+				else
+					lplr["Character"]["Head"]["Transparency"] = 0;
+					for _, v in pairs(lplr.Character:GetChildren()) do
+						if v:IsA'Accessory' then
+							v["Handle"]["Transparency"] = 0;
+						end;
+					end;
+					if old then
+						old["Parent"] = entitylib["character"]["Head"];
+						old = x;
+					end;
+				end;
+				pcall(function()
+					local cc = {};
+					cc.__index = cc;
+					function cc.n(a, b, c, d, e, f, g, h)
+						local self = setmetatable({}, cc);
+						self.a = a;
+						self.b = b;
+						self.c = c;
+						self.d = d;
+						self.e = e;
+						self.f = f;
+						self.g = g;
+						self.h = h;
+						return self;
+					end
+					function cc:s()
+						local a = self.a;
+						local b = self.b;
+						local c = self.c;
+						local d = self.d;
+						local e = self.e;
+						local f = self.f;
+						local g = self.g;
+						local h1 = self.h;
+						local cc_meta = {
+							__index = function(self, x)
+								if x == 'on' then
+									return function()
+										local h = Instance.new('Highlight');
+										h.Parent = lplr.Character;
+										h.DepthMode = 'Occluded';
+										h.Enabled = callback;
+										h.FillColor = Color3.fromHSV(a, b, c);
+										h.FillTransparency = g / 100;
+										h.Name = 'velo_cc';
+										h.OutlineColor = Color3.fromHSV(d, e, f);
+										h.OutlineTransparency = h1 / 100;
+										h.Adornee = lplr.Character;
+										z = lplr.CharacterAdded:Connect(function()
+											z1 = lplr.Character.ChildAdded:Connect(function(x)
+												local h = Instance.new('Highlight');
+												h.Parent = x;
+												h.DepthMode = 'Occluded';
+												h["Enabled"] = callback;
+												h.FillColor = Color3.fromHSV(a, b, c);
+												h.FillTransparency = g / 100;
+												h.Name = 'velo_cc';
+												h.OutlineColor = Color3.fromHSV(d, e, f);
+												h.OutlineTransparency = h1 / 100;
+												h.Adornee = x;
+											end);
+										end);
+									end;
+								end;
+							end;
+						};
+						local cc_val = setmetatable({}, cc_meta);
+						cc_val:on();
+					end;
+					local cc_vd = cc.n(
+						custom_char_fc.Hue,
+						custom_char_fc.Sat,
+						custom_char_fc.Val,
+						custom_char_oc.Hue,
+						custom_char_oc.Sat,
+						custom_char_oc.Val,
+						custom_char_ft.Value,
+						custom_char_ot.Value
+					)
+					cc_vd:s();
+				end)
+			else
+				local cc = {};
+				cc.__index = cc;
+				function cc.n()
+					local self = setmetatable({}, cc);
+					return self;
+				end;
+				function cc:s()
+					local cc_meta = {
+						__index = function(self, x)
+							if x == 'on' then
+								return function()
+									if z then
+										z:Disconnect();
+									end;
+									if z1 then
+										z1:Disconnect();
+									end;
+									for _, v in next, lplr.Character:GetDescendants() do
+										if v:IsA('Highlight') then
+											v:Destroy();
+										end;
+									end;
+								end;
+							end;
+						end;
+					};
+					local cc_val = setmetatable({}, cc_meta);
+					cc_val:on();
+				end;
+				local cc_vd = cc.n();
+				cc_vd:s();
+			end;
+		end;
+	});
+	custom_char_fc = custom_char:CreateColorSlider({
+		["Name"] = 'Fill Color',
+		["HoverText"] = 'Color to fill your character.',
+		["Function"] = function(h, s, v) 
+			custom_char_fc.Hue = h;
+			custom_char_fc.Sat = s;
+			custom_char_fc.Val = v;
+			if custom_char["Enabled"] then
+				for _, v in next, lplr.Character:GetDescendants() do
+					if v:IsA('Highlight') then
+						v.FillColor = Color3.fromHSV(custom_char_fc.Hue, custom_char_fc.Sat, custom_char_fc.Val);
+					end;
+				end;
+			end;
+		end;
+	});
+	custom_char_oc = custom_char:CreateColorSlider({
+		["Name"] = 'Outline Color',
+		["HoverText"] = 'Color to outline your character.',
+		["Function"] = function(h, s, v) 
+			custom_char_oc.Hue = h;
+			custom_char_oc.Sat = s;
+			custom_char_oc.Val = v;
+			if custom_char["Enabled"] then
+				for _, v in next, lplr.Character:GetDescendants() do
+					if v:IsA('Highlight') then
+						v.OutlineColor = Color3.fromHSV(custom_char_oc.Hue, custom_char_oc.Sat, custom_char_oc.Val);
+					end;
+				end;
+			end;
+		end;
+	});
+	custom_char_ft = custom_char:CreateSlider({
+		["Name"] = 'Fill Transparency',
+		["Min"] = 0,
+		["Max"] = 100,
+		["HoverText"] = 'Transparency of the character color fill.',
+		["Function"] = function(val)
+			if custom_char["Enabled"] then
+				for _, v in next, lplr.Character:GetDescendants() do
+					if v:IsA('Highlight') then
+						v.FillTransparency = val / 100;
+					end;
+				end;
+			end;
+		end,
+		["Default"] = 50
+	});
+	custom_char_ot = custom_char:CreateSlider({
+		["Name"] = 'Outline Transparency',
+		["Min"] = 0,
+		["Max"] = 100,
+		["HoverText"] = 'Transparency of the character outline fill.',
+		["Function"] = function(val)
+			if custom_char["Enabled"] then
+				for _, v in next, lplr.Character:GetDescendants() do
+					if v:IsA('Highlight') then
+						v.OutlineTransparency = val / 100;
+					end;
+				end;
+			end;
+		end,
+		["Default"] = 0
+	});
+	custom_char_headless = custom_char:CreateToggle({
+		["Name"] = "Headless",
+		["HoverText"] = "Gives you headless",
+		["Function"] = function() end
+	});
+end);
+
+velo.run(function()
+    	local shaders: table = {};
+	local shaders_m: table = {};
+	local shaders_l: table = {};
+	local shaders_t: table = {};
+	shaders = vape.Categories.Velocity:CreateModule({
+		["Name"] ='Shaders',
+        	["HoverText"] = 'Makes the game\'s shaders better.',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				local s: table = {};
+				s.__index = s;
+				function s.new(a : Number, b : Boolean, c : Boolean, d : Number)
+					local self = setmetatable({}, s);
+					self.a = a;
+					self.b = b;
+					self.c = c;
+					self.d = d;
+					return self;
+				end;
+				function s:start()
+					local a = self.a;
+					local b = self.b;
+					local c = self.c;
+					local d = self.d;
+					local s_meta = {
+						__index = function(self, x)
+							self.r = workspace.Terrain;
+							if x == 'on' then
+								return function()
+									task.spawn(function()
+										if a == 'Realistic' then
+											if b then
+												local color_correction = Instance.new('ColorCorrectionEffect');
+												local sunRays = Instance.new('SunRaysEffect');
+												local blur = Instance.new('BlurEffect');
+												local sky = Instance.new('Sky');
+												local atmosphere = Instance.new('Atmosphere');
+												local clouds = Instance.new('Clouds');
+												for _, v in next, lightingService:GetChildren() do
+													if v:IsA('PostEffect') then
+														v:Destroy();
+													elseif v:IsA('Sky') or v:IsA('Atmosphere') then
+														v:Destroy();
+													end;
+												end;
+												lightingService.Brightness = d + 1;
+												lightingService.EnvironmentDiffuseScale = d + 0.2;
+												lightingService.EnvironmentSpecularScale = d + 0.82;
+												sunRays.Parent = lightingService;
+												atmosphere.Parent = lightingService;
+												sky.Parent = lightingService;
+												blur.Size = d + 3.921;
+												blur.Parent = lightingService;
+												color_correction.Parent = lightingService;
+												color_correction.Saturation = d + 0.092;
+												clouds.Parent = self.r;
+												clouds.Cover = d + 0.4;									
+											end;
+											if c then
+												self.r.WaterTransparency = d + 1;
+												self.r.WaterReflectance = d + 1;
+											end;
+										else
+											if b then
+												local blur: BlurEffect = Instance.new('BlurEffect', lightingService);
+												local color: ColorCorrectionEffect = Instance.new('ColorCorrectionEffect', lightingService);
+												local clouds: Clouds = Instance.new('Clouds', self.r);
+												local sun: SunRaysEffect = Instance.new('SunRaysEffect', lightingService);
+												local sky: Sky = Instance.new('Sky', lightingService);
+												local atmosphere: Atmosphere = Instance.new('Atmosphere', lightingService);
+												for _, v in next, lightingService:GetChildren() do
+													if v:IsA('PostEffect') or v:IsA('Sky') or v:IsA('Atmosphere') then
+														v:Destroy();
+													end;
+												end;
+												blur.Size = d + 3.9;
+												color.Saturation = d + 0.09;
+												clouds.Cover = d + 0.4;
+												lightingService.Brightness = d + 1;
+												lightingService.EnvironmentDiffuseScale = d + 0.2;
+												lightingService.EnvironmentSpecularScale = d + 0.8;
+											end;
+										end;
+										if c then
+											self.r.WaterTransparency = d + 1;
+											self.r.WaterReflectance = d + 1;
+										end;
+										--[[if GuiLibrary.ObjectsThatCanBeSaved.AtmosphereOptionsButton.Api.Enabled then
+											GuiLibrary.ObjectsThatCanBeSaved.AtmosphereOptionsButton.Api.ToggleButton();
+										end;
+										task.wait();
+										GuiLibrary.ObjectsThatCanBeSaved.AtmosphereOptionsButton.Api.ToggleButton(true);
+										if GuiLibrary.ObjectsThatCanBeSaved.LuminescentsOptionsButton.Api.Enabled then
+											GuiLibrary.ObjectsThatCanBeSaved.LuminescentsOptionsButton.Api.ToggleButton();
+										end;
+										task.wait();
+										GuiLibrary.ObjectsThatCanBeSaved.LuminescentsOptionsButton.Api.ToggleButton(true);
+
+										]]--
+									end);
+								end;
+							end;
+						end;
+					};
+					local s_val = setmetatable({}, s_meta);
+					s_val:on();
+				end;
+				local s_vd = s.new(
+					shaders_m["Value"],
+					shaders_l["Enabled"],
+					shaders_t["Enabled"], 0
+				);
+				s_vd:start();
+			end
+		end,
+        	["Default"] = false,
+        	["ExtraText"] = function()
+            		return shaders_m["Value"];
+        	end;
+	})
+	shaders_m = shaders:CreateDropdown({
+		["Name"] ='Mode',
+		["List"] = {
+			'Realistic',
+			'Clean'
+		},
+		["Default"] ='Realistic',
+		["HoverText"] = 'Mode to render the shaders.',
+		["Function"] = function() end
+	})
+	shaders_l = shaders:CreateToggle({
+		["Name"] ='Lighting',
+		["HoverText"] = 'Applies changes to the lighting.',
+		["Function"] = function() end,
+		["Default"] =true
+	})
+	shaders_t = shaders:CreateToggle({
+		["Name"] ='Terrain',
+		["HoverText"] = 'Applies changes to the terrain.',
+		["Function"] = function() end,
+		["Default"] =true
+	})
+end)
+
+elo.run(function()
+	local CustomClouds: table = {["Enabled"] = false}
+    	local Material: table = {["Value"] = "Neon"}
+	local Color: table = {
+		["Hue"] = 0,
+		["Sat"] = 0,
+		["Value"] = 0
+	}
+	local Trans: table = {["Value"] = 0}
+    	local Old: table = {["Clouds"] = workspace:FindFirstChild("Clouds"):GetChildren()}
+	CustomClouds = vape.Categories.Velocity:CreateModule({
+		["Name"] = "CustomClouds",
+        	["HoverText"] = HoverText("Customizes the clouds."),
+		["Function"] = function(callback: boolean): void
+			if callback then
+				task.spawn(function()
+					for _, v in next, Old["Clouds"] do
+						if v:IsA("Part") then
+							v["Transparency"] = Trans["Value"] / 100
+							v["Color"] = Color3["fromHSV"](Color["Hue"], Color["Sat"], Color["Value"])
+                            				v["Material"] = Enum["Material"][Material["Value"]]
+						end
+					end
+				end)
+			else
+				task.spawn(function()
+					for _, v in next, Old["Clouds"] do
+						if v:IsA("Part") then
+							v["Transparency"] = 0
+							v["Color"] = Color3["fromRGB"](255, 255, 255)
+							v["Material"] = Enum["Material"]["SmoothPlastic"]
+						end
+					end
+				end)
+			end
+		end,
+        	["Default"] = false,
+        	["ExtraText"] = function()
+            		return Material["Value"]
+        	end
+	})
+    	Material = CustomClouds:CreateDropdown({
+		["Name"] = "Material",
+		["List"] = GetItems("Material"),
+        	["Default"] = "Neon",
+		["HoverText"] = HoverText("Material of the clouds."),
+		["Function"] = function(val)
+			if CustomClouds["Enabled"] then
+                		task.spawn(function()
+					for _, v in next, Old["Clouds"] do
+						if v:IsA("Part") then
+				            		v["Material"] = Enum["Material"][val]
+                        			end
+                    			end
+                		end)
+			end
+		end
+	})
+	Color = CustomClouds:CreateColorSlider({
+		["Name"] = "Color",
+        	["HoverText"] = HoverText("Color of the clouds."),
+		["Function"] = function()
+			if CustomClouds["Enabled"] then
+                		task.spawn(function()
+					for _, v in next, Old["Clouds"] do
+						if v:IsA("Part") then
+				            		v["Color"] = Color3["fromHSV"](Color["Hue"], Color["Sat"], Color["Value"])
+                        			end
+                    			end
+                		end)
+			end
+		end
+	})
+	Trans = CustomClouds:CreateSlider({
+		["Name"] = "Transparency",
+		["Min"] = 0,
+		["Max"] = 100,
+        	["HoverText"] = HoverText("Transparency of the clouds."),
+		["Function"] = function(val)
+			if CustomClouds["Enabled"] then
+                		task.spawn(function()
+					for _, v in next, Old["Clouds"] do
+						if v:IsA("Part") then
+				            		v["Transparency"] = val / 100
+                        			end
+                    			end
+                		end)
+			end
+		end,
+        	["Default"] = 0
+	})
+end)
+
+velo.run(function()
+	local NoNameTag: table = {["Enabled"] = false}
+	NoNameTag = vape.Categories.Velocity:CreateModule({
+		["Name"] ='NoNameTag',
+        	["HoverText"] = 'Removes your NameTag.',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				RunLoops:BindToHeartbeat('NoNameTag', function()
+					pcall(function()
+						lplr.Character.Head.Nametag:Destroy()
+					end)
+				end)
+			else
+				RunLoops:UnbindFromHeartbeat('NoNameTag')
+			end
+		end,
+        	["Default"] =false
+	})
+end)
+
+velo.run(function()
+    local FeedRemover: table = {["Enabled"] = false}
+	local function SetFeed(Boolean: boolean): void
+		local suc, res = pcall(function()
+			lplr["PlayerGui"]["KillFeedGui"]["Enabled"] = Boolean
+		end)
+		if not suc then
+			repeat task.wait(0) until lplr["PlayerGui"]["KillFeedGui"]
+			lplr["PlayerGui"]["KillFeedGui"]["Enabled"] = Boolean
+		end
+	end
+	FeedRemover = vape.Categories.Velocity:CreateModule({
+		["Name"] = "FeedRemover",
+        	["HoverText"] = HoverText("Removes the kill feed interface."),
+		["Function"] = function(callback: boolean): void
+			if callback then
+				SetFeed(false)
+			else
+				SetFeed(true)
+			end
+		end,
+        	["Default"] = false
+	})
+end)
+
+velo.run(function()
+	do
+		nan = function(x)
+			return x == x;
+		end;
+		local continue = nan(gameCamera:ScreenPointToRay(0, 0).Origin.x);
+		while not continue do
+			runService.RenderStepped:wait();
+			continue = nan(gameCamera:ScreenPointToRay(0, 0).Origin.x);
+		end;
+	end;
+	local binds: table = {};
+	local root: Folder = Instance.new('Folder');
+	root.Parent = gameCamera;
+	root.Name ='neon';
+	local gen_uid;
+	do
+		local id = 0;
+		gen_uid = function()
+			id += 1;
+			return 'neon::' .. tostring(id);
+		end;
+	end;
+	local draw_qd;
+	do
+		local acos, max, pi, sqrt = math.acos, math.max, math.pi, math.sqrt;
+		local sz = 0.2;
+		draw_tr = function(v1, v2, v3, p0, p1)
+			local s1 = (v1 - v2).Magnitude;
+			local s2 = (v2 - v3).Magnitude;
+			local s3 = (v3 - v1).Magnitude;
+			local smax =max(s1, s2, s3);
+			local A, B, C;
+			if s1 == smax then
+				A, B, C = v1, v2, v3;
+			elseif s2 == smax then
+				A, B, C = v2, v3, v1;
+			elseif s3 == smax then
+				A, B, C = v3, v1, v2;
+			end;
+			local para = ((B - A).x * (C - A).x + (B - A).y * (C - A).y + (B - A).z * (C - A).z ) / (A - B).Magnitude;
+			local perp = sqrt((C - A).Magnitude ^ 2 - para * para);
+			local dif_para = (A - B).Magnitude - para;
+			local st = CFrame.new(B, A);
+			local za = CFrame.Angles(pi / 2, 0, 0);
+			local cf0 = st;
+			local Top_Look = (cf0 * za).LookVector;
+			local Mid_Point = A + CFrame.new(A, B).LookVector * para;
+			local Needed_Look = CFrame.new(Mid_Point, C).LookVector;
+			local dot = Top_Look.x * Needed_Look.x + Top_Look.y * Needed_Look.y + Top_Look.z * Needed_Look.z;
+			local ac = CFrame.Angles(0, 0, acos(dot));
+			cf0 *= ac;
+			if ((cf0 * za).LookVector - Needed_Look).Magnitude > 0.01 then
+				cf0 = cf0 * CFrame.Angles(0, 0, -2 * acos(dot));
+			end;
+			cf0 = cf0 * CFrame.Angles(0, perp / 2, -(dif_para + para / 2));
+			local cf1 = st * ac * CFrame.Angles(0, pi, 0)
+			if ((cf1 * za).LookVector - Needed_Look).Magnitude > 0.01 then
+				cf1 = cf1 * CFrame.Angles(0, 0, 2*acos(dot))
+			end
+			cf1 = cf1 * CFrame.new(0, perp / 2, dif_para / 2);
+			if not p0 then
+				p0 = Instance.new('Part');
+				p0.FormFactor = 'Custom';
+				p0.TopSurface = 0;
+				p0.BottomSurface = 0;
+				p0.Anchored = true;
+				p0.CanCollide = false;
+				p0.Material = 'Glass';
+				p0.Size = Vec3(sz, sz, sz);
+				local mesh = Instance.new('SpecialMesh');
+				mesh.Parent = p0;
+				mesh.MeshType = 2;
+				mesh.Name ='WedgeMesh';
+			end;
+			p0.WedgeMesh.Scale = Vec3(0, perp / sz, para / sz);
+			p0.CFrame = cf0;
+			if not p1 then
+				p1 = p0:clone();
+			end;
+			p1.WedgeMesh.Scale = Vec3(0, perp / sz, dif_para / sz);
+			p1.CFrame = cf1;
+			return p0, p1;
+		end;
+		draw_qd = function(v1, v2, v3, v4, parts)
+			parts[1], parts[2] = draw_tr(v1, v2, v3, parts[1], parts[2]);
+			parts[3], parts[4] = draw_tr(v3, v2, v4, parts[3], parts[4]);
+		end;
+	end;
+	bind_fr = function(frame, properties)
+		if binds[frame] then
+			return binds[frame].parts;
+		end;
+		local uid = gen_uid();
+		local parts = {};
+		local f = Instance.new('Folder');
+		f.Parent = root;
+		f.Name =frame.Name;
+		local parents = {};
+		do
+			add = function(child)
+				if child:IsA('GuiObject') then
+					parents[#parents + 1] = child;
+					add(child.Parent);
+				end;
+			end;
+			add(frame);
+		end;
+		upd_ort = function(fetchProps)
+			local zIndex = 1 - 0.05 * frame.ZIndex;
+			local tl, br = frame.AbsolutePosition, frame.AbsolutePosition + frame.AbsoluteSize;
+			local tr, bl = Vec2(br.x, tl.y), Vec2(tl.x, br.y);
+			do
+				local rot = 0;
+				for _, v in next, parents do
+					rot += v.Rotation;
+				end;
+				if rot ~= 0 and rot%180 ~= 0 then
+					local mid = tl:lerp(br, 0.5);
+					local s, c = math.sin(math.rad(rot)), math.cos(math.rad(rot));
+					local vec = tl;
+					tl = Vec2(c*(tl.x - mid.x) - s*(tl.y - mid.y), s*(tl.x - mid.x) + c*(tl.y - mid.y)) + mid;
+					tr = Vec2(c*(tr.x - mid.x) - s*(tr.y - mid.y), s*(tr.x - mid.x) + c*(tr.y - mid.y)) + mid;
+					bl = Vec22(c*(bl.x - mid.x) - s*(bl.y - mid.y), s*(bl.x - mid.x) + c*(bl.y - mid.y)) + mid;
+					br = Vec2(c*(br.x - mid.x) - s*(br.y - mid.y), s*(br.x - mid.x) + c*(br.y - mid.y)) + mid;
+				end;
+			end;
+			draw_qd(
+				gameCamera:ScreenPointToRay(tl.x, tl.y, zIndex).Origin, 
+				gameCamera:ScreenPointToRay(tr.x, tr.y, zIndex).Origin, 
+				gameCamera:ScreenPointToRay(bl.x, bl.y, zIndex).Origin, 
+				gameCamera:ScreenPointToRay(br.x, br.y, zIndex).Origin, 
+				parts
+			);
+			if fetchProps then
+				for _, pt in next, parts do
+					pt.Parent = f;
+				end;
+				for propName, propValue in pairs(properties) do
+					for _, pt in pairs(parts) do
+						pt[propName] = propValue;
+					end;
+				end;
+			end;
+		end;
+		upd_ort(true);
+		runService:BindToRenderStep(uid, 2000, upd_ort);
+		binds[frame] = {
+			uid = uid;
+			parts = parts;
+		};
+		return binds[frame].parts;
+	end
+	local fod: any;
+	local ScreenGui2: any;
+	local statsModule: table = {}
+	statsModule = vape.Categories.Velocity:CreateModule({
+		["Name"] ='Stats',
+		["HoverText"] = 'An UI that shows your current stats.',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				if store.matchState == 0 then
+				    notif('Velocity', 'Waiting for the game to load.', 5, "warn");
+				end;
+				repeat task.wait() until game:IsLoaded() and store.matchState ~= 0
+				local deathCount: number = 0;
+				task.spawn(function()
+					local canAddDeath: boolean = true;
+					repeat 
+						if not isAlive(lplr, true) and canAddDeath then
+							deathCount += 1
+							canAddDeath = false
+						elseif isAlive(lplr, true) then
+							canAddDeath = true
+						end
+						task.wait()
+					until not statsModule["Enabled"]
+				end)
+				lplr.PlayerGui.TopBarAppGui.TopBarApp["2"].Visible = false
+				ScreenGui2 = Instance.new("ScreenGui")
+				local Frame: Frame = Instance.new("Frame")
+				local UICorner: UICorner = Instance.new("UICorner")
+				local TextLabel: TextLabel = Instance.new("TextLabel")
+				local ImageLabel: ImageLabel = Instance.new("ImageLabel")
+				local blur: Frame = Instance.new("Frame")
+				local Frame_2: Frame = Instance.new("Frame")
+				local UICorner_2: UICorner = Instance.new("UICorner")
+				local TextLabel_2: TextLabel = Instance.new("TextLabel")
+				local TextLabel_3: TextLabel = Instance.new("TextLabel")
+				local TextLabel_4: TextLabel = Instance.new("TextLabel")
+				local Frame_3: Frame = Instance.new("Frame")
+				local UICorner_3: UICorner = Instance.new("UICorner")
+				local Frame_4: Frame = Instance.new("Frame")
+				local UICorner_4: UICorner = Instance.new("UICorner")
+				local TextLabel_5: TextLabel = Instance.new("TextLabel")
+				local TextLabel_6: TextLabel = Instance.new("TextLabel")
+				local blur_2: Frame = Instance.new("Frame")
+				
+				ScreenGui2.Parent = game:GetService("CoreGui")
+				ScreenGui2.ResetOnSpawn = false
+				
+				Frame.Parent = ScreenGui2
+				Frame.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+				Frame.BackgroundTransparency = 0.200
+				-- Frame.Position = UDim2.new(0.00792682916, 0, 0.0160493832, 0)
+				Frame.Position = UDim2.new(0.00792682916, 0, 0.3, 0)
+				Frame.Size = UDim2.new(0, 256, 0, 45)
+				
+				UICorner.Parent = Frame
+				
+				TextLabel.Parent = Frame
+				TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				TextLabel.BackgroundTransparency = 1.000
+				TextLabel.Position = UDim2.new(0.19921875, 0, 0.355555564, 0)
+				TextLabel.Size = UDim2.new(0, 139, 0, 13)
+				TextLabel.Font = Enum.Font.GothamBlack
+				TextLabel.Text = "Velocity"
+				TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+				TextLabel.TextScaled = true
+				TextLabel.TextSize = 14.000
+				TextLabel.TextWrapped = true
+				TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+				
+				ImageLabel.Parent = Frame
+				ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				ImageLabel.BackgroundTransparency = 1.000
+				ImageLabel.Position = UDim2.new(0.0625, 0, 0.266666681, 0)
+				ImageLabel.Size = UDim2.new(0, 20, 0, 20)
+				ImageLabel.Image = "rbxassetid://14314898887"
+				
+				blur.Name ="blur"
+				blur.Parent = Frame
+				blur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				blur.BackgroundTransparency = 1.000
+				blur.BorderColor3 = Color3.fromRGB(0, 0, 0)
+				blur.BorderSizePixel = 0
+				blur.Position = UDim2.new(0.03125, 0, 0.13333334, 0)
+				blur.Size = UDim2.new(0, 240, 0, 33)
+				
+				Frame_2.Parent = ScreenGui2
+				Frame_2.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+				Frame_2.BackgroundTransparency = 0.200
+				Frame_2.Position = UDim2.new(0.00792682916, 0, 0.37, 0)
+				Frame_2.Size = UDim2.new(0, 256, 0, 132)
+				
+				UICorner_2.Parent = Frame_2
+				
+				TextLabel_2.Parent = Frame_2
+				TextLabel_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				TextLabel_2.BackgroundTransparency = 1.000
+				TextLabel_2.Position = UDim2.new(0.0625, 0, 0.121802919, 0)
+				TextLabel_2.Size = UDim2.new(0, 186, 0, 13)
+				TextLabel_2.Font = Enum.Font.GothamBlack
+				TextLabel_2.Text = "SESSION INFORMATION"
+				TextLabel_2.TextColor3 = Color3.fromRGB(94, 94, 94)
+				TextLabel_2.TextScaled = true
+				TextLabel_2.TextSize = 14.000
+				TextLabel_2.TextWrapped = true
+				TextLabel_2.TextXAlignment = Enum.TextXAlignment.Left
+				
+				TextLabel_3.Parent = Frame_2
+				TextLabel_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				TextLabel_3.BackgroundTransparency = 1.000
+				TextLabel_3.Position = UDim2.new(0.0625, 0, 0.329350114, 0)
+				TextLabel_3.Size = UDim2.new(0, 186, 0, 19)
+				TextLabel_3.Font = Enum.Font.GothamBlack
+				TextLabel_3.Text = lplr.PlayerGui.TopBarAppGui.TopBarApp["2"]["5"].ContentText
+				TextLabel_3.TextColor3 = Color3.fromRGB(255, 255, 255)
+				TextLabel_3.TextScaled = true
+				TextLabel_3.TextSize = 14.000
+				TextLabel_3.TextWrapped = true
+				TextLabel_3.TextXAlignment = Enum.TextXAlignment.Left
+				
+				TextLabel_4.Parent = Frame_2
+				TextLabel_4.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				TextLabel_4.BackgroundTransparency = 1.000
+				TextLabel_4.Position = UDim2.new(0.111000001, 0, 0.470999986, 0)
+				TextLabel_4.Size = UDim2.new(0, 186, 0, 12)
+				TextLabel_4.Font = Enum.Font.GothamMedium
+				TextLabel_4.Text = "TIME PLAYED"
+				TextLabel_4.TextColor3 = Color3.fromRGB(106, 106, 106)
+				TextLabel_4.TextScaled = true
+				TextLabel_4.TextSize = 14.000
+				TextLabel_4.TextWrapped = true
+				TextLabel_4.TextXAlignment = Enum.TextXAlignment.Left
+				
+				Frame_3.Parent = Frame_2
+				Frame_3.BackgroundColor3 = Color3.fromRGB(0, 255, 140)
+				Frame_3.Position = UDim2.new(0, 17, 0.497999996, 0)
+				Frame_3.Size = UDim2.new(0, 5, 0, 5)
+				
+				UICorner_3.CornerRadius = UDim.new(1, 0)
+				UICorner_3.Parent = Frame_3
+				
+				Frame_4.Parent = Frame_2
+				Frame_4.BackgroundColor3 = Color3.fromRGB(255, 33, 33)
+				Frame_4.Position = UDim2.new(0, 17, 0.814999998, 0)
+				Frame_4.Size = UDim2.new(0, 5, 0, 5)
+				
+				UICorner_4.CornerRadius = UDim.new(1, 0)
+				UICorner_4.Parent = Frame_4
+				
+				TextLabel_5.Parent = Frame_2
+				TextLabel_5.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				TextLabel_5.BackgroundTransparency = 1.000
+				TextLabel_5.Position = UDim2.new(0.111000001, 0, 0.788999975, 0)
+				TextLabel_5.Size = UDim2.new(0, 186, 0, 12)
+				TextLabel_5.Font = Enum.Font.GothamMedium
+				TextLabel_5.Text = "DEATHS"
+				TextLabel_5.TextColor3 = Color3.fromRGB(106, 106, 106)
+				TextLabel_5.TextScaled = true
+				TextLabel_5.TextSize = 14.000
+				TextLabel_5.TextWrapped = true
+				TextLabel_5.TextXAlignment = Enum.TextXAlignment.Left
+				
+				TextLabel_6.Parent = Frame_2
+				TextLabel_6.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				TextLabel_6.BackgroundTransparency = 1.000
+				TextLabel_6.Position = UDim2.new(0.0625, 0, 0.646102548, 0)
+				TextLabel_6.Size = UDim2.new(0, 186, 0, 19)
+				TextLabel_6.Font = Enum.Font.GothamBlack
+				TextLabel_6.Text = deathCount
+				TextLabel_6.TextColor3 = Color3.fromRGB(255, 255, 255)
+				TextLabel_6.TextScaled = true
+				TextLabel_6.TextSize = 14.000
+				TextLabel_6.TextWrapped = true
+				TextLabel_6.TextXAlignment = Enum.TextXAlignment.Left
+				
+				blur_2.Name ="blur"
+				blur_2.Parent = Frame_2
+				blur_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				blur_2.BackgroundTransparency = 1.000
+				blur_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
+				blur_2.BorderSizePixel = 0
+				blur_2.Position = UDim2.new(0.03125, 0, 0.0454545468, 0)
+				blur_2.Size = UDim2.new(0, 241, 0, 120)
+				
+				fod = Instance.new("DepthOfFieldEffect", game:GetService("Lighting"))
+				fod.Enabled = true
+				fod.FarIntensity = 0
+				fod.FocusDistance = 51.6
+				fod.InFocusRadius = 50
+				fod.NearIntensity = 1
+				
+				task.spawn(function()
+					repeat
+						task.wait()
+						TextLabel_6.Text = deathCount
+						TextLabel_3.Text = lplr.PlayerGui.TopBarAppGui.TopBarApp["2"]["5"].ContentText
+					until not callback
+				end)
+				
+				bind_fr(blur, {
+					Transparency = 0.98;
+					BrickColor = BrickColor.new("Institutional white");
+				})
+				bind_fr(blur_2, {
+					Transparency = 0.98;
+					BrickColor = BrickColor.new("Institutional white");
+				}) 
+			else
+				ScreenGui2:Destroy()      
+				lplr.PlayerGui.TopBarAppGui.TopBarApp["2"].Visible = true;      
+			end
+		end
+	})
+end)
+
+velo.run(function()
+	local Card: table = {["Enabled"] = false};
+	local CardGradient: table = {["Enabled"] = false};
+	local Highlight: table = {};
+	local HighlightColor: table = {};
+	local CardColor: table = {};
+	local CardColor2: table = {};
+	local Object: table = {};
+	local Round: table = {};
+	local CardFunc: () -> () = function()
+		if not lplr.PlayerGui:FindFirstChild('QueueApp') and Card["Enabled"] then 
+			return;
+		end;
+		local card: Frame = lplr.PlayerGui.QueueApp:WaitForChild('1', math.huge);
+		local corners: UICorner = card:FindFirstChildOfClass('UICorner') or Instance.new('UICorner', card);
+		corners.CornerRadius = UDim.new(0, Round["Value"]);
+		card.BackgroundColor3 = Color3.fromHSV(CardColor["Hue"], CardColor["Sat"], CardColor["Value"]);
+        if not table.find(Object, corners) then
+            table.insert(Object, corners);
+        end;
+		if Highlight["Enabled"] then 
+			local stroke: UIStroke? = card:FindFirstChildOfClass('UIStroke') or Instance.new('UIStroke', card);
+			stroke.Thickness = 1.7;
+			stroke.Color = Color3.fromHSV(HighlightColor["Hue"], HighlightColor["Sat"], HighlightColor["Value"]);
+			if not table.find(Object, stroke) then
+				table.insert(Object, stroke);
+			end;
+		else
+			local stroke: UIStroke? = card:FindFirstChildOfClass("UIStroke") or Instance.new('UIStroke', card);
+            if stroke then
+                stroke:Destroy();
+            end;
+		end;
+		if CardGradient["Enabled"] then
+			card.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+			local gradient: UIGradient = card:FindFirstChildWhichIsA('UIGradient') or Instance.new('UIGradient', card);
+			gradient.Color = ColorSequence.new({
+				[1] = ColorSequenceKeypoint.new(0, Color3.fromHSV(CardColor["Hue"], CardColor["Sat"], CardColor["Value"])), 
+				[2] = ColorSequenceKeypoint.new(1, Color3.fromHSV(CardColor2["Hue"], CardColor2["Sat"], CardColor2["Value"]))
+			});
+			if not table.find(Object, gradient) then
+				table.insert(Object, gradient);
+			end;
+		end;
+	end;
+	Card = vape.Legit:CreateModule({
+		["Name"] = 'QueueCardVisuals',
+		["Function"] = function(callback: boolean): void
+			if callback then 
+				pcall(CardFunc);
+				table.insert(Card.Connections, lplr.PlayerGui.ChildAdded:Connect(CardFunc));
+			else
+                for _, x in next, Object do
+                    if x and x.Destroy then
+                        x:Destroy();
+                    end;
+                end;
+                Object = {}
+                for _, v in next, Card.Connections do
+                    if v.Disconnect then
+                        v:Disconnect();
+                    end;
+                end;
+                Card.Connections = {};
+            end;
+		end;
+	});
+	CardGradient = Card:CreateToggle({
+		["Name"] = 'Gradient',
+		["Function"] = function(callback: boolean): void
+			pcall(function() CardColor2.Object.Visible = callback end) 
+		end
+	});
+	Round = Card:CreateSlider({
+		["Name"] = 'Rounding',
+		["Min"] = 0,
+		["Max"] = 20,
+		["Default"] = 4,
+		["Function"] = function(value: number): ()
+			for i: number, v: UICorner? in Object do 
+				if v.ClassName == 'UICorner' then 
+					v.CornerRadius = value;
+				end;
+			end;
+		end;
+	})
+	CardColor = Card:CreateColorSlider({
+		["Name"] = 'Color',
+		["Function"] = function()
+			task.spawn(pcall, CardFunc)
+		end
+	});
+	CardColor2 = Card:CreateColorSlider({
+		["Name"] = 'Color 2',
+		["Function"] = function()
+			task.spawn(pcall, CardFunc)
+		end
+	});
+	Highlight = Card:CreateToggle({
+		["Name"] = 'Highlight',
+		["Function"] = function()
+			task.spawn(pcall, CardFunc)
+		end
+	});
+	HighlightColor = Card:CreateColorSlider({
+		["Name"] = 'Highlight Color',
+		["Function"] = function()
+			task.spawn(pcall, CardFunc)
+		end;
+	});
+end);
+
+-- credits to catvape + render + snoopy
+-- IF YOU WANT THEM REMOVED, TELL ME AND I WILL REMOVE
+velo.run(function()
+    local texture_pack: table = {["Enabled"] = false};
+    local texture_pack_color: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 0};
+    local texture_pack_m: table = {};
+    texture_pack = vape.Categories.Velocity:CreateModule({
+        ["Name"] ='TexturePack',
+        ["HoverText"] = 'Customizes the texture pack.',
+        ["Function"] = function(callback: boolean): void
+            if callback then
+                if texture_pack_m["Value"] == 'Velocity' then
+					task.spawn(function()
+						local Players: Players = game:GetService("Players")
+						local ReplicatedStorage: ReplicatedStorage = game:GetService("ReplicatedStorage")
+						local Workspace: Workspace = game:GetService("Workspace")
+						local objs: any = game:GetObjects("rbxassetid://13988978091")
+						local import: any = objs[1]
+						import.Parent = game:GetService("ReplicatedStorage")
+						local index: table? = {
+							{
+								name = "wood_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-100), math.rad(-90)),
+								model = import:WaitForChild("Wood_Sword"),
+							},
+							{
+								name = "stone_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-100), math.rad(-90)),
+								model = import:WaitForChild("Stone_Sword"),
+							},
+							{
+								name = "iron_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-100), math.rad(-90)),
+								model = import:WaitForChild("Iron_Sword"),
+							},
+							{
+								name = "diamond_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-100), math.rad(-90)),
+								model = import:WaitForChild("Diamond_Sword"),
+							},
+							{
+								name = "emerald_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-100), math.rad(-90)),
+								model = import:WaitForChild("Emerald_Sword"),
+							},
+							{
+								name = "wood_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-190), math.rad(-95)),
+								model = import:WaitForChild("Wood_Pickaxe"),
+							},
+							{
+								name = "stone_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-190), math.rad(-95)),
+								model = import:WaitForChild("Stone_Pickaxe"),
+							},
+							{
+								name = "iron_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-190), math.rad(-95)),
+								model = import:WaitForChild("Iron_Pickaxe"),
+							},
+							{
+								name = "diamond_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(80), math.rad(-95)),
+								model = import:WaitForChild("Diamond_Pickaxe"),
+							},
+							{
+								name = "wood_axe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-10), math.rad(-95)),
+								model = import:WaitForChild("Wood_Axe"),
+							},
+							{
+								name = "stone_axe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-10), math.rad(-95)),
+								model = import:WaitForChild("Stone_Axe"),
+							},
+							{
+								name = "iron_axe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-10), math.rad(-95)),
+								model = import:WaitForChild("Iron_Axe"),
+							},
+							{
+								name = "diamond_axe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-90), math.rad(-95)),
+								model = import:WaitForChild("Diamond_Axe"),
+							},
+						}
+						local func = Workspace.Camera.Viewmodel.ChildAdded:Connect(function(tool)
+							if not tool:IsA("Accessory") then
+								return
+							end
+							for _, v in next, index do
+								if v.name == tool.Name then
+									for _, part in next, tool:GetDescendants() do
+										if part:IsA("BasePart") or part:IsA("MeshPart") or part:IsA("UnionOperation") then
+											part.Transparency = 1
+										end
+									end
+									local model = v.model:Clone()
+									model.CFrame = tool.Handle.CFrame * v.offset
+									model.CFrame = model.CFrame * CFrame.Angles(math.rad(0), math.rad(-50), math.rad(0))
+									model.Parent = tool
+									local weld = Instance.new("WeldConstraint")
+									weld.Part0 = model
+									weld.Part1 = tool.Handle
+									weld.Parent = model
+									local tool2 = Players.LocalPlayer.Character:WaitForChild(tool.Name)
+									for _, part in ipairs(tool2:GetDescendants()) do
+										if part:IsA("BasePart") or part:IsA("MeshPart") or part:IsA("UnionOperation") then
+											part.Transparency = 1
+											if part.Name == "Handle" then
+												part.Transparency = 0
+											end
+										end
+									end
+								end
+							end
+						end)
+					end)
+                elseif texture_pack_m["Value"] == 'Aquarium' then
+					task.spawn(function()
+						local Players = game:GetService("Players")
+						local ReplicatedStorage = game:GetService("ReplicatedStorage")
+						local Workspace = game:GetService("Workspace")
+						local objs = game:GetObjects("rbxassetid://14217388022")
+						local import = objs[1]
+						import.Parent = game:GetService("ReplicatedStorage")
+						local index = {
+						
+							{
+								name = "wood_sword",
+								offset = CFrame.Angles(math.rad(0),math.rad(-100),math.rad(-90)),
+								model = import:WaitForChild("Wood_Sword"),
+							},
+							
+							{
+								name = "stone_sword",
+								offset = CFrame.Angles(math.rad(0),math.rad(-100),math.rad(-90)),
+								model = import:WaitForChild("Stone_Sword"),
+							},
+							
+							{
+								name = "iron_sword",
+								offset = CFrame.Angles(math.rad(0),math.rad(-100),math.rad(-90)),
+								model = import:WaitForChild("Iron_Sword"),
+							},
+							
+							{
+								name = "diamond_sword",
+								offset = CFrame.Angles(math.rad(0),math.rad(-100),math.rad(-90)),
+								model = import:WaitForChild("Diamond_Sword"),
+							},
+							
+							{
+								name = "emerald_sword",
+								offset = CFrame.Angles(math.rad(0),math.rad(-100),math.rad(-90)),
+								model = import:WaitForChild("Diamond_Sword"),
+							},
+							
+							{
+								name = "Rageblade",
+								offset = CFrame.Angles(math.rad(0),math.rad(-100),math.rad(-90)),
+								model = import:WaitForChild("Diamond_Sword"),
+							},
+						}
+						local func = Workspace:WaitForChild("Camera").Viewmodel.ChildAdded:Connect(function(tool)
+							if(not tool:IsA("Accessory")) then return end
+							for i,v in pairs(index) do
+								if(v.name == tool.Name) then
+									for i,v in pairs(tool:GetDescendants()) do
+										if(v:IsA("Part") or v:IsA("MeshPart") or v:IsA("UnionOperation")) then
+											v.Transparency = 1
+										end
+									end
+									local model = v.model:Clone()
+									model.CFrame = tool:WaitForChild("Handle").CFrame * v.offset
+									model.CFrame *= CFrame.Angles(math.rad(0),math.rad(-50),math.rad(0))
+									model.Parent = tool
+									local weld = Instance.new("WeldConstraint",model)
+									weld.Part0 = model
+									weld.Part1 = tool:WaitForChild("Handle")
+									local tool2 = Players.LocalPlayer.Character:WaitForChild(tool.Name)
+									for i,v in pairs(tool2:GetDescendants()) do
+										if(v:IsA("Part") or v:IsA("MeshPart") or v:IsA("UnionOperation")) then
+											v.Transparency = 1
+										end
+									end
+									local model2 = v.model:Clone()
+									model2.Anchored = false
+									model2.CFrame = tool2:WaitForChild("Handle").CFrame * v.offset
+									model2.CFrame *= CFrame.Angles(math.rad(0),math.rad(-50),math.rad(0))
+									model2.CFrame *= CFrame.new(0.4,0,-.9)
+									model2.Parent = tool2
+									local weld2 = Instance.new("WeldConstraint",model)
+									weld2.Part0 = model2
+									weld2.Part1 = tool2:WaitForChild("Handle")
+								end
+							end
+						end)
+					end)
+                elseif texture_pack_m["Value"] == 'Ocean' then
+					task.spawn(function()
+						local Players = game:GetService("Players")
+						local ReplicatedStorage = game:GetService("ReplicatedStorage")
+						local Workspace = game:GetService("Workspace")
+						local objs = game:GetObjects("rbxassetid://14356045010")
+						local import = objs[1]
+						import.Parent = game:GetService("ReplicatedStorage")
+						index = {
+							{
+								name = "wood_sword",
+								offset = CFrame.Angles(math.rad(0),math.rad(-100),math.rad(-90)),
+								model = import:WaitForChild("Wood_Sword"),
+							},
+							{
+								name = "stone_sword",
+								offset = CFrame.Angles(math.rad(0),math.rad(-100),math.rad(-90)),
+								model = import:WaitForChild("Stone_Sword"),
+							},
+							{
+								name = "iron_sword",
+								offset = CFrame.Angles(math.rad(0),math.rad(-100),math.rad(-90)),
+								model = import:WaitForChild("Iron_Sword"),
+							},
+							{
+								name = "diamond_sword",
+								offset = CFrame.Angles(math.rad(0),math.rad(-100),math.rad(-90)),
+								model = import:WaitForChild("Diamond_Sword"),
+							},
+							{
+								name = "emerald_sword",
+								offset = CFrame.Angles(math.rad(0),math.rad(-100),math.rad(-90)),
+								model = import:WaitForChild("Emerald_Sword"),
+							}, 
+							{
+								name = "rageblade",
+								offset = CFrame.Angles(math.rad(0),math.rad(-100),math.rad(90)),
+								model = import:WaitForChild("Rageblade"),
+							}, 
+							{
+								name = "fireball",
+										offset = CFrame.Angles(math.rad(0), math.rad(0), math.rad(90)),
+								model = import:WaitForChild("Fireball"),
+							}, 
+							{
+								name = "telepearl",
+										offset = CFrame.Angles(math.rad(0), math.rad(0), math.rad(90)),
+								model = import:WaitForChild("Telepearl"),
+							}, 
+							{
+								name = "wood_bow",
+								offset = CFrame.Angles(math.rad(0), math.rad(0), math.rad(90)),
+								model = import:WaitForChild("Bow"),
+							},
+							{
+								name = "wood_crossbow",
+								offset = CFrame.Angles(math.rad(0), math.rad(0), math.rad(90)),
+								model = import:WaitForChild("Crossbow"),
+							},
+							{
+								name = "tactical_crossbow",
+								offset = CFrame.Angles(math.rad(0), math.rad(180), math.rad(-90)),
+								model = import:WaitForChild("Crossbow"),
+							},
+								{
+								name = "wood_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-180), math.rad(-95)),
+								model = import:WaitForChild("Wood_Pickaxe"),
+							},
+							{
+								name = "stone_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-180), math.rad(-95)),
+								model = import:WaitForChild("Stone_Pickaxe"),
+							},
+							{
+								name = "iron_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-180), math.rad(-95)),
+								model = import:WaitForChild("Iron_Pickaxe"),
+							},
+							{
+								name = "diamond_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(80), math.rad(-95)),
+								model = import:WaitForChild("Diamond_Pickaxe"),
+							},
+						{
+									
+								name = "wood_axe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-10), math.rad(-95)),
+								model = import:WaitForChild("Wood_Axe"),
+							},
+							{
+								name = "stone_axe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-10), math.rad(-95)),
+								model = import:WaitForChild("Stone_Axe"),
+							},
+							{
+								name = "iron_axe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-10), math.rad(-95)),
+								model = import:WaitForChild("Iron_Axe"),
+							},
+							{
+								name = "diamond_axe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-89), math.rad(-95)),
+								model = import:WaitForChild("Diamond_Axe"),
+							},
+						
+						
+						
+						}
+						local func = Workspace:WaitForChild("Camera").Viewmodel.ChildAdded:Connect(function(tool)
+							if(not tool:IsA("Accessory")) then return end
+							for i,v in pairs(index) do
+								if(v.name == tool.Name) then
+									for i,v in pairs(tool:GetDescendants()) do
+										if(v:IsA("Part") or v:IsA("MeshPart") or v:IsA("UnionOperation")) then
+											v.Transparency = 1
+										end
+									end
+									local model = v.model:Clone()
+									model.CFrame = tool:WaitForChild("Handle").CFrame * v.offset
+									model.CFrame *= CFrame.Angles(math.rad(0),math.rad(-50),math.rad(0))
+									model.Parent = tool
+									local weld = Instance.new("WeldConstraint",model)
+									weld.Part0 = model
+									weld.Part1 = tool:WaitForChild("Handle")
+									local tool2 = Players.LocalPlayer.Character:WaitForChild(tool.Name)
+									for i,v in pairs(tool2:GetDescendants()) do
+										if(v:IsA("Part") or v:IsA("MeshPart") or v:IsA("UnionOperation")) then
+											v.Transparency = 1
+										end
+									end
+									local model2 = v.model:Clone()
+									model2.Anchored = false
+									model2.CFrame = tool2:WaitForChild("Handle").CFrame * v.offset
+									model2.CFrame *= CFrame.Angles(math.rad(0),math.rad(-50),math.rad(0))
+									model2.CFrame *= CFrame.new(.7,0,-.8)
+									model2.Parent = tool2
+									local weld2 = Instance.new("WeldConstraint",model)
+									weld2.Part0 = model2
+									weld2.Part1 = tool2:WaitForChild("Handle")
+								end
+							end
+						end)
+					end)
+                elseif texture_pack_m["Value"] == 'Animated' then
+                    task.spawn(function()
+                        workspace:WaitForChild("Camera").Viewmodel.ChildAdded:Connect(function(tool)
+                            if not tool:IsA("Accessory") then 
+                                return 
+                            end
+                            local handle: any = tool:FindFirstChild("Handle")
+                            if handle then
+                                if string.find(tool.Name:lower(), 'sword') then
+                                    handle.Material = Enum.Material.ForceField
+                                    handle.MeshId = "rbxassetid://13471207377"
+                                    handle.BrickColor = BrickColor.new("Hot pink")
+                                    local outline: Highlight = Instance.new('Highlight')
+                                    outline.Adornee = handle 
+                                    outline.FillTransparency = 0.5
+                                    outline.FillColor = Color3.fromRGB(221, 193, 255) 
+                                    outline.OutlineTransparency = 0.2
+                                    outline.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                                    outline.Parent = handle
+                                    local highlight: Highlight = Instance.new('Highlight')
+                                    highlight.Adornee = handle 
+                                    highlight.FillTransparency = 0.5
+                                    highlight.FillColor = Color3.fromHSV(texture_pack_color["Hue"], texture_pack_color["Sat"], texture_pack_color["Value"])
+                                    highlight.OutlineTransparency = 0.2
+                                    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                                    highlight.Parent = handle
+                                end
+                            end
+                        end)
+                    end)
+				elseif texture_pack_m["Value"] == 'DemonSlayer' then
+					task.spawn(function()
+						local Players = game:GetService("Players")
+						local ReplicatedStorage = game:GetService("ReplicatedStorage")
+						local Workspace = game:GetService("Workspace")
+						local objs = game:GetObjects("rbxassetid://14241215869")
+						local import = objs[1]
+						import.Parent = ReplicatedStorage
+						local index = {
+							{
+								name = "wood_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-89), math.rad(-90)),
+								model = import:WaitForChild("Wood_Sword"),
+							},	
+							{
+								name = "stone_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-89), math.rad(-90)),
+								model = import:WaitForChild("Stone_Sword"),
+							},
+							{
+								name = "iron_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-89), math.rad(-90)),
+								model = import:WaitForChild("Iron_Sword"),
+							},
+							{
+								name = "diamond_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-89), math.rad(-90)),
+								model = import:WaitForChild("Diamond_Sword"),
+							},
+							{
+								name = "emerald_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-89), math.rad(-90)),
+								model = import:WaitForChild("Emerald_Sword"),
+							},
+							{
+								name = "wood_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-180), math.rad(-95)),
+								model = import:WaitForChild("Wood_Pickaxe"),
+							},
+							{
+								name = "stone_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-180), math.rad(-95)),
+								model = import:WaitForChild("Stone_Pickaxe"),
+							},
+							{
+								name = "iron_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-180), math.rad(-95)),
+								model = import:WaitForChild("Iron_Pickaxe"),
+							},
+							{
+								name = "diamond_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(90), math.rad(-95)),
+								model = import:WaitForChild("Diamond_Pickaxe"),
+							},	
+							{
+								name = "fireball",
+								offset = CFrame.Angles(math.rad(0), math.rad(-90), math.rad(90)),
+								model = import:WaitForChild("Fireball"),
+							},	
+							{
+								name = "telepearl",
+								offset = CFrame.Angles(math.rad(0), math.rad(-90), math.rad(90)),
+								model = import:WaitForChild("Telepearl"),
+							},
+							{
+								name = "diamond",
+								offset = CFrame.Angles(math.rad(0), math.rad(-90), math.rad(-90)),
+								model = import:WaitForChild("Diamond"),
+							},
+							{
+								name = "iron",
+								offset = CFrame.Angles(math.rad(0), math.rad(-90), math.rad(90)),
+								model = import:WaitForChild("Iron"),
+							},
+							{
+								name = "gold",
+								offset = CFrame.Angles(math.rad(0), math.rad(-90), math.rad(90)),
+								model = import:WaitForChild("Gold"),
+							},
+							{
+								name = "emerald",
+								offset = CFrame.Angles(math.rad(0), math.rad(-90), math.rad(-90)),
+								model = import:WaitForChild("Emerald"),
+							},
+							{
+								name = "wood_bow",
+								offset = CFrame.Angles(math.rad(0), math.rad(0), math.rad(90)),
+								model = import:WaitForChild("Bow"),
+							},
+							{
+								name = "wood_crossbow",
+								offset = CFrame.Angles(math.rad(0), math.rad(0), math.rad(90)),
+								model = import:WaitForChild("Bow"),
+							},
+							{
+								name = "tactical_crossbow",
+								offset = CFrame.Angles(math.rad(0), math.rad(180), math.rad(-90)),
+								model = import:WaitForChild("Bow"),
+							},
+							{
+								name = "wood_dao",
+								offset = CFrame.Angles(math.rad(0), math.rad(89), math.rad(-90)),
+								model = import:WaitForChild("Wood_Sword"),
+							},
+							{
+								name = "stone_dao",
+								offset = CFrame.Angles(math.rad(0), math.rad(89), math.rad(-90)),
+								model = import:WaitForChild("Stone_Sword"),
+							},
+							{
+								name = "iron_dao",
+								offset = CFrame.Angles(math.rad(0), math.rad(89), math.rad(-90)),
+								model = import:WaitForChild("Iron_Sword"),
+							},
+							{
+								name = "diamond_dao",
+								offset = CFrame.Angles(math.rad(0), math.rad(89), math.rad(-90)),
+								model = import:WaitForChild("Diamond_Sword"),
+							},
+						}
+						local func = Workspace.Camera.Viewmodel.ChildAdded:Connect(function(tool)	
+							if not tool:IsA("Accessory") then return end	
+							for _, v in ipairs(index) do	
+								if v.name == tool.Name then		
+									for _, part in ipairs(tool:GetDescendants()) do
+										if part:IsA("BasePart") or part:IsA("MeshPart") or part:IsA("UnionOperation") then				
+											part.Transparency = 1
+										end			
+									end		
+									local model = v.model:Clone()
+									model.CFrame = tool:WaitForChild("Handle").CFrame * v.offset
+									model.CFrame *= CFrame.Angles(math.rad(0), math.rad(-50), math.rad(0))
+									model.Parent = tool			
+									local weld = Instance.new("WeldConstraint", model)
+									weld.Part0 = model
+									weld.Part1 = tool:WaitForChild("Handle")			
+									local tool2 = Players.LocalPlayer.Character:WaitForChild(tool.Name)			
+									for _, part in ipairs(tool2:GetDescendants()) do
+										if part:IsA("BasePart") or part:IsA("MeshPart") or part:IsA("UnionOperation") then				
+											part.Transparency = 1				
+										end			
+									end			
+									local model2 = v.model:Clone()
+									model2.Anchored = false
+									model2.CFrame = tool2:WaitForChild("Handle").CFrame * v.offset
+									model2.CFrame *= CFrame.Angles(math.rad(0), math.rad(-50), math.rad(0))
+									if v.name:match("rageblade") then
+										model2.CFrame *= CFrame.new(0.7, 0, -.7)                           
+									elseif v.name:match("sword") or v.name:match("blade") then
+										model2.CFrame *= CFrame.new(.2, 0, -.8)
+									elseif v.name:match("dao") then
+										model2.CFrame *= CFrame.new(.7, 0, -1.3)
+									elseif v.name:match("axe") and not v.name:match("pickaxe") and v.name:match("diamond") then
+										model2.CFrame *= CFrame.new(.08, 0, -1.1) - Vector3.new(0, 0, -1.1)
+									elseif v.name:match("axe") and not v.name:match("pickaxe") and not v.name:match("diamond") then
+										model2.CFrame *= CFrame.new(-.2, 0, -2.4) + Vector3.new(0, 0, 2.12)
+									elseif v.name:match("diamond_pickaxe") then
+										model2.CFrame *= CFrame.new(.2, 0, -.26)
+									elseif v.name:match("iron") and not v.name:match("iron_pickaxe") then
+										model2.CFrame *= CFrame.new(0, -.24, 0)
+									elseif v.name:match("gold") then
+										model2.CFrame *= CFrame.new(0, .03, 0)
+									elseif v.name:match("diamond") or v.name:match("emerald") then
+										model2.CFrame *= CFrame.new(0, -.03, 0)
+									elseif v.name:match("telepearl") then
+										model2.CFrame *= CFrame.new(.1, 0, .1)
+									elseif v.name:match("fireball") then
+										model2.CFrame *= CFrame.new(.28, .1, 0)
+									elseif v.name:match("bow") and not v.name:match("crossbow") then
+										model2.CFrame *= CFrame.new(-.2, .1, -.05)
+									elseif v.name:match("wood_crossbow") and not v.name:match("tactical_crossbow") then
+										model2.CFrame *= CFrame.new(-.5, 0, .05)
+									elseif v.name:match("tactical_crossbow") and not v.name:match("wood_crossbow") then
+										model2.CFrame *= CFrame.new(-.35, 0, -1.2)
+									else
+										model2.CFrame *= CFrame.new(.0, 0, -.06)
+									end
+									model2.Parent = tool2
+									local weld2 = Instance.new("WeldConstraint", model)
+									weld2.Part0 = model2
+									weld2.Part1 = tool2:WaitForChild("Handle")
+								end
+							end
+						end)
+					end)
+				elseif texture_pack_m["Value"] == 'Glizzy' then
+					task.spawn(function()
+						local Players = game:GetService("Players")
+						local ReplicatedStorage = game:GetService("ReplicatedStorage")
+						local Workspace = game:GetService("Workspace")
+						local objs = game:GetObjects("rbxassetid://13804645310")
+						local import = objs[1]
+						import.Parent = game:GetService("ReplicatedStorage")
+						
+						local index = {
+							{
+								name = "wood_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-100), math.rad(-90)),
+								model = import:WaitForChild("Wood_Sword"),
+							},
+							{
+								name = "stone_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-100), math.rad(-90)),
+								model = import:WaitForChild("Stone_Sword"),
+							},
+							{
+								name = "iron_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-100), math.rad(-90)),
+								model = import:WaitForChild("Iron_Sword"),
+							},
+							{
+								name = "diamond_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-100), math.rad(-90)),
+								model = import:WaitForChild("Diamond_Sword"),
+							},
+							{
+								name = "emerald_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-100), math.rad(-90)),
+								model = import:WaitForChild("Emerald_Sword"),
+							},
+							{
+								name = "rageblade",
+								offset = CFrame.Angles(math.rad(0), math.rad(-100), math.rad(-270)),
+								model = import:WaitForChild("Rageblade"),
+							},
+						}
+						
+						local func = Workspace:WaitForChild("Camera").Viewmodel.ChildAdded:Connect(function(tool)
+							if not tool:IsA("Accessory") then return end
+							for _,v in pairs(index) do
+								if v.name == tool.Name then
+									for _,v in pairs(tool:GetDescendants()) do
+										if v:IsA("Part") or v:IsA("MeshPart") or v:IsA("UnionOperation") then
+											v.Transparency = 1
+										end
+									end
+									local model = v.model:Clone()
+									model.CFrame = tool:WaitForChild("Handle").CFrame * v.offset
+									model.CFrame = model.CFrame * CFrame.Angles(math.rad(0), math.rad(100), math.rad(0))
+									model.Parent = tool
+									local weld = Instance.new("WeldConstraint", model)
+									weld.Part0 = model
+									weld.Part1 = tool:WaitForChild("Handle")
+									
+									local tool2 = Players.LocalPlayer.Character:WaitForChild(tool.Name)
+									for _,v in pairs(tool2:GetDescendants()) do
+										if v:IsA("Part") or v:IsA("MeshPart") or v:IsA("UnionOperation") then
+											v.Transparency = 1
+										end
+									end
+									local model2 = v.model:Clone()
+									model2.Anchored = false
+									model2.CFrame = tool2:WaitForChild("Handle").CFrame * v.offset
+									model2.CFrame = model2.CFrame * CFrame.Angles(math.rad(0), math.rad(-105), math.rad(0))
+									model2.CFrame = model2.CFrame * CFrame.new(-0.4, 0, -0.10)
+									model2.Parent = tool2
+									local weld2 = Instance.new("WeldConstraint", model2)
+									weld2.Part0 = model2
+									weld2.Part1 = tool2:WaitForChild("Handle")
+								end
+							end
+						end)					
+					end)
+				elseif texture_pack_m["Value"] == 'FirstPack' then
+					task.spawn(function()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/SnoopyOwner/TexturePacks/main/Pack%231"))()  
+					end)
+				elseif texture_pack_m["Value"] == 'SecondPack' then
+					task.spawn(function()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/SnoopyOwner/TexturePacks/main/Pack%232"))()  
+					end)
+				elseif texture_pack_m["Value"] == 'ThirdPack' then
+					task.spawn(function()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/SnoopyOwner/Modules/main/TexturePack"))()  
+					end)
+				elseif texture_pack_m["Value"] == 'FourthPack' then
+					task.spawn(function()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/SnoopyOwner/TexturePacks/main/Pack%234"))()  
+					end)
+				elseif texture_pack_m["Value"] == 'FifthPack' then
+					task.spawn(function()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/SnoopyOwner/TexturePacks/main/Pack%235"))()  
+					end)
+				elseif texture_pack_m["Value"] == 'SixthPack' then
+					task.spawn(function()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/SnoopyOwner/TexturePacks/main/Pack%236"))()  
+					end)
+				elseif texture_pack_m["Value"] == 'SeventhPack' then
+					task.spawn(function()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/SnoopyOwner/TexturePacks/main/Pack%237"))()  
+					end)
+				elseif texture_pack_m["Value"] == 'EighthPack' then
+					task.spawn(function()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/SnoopyOwner/TexturePacks/main/1024xPack"))()  
+					end)
+				elseif texture_pack_m["Value"] == 'EgirlPack' then
+					task.spawn(function() 	
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/SnoopyOwner/TexturePacks/main/E-Girl"))()  		             
+					end)
+				elseif texture_pack_m["Value"] == 'CottonCandy' then
+					task.spawn(function() 
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/SnoopyOwner/TexturePacks/main/CottonCandy256x"))()           
+					end)
+				elseif texture_pack_m["Value"] == 'PrivatePack' then
+					task.spawn(function()
+						local Players = game:GetService("Players")
+						local ReplicatedStorage = game:GetService("ReplicatedStorage")
+						local Workspace = game:GetService("Workspace")
+						local objs = game:GetObjects("rbxassetid://14161283331")
+						local import = objs[1]
+						import.Parent = ReplicatedStorage
+						local index = {
+							{
+								name = "wood_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-89), math.rad(-90)),
+								model = import:WaitForChild("Wood_Sword"),
+							},	
+							{
+								name = "stone_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-89), math.rad(-90)),
+								model = import:WaitForChild("Stone_Sword"),
+							},
+							{
+								name = "iron_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-89), math.rad(-90)),
+								model = import:WaitForChild("Iron_Sword"),
+							},
+							{
+								name = "diamond_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-89), math.rad(-90)),
+								model = import:WaitForChild("Diamond_Sword"),
+							},
+							{
+								name = "emerald_sword",
+								offset = CFrame.Angles(math.rad(0), math.rad(-89), math.rad(-90)),
+								model = import:WaitForChild("Emerald_Sword"),
+							},
+							{
+								name = "rageblade",
+								offset = CFrame.Angles(math.rad(0),math.rad(-100),math.rad(90)),
+								model = import:WaitForChild("Rageblade"),
+							}, 
+							{
+								name = "wood_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-180), math.rad(-95)),
+								model = import:WaitForChild("Wood_Pickaxe"),
+							},
+							{
+								name = "stone_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-180), math.rad(-95)),
+								model = import:WaitForChild("Stone_Pickaxe"),
+							},
+							{
+								name = "iron_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-18033), math.rad(-95)),
+								model = import:WaitForChild("Iron_Pickaxe"),
+							},
+							{
+								name = "diamond_pickaxe",
+								offset = CFrame.Angles(math.rad(0), math.rad(80), math.rad(-95)),
+								model = import:WaitForChild("Diamond_Pickaxe"),
+							},	
+							{
+								name = "wood_axe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-10), math.rad(-95)),
+								model = import:WaitForChild("Wood_Axe"),
+							},	
+							{
+								name = "stone_axe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-10), math.rad(-95)),
+								model = import:WaitForChild("Stone_Axe"),
+							},	
+							{
+								name = "iron_axe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-10), math.rad(-95)),
+								model = import:WaitForChild("Iron_Axe"),
+							},	
+							{
+								name = "diamond_axe",
+								offset = CFrame.Angles(math.rad(0), math.rad(-89), math.rad(-95)),
+								model = import:WaitForChild("Diamond_Axe"),
+							},	
+							{
+								name = "fireball",
+								offset = CFrame.Angles(math.rad(0), math.rad(-90), math.rad(90)),
+								model = import:WaitForChild("Fireball"),
+							},	
+							{
+								name = "telepearl",
+								offset = CFrame.Angles(math.rad(0), math.rad(-90), math.rad(90)),
+								model = import:WaitForChild("Telepearl"),
+							},
+							{
+								name = "diamond",
+								offset = CFrame.Angles(math.rad(0), math.rad(-90), math.rad(90)),
+								model = import:WaitForChild("Diamond"),
+							},
+							{
+								name = "iron",
+								offset = CFrame.Angles(math.rad(0), math.rad(-90), math.rad(90)),
+								model = import:WaitForChild("Iron"),
+							},
+							{
+								name = "gold",
+								offset = CFrame.Angles(math.rad(0), math.rad(-90), math.rad(90)),
+								model = import:WaitForChild("Gold"),
+							},
+							{
+								name = "emerald",
+								offset = CFrame.Angles(math.rad(0), math.rad(-90), math.rad(90)),
+								model = import:WaitForChild("Emerald"),
+							},
+							{
+								name = "wood_bow",
+								offset = CFrame.Angles(math.rad(0), math.rad(0), math.rad(90)),
+								model = import:WaitForChild("Bow"),
+							},
+							{
+								name = "wood_crossbow",
+								offset = CFrame.Angles(math.rad(0), math.rad(0), math.rad(90)),
+								model = import:WaitForChild("Bow"),
+							},
+							{
+								name = "tactical_crossbow",
+								offset = CFrame.Angles(math.rad(0), math.rad(180), math.rad(-90)),
+								model = import:WaitForChild("Bow"),
+							},
+						}
+						local func = Workspace.Camera.Viewmodel.ChildAdded:Connect(function(tool)	
+							if not tool:IsA("Accessory") then return end	
+							for _, v in ipairs(index) do	
+								if v.name == tool.Name then		
+									for _, part in ipairs(tool:GetDescendants()) do
+										if part:IsA("BasePart") or part:IsA("MeshPart") or part:IsA("UnionOperation") then				
+											part.Transparency = 1
+										end			
+									end		
+									local model = v.model:Clone()
+									model.CFrame = tool:WaitForChild("Handle").CFrame * v.offset
+									model.CFrame *= CFrame.Angles(math.rad(0), math.rad(-50), math.rad(0))
+									model.Parent = tool			
+									local weld = Instance.new("WeldConstraint", model)
+									weld.Part0 = model
+									weld.Part1 = tool:WaitForChild("Handle")			
+									local tool2 = Players.LocalPlayer.Character:WaitForChild(tool.Name)			
+									for _, part in ipairs(tool2:GetDescendants()) do
+										if part:IsA("BasePart") or part:IsA("MeshPart") or part:IsA("UnionOperation") then				
+											part.Transparency = 1				
+										end			
+									end			
+									local model2 = v.model:Clone()
+									model2.Anchored = false
+									model2.CFrame = tool2:WaitForChild("Handle").CFrame * v.offset
+									model2.CFrame *= CFrame.Angles(math.rad(0), math.rad(-50), math.rad(0))
+									if v.name:match("rageblade") then
+										model2.CFrame *= CFrame.new(0.7, 0, -1)                           
+									elseif v.name:match("sword") or v.name:match("blade") then
+										model2.CFrame *= CFrame.new(.6, 0, -1.1) - Vector3.new(0, 0, -.3)
+									elseif v.name:match("axe") and not v.name:match("pickaxe") and v.name:match("diamond") then
+										model2.CFrame *= CFrame.new(.08, 0, -1.1) - Vector3.new(0, 0, -1.1)
+									elseif v.name:match("axe") and not v.name:match("pickaxe") and not v.name:match("diamond") then
+										model2.CFrame *= CFrame.new(-.2, 0, -2.4) + Vector3.new(0, 0, 2.12)
+									elseif v.name:match("iron") then
+										model2.CFrame *= CFrame.new(0, -.24, 0)
+									elseif v.name:match("gold") then
+										model2.CFrame *= CFrame.new(0, .03, 0)
+									elseif v.name:match("diamond") then
+										model2.CFrame *= CFrame.new(0, .027, 0)
+									elseif v.name:match("emerald") then
+										model2.CFrame *= CFrame.new(0, .001, 0)
+									elseif v.name:match("telepearl") then
+										model2.CFrame *= CFrame.new(.1, 0, .1)
+									elseif v.name:match("fireball") then
+										model2.CFrame *= CFrame.new(.28, .1, 0)
+									elseif v.name:match("bow") and not v.name:match("crossbow") then
+										model2.CFrame *= CFrame.new(-.29, .1, -.2)
+									elseif v.name:match("wood_crossbow") and not v.name:match("tactical_crossbow") then
+										model2.CFrame *= CFrame.new(-.6, 0, 0)
+									elseif v.name:match("tactical_crossbow") and not v.name:match("wood_crossbow") then
+										model2.CFrame *= CFrame.new(-.5, 0, -1.2)
+									else
+										model2.CFrame *= CFrame.new(.2, 0, -.2)
+									end
+									model2.Parent = tool2
+									local weld2 = Instance.new("WeldConstraint", model)
+									weld2.Part0 = model2
+									weld2.Part1 = tool2:WaitForChild("Handle")
+								end
+							end
+						end)            
+					end)
+				elseif texture_pack_m["Value"] == 'FirstHighResPack' then	
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/SnoopyOwner/TexturePacks/main/512xPack"))()   
+					end)
+				elseif texture_pack_m["Value"] == 'SecondHighResPack' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/SnoopyOwner/TexturePacks/main/1024xPack"))()   
+					end)
+				elseif texture_pack_m["Value"] == 'FatCat' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/"..Pack.Value..".lua"))()
+					end)
+				elseif texture_pack_m["Value"] == 'Simply' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/Simply.lua"))()
+					end)
+				elseif texture_pack_m["Value"] == 'VioletsDreams' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/VioletsDreams.lua"))()
+					end)
+				elseif texture_pack_m["Value"] == 'Enlightened' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/Enlightened.lua"))()
+					end)
+				elseif texture_pack_m["Value"] == 'Onyx' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/Onyx.lua"))()
+					end)
+				elseif texture_pack_m["Value"] == 'Fury' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/Fury.lua"))()
+					end)
+				elseif texture_pack_m["Value"] == 'Wichtiger' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/Wichtiger.lua"))()
+					end)
+				elseif texture_pack_m["Value"] == 'Makima' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/Makima.lua"))()
+					end)
+				elseif texture_pack_m["Value"] == 'Marin-Kitsawaba' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/Marin-Kitsawaba.lua"))()
+					end)
+				elseif texture_pack_m["Value"] == 'Prime' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/Prime.lua"))()
+					end)
+				elseif texture_pack_m["Value"] == 'Vile' then	
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/Vile.lua"))()
+					end)
+				elseif texture_pack_m["Value"] == 'Devourer' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/Devourer.lua"))()
+					end)
+				elseif texture_pack_m["Value"] == 'Acidic' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/Acidic.lua"))()
+					end)
+				elseif texture_pack_m["Value"] == 'Moon4Real' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/Moon4Real.lua"))()
+					end)
+				elseif texture_pack_m["Value"] == 'Nebula' then
+					task.spawn(function()
+						task.wait()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/qwertyui-is-back/TexturePacks/refs/heads/main/Nebula.lua"))()
+					end)
+				else
+					local connect: any;
+					local pack: any = game:GetObjects("rbxassetid://14027120450");
+					local txtpack = unpack(pack)
+					txtpack.Parent = game:GetService("ReplicatedStorage")
+					connect = workspace.Camera.Viewmodel.DescendantAdded:Connect(function(d)
+						for i,v in next, txtpack:GetChildren() do
+							if v.Name == d.Name then
+								for i1,v1 in next, d:GetDescendants() do
+									if v1:IsA("Part") or v1:IsA("MeshPart") then
+										v1.Transparency = 1
+									end
+								end
+								for i1,v1 in next, lplr.Character:GetChildren() do
+									if v1.Name == v.Name then
+										for i2,v2 in next, v1:GetDescendants() do
+											if v2.Name ~= d.Name then
+												if v2:IsA("Part") or v2:IsA("MeshPart") then
+													v2.Transparency = 1;
+												end;
+											end;
+										end;
+									end;
+								end;
+								local vmmodel: any = v:Clone()
+								vmmodel.CFrame = d.Handle.CFrame * CFrame.Angles(math.rad(90),math.rad(-130),math.rad(0))
+								if d.Name == "rageblade" then 
+									vmmodel.CFrame = CFrame.Angles(math.rad(-80),math.rad(230),math.rad(10)) 
+								end;
+								vmmodel.Parent = d
+								local vmmodelweld: WeldConstraint = Instance.new("WeldConstraint", vmmodel);
+								vmmodelweld.Part0 = vmmodelweld.Parent
+								vmmodelweld.Part1 = d.Handle
+								local charmodel: any = v:Clone();
+								charmodel.CFrame = lplr["Character"][d["Name"]]:FindFirstChild("Handle").CFrame * CFrame.Angles(math.rad(90),math.rad(-130),math.rad(0))
+								if d.Name == "rageblade" then 
+									charmodel.CFrame = CFrame.Angles(math.rad(-80),math.rad(230),math.rad(10)) 
+								end;
+								charmodel.Anchored = false
+								charmodel.CanCollide = false
+								charmodel.Parent = lplr["Character"][d["Name"]]
+								local charmodelweld: WeldConstraint = Instance.new("WeldConstraint", charmodel)
+								charmodelweld.Part0 = charmodelweld.Parent
+								charmodelweld.Part1 = lplr["Character"][d["Name"]].Handle
+							end
+						end
+					end)
+				end
+			end
+		end
+    })
+    texture_pack_m = texture_pack:CreateDropdown({
+        ["Name"] ='Mode',
+        ["List"] = {
+            'Velocity',
+			"FirstPack", 
+			"SecondPack", 
+			"ThirdPack", 
+			"FourthPack", 
+			"FifthPack", 
+			"SixthPack", 
+			"SeventhPack",
+			"EighthPack", 
+			"EgirlPack", 
+			"CottonCandy", 
+			"Pack512x", 
+			"Pack1056x",
+	        "PrivatePack",
+            'Aquarium',
+            'Ocean',
+            'Animated',
+			'DemonSlayer',
+			'Glizzy',
+			'FatCat',
+			'Simply',
+			'VioletsDreams',
+			'Enlightened',
+			"Onyx", 
+			"Fury", 
+			"Wichtiger", 
+			"Makima", 
+			"Marin-Kitsawaba", 
+			"Prime", 
+			"Vile", 
+			"Devourer", 
+			"Acidic", 
+			"Moon4Real", 
+			"Nebula",
+			'Lunar'
+        },
+        ["Default"] ='Velocity',
+        ["HoverText"] = 'Mode to render the texture pack, credits to Snoopy and CatVape.',
+        ["Function"] = function() end
+    })
+    texture_pack_color = texture_pack:CreateColorSlider({
+        ["Name"] ="Animated Color",
+        ["HoverText"] = "Color of the ANIMATED texturepack.",
+        ["Function"] = function() end
+    })
+end)
+
+velo.run(function()
+	local RemotesConnect: table = {["Enabled"] = false}
+	local RemotesConnectDelay: table = {["Value"] = 10}
+	local RemotesConnectParty: table = {["Enabled"] = true}
+	local RemotesConnectDragon: table = {["Enabled"] = true}
+	local RemotesConnectParty1: table = {["Enabled"] = true}
+	local RemotesConnectDragon1: table = {["Enabled"] = true}
+	local RemoteConnectMelody: table = {["Enabled"] = true}
+	local PartyConnection: any, DragonConnection: any;
+	local MelodyExploit: table = {};
+	local MelodyTick: number = tick();
+	local getguitar = function()
+		for i: any, v: any in replicatedStorage.Inventories:GetChildren() do 
+			if v["Name"] == lplr["Name"] and v:FindFirstChild('guitar') then 
+				return {tool = v.guitar, itemType = 'guitar'};
+			end;
+		end;
+	end;
+
+	RemotesConnect = vape.Categories.Velocity:CreateModule({
+		["Name"] ='RemotesConnect',
+        	["HoverText"] = 'Spams remotes.',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				task.spawn(function()
+					pcall(function()
+						repeat task.wait()
+							if RemoteConnectMelody["Enabled"] then
+								if isAlive(lplr, true) and tick() > MelodyTick and getguitar() and lplr.Character:GetAttribute('Health') < lplr.Character:GetAttribute('MaxHealth') then 
+									bedwars.Client:Get('PlayGuitar'):SendToServer({healTarget = lplr});
+									bedwars.Client:Get('StopPlayingGuitar'):SendToServer();
+									melodytick = tick() + 0.45;
+								end;
+								task.wait();
+							end;
+							if RemotesConnectParty["Enabled"] then
+								bedwars.AbilityController:useAbility('PARTY_POPPER');
+							end;
+							if RemotesConnectDragon["Enabled"] then
+								if RemotesConnectDragon1["Enabled"] then
+									DragonConnection = workspace.ChildAdded:Connect(function(x)
+										if x:IsA'Model' and x.Name == 'DragonBreath' then
+											x:Destroy();
+										end;
+									end);
+								end;
+								bedwars.Client:Get('DragonBreath'):SendToServer({player = lplr});
+							end;
+							task.wait(RemotesConnectDelay["Value"] / 10);
+						until not RemotesConnect["Enabled"];
+					end);
+				end);
+			else
+				if PartyConnection then
+					PartyConnection:Disconnect();
+				end;
+				if DragonConnection then
+					DragonConnection:Disconnect();
+				end;
+			end
+		end,
+        	["Default"] =false
+	})
+	RemotesConnectDelay = RemotesConnect:CreateSlider({
+		["Name"] ='Delay',
+		["Min"] =0,
+		["Max"] =50,
+		["HoverText"] = 'Delay to Spam the Remotes',
+		["Function"] = function() end,
+		["Default"] =10
+	})
+	RemoteConnectMelody = RemotesConnect:CreateToggle({
+		["Name"] ='Melody',
+		["HoverText"] = 'Spams the Melody Remote',
+		["Function"] = function() end,
+		["Default"] =true
+	})
+	RemotesConnectParty = RemotesConnect:CreateToggle({
+		["Name"] ='Party Popper',
+		["HoverText"] = 'Spams the Party Popper Remote',
+		["Function"] = function() end,
+		["Default"] =true
+	})
+	RemotesConnectDragon = RemotesConnect:CreateToggle({
+		["Name"] ='Dragon',
+		["HoverText"] = 'Spams the Dragon Breath Remote',
+		["Function"] = function() end,
+		["Default"] =true
+	})
+	RemotesConnectDragon1 = RemotesConnect:CreateToggle({
+		["Name"] ='Hide Dragon',
+		["HoverText"] = 'Hides the Dragon Breath Effect (CS)',
+		["Function"] = function() end,
+		["Default"] =true
+	})
+end)
+	
