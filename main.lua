@@ -1,33 +1,28 @@
---[[
+--[[         _____                    _____                    _____                   _____          
+        /\    \                  /\    \                  /\    \                 /\    \         
+       /::\____\                /::\    \                /::\    \               /::\    \        
+      /:::/    /               /::::\    \              /::::\    \             /::::\    \       
+     /:::/    /               /::::::\    \            /::::::\    \           /::::::\    \      
+    /:::/    /               /:::/\:::\    \          /:::/\:::\    \         /:::/\:::\    \     
+   /:::/____/               /:::/__\:::\    \        /:::/__\:::\    \       /:::/__\:::\    \    
+   |::|    |               /::::\   \:::\    \      /::::\   \:::\    \     /::::\   \:::\    \   
+   |::|    |     _____    /::::::\   \:::\    \    /::::::\   \:::\    \   /::::::\   \:::\    \  
+   |::|    |    /\    \  /:::/\:::\   \:::\    \  /:::/\:::\   \:::\____\ /:::/\:::\   \:::\    \ 
+   |::|    |   /::\____\/:::/  \:::\   \:::\____\/:::/  \:::\   \:::|    /:::/__\:::\   \:::\____\
+   |::|    |  /:::/    /\::/    \:::\  /:::/    /\::/    \:::\  /:::|____\:::\   \:::\   \::/    /
+   |::|    | /:::/    /  \/____/ \:::\/:::/    /  \/_____/\:::\/:::/    / \:::\   \:::\   \/____/ 
+   |::|____|/:::/    /            \::::::/    /            \::::::/    /   \:::\   \:::\    \     
+   |:::::::::::/    /              \::::/    /              \::::/    /     \:::\   \:::\____\    
+   \::::::::::/____/               /:::/    /                \::/____/       \:::\   \::/    /    
+    ~~~~~~~~~~                    /:::/    /                  ~~              \:::\   \/____/     
+                                 /:::/    /                                    \:::\    \         
+                                /:::/    /                                      \:::\____\        
+                                \::/    /                                        \::/    /        
+                                 \/____/                                          \/____/         
 
-    ____   ____     .__                .__  __          
-    \   \ /   /____ |  |   ____   ____ |__|/  |_ ___.__.
-     \   Y   // __ \|  |  /  _ \_/ ___\|  \   __<   |  |
-      \     /\  ___/|  |_(  <_> )  \___|  ||  |  \___  |
-       \___/  \___  >____/\____/ \___  >__||__|  / ____|
-                  \/                 \/          \/      
+    The #1 Roblox Bedwars Script on the market.
 
-       The #1 Roblox Bedwars Vape Config on the market.
-
-        - luc - modules / organizer
-		- null.wtf - modules 
-		- copium - modules
-		- sammz - modules
-		- lr - modules
-        - blanked - modules
-        - gamesense - modules
-        - sown - modules
-        - relevant - executor
-        - nick - first UI
-
-
-
-       _  _                       _                 __ _  _       _                     _    _          
-     _| |<_> ___ ___  ___  _ _  _| |    ___  ___   / /| |<_>._ _ | |__ _ _  ___  _ _  _| |_ <_> ___ ___ 
-    / . || |<_-</ | '/ . \| '_>/ . | _ / . |/ . | / / | || || ' || / /| | |/ ._>| '_>  | |  | |<_-</ ._>
-    \___||_|/__/\_|_.\___/|_|  \___|<_>\_. |\_. |/_/  |_||_||_|_||_\_\|__/ \___.|_|    |_|  |_|/__/\___.
-                                       <___'<___'                                                       
-
+        - Xylex/7GrandDad - developer / organizer
 ]]--
 
 repeat 
@@ -40,19 +35,21 @@ end;
 
 local copied: boolean = false;
 
-local function copy_discord()
+local function copy_discord(): (any, any)
 	if not copied then
-		pcall(setclipboard, "https://discord.gg/vRwHydnW")
+		pcall(setclipboard, "https://discord.gg/EQyxeZhcsE");
 		copied = true;
 	end;
 end;
+copy_discord()
 
 if identifyexecutor then
-	if table.find({'Argon', 'Wave', 'Hyerin'}, ({identifyexecutor()})[1]) then
+	local execName: string? = ({identifyexecutor()})[1]
+	if table.find({'Argon', 'Wave', 'Hyerin'}, execName) then
 		getgenv().setthreadidentity = nil;
 	end;
-	if ({identifyexecutor()})[1] == 'Delta' then
-		getgenv().require = function(path)
+	if execName == 'Delta' then
+		getgenv().require = function(path: string): any
 			setthreadidentity(2);
 			local args: any = {getrenv().require(path)};
 			setthreadidentity(8);
@@ -62,7 +59,7 @@ if identifyexecutor then
 end;
 
 local vape: any;
-local loadstring = function(...)
+local loadstring: (string?) -> (function?, string?) = function(...)
 	local res: any, err: string? = loadstring(...);
 	if err and vape then
 		vape:CreateNotification('Vape', 'Failed to load : '..err, 30, 'alert');
@@ -81,7 +78,7 @@ local cloneref: (obj: any) -> any = cloneref or function(obj)
 end;
 local playersService: Players = cloneref(game:GetService('Players'));
 
-local function downloadFile(path, func)
+local function downloadFile(path: string, func: any)
 	if not isfile(path) then
 		local suc: boolean, res: string? = pcall(function()
 			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true);
@@ -97,7 +94,7 @@ local function downloadFile(path, func)
 	return (func or readfile)(path);
 end;
 
-local function finishLoading()
+local function finishLoading(): nil
 	vape.Init = nil;
 	vape:Load();
 	task.spawn(function()
@@ -143,7 +140,7 @@ if not isfile('newvape/profiles/gui.txt') then
 	writefile('newvape/profiles/gui.txt', 'new');
 end;
 
-local gui: any = readfile('newvape/profiles/gui.txt');
+local gui: string = readfile('newvape/profiles/gui.txt');
 
 if not isfolder('newvape/assets/'..gui) then
 	makefolder('newvape/assets/'..gui);
@@ -175,3 +172,4 @@ else
 	vape.Init = finishLoading;
 	return vape;
 end;
+
