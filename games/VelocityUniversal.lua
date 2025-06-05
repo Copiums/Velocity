@@ -8288,14 +8288,14 @@ velo.run(function()
 		["Tooltip"] = 'Automatic murder mystery teaming based on equipped roblox tools.'
 	})
 end)
-	
+
 velo.run(function()
 	local Atmosphere: table = {["Enabled"] = false};
 	local Toggles: table = {}
 	local themeName: any;
 	local newobjects: table, oldobjects: table = {}, {}
 	local function BeforeShaders()
-        local lightingState = {
+        local lightingState: table? = {
             Brightness = lightingService.Brightness,
             ColorShift_Bottom = lightingService.ColorShift_Bottom,
             ColorShift_Top = lightingService.ColorShift_Top,
@@ -8675,6 +8675,46 @@ velo.run(function()
 		["Name"] = 'Atmosphere',
 		["Function"] = function(callback: boolean): void
 			if callback then
+				local d = 0
+				local r = workspace.Terrain
+				for _, v in lightingService:GetChildren() do
+                    if v:IsA('PostEffect') or v:IsA('Sky') or v:IsA('Atmosphere') or v:IsA('Clouds') then -- Added Clouds
+                        v:Destroy()
+                    end
+                end
+				lightingService.Brightness = d + 1
+                lightingService.EnvironmentDiffuseScale = d + 0.2
+                lightingService.EnvironmentSpecularScale = d + 0.82
+
+                local sunRays: SunRaysEffect = Instance.new('SunRaysEffect')
+                sunRays.Parent = lightingService
+                table.insert(newobjects, sunRays)
+
+                local atmosphere: Atmosphere = Instance.new('Atmosphere')
+                atmosphere.Parent = lightingService
+                table.insert(newobjects, atmosphere)
+
+                local sky: Sky = Instance.new('Sky')
+                sky.Parent = lightingService
+                table.insert(newobjects, sky)
+
+                local blur: BlurEffect = Instance.new('BlurEffect')
+                blur.Size = d + 3.921
+                blur.Parent = lightingService
+                table.insert(newobjects, blur)
+
+                local color_correction: ColorCorrectionEffect = Instance.new('ColorCorrectionEffect')
+                color_correction.Parent = lightingService
+                color_correction.Saturation = d + 0.092
+                table.insert(newobjects, color_correction)
+                
+                local clouds: Clouds = Instance.new('Clouds')
+                clouds.Cover = d + 0.4
+                clouds.Parent = r 
+                table.insert(newobjects, clouds)
+				r.WaterTransparency = d + 1
+                r.WaterReflectance = d + 1
+
 				themes()
 				for _, v in lightingService:GetChildren() do
 					removeObject(v)
