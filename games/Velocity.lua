@@ -239,6 +239,10 @@ local function getBow(): (any, number?)
 	return bestBow, bestBowSlot;
 end;
 
+local function getRoactRender(func: (any) -> any): () -> any
+	return debug.getupvalue(debug.getupvalue(debug.getupvalue(func, 3).render, 2).render, 1);
+end
+
 local function getItem(itemName: string, inv: table?): (table?, number?)
 	for slot: number, item: table in (inv or store.inventory.inventory.items) do
 		if item.itemType == itemName then
@@ -837,7 +841,6 @@ velo.run(function()
 	bedwars = setmetatable(cheatengine and engine_loader.controllers or {
 		SoundList = require(replicatedStorage.TS.sound['game-sound']).GameSound,
 		SoundManager = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out).SoundManager,
-		NetworkLib = require(lplr.PlayerScripts.TS.lib.network),
 		AnimationType = require(replicatedStorage.TS.animation['animation-type']).AnimationType,
 		AnimationUtil = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out['shared'].util['animation-util']).AnimationUtil,
 		AppController = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out.client.controllers['app-controller']).AppController,
@@ -871,12 +874,12 @@ velo.run(function()
 			};
 		end,
 		ItemMeta = debug.getupvalue(require(replicatedStorage.TS.item['item-meta']).getItemMeta, 1),
+		HudAliveCount = require(lplr.PlayerScripts.TS.controllers.global['top-bar'].ui.game['hud-alive-player-counts']).HudAlivePlayerCounts,
 		KillEffectMeta = require(replicatedStorage.TS.locker['kill-effect']['kill-effect-meta']).KillEffectMeta,
 		KillFeedController = Flamework.resolveDependency('client/controllers/game/kill-feed/kill-feed-controller@KillFeedController'),
 		Knit = Knit,
 		KnockbackUtil = require(replicatedStorage.TS.damage['knockback-util']).KnockbackUtil,
 		NametagController = Knit.Controllers.NametagController,
-		HudAliveCount = require(lplr.PlayerScripts.TS.controllers.global['top-bar'].ui.game['hud-alive-player-counts']).HudAlivePlayerCounts,
 		MageKitUtil = require(replicatedStorage.TS.games.bedwars.kit.kits.mage['mage-kit-util']).MageKitUtil,
 		ProjectileMeta = require(replicatedStorage.TS.projectile['projectile-meta']).ProjectileMeta,
 		QueryUtil = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out).GameQueryUtil,
@@ -894,7 +897,7 @@ velo.run(function()
 		WinEffectMeta = require(replicatedStorage.TS.locker['win-effect']['win-effect-meta']).WinEffectMeta,
 		ZapNetworking = require(lplr.PlayerScripts.TS.lib.network)
 	}, {
-		__index = function(self: table, ind: string)
+		__index = function(self: table, ind: string?)
 			rawset(self, ind, Knit.Controllers[ind]);
 			return rawget(self, ind);
 		end;
@@ -931,7 +934,6 @@ velo.run(function()
 		SpawnRaven = debug.getproto(Knit.Controllers.RavenController.KnitStart, 1),
 		SummonerClawAttack = Knit.Controllers.SummonerClawHandController.attack,
 		WarlockTarget = debug.getproto(Knit.Controllers.WarlockStaffController.KnitStart, 2)
-
 	}
 	
 	local function dumpRemote(tab: table)
@@ -2221,7 +2223,7 @@ velo.run(function()
                                                         else
                                                                 if oldy then
                                                                         if tpTick < tick() then
-                                                                                local newpo: any = Vector3.new(root.Position.X, oldy, root.Position.Z);
+                                                                                local newpos: any = Vector3.new(root.Position.X, oldy, root.Position.Z);
                                                                                 root.CFrame = CFrame.lookAlong(newpos, root.CFrame.LookVector);
                                                                                 tpToggle = true;
                                                                                 oldy = nil;
@@ -2598,7 +2600,7 @@ run(function()
 		["Default"] = 0.42,
 		["Decimal"] = 100
 	})
-AngleSlider = Killaura:CreateSlider({
+	AngleSlider = Killaura:CreateSlider({
 		["Name"] = 'Max angle',
 		["Min"] = 1,
 		["Max"] = 360,
@@ -2628,7 +2630,7 @@ AngleSlider = Killaura:CreateSlider({
 		["Name"] = 'Show target',
 		["Function"] = function(callback: boolean): void
 			BoxSwingColor.Object.Visible = callback
-			BoxColor.Object.Visible = callback
+			--BoxColor.Object.Visible = callback
 			if callback then
 				for i = 1, 10 do
 					local box: BoxHandleAdornment = Instance.new('BoxHandleAdornment');
@@ -3334,6 +3336,7 @@ velo.run(function()
 						local moveDirection: any = AntiFallDirection or entitylib.character.Humanoid.MoveDirection;
 						local now: number = tick();
 						local velo: number = getSpeed();
+						local destination: number? = (moveDirection * math.max(Value.Value - velo, 0) * dt)
 	
 						if WallCheck["Enabled"] then
 							rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera};
@@ -7192,7 +7195,7 @@ velo.run(function()
 	local OpenInv: table = {["Enabled"] = false}
 	local KillFeed: table = {["Enabled"] = false}
 	local OldTabList: table = {["Enabled"] = false}
-	local HotbarApp: any = require(lplr.PlayerScripts.TS.controllers.global.hotbar.ui['hotbar-app']).HotbarApp;
+	local HotbarApp: any = getRoactRender(require(lplr.PlayerScripts.TS.controllers.global.hotbar.ui['hotbar-app']).HotbarApp.render);
 	local HotbarOpenInventory: any = require(lplr.PlayerScripts.TS.controllers.global.hotbar.ui['hotbar-open-inventory']).HotbarOpenInventory;
 	local old: any = {}
 	local new: any = {}
@@ -7273,9 +7276,9 @@ velo.run(function()
 	UICleanup:CreateToggle({
 		["Name"] = 'Resize Health',
 		["Function"] = function(callback)
-			modifyconstant(HotbarApp.render, 60, callback and 1 or nil);
-			modifyconstant(debug.getupvalue(HotbarApp.render, 10).render, 30, callback and 1 or nil);
-			modifyconstant(debug.getupvalue(HotbarApp.render, 17).tweenPosition, 16, callback and 0 or nil);
+			modifyconstant(HotbarApp, 60, callback and 1 or nil);
+			modifyconstant(debug.getupvalue(HotbarApp, 15).render, 30, callback and 1 or nil);
+			modifyconstant(debug.getupvalue(HotbarApp, 23).tweenPosition, 16, callback and 0 or nil);
 		end,
 		["Default"] = true
 	})
@@ -7283,7 +7286,7 @@ velo.run(function()
 		["Name"] = 'No Hotbar Numbers',
 		["Function"] = function(callback)
 			local func: any = oldinvrender or HotbarOpenInventory.render;
-			modifyconstant(debug.getupvalue(HotbarApp.render, 17).render, 90, callback and 0 or nil);
+			modifyconstant(debug.getupvalue(HotbarApp, 23).render, 90, callback and 0 or nil);
 			modifyconstant(func, 71, callback and 0 or nil);
 		end,
 		["Default"] = true
@@ -7291,7 +7294,7 @@ velo.run(function()
 	OpenInv = UICleanup:CreateToggle({
 		["Name"] = 'No Inventory Button',
 		["Function"] = function(callback)
-			modifyconstant(HotbarApp.render, 78, callback and 0 or nil);
+			modifyconstant(HotbarApp, 78, callback and 0 or nil);
 			if UICleanup["Enabled"] then
 				if callback then
 					oldinvrender = HotbarOpenInventory.render;
@@ -7338,6 +7341,7 @@ velo.run(function()
 		["Default"] = true
 	})
 end)
+
 
 velo.run(function()
 	local SongBeats: table = {["Enabled"] = false}
@@ -8970,16 +8974,16 @@ velo.run(function()
 		["HoverText"] = "Gives you headless",
 		["Function"] = function() end
 	});
-end);
+end)
 
 velo.run(function()
-    	local shaders: table = {};
+    local shaders: table = {};
 	local shaders_m: table = {};
 	local shaders_l: table = {};
 	local shaders_t: table = {};
 	shaders = vape.Categories.Velocity:CreateModule({
 		["Name"] ='Shaders',
-        	["HoverText"] = 'Makes the game\'s shaders better.',
+        ["HoverText"] = 'Makes the game\'s shaders better.',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				local s: table = {};
@@ -9060,18 +9064,6 @@ velo.run(function()
 											self.r.WaterTransparency = d + 1;
 											self.r.WaterReflectance = d + 1;
 										end;
-										--[[if GuiLibrary.ObjectsThatCanBeSaved.AtmosphereOptionsButton.Api.Enabled then
-											GuiLibrary.ObjectsThatCanBeSaved.AtmosphereOptionsButton.Api.ToggleButton();
-										end;
-										task.wait();
-										GuiLibrary.ObjectsThatCanBeSaved.AtmosphereOptionsButton.Api.ToggleButton(true);
-										if GuiLibrary.ObjectsThatCanBeSaved.LuminescentsOptionsButton.Api.Enabled then
-											GuiLibrary.ObjectsThatCanBeSaved.LuminescentsOptionsButton.Api.ToggleButton();
-										end;
-										task.wait();
-										GuiLibrary.ObjectsThatCanBeSaved.LuminescentsOptionsButton.Api.ToggleButton(true);
-
-										]]--
 									end);
 								end;
 							end;
@@ -9117,19 +9109,19 @@ velo.run(function()
 	})
 end)
 
-elo.run(function()
+velo.run(function()
 	local CustomClouds: table = {["Enabled"] = false}
-    	local Material: table = {["Value"] = "Neon"}
+    local Material: table = {["Value"] = "Neon"}
 	local Color: table = {
 		["Hue"] = 0,
 		["Sat"] = 0,
 		["Value"] = 0
 	}
 	local Trans: table = {["Value"] = 0}
-    	local Old: table = {["Clouds"] = workspace:FindFirstChild("Clouds"):GetChildren()}
+    local Old: table = {["Clouds"] = workspace:FindFirstChild("Clouds"):GetChildren()}
 	CustomClouds = vape.Categories.Velocity:CreateModule({
 		["Name"] = "CustomClouds",
-        	["HoverText"] = HoverText("Customizes the clouds."),
+        ["HoverText"] = HoverText("Customizes the clouds."),
 		["Function"] = function(callback: boolean): void
 			if callback then
 				task.spawn(function()
@@ -9137,7 +9129,7 @@ elo.run(function()
 						if v:IsA("Part") then
 							v["Transparency"] = Trans["Value"] / 100
 							v["Color"] = Color3["fromHSV"](Color["Hue"], Color["Sat"], Color["Value"])
-                            				v["Material"] = Enum["Material"][Material["Value"]]
+                            v["Material"] = Enum["Material"][Material["Value"]]
 						end
 					end
 				end)
@@ -9155,38 +9147,38 @@ elo.run(function()
 		end,
         	["Default"] = false,
         	["ExtraText"] = function()
-            		return Material["Value"]
+            	return Material["Value"]
         	end
 	})
-    	Material = CustomClouds:CreateDropdown({
+    Material = CustomClouds:CreateDropdown({
 		["Name"] = "Material",
 		["List"] = GetItems("Material"),
-        	["Default"] = "Neon",
+        ["Default"] = "Neon",
 		["HoverText"] = HoverText("Material of the clouds."),
 		["Function"] = function(val)
 			if CustomClouds["Enabled"] then
-                		task.spawn(function()
+                task.spawn(function()
 					for _, v in next, Old["Clouds"] do
 						if v:IsA("Part") then
-				            		v["Material"] = Enum["Material"][val]
-                        			end
-                    			end
-                		end)
+				            v["Material"] = Enum["Material"][val]
+                        end
+                    end
+                end)
 			end
 		end
 	})
 	Color = CustomClouds:CreateColorSlider({
 		["Name"] = "Color",
-        	["HoverText"] = HoverText("Color of the clouds."),
+        ["HoverText"] = HoverText("Color of the clouds."),
 		["Function"] = function()
 			if CustomClouds["Enabled"] then
-                		task.spawn(function()
+                task.spawn(function()
 					for _, v in next, Old["Clouds"] do
 						if v:IsA("Part") then
-				            		v["Color"] = Color3["fromHSV"](Color["Hue"], Color["Sat"], Color["Value"])
-                        			end
-                    			end
-                		end)
+				            v["Color"] = Color3["fromHSV"](Color["Hue"], Color["Sat"], Color["Value"])
+                        end
+                    end
+                end)
 			end
 		end
 	})
@@ -9194,19 +9186,19 @@ elo.run(function()
 		["Name"] = "Transparency",
 		["Min"] = 0,
 		["Max"] = 100,
-        	["HoverText"] = HoverText("Transparency of the clouds."),
+        ["HoverText"] = HoverText("Transparency of the clouds."),
 		["Function"] = function(val)
 			if CustomClouds["Enabled"] then
-                		task.spawn(function()
+                task.spawn(function()
 					for _, v in next, Old["Clouds"] do
 						if v:IsA("Part") then
-				            		v["Transparency"] = val / 100
-                        			end
-                    			end
-                		end)
+				            v["Transparency"] = val / 100
+                        end
+                    end
+                end)
 			end
 		end,
-        	["Default"] = 0
+        ["Default"] = 0
 	})
 end)
 
@@ -9214,7 +9206,7 @@ velo.run(function()
 	local NoNameTag: table = {["Enabled"] = false}
 	NoNameTag = vape.Categories.Velocity:CreateModule({
 		["Name"] ='NoNameTag',
-        	["HoverText"] = 'Removes your NameTag.',
+        ["HoverText"] = 'Removes your NameTag.',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				RunLoops:BindToHeartbeat('NoNameTag', function()
@@ -9226,7 +9218,7 @@ velo.run(function()
 				RunLoops:UnbindFromHeartbeat('NoNameTag')
 			end
 		end,
-        	["Default"] =false
+        ["Default"] =false
 	})
 end)
 
@@ -9243,7 +9235,7 @@ velo.run(function()
 	end
 	FeedRemover = vape.Categories.Velocity:CreateModule({
 		["Name"] = "FeedRemover",
-        	["HoverText"] = HoverText("Removes the kill feed interface."),
+        ["HoverText"] = HoverText("Removes the kill feed interface."),
 		["Function"] = function(callback: boolean): void
 			if callback then
 				SetFeed(false)
@@ -9251,7 +9243,7 @@ velo.run(function()
 				SetFeed(true)
 			end
 		end,
-        	["Default"] = false
+        ["Default"] = false
 	})
 end)
 
@@ -10806,7 +10798,7 @@ velo.run(function()
 
 	RemotesConnect = vape.Categories.Velocity:CreateModule({
 		["Name"] ='RemotesConnect',
-        	["HoverText"] = 'Spams remotes.',
+        ["HoverText"] = 'Spams remotes.',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				task.spawn(function()
@@ -10816,7 +10808,7 @@ velo.run(function()
 								if isAlive(lplr, true) and tick() > MelodyTick and getguitar() and lplr.Character:GetAttribute('Health') < lplr.Character:GetAttribute('MaxHealth') then 
 									bedwars.Client:Get('PlayGuitar'):SendToServer({healTarget = lplr});
 									bedwars.Client:Get('StopPlayingGuitar'):SendToServer();
-									melodytick = tick() + 0.45;
+									MelodyTick = tick() + 0.45;
 								end;
 								task.wait();
 							end;
@@ -10846,7 +10838,7 @@ velo.run(function()
 				end;
 			end
 		end,
-        	["Default"] =false
+        ["Default"] =false
 	})
 	RemotesConnectDelay = RemotesConnect:CreateSlider({
 		["Name"] ='Delay',
