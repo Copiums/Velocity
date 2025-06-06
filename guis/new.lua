@@ -3700,6 +3700,9 @@ function mainapi:CreateCategory(categorysettings)
 	windowlist.Parent = children
 
 	function categoryapi:CreateModule(modulesettings)
+        if mainapi.Modules[modulesettings.Name] then
+			mainapi:Remove(modulesettings.Name)
+		end
 		local moduleapi = {
 			Enabled = false,
 			Options = {},
@@ -6075,7 +6078,15 @@ guipane:CreateDropdown({
 			if shared.VapeDeveloper then
 				loadstring(readfile('newvape/loader.lua'), 'loader')()
 			else
-				loadstring(game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/loader.lua', true))()
+				local url = 'https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/loader.lua'
+                local res = game:HttpGet(url, true)
+                print(res)
+                local func, err = loadstring(res)
+                if not func then
+                    error("Failed to load script: "..tostring(err))
+                else
+                    func()
+                end
 			end
 		end
 	end,
