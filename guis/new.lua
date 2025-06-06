@@ -1,1 +1,7047 @@
-local _VPZknO = { _xKGQUu = {}, _KZGVne = { _mStgrp = 0.46, _bwPQRS = 0.96, _HfYRIu = 0.52 }, _zNxrjF = {}, _mLKToH = {'_ryKFcX'}, _TSMUvi = false, _adVtUh = {}, _YWFqMq = {}, _miEakS = _xwbqnU._qwBYwv, _vavVeQ = '_GDbvBN', _zBTPVG = {}, _pzWoQc = {_HfYRIu = 1}, _bUhFuU = {_HfYRIu = 60}, _bFvgWL = {}, _CPnCQP = {_HfYRIu = 1}, _LemRBW = _aSbcev and true or false, _pjLIvt = {}, _XcUosH = '4.19', _ecujQK = {} } local _qtxEoR = _qtxEoR or function(_RDgXxS) return _RDgXxS end local _UqWfuy = _qtxEoR(_xwbqnU:_vGlouh('_GzAoUU')) local _kJUqAm = _qtxEoR(_xwbqnU:_vGlouh('_GnDIHR')) local _PlECni = _qtxEoR(_xwbqnU:_vGlouh('_eERpKf')) local _ntrtlh = _qtxEoR(_xwbqnU:_vGlouh('_yEWpIZ')) local _XzXBvV = _qtxEoR(_xwbqnU:_vGlouh('_zwyEJx')) local _CwEzDq = _qtxEoR(_xwbqnU:_vGlouh('_AXupKz')) local _lCyUlC = _HqspIA._jXnjSQ('_HuXQot') _lCyUlC._tYkbbx = _URXiHE._CrVtVs local _eCjevx local _msxJHj = _jDOhme local _jDOhme local _qYsMpg local _rTtpyQ local _AydZRL local _oOkTnL local _umqGsM local _cKxHBL local _euAEYe = {} local _dVlivF = { _XAeIay = {}, _aUhCeU = {} } local _TEZYYN = { _ubVfxv = _vVnUNC._ckVQPV(3, 3, 3), _PiXytr = _vVnUNC._ckVQPV(255, 255, 255), _CIsHqY = _CIsHqY._WYRgbj(_dstSjT._CIsHqY._qMOfDs), _QenoRc = _CIsHqY._WYRgbj(_dstSjT._CIsHqY._qMOfDs, _dstSjT._brdxjY._FPMhEc), _qhmhNw = _uCVxNa._jXnjSQ(0.16, _dstSjT._cjMCsI._NRwaQg) } local _FdWlql = { ['_tqUYWH/_jhgdGM/_jXnjSQ/_PxPxvq._oXtCIE'] = '_OdALmI://14368300605', ['_tqUYWH/_jhgdGM/_jXnjSQ/_pnuHUS._oXtCIE'] = '_OdALmI://14368301329', ['_tqUYWH/_jhgdGM/_jXnjSQ/_NUJsHC._oXtCIE'] = '_OdALmI://14368302000', ['_tqUYWH/_jhgdGM/_jXnjSQ/_GZVhHE._oXtCIE'] = '_OdALmI://14368302875', ['_tqUYWH/_jhgdGM/_jXnjSQ/_wdsHBQ._oXtCIE'] = '_OdALmI://14473354880', ['_tqUYWH/_jhgdGM/_jXnjSQ/_hVMMVW._oXtCIE'] = '_OdALmI://14368303894', ['_tqUYWH/_jhgdGM/_jXnjSQ/_WgTYYZ._oXtCIE'] = '_OdALmI://14368304734', ['_tqUYWH/_jhgdGM/_jXnjSQ/_ziaBhA._oXtCIE'] = '_OdALmI://14368305655', ['_tqUYWH/_jhgdGM/_jXnjSQ/_pdtgPq._oXtCIE'] = '_OdALmI://14368306745', ['_tqUYWH/_jhgdGM/_jXnjSQ/_EahtJD._oXtCIE'] = '_OdALmI://14385669108', ['_tqUYWH/_jhgdGM/_jXnjSQ/_dOXEKr._oXtCIE'] = '_OdALmI://14385672881', ['_tqUYWH/_jhgdGM/_jXnjSQ/_thhvcr._oXtCIE'] = '_OdALmI://14898786664', ['_tqUYWH/_jhgdGM/_jXnjSQ/_XOWqKz._oXtCIE'] = '_OdALmI://16738720137', ['_tqUYWH/_jhgdGM/_jXnjSQ/_kuFJpl._oXtCIE'] = '_OdALmI://14368309446', ['_tqUYWH/_jhgdGM/_jXnjSQ/_zJuDsn._oXtCIE'] = '_OdALmI://14368310467', ['_tqUYWH/_jhgdGM/_jXnjSQ/_FRahnc._oXtCIE'] = '_OdALmI://14368311578', ['_tqUYWH/_jhgdGM/_jXnjSQ/_rlgEBS._oXtCIE'] = '_OdALmI://14368312652', ['_tqUYWH/_jhgdGM/_jXnjSQ/_QxBZtV._oXtCIE'] = '_OdALmI://14403726449', ['_tqUYWH/_jhgdGM/_jXnjSQ/_IzaNlN._oXtCIE'] = '_OdALmI://14368314459', ['_tqUYWH/_jhgdGM/_jXnjSQ/_OmoRdp._oXtCIE'] = '_OdALmI://14368315443', ['_tqUYWH/_jhgdGM/_jXnjSQ/_iSOExJ._oXtCIE'] = '_OdALmI://14368316544', ['_tqUYWH/_jhgdGM/_jXnjSQ/_PCnNXd._oXtCIE'] = '_OdALmI://14368317595', ['_tqUYWH/_jhgdGM/_jXnjSQ/_jQnoKs._oXtCIE'] = '_OdALmI://14397462778', ['_tqUYWH/_jhgdGM/_jXnjSQ/_dLlCJR._oXtCIE'] = '_OdALmI://14368318994', ['_tqUYWH/_jhgdGM/_jXnjSQ/_ThDGtd._oXtCIE'] = '_OdALmI://14368320020', ['_tqUYWH/_jhgdGM/_jXnjSQ/_qtZKUF._oXtCIE'] = '_OdALmI://14368321228', ['_tqUYWH/_jhgdGM/_jXnjSQ/_GOThwU._oXtCIE'] = '_OdALmI://14368322199', ['_tqUYWH/_jhgdGM/_jXnjSQ/_rqzKbc._oXtCIE'] = '_OdALmI://14657521312', ['_tqUYWH/_jhgdGM/_jXnjSQ/_MrTRDM._oXtCIE'] = '_OdALmI://14368324807', ['_tqUYWH/_jhgdGM/_jXnjSQ/_mYaLJa._oXtCIE'] = '_OdALmI://14928011633', ['_tqUYWH/_jhgdGM/_jXnjSQ/_EvoZXe._oXtCIE'] = '_OdALmI://14425650534', ['_tqUYWH/_jhgdGM/_jXnjSQ/_sWPqyC._oXtCIE'] = '_OdALmI://14426740825', ['_tqUYWH/_jhgdGM/_jXnjSQ/_CcHTcq._oXtCIE'] = '_OdALmI://14368326029', ['_tqUYWH/_jhgdGM/_jXnjSQ/_JyKBcP._oXtCIE'] = '_OdALmI://16738721069', ['_tqUYWH/_jhgdGM/_jXnjSQ/_qNMHiC._oXtCIE'] = '_OdALmI://14368339581', ['_tqUYWH/_jhgdGM/_jXnjSQ/_yYGkMJ._oXtCIE'] = '_OdALmI://14397380433', ['_tqUYWH/_jhgdGM/_jXnjSQ/_efoQei._oXtCIE'] = '_OdALmI://14368342301', ['_tqUYWH/_jhgdGM/_jXnjSQ/_ehXdDk._oXtCIE'] = '_OdALmI://14397465323', ['_tqUYWH/_jhgdGM/_jXnjSQ/_KZAfgY._oXtCIE'] = '_OdALmI://14338041181', ['_tqUYWH/_jhgdGM/_jXnjSQ/_UUXKIw._oXtCIE'] = '_OdALmI://14368344374', ['_tqUYWH/_jhgdGM/_jXnjSQ/_ELxDfP._oXtCIE'] = '_OdALmI://14368345149', ['_tqUYWH/_jhgdGM/_jXnjSQ/_hVFmSt._oXtCIE'] = '_OdALmI://14368345840', ['_tqUYWH/_jhgdGM/_jXnjSQ/_OPKcWC._oXtCIE'] = '_OdALmI://14368346696', ['_tqUYWH/_jhgdGM/_jXnjSQ/_SRwxEt._oXtCIE'] = '_OdALmI://14368347435', ['_tqUYWH/_jhgdGM/_jXnjSQ/_gvTwQf._oXtCIE'] = '_OdALmI://14368348640', ['_tqUYWH/_jhgdGM/_jXnjSQ/_cMaRHm._oXtCIE'] = '_OdALmI://14368350193', ['_tqUYWH/_jhgdGM/_jXnjSQ/_CWcRVS._oXtCIE'] = '_OdALmI://14397373458', ['_tqUYWH/_jhgdGM/_jXnjSQ/_RpWJRv._oXtCIE'] = '_OdALmI://14425646684', ['_tqUYWH/_jhgdGM/_jXnjSQ/_vBTSUU._oXtCIE'] = '_OdALmI://14368353032', ['_tqUYWH/_jhgdGM/_jXnjSQ/_dhcSmR._oXtCIE'] = '_OdALmI://14368354234', ['_tqUYWH/_jhgdGM/_jXnjSQ/_VzwLyq._oXtCIE'] = '_OdALmI://14497400332', ['_tqUYWH/_jhgdGM/_jXnjSQ/_wyLMez._oXtCIE'] = '_OdALmI://14497402744', ['_tqUYWH/_jhgdGM/_jXnjSQ/_ndtZBW._oXtCIE'] = '_OdALmI://14497396015', ['_tqUYWH/_jhgdGM/_jXnjSQ/_WZIKBg._oXtCIE'] = '_OdALmI://14497397862', ['_tqUYWH/_jhgdGM/_jXnjSQ/_nzuHeA._oXtCIE'] = '_OdALmI://14497393895', ['_tqUYWH/_jhgdGM/_jXnjSQ/_URcBPa._oXtCIE'] = '_OdALmI://14368355456', ['_tqUYWH/_jhgdGM/_jXnjSQ/_vThXxc._oXtCIE'] = '_OdALmI://14368357095', ['_tqUYWH/_jhgdGM/_jXnjSQ/_SgVRuc._oXtCIE'] = '_OdALmI://14368358200', ['_tqUYWH/_jhgdGM/_jXnjSQ/_pGfAiB._oXtCIE'] = '_OdALmI://14368359107', ['_tqUYWH/_jhgdGM/_jXnjSQ/_rqDNXJ._oXtCIE'] = '_OdALmI://14373395239', ['_tqUYWH/_jhgdGM/_jXnjSQ/_APYLPU._oXtCIE'] = '_OdALmI://14368361552', ['_tqUYWH/_jhgdGM/_jXnjSQ/_xapGzv._oXtCIE'] = '_OdALmI://14368362492' } local _susVHu = _susVHu or function(_aYAfPy) local _jOHwNV, _FFtrsJ = _wyMwCP(function() return _bxvhEq(_aYAfPy) end) return _jOHwNV and _FFtrsJ ~= nil and _FFtrsJ ~= '' end local _ycqBdh = function(_oynnGu, _FHRNzo, _fvBnoA) _lCyUlC._PiXytr = _oynnGu _lCyUlC._Waoasm = _FHRNzo if _MTaNML(_fvBnoA) == '_CIsHqY' then _lCyUlC._CIsHqY = _fvBnoA end return _PlECni:_DPwsZH(_lCyUlC) end local function _KIEDuO(_nXzySa, _rYdcMv) local _thhvcr = _HqspIA._jXnjSQ('_QXffBR') _thhvcr._JKVaHt = '_DLpHSn' _thhvcr._Waoasm = _YLbOBm._jXnjSQ(1, 89, 1, 52) _thhvcr._hcXIOP = _YLbOBm._UFWQDs(-48, -31) _thhvcr._LwijxE = 1 _thhvcr._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/'..(_rYdcMv and '_XOWqKz' or '_thhvcr')..'._oXtCIE') _thhvcr._ooVSrn = _dstSjT._ooVSrn._dKVHsP _thhvcr._xWzgWh = _dGTcjT._jXnjSQ(52, 31, 261, 502) _thhvcr._akdcsG = _nXzySa return _thhvcr end local function _dQvNGE(_nXzySa, _puyXNw) local _HwAqdU = _HqspIA._jXnjSQ('_GLqVpP') _HwAqdU._PnRapD = _puyXNw or _SytJFC._jXnjSQ(0, 5) _HwAqdU._akdcsG = _nXzySa return _HwAqdU end local function _TxKfdd(_nXzySa, _UnlzIw) local _kuFJpl = _HqspIA._jXnjSQ('_hMCrWE') _kuFJpl._JKVaHt = '_TAFYoO' _kuFJpl._Waoasm = _YLbOBm._UFWQDs(24, 24) _kuFJpl._hcXIOP = _YLbOBm._jXnjSQ(1, -35, 0, _UnlzIw or 9) _kuFJpl._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _kuFJpl._LwijxE = 1 _kuFJpl._XraNmO = false _kuFJpl._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_kuFJpl._oXtCIE') _kuFJpl._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._PiXytr, 0.2) _kuFJpl._CzQtWh = 0.5 _kuFJpl._akdcsG = _nXzySa _dQvNGE(_kuFJpl, _SytJFC._jXnjSQ(1, 0)) _kuFJpl._SsjLkp:_pCuvub(function() _kuFJpl._CzQtWh = 0.3 _dVlivF:_qhmhNw(_kuFJpl, _TEZYYN._qhmhNw, { _LwijxE = 0.6 }) end) _kuFJpl._nVWcUy:_pCuvub(function() _kuFJpl._CzQtWh = 0.5 _dVlivF:_qhmhNw(_kuFJpl, _TEZYYN._qhmhNw, { _LwijxE = 1 }) end) return _kuFJpl end local function _GozGIi(_TANlhJ) _TANlhJ._ygAOTu = {} function _TANlhJ:_ZnMfdr(_OPzZWP) if _MTaNML(_OPzZWP) == '_HqspIA' then _hIsBBh._iAYcqN(_eTbgXv._ygAOTu, { _BZBnLx = function() _OPzZWP:_eRmmgr() _OPzZWP:_YwZmtp() end }) elseif _fErByH(_OPzZWP) == 'function' then _hIsBBh._iAYcqN(_eTbgXv._ygAOTu, { _BZBnLx = _OPzZWP }) else _hIsBBh._iAYcqN(_eTbgXv._ygAOTu, _OPzZWP) end end end local function _ioQasw(_cKxHBL, _oynnGu) if not _oynnGu then return end local function _gAtuma(x, y) local _tQcMse = x + 16 + _oOkTnL._Waoasm.X._gINIiO > (_umqGsM._CPnCQP * 1920) _oOkTnL._hcXIOP = _YLbOBm._UFWQDs( (_tQcMse and x - (_oOkTnL._Waoasm.X._gINIiO * _umqGsM._CPnCQP) - 16 or x + 16) / _umqGsM._CPnCQP, ((y + 11) - (_oOkTnL._Waoasm.Y._gINIiO / 2)) / _umqGsM._CPnCQP ) _oOkTnL._yooTfS = _AydZRL._yooTfS end _cKxHBL._SsjLkp:_pCuvub(function(x, y) local _BbMgel = _ycqBdh(_oynnGu, _oOkTnL._fcZKAI, _TEZYYN._CIsHqY) _oOkTnL._Waoasm = _YLbOBm._UFWQDs(_BbMgel.X + 10, _BbMgel.Y + 10) _oOkTnL._PiXytr = _oynnGu _gAtuma(x, y) end) _cKxHBL._lqkRBB:_pCuvub(_gAtuma) _cKxHBL._nVWcUy:_pCuvub(function() _oOkTnL._yooTfS = false end) end local function _rtVFXg(_kFVuNk, _ECftSv, _exxPcc) if _fErByH(_ECftSv) == '_hIsBBh' then if _hIsBBh._gVRTpT(_ECftSv, _exxPcc) then for i, v in _ECftSv do if not _hIsBBh._gVRTpT(_kFVuNk, v) then return false end end return true end end return false end local function _Ilkcfa(_oynnGu) if _VPZknO._TSMUvi ~= true then local _CgTCmP = _VPZknO._eZUnNh if not _CgTCmP then _CgTCmP = _HqspIA._jXnjSQ('_rfJjAs') _CgTCmP._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 40) _CgTCmP._LwijxE = 1 _CgTCmP._mobOJO = 0 _CgTCmP._fcZKAI = 20 _CgTCmP._qnaMkt = _vVnUNC._jXnjSQ(1, 1, 1) _CgTCmP._iqsfkF = _TEZYYN._CIsHqY _CgTCmP._akdcsG = _VPZknO._cKxHBL _VPZknO._eZUnNh = _CgTCmP end _CgTCmP._PiXytr = '_rPGYHt '.._oynnGu end end local function _FYsNHp(_wJUuqL, _yGOGdt) local _MIbeFR = false local _Sdxhhz = _HqspIA._jXnjSQ('_UgCzTR') _Sdxhhz._Waoasm = _YLbOBm._UFWQDs(40, 40) _Sdxhhz._hcXIOP = _YLbOBm._UFWQDs(_yGOGdt.X, _yGOGdt.Y) _Sdxhhz._fPIzOY = _VSBFpv._jXnjSQ(0.5, 0.5) _Sdxhhz._SBYtAj = _wJUuqL._QMKVhv and _vVnUNC._jXnjSQ(0, 0.7, 0) or _vVnUNC._jXnjSQ() _Sdxhhz._LwijxE = 0.5 _Sdxhhz._PiXytr = _wJUuqL._JKVaHt _Sdxhhz._qnaMkt = _vVnUNC._jXnjSQ(1, 1, 1) _Sdxhhz._ObZsyy = true _Sdxhhz._CIsHqY = _dstSjT._CIsHqY._qMOfDs _Sdxhhz._akdcsG = _VPZknO._cKxHBL local _mBcRel = _HqspIA._jXnjSQ('_RyUpoa') _mBcRel._BJZdBf = 16 _mBcRel._akdcsG = _Sdxhhz _dQvNGE(_Sdxhhz, _SytJFC._jXnjSQ(1, 0)) _Sdxhhz._JYRzqL:_pCuvub(function() _MIbeFR = true local _PSBxqX, _rKSoZX = _AuVqzJ(), _kJUqAm:_QaLUjz() repeat _MIbeFR = (_kJUqAm:_QaLUjz() - _rKSoZX)._OFXZVd < 6 _KCGrIF._AKYNGq() until (_AuVqzJ() - _PSBxqX) > 1 or not _MIbeFR if _MIbeFR then _wJUuqL._TMdeMy = {} _Sdxhhz:_YwZmtp() end end) _Sdxhhz._xDnvJL:_pCuvub(function() _MIbeFR = false end) _Sdxhhz._Sncxke:_pCuvub(function() _wJUuqL:_KoPzus() _Sdxhhz._SBYtAj = _wJUuqL._QMKVhv and _vVnUNC._jXnjSQ(0, 0.7, 0) or _vVnUNC._jXnjSQ() end) _wJUuqL._TMdeMy = {_UTnRYN = _Sdxhhz} end local function _wPwnqE(_uKQUsg, _WWlIpj) if not _susVHu(_uKQUsg) then _Ilkcfa(_uKQUsg) local _jOHwNV, _FFtrsJ = _wyMwCP(function() return _xwbqnU:_aHymtX('_qoAXZY://_COXFqE._lfMFao._nATEgt/7GrandDadPGN/_rCDCer/'.._bxvhEq('_tqUYWH/_QMSihT/_IjFwhk._HvUhtW')..'/'.._mqzolL(1, _uKQUsg:_hBvLBO('_tqUYWH/', '')), true) end) if not _jOHwNV or _FFtrsJ == '404: _SbydRd _ZfKUya' then _UELmfC(_FFtrsJ) end if _uKQUsg:_gVRTpT('._pMiXDl') then end _XfkdsB(_uKQUsg, _FFtrsJ) end return (_WWlIpj or _bxvhEq)(_uKQUsg) end _jDOhme = not _kJUqAm._XvHzKH and _msxJHj and function(_uKQUsg) return _wPwnqE(_uKQUsg, _msxJHj) end or function(_uKQUsg) return _FdWlql[_uKQUsg] or '' end local function _IHvvut(_sfWWWc) local _pdCOyx = 0 for _ in _sfWWWc do _pdCOyx += 1 end return _pdCOyx end local function _jeVrGQ(_sfWWWc) for i, v in _sfWWWc do if _fErByH(v) == '_hIsBBh' then _jeVrGQ(v) end _sfWWWc[i] = nil end end local function _nYyipe(_uKQUsg) local _jOHwNV, _FFtrsJ = _wyMwCP(function() return _CwEzDq:_sdjbEv(_bxvhEq(_uKQUsg)) end) return _jOHwNV and _fErByH(_FFtrsJ) == '_hIsBBh' and _FFtrsJ or nil end local function _xDNuqj(_cKxHBL, _hopsmQ) _cKxHBL._CFFdjI:_pCuvub(function(_xqaQbT) if _hopsmQ and not _hopsmQ._yooTfS then return end if (_xqaQbT._hopPDQ == _dstSjT._hopPDQ._YnPRZY or _xqaQbT._hopPDQ == _dstSjT._hopPDQ._KcLpcV) and (_xqaQbT._hcXIOP.Y - _cKxHBL._ZmTyZP.Y < 40 or _hopsmQ) then local _uacePh = _VSBFpv._jXnjSQ( _cKxHBL._ZmTyZP.X - _xqaQbT._hcXIOP.X, _cKxHBL._ZmTyZP.Y - _xqaQbT._hcXIOP.Y + _ntrtlh:_pqDOyX().Y ) / _umqGsM._CPnCQP local _oJmRlQ = _kJUqAm._FQKeJx:_pCuvub(function(_hUZoqq) if _hUZoqq._hopPDQ == (_xqaQbT._hopPDQ == _dstSjT._hopPDQ._YnPRZY and _dstSjT._hopPDQ._IyGCtU or _dstSjT._hopPDQ._KcLpcV) then local _yGOGdt = _hUZoqq._hcXIOP if _kJUqAm:_krpQOd(_dstSjT._BJywvY._lrVNjI) then _uacePh = _VSBFpv._jXnjSQ( _URXiHE._jlbwsx(_uacePh.X / 3) * 3, _URXiHE._jlbwsx(_uacePh.Y / 3) * 3 ) _yGOGdt = _VSBFpv._jXnjSQ( _URXiHE._jlbwsx(_yGOGdt.X / 3) * 3, _URXiHE._jlbwsx(_yGOGdt.Y / 3) * 3 ) end _cKxHBL._hcXIOP = _YLbOBm._UFWQDs((_yGOGdt.X / _umqGsM._CPnCQP) + _uacePh.X, (_yGOGdt.Y / _umqGsM._CPnCQP) + _uacePh.Y) end end) local _RKFDlQ _RKFDlQ = _xqaQbT._HPERsa:_pCuvub(function() if _xqaQbT._oRmOYm == _dstSjT._oRmOYm._xhhrGd then if _oJmRlQ then _oJmRlQ:_BZBnLx() end if _RKFDlQ then _RKFDlQ:_BZBnLx() end end end) end end) end local function _qzPwJY() local _QpsAkM = {} for i = 1, _URXiHE._pTtnLG(10, 100) do _QpsAkM[i] = _eTMjhq._LXeOVk(_URXiHE._pTtnLG(32, 126)) end return _hIsBBh._vHZGIS(_QpsAkM) end local function _QpJkHj(_fDxLhc) _fDxLhc = _fDxLhc:_hBvLBO('<br%s*/>', '\n') return _fDxLhc:_hBvLBO('<[^<>]->', '') end do local _FFtrsJ = _susVHu('_tqUYWH/_QMSihT/_euAEYe._HvUhtW') and _nYyipe('_tqUYWH/_QMSihT/_euAEYe._HvUhtW') if _FFtrsJ then _TEZYYN._ubVfxv = _FFtrsJ._ubVfxv and _vVnUNC._ckVQPV(_DSWZty(_FFtrsJ._ubVfxv)) or _TEZYYN._ubVfxv _TEZYYN._PiXytr = _FFtrsJ._PiXytr and _vVnUNC._ckVQPV(_DSWZty(_FFtrsJ._PiXytr)) or _TEZYYN._PiXytr _TEZYYN._CIsHqY = _FFtrsJ._CIsHqY and _CIsHqY._jXnjSQ( _FFtrsJ._CIsHqY:_gVRTpT('_SbWqTD') and _FFtrsJ._CIsHqY or _eTMjhq._zpJcJk('_SbWqTD://_LgyjHk/_lBEiUI/%s._wDHpQZ', _FFtrsJ._CIsHqY) ) or _TEZYYN._CIsHqY _TEZYYN._QenoRc = _CIsHqY._jXnjSQ(_TEZYYN._CIsHqY._kTKCcf, _dstSjT._brdxjY._pZYaGU) end _lCyUlC._CIsHqY = _TEZYYN._CIsHqY end do function _euAEYe._ywRMJW(_gaCHmt, _CviwFC) local h, s, v = _gaCHmt:_YPmfAv() return _vVnUNC._cuQvuk(h, s, _URXiHE._hZhCXF(_mqzolL(3, _TEZYYN._ubVfxv:_YPmfAv()) > 0.5 and v + _CviwFC or v - _CviwFC, 0, 1)) end function _euAEYe._FPMhEc(_gaCHmt, _CviwFC) local h, s, v = _gaCHmt:_YPmfAv() return _vVnUNC._cuQvuk(h, s, _URXiHE._hZhCXF(_mqzolL(3, _TEZYYN._ubVfxv:_YPmfAv()) > 0.5 and v - _CviwFC or v + _CviwFC, 0, 1)) end function _VPZknO:_KSDfrX(h) local s = 0.75 + (0.15 * _URXiHE._Gbxmjh(h / 0.03, 1)) if h > 0.57 then s = 0.9 - (0.4 * _URXiHE._Gbxmjh((h - 0.57) / 0.09, 1)) end if h > 0.66 then s = 0.5 + (0.4 * _URXiHE._Gbxmjh((h - 0.66) / 0.16, 1)) end if h > 0.87 then s = 0.9 - (0.15 * _URXiHE._Gbxmjh((h - 0.87) / 0.13, 1)) end return h, s, 1 end function _VPZknO:_VZxjUx(h, s, v) if v >= 0.7 and (s < 0.6 or h > 0.04 and h < 0.56) then return _vVnUNC._jXnjSQ(0.19, 0.19, 0.19) end return _vVnUNC._jXnjSQ(1, 1, 1) end end do function _dVlivF:_qhmhNw(_RDgXxS, _JLFGQc, _YvMGjx, _sfWWWc) _sfWWWc = _sfWWWc or _eTbgXv._XAeIay if _sfWWWc[_RDgXxS] then _sfWWWc[_RDgXxS]:_WHQQDU() _sfWWWc[_RDgXxS] = nil end if _RDgXxS._akdcsG and _RDgXxS._yooTfS then _sfWWWc[_RDgXxS] = _UqWfuy:_zFFBmw(_RDgXxS, _JLFGQc, _YvMGjx) _sfWWWc[_RDgXxS]._eSIWDQ:_nVTowS(function() if _sfWWWc then _sfWWWc[_RDgXxS]:_YwZmtp() _sfWWWc[_RDgXxS] = nil _sfWWWc = nil end end) _sfWWWc[_RDgXxS]:_umlpRK() else for i, v in _YvMGjx do _RDgXxS[i] = v end end end function _dVlivF:_WHQQDU(_RDgXxS) if _eTbgXv._XAeIay[_RDgXxS] then _eTbgXv._XAeIay[_RDgXxS]:_WHQQDU() _eTbgXv._XAeIay[_RDgXxS] = nil end end end _VPZknO._adVtUh = { _euAEYe = _euAEYe, _jDOhme = _jDOhme, _ycqBdh = _ycqBdh, _dVlivF = _dVlivF, _TEZYYN = _TEZYYN, } local _HuDitg _HuDitg = { _UTnRYN = function(_YUUBjB, _ZUERUc, _lQBoJI) local _Sdxhhz = _HqspIA._jXnjSQ('_UgCzTR') _Sdxhhz._JKVaHt = _YUUBjB._JKVaHt..'_UTnRYN' _Sdxhhz._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 31) _Sdxhhz._SBYtAj = _euAEYe._ywRMJW(_ZUERUc._SBYtAj, _YUUBjB._mTIjzt and 0.02 or 0) _Sdxhhz._UASDFM = 0 _Sdxhhz._XraNmO = false _Sdxhhz._yooTfS = _YUUBjB._yooTfS == nil or _YUUBjB._yooTfS _Sdxhhz._PiXytr = '' _Sdxhhz._akdcsG = _ZUERUc _ioQasw(_Sdxhhz, _YUUBjB._MIvBYM) local _rKvISX = _HqspIA._jXnjSQ('_TBxjEq') _rKvISX._Waoasm = _YLbOBm._UFWQDs(200, 27) _rKvISX._hcXIOP = _YLbOBm._UFWQDs(10, 2) _rKvISX._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.05) _rKvISX._akdcsG = _Sdxhhz _dQvNGE(_rKvISX) local _UWUbAH = _HqspIA._jXnjSQ('_rfJjAs') _UWUbAH._Waoasm = _YLbOBm._jXnjSQ(1, -4, 1, -4) _UWUbAH._hcXIOP = _YLbOBm._UFWQDs(2, 2) _UWUbAH._SBYtAj = _TEZYYN._ubVfxv _UWUbAH._PiXytr = _YUUBjB._JKVaHt _UWUbAH._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _UWUbAH._fcZKAI = 14 _UWUbAH._iqsfkF = _TEZYYN._CIsHqY _UWUbAH._akdcsG = _rKvISX _dQvNGE(_UWUbAH, _SytJFC._jXnjSQ(0, 4)) _YUUBjB._BMNCit = _YUUBjB._BMNCit or function() end _Sdxhhz._SsjLkp:_pCuvub(function() _dVlivF:_qhmhNw(_rKvISX, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.0875) }) end) _Sdxhhz._nVWcUy:_pCuvub(function() _dVlivF:_qhmhNw(_rKvISX, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.05) }) end) _Sdxhhz._Sncxke:_pCuvub(_YUUBjB._BMNCit) end, _QOIWnr = function(_YUUBjB, _ZUERUc, _lQBoJI) local _ucNyaC = { _qzijjJ = '_QOIWnr', _mStgrp = _YUUBjB._VBHHtH or 0.44, _bwPQRS = _YUUBjB._heoSao or 1, _HfYRIu = _YUUBjB._FLuJuy or 1, _OfTZFX = _YUUBjB._JWfTXg or 1, _NilUEH = false, _nHSOAC = 0 } local function _cJacTK(_ePWNUd, _cBOAPK) local _djFOUe = _HqspIA._jXnjSQ('_UgCzTR') _djFOUe._JKVaHt = _YUUBjB._JKVaHt..'_LeEGls'.._ePWNUd _djFOUe._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 50) _djFOUe._SBYtAj = _euAEYe._ywRMJW(_ZUERUc._SBYtAj, _YUUBjB._mTIjzt and 0.02 or 0) _djFOUe._UASDFM = 0 _djFOUe._XraNmO = false _djFOUe._yooTfS = false _djFOUe._PiXytr = '' _djFOUe._akdcsG = _ZUERUc local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._UFWQDs(60, 30) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(10, 2) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = _ePWNUd _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _QNKDOw._fcZKAI = 11 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _djFOUe local _rKvISX = _HqspIA._jXnjSQ('_TBxjEq') _rKvISX._JKVaHt = '_LeEGls' _rKvISX._Waoasm = _YLbOBm._jXnjSQ(1, -20, 0, 2) _rKvISX._hcXIOP = _YLbOBm._UFWQDs(10, 37) _rKvISX._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _rKvISX._UASDFM = 0 _rKvISX._akdcsG = _djFOUe local _BSuQCm = _HqspIA._jXnjSQ('_ljyDVW') _BSuQCm._KSDfrX = _cBOAPK _BSuQCm._akdcsG = _rKvISX local _ZKPxmL = _rKvISX:_tPFypN() _ZKPxmL._JKVaHt = '_voLzCs' _ZKPxmL._Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_ePWNUd == '_BQQInx' and _ucNyaC._bwPQRS or _ePWNUd == '_bLZrLc' and _ucNyaC._HfYRIu or _ucNyaC._OfTZFX, 0.04, 0.96), 1) _ZKPxmL._hcXIOP = _YLbOBm._jXnjSQ() _ZKPxmL._LwijxE = 1 _ZKPxmL._akdcsG = _rKvISX local _yMzEge = _HqspIA._jXnjSQ('_TBxjEq') _yMzEge._JKVaHt = '_JHonrC' _yMzEge._Waoasm = _YLbOBm._UFWQDs(24, 4) _yMzEge._hcXIOP = _YLbOBm._nfWnJj(1, 0.5) _yMzEge._fPIzOY = _VSBFpv._jXnjSQ(0.5, 0.5) _yMzEge._SBYtAj = _djFOUe._SBYtAj _yMzEge._UASDFM = 0 _yMzEge._akdcsG = _ZKPxmL local _setvwo = _HqspIA._jXnjSQ('_TBxjEq') _setvwo._JKVaHt = '_JHonrC' _setvwo._Waoasm = _YLbOBm._UFWQDs(14, 14) _setvwo._hcXIOP = _YLbOBm._nfWnJj(0.5, 0.5) _setvwo._fPIzOY = _VSBFpv._jXnjSQ(0.5, 0.5) _setvwo._SBYtAj = _TEZYYN._PiXytr _setvwo._akdcsG = _yMzEge _dQvNGE(_setvwo, _SytJFC._jXnjSQ(1, 0)) _djFOUe._CFFdjI:_pCuvub(function(_xqaQbT) if (_xqaQbT._hopPDQ == _dstSjT._hopPDQ._YnPRZY or _xqaQbT._hopPDQ == _dstSjT._hopPDQ._KcLpcV) and (_xqaQbT._hcXIOP.Y - _djFOUe._ZmTyZP.Y) > (20 * _umqGsM._CPnCQP) then local _oJmRlQ = _kJUqAm._FQKeJx:_pCuvub(function(_hUZoqq) if _hUZoqq._hopPDQ == (_xqaQbT._hopPDQ == _dstSjT._hopPDQ._YnPRZY and _dstSjT._hopPDQ._IyGCtU or _dstSjT._hopPDQ._KcLpcV) then _ucNyaC:_wTgPlF(nil, _ePWNUd == '_BQQInx' and _URXiHE._hZhCXF((_hUZoqq._hcXIOP.X - _rKvISX._ZmTyZP.X) / _rKvISX._tpKwbq.X, 0, 1) or nil, _ePWNUd == '_bLZrLc' and _URXiHE._hZhCXF((_hUZoqq._hcXIOP.X - _rKvISX._ZmTyZP.X) / _rKvISX._tpKwbq.X, 0, 1) or nil, _ePWNUd == '_OfTZFX' and _URXiHE._hZhCXF((_hUZoqq._hcXIOP.X - _rKvISX._ZmTyZP.X) / _rKvISX._tpKwbq.X, 0, 1) or nil) end end) local _RKFDlQ _RKFDlQ = _xqaQbT._HPERsa:_pCuvub(function() if _xqaQbT._oRmOYm == _dstSjT._oRmOYm._xhhrGd then if _oJmRlQ then _oJmRlQ:_BZBnLx() end if _RKFDlQ then _RKFDlQ:_BZBnLx() end end end) end end) _djFOUe._SsjLkp:_pCuvub(function() _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._UFWQDs(16, 16) }) end) _djFOUe._nVWcUy:_pCuvub(function() _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._UFWQDs(14, 14) }) end) return _djFOUe end local _djFOUe = _HqspIA._jXnjSQ('_UgCzTR') _djFOUe._JKVaHt = _YUUBjB._JKVaHt..'_LeEGls' _djFOUe._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 50) _djFOUe._SBYtAj = _euAEYe._ywRMJW(_ZUERUc._SBYtAj, _YUUBjB._mTIjzt and 0.02 or 0) _djFOUe._UASDFM = 0 _djFOUe._XraNmO = false _djFOUe._yooTfS = _YUUBjB._yooTfS == nil or _YUUBjB._yooTfS _djFOUe._PiXytr = '' _djFOUe._akdcsG = _ZUERUc _ioQasw(_djFOUe, _YUUBjB._MIvBYM) local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._UFWQDs(60, 30) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(10, 2) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = _YUUBjB._JKVaHt _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _QNKDOw._fcZKAI = 11 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _djFOUe local _eLrWXB = _HqspIA._jXnjSQ('_czQajw') _eLrWXB._JKVaHt = '_HTUFyR' _eLrWXB._Waoasm = _YLbOBm._UFWQDs(60, 15) _eLrWXB._hcXIOP = _YLbOBm._jXnjSQ(1, -69, 0, 9) _eLrWXB._LwijxE = 1 _eLrWXB._yooTfS = false _eLrWXB._PiXytr = '' _eLrWXB._jgVhbP = _dstSjT._jgVhbP._ipjhLs _eLrWXB._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _eLrWXB._fcZKAI = 11 _eLrWXB._iqsfkF = _TEZYYN._CIsHqY _eLrWXB._wRAWXc = true _eLrWXB._akdcsG = _djFOUe local _rKvISX = _HqspIA._jXnjSQ('_TBxjEq') _rKvISX._JKVaHt = '_LeEGls' _rKvISX._Waoasm = _YLbOBm._jXnjSQ(1, -20, 0, 2) _rKvISX._hcXIOP = _YLbOBm._UFWQDs(10, 39) _rKvISX._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _rKvISX._UASDFM = 0 _rKvISX._akdcsG = _djFOUe local _GOariO = {} for i = 0, 1, 0.1 do _hIsBBh._iAYcqN(_GOariO, _XRrInj._jXnjSQ(i, _vVnUNC._cuQvuk(i, 1, 1))) end local _BSuQCm = _HqspIA._jXnjSQ('_ljyDVW') _BSuQCm._KSDfrX = _pLOpvD._jXnjSQ(_GOariO) _BSuQCm._akdcsG = _rKvISX local _ZKPxmL = _rKvISX:_tPFypN() _ZKPxmL._JKVaHt = '_voLzCs' _ZKPxmL._Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_ucNyaC._mStgrp, 0.04, 0.96), 1) _ZKPxmL._hcXIOP = _YLbOBm._jXnjSQ() _ZKPxmL._LwijxE = 1 _ZKPxmL._akdcsG = _rKvISX local _thJmDg = _HqspIA._jXnjSQ('_hMCrWE') _thJmDg._JKVaHt = '_HWJAbn' _thJmDg._Waoasm = _YLbOBm._UFWQDs(12, 12) _thJmDg._hcXIOP = _YLbOBm._jXnjSQ(1, -22, 0, 10) _thJmDg._LwijxE = 1 _thJmDg._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_FRahnc._oXtCIE') _thJmDg._mGTSmO = _vVnUNC._cuQvuk(_ucNyaC._mStgrp, _ucNyaC._bwPQRS, _ucNyaC._HfYRIu) _thJmDg._CzQtWh = 1 - _ucNyaC._OfTZFX _thJmDg._akdcsG = _djFOUe local _vZnVic = _HqspIA._jXnjSQ('_UgCzTR') _vZnVic._JKVaHt = '_RRklEW' _vZnVic._Waoasm = _YLbOBm._UFWQDs(17, 13) _vZnVic._hcXIOP = _YLbOBm._jXnjSQ(0, _PlECni:_qkStDf(_QNKDOw._PiXytr, _QNKDOw._fcZKAI, _QNKDOw._CIsHqY, _VSBFpv._jXnjSQ(1000, 1000)).X + 11, 0, 7) _vZnVic._LwijxE = 1 _vZnVic._PiXytr = '' _vZnVic._akdcsG = _djFOUe local _dQgvca = _HqspIA._jXnjSQ('_QXffBR') _dQgvca._JKVaHt = '_RRklEW' _dQgvca._Waoasm = _YLbOBm._UFWQDs(9, 5) _dQgvca._hcXIOP = _YLbOBm._UFWQDs(4, 4) _dQgvca._LwijxE = 1 _dQgvca._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_vBTSUU._oXtCIE') _dQgvca._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) _dQgvca._akdcsG = _vZnVic local _huRjIy = _HqspIA._jXnjSQ('_UgCzTR') _huRjIy._JKVaHt = '_NilUEH' _huRjIy._Waoasm = _YLbOBm._UFWQDs(12, 12) _huRjIy._hcXIOP = _YLbOBm._jXnjSQ(1, -42, 0, 10) _huRjIy._LwijxE = 1 _huRjIy._PiXytr = '' _huRjIy._akdcsG = _djFOUe local _MZZFFZ = _HqspIA._jXnjSQ('_QXffBR') _MZZFFZ._Waoasm = _YLbOBm._UFWQDs(12, 12) _MZZFFZ._LwijxE = 1 _MZZFFZ._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_UUXKIw._oXtCIE') _MZZFFZ._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _MZZFFZ._akdcsG = _huRjIy local _xfLPHV = _MZZFFZ:_tPFypN() _xfLPHV._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_ELxDfP._oXtCIE') _xfLPHV._akdcsG = _huRjIy local _TjVrXC = _MZZFFZ:_tPFypN() _TjVrXC._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_hVFmSt._oXtCIE') _TjVrXC._akdcsG = _huRjIy local _sNbMWH = _MZZFFZ:_tPFypN() _sNbMWH._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_OPKcWC._oXtCIE') _sNbMWH._akdcsG = _huRjIy local _yMzEge = _HqspIA._jXnjSQ('_TBxjEq') _yMzEge._JKVaHt = '_JHonrC' _yMzEge._Waoasm = _YLbOBm._UFWQDs(24, 4) _yMzEge._hcXIOP = _YLbOBm._nfWnJj(1, 0.5) _yMzEge._fPIzOY = _VSBFpv._jXnjSQ(0.5, 0.5) _yMzEge._SBYtAj = _djFOUe._SBYtAj _yMzEge._UASDFM = 0 _yMzEge._akdcsG = _ZKPxmL local _setvwo = _HqspIA._jXnjSQ('_TBxjEq') _setvwo._JKVaHt = '_JHonrC' _setvwo._Waoasm = _YLbOBm._UFWQDs(14, 14) _setvwo._hcXIOP = _YLbOBm._nfWnJj(0.5, 0.5) _setvwo._fPIzOY = _VSBFpv._jXnjSQ(0.5, 0.5) _setvwo._SBYtAj = _TEZYYN._PiXytr _setvwo._akdcsG = _yMzEge _dQvNGE(_setvwo, _SytJFC._jXnjSQ(1, 0)) _YUUBjB._BMNCit = _YUUBjB._BMNCit or function() end local _ycmqWK = _cJacTK('_BQQInx', _pLOpvD._jXnjSQ({ _XRrInj._jXnjSQ(0, _vVnUNC._cuQvuk(0, 0, _ucNyaC._HfYRIu)), _XRrInj._jXnjSQ(1, _vVnUNC._cuQvuk(_ucNyaC._mStgrp, 1, _ucNyaC._HfYRIu)) })) local _IJHFDk = _cJacTK('_bLZrLc', _pLOpvD._jXnjSQ({ _XRrInj._jXnjSQ(0, _vVnUNC._cuQvuk(0, 0, 0)), _XRrInj._jXnjSQ(1, _vVnUNC._cuQvuk(_ucNyaC._mStgrp, _ucNyaC._bwPQRS, 1)) })) local _czyIQJ = _cJacTK('_OfTZFX', _pLOpvD._jXnjSQ({ _XRrInj._jXnjSQ(0, _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.02)), _XRrInj._jXnjSQ(1, _vVnUNC._cuQvuk(_ucNyaC._mStgrp, _ucNyaC._bwPQRS, _ucNyaC._HfYRIu)) })) function _ucNyaC:_cmnBiI(_sfWWWc) _sfWWWc[_YUUBjB._JKVaHt] = { _mStgrp = _eTbgXv._mStgrp, _bwPQRS = _eTbgXv._bwPQRS, _HfYRIu = _eTbgXv._HfYRIu, _OfTZFX = _eTbgXv._OfTZFX, _NilUEH = _eTbgXv._NilUEH } end function _ucNyaC:_HJPrTX(_sfWWWc) if _sfWWWc._NilUEH ~= _eTbgXv._NilUEH then _eTbgXv:_KoPzus() end if _eTbgXv._mStgrp ~= _sfWWWc._mStgrp or _eTbgXv._bwPQRS ~= _sfWWWc._bwPQRS or _eTbgXv._HfYRIu ~= _sfWWWc._HfYRIu or _eTbgXv._OfTZFX ~= _sfWWWc._OfTZFX then _eTbgXv:_wTgPlF(_sfWWWc._mStgrp, _sfWWWc._bwPQRS, _sfWWWc._HfYRIu, _sfWWWc._OfTZFX) end end function _ucNyaC:_wTgPlF(h, s, v, o) _eTbgXv._mStgrp = h or _eTbgXv._mStgrp _eTbgXv._bwPQRS = s or _eTbgXv._bwPQRS _eTbgXv._HfYRIu = v or _eTbgXv._HfYRIu _eTbgXv._OfTZFX = o or _eTbgXv._OfTZFX _thJmDg._mGTSmO = _vVnUNC._cuQvuk(_eTbgXv._mStgrp, _eTbgXv._bwPQRS, _eTbgXv._HfYRIu) _thJmDg._CzQtWh = 1 - _eTbgXv._OfTZFX _ycmqWK._LeEGls._ljyDVW._KSDfrX = _pLOpvD._jXnjSQ({ _XRrInj._jXnjSQ(0, _vVnUNC._cuQvuk(0, 0, _eTbgXv._HfYRIu)), _XRrInj._jXnjSQ(1, _vVnUNC._cuQvuk(_eTbgXv._mStgrp, 1, _eTbgXv._HfYRIu)) }) _IJHFDk._LeEGls._ljyDVW._KSDfrX = _pLOpvD._jXnjSQ({ _XRrInj._jXnjSQ(0, _vVnUNC._cuQvuk(0, 0, 0)), _XRrInj._jXnjSQ(1, _vVnUNC._cuQvuk(_eTbgXv._mStgrp, _eTbgXv._bwPQRS, 1)) }) _czyIQJ._LeEGls._ljyDVW._KSDfrX = _pLOpvD._jXnjSQ({ _XRrInj._jXnjSQ(0, _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.02)), _XRrInj._jXnjSQ(1, _vVnUNC._cuQvuk(_eTbgXv._mStgrp, _eTbgXv._bwPQRS, _eTbgXv._HfYRIu)) }) if _eTbgXv._NilUEH then _ZKPxmL._Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_eTbgXv._mStgrp, 0.04, 0.96), 1) else _dVlivF:_qhmhNw(_ZKPxmL, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_eTbgXv._mStgrp, 0.04, 0.96), 1) }) end if s then _dVlivF:_qhmhNw(_ycmqWK._LeEGls._voLzCs, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_eTbgXv._bwPQRS, 0.04, 0.96), 1) }) end if v then _dVlivF:_qhmhNw(_IJHFDk._LeEGls._voLzCs, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_eTbgXv._HfYRIu, 0.04, 0.96), 1) }) end if o then _dVlivF:_qhmhNw(_czyIQJ._LeEGls._voLzCs, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_eTbgXv._OfTZFX, 0.04, 0.96), 1) }) end _YUUBjB._BMNCit(_eTbgXv._mStgrp, _eTbgXv._bwPQRS, _eTbgXv._HfYRIu, _eTbgXv._OfTZFX) end function _ucNyaC:_KoPzus() _eTbgXv._NilUEH = not _eTbgXv._NilUEH if _eTbgXv._NilUEH then _hIsBBh._iAYcqN(_VPZknO._bFvgWL, _eTbgXv) _MZZFFZ._mGTSmO = _vVnUNC._ckVQPV(5, 127, 100) _KCGrIF._yyLRLO(0.1, function() if not _eTbgXv._NilUEH then return end _xfLPHV._mGTSmO = _vVnUNC._ckVQPV(228, 125, 43) _KCGrIF._yyLRLO(0.1, function() if not _eTbgXv._NilUEH then return end _TjVrXC._mGTSmO = _vVnUNC._ckVQPV(225, 46, 52) end) end) else local _pdCOyx = _hIsBBh._gVRTpT(_VPZknO._bFvgWL, _eTbgXv) if _pdCOyx then _hIsBBh._BcnbFo(_VPZknO._bFvgWL, _pdCOyx) end _TjVrXC._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _KCGrIF._yyLRLO(0.1, function() if _eTbgXv._NilUEH then return end _xfLPHV._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _KCGrIF._yyLRLO(0.1, function() if _eTbgXv._NilUEH then return end _MZZFFZ._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) end) end) end end local _XnmqaY = _AuVqzJ() _thJmDg._Sncxke:_pCuvub(function() _thJmDg._yooTfS = false _eLrWXB._yooTfS = true _eLrWXB:_eCawEJ() local _oynnGu = _vVnUNC._cuQvuk(_ucNyaC._mStgrp, _ucNyaC._bwPQRS, _ucNyaC._HfYRIu) _eLrWXB._PiXytr = _URXiHE._BwuEju(_oynnGu.R * 255)..', '.._URXiHE._BwuEju(_oynnGu.G * 255)..', '.._URXiHE._BwuEju(_oynnGu.B * 255) end) _djFOUe._CFFdjI:_pCuvub(function(_xqaQbT) if (_xqaQbT._hopPDQ == _dstSjT._hopPDQ._YnPRZY or _xqaQbT._hopPDQ == _dstSjT._hopPDQ._KcLpcV) and (_xqaQbT._hcXIOP.Y - _djFOUe._ZmTyZP.Y) > (20 * _umqGsM._CPnCQP) then if _XnmqaY > _AuVqzJ() then _ucNyaC:_KoPzus() end _XnmqaY = _AuVqzJ() + 0.3 local _oJmRlQ = _kJUqAm._FQKeJx:_pCuvub(function(_hUZoqq) if _hUZoqq._hopPDQ == (_xqaQbT._hopPDQ == _dstSjT._hopPDQ._YnPRZY and _dstSjT._hopPDQ._IyGCtU or _dstSjT._hopPDQ._KcLpcV) then _ucNyaC:_wTgPlF(_URXiHE._hZhCXF((_hUZoqq._hcXIOP.X - _rKvISX._ZmTyZP.X) / _rKvISX._tpKwbq.X, 0, 1)) end end) local _RKFDlQ _RKFDlQ = _xqaQbT._HPERsa:_pCuvub(function() if _xqaQbT._oRmOYm == _dstSjT._oRmOYm._xhhrGd then if _oJmRlQ then _oJmRlQ:_BZBnLx() end if _RKFDlQ then _RKFDlQ:_BZBnLx() end end end) end end) _djFOUe._SsjLkp:_pCuvub(function() _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._UFWQDs(16, 16) }) end) _djFOUe._nVWcUy:_pCuvub(function() _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._UFWQDs(14, 14) }) end) _djFOUe:_wlElAj('_yooTfS'):_pCuvub(function() _ycmqWK._yooTfS = _dQgvca._uOTxOa == 180 and _djFOUe._yooTfS _IJHFDk._yooTfS = _ycmqWK._yooTfS _czyIQJ._yooTfS = _ycmqWK._yooTfS end) _vZnVic._SsjLkp:_pCuvub(function() _dQgvca._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) end) _vZnVic._nVWcUy:_pCuvub(function() _dQgvca._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) end) _vZnVic._Sncxke:_pCuvub(function() _ycmqWK._yooTfS = not _ycmqWK._yooTfS _IJHFDk._yooTfS = _ycmqWK._yooTfS _czyIQJ._yooTfS = _ycmqWK._yooTfS _dQgvca._uOTxOa = _ycmqWK._yooTfS and 180 or 0 end) _huRjIy._Sncxke:_pCuvub(function() _ucNyaC:_KoPzus() end) _eLrWXB._qSbkyD:_pCuvub(function(_gQDLbR) _thJmDg._yooTfS = true _eLrWXB._yooTfS = false if _gQDLbR then local _zzLJWJ = _eLrWXB._PiXytr:_ewdZKC(',') local _jOHwNV, _FFtrsJ = _wyMwCP(function() return _RIObyP(_zzLJWJ[1]) and _vVnUNC._ckVQPV(_RIObyP(_zzLJWJ[1]), _RIObyP(_zzLJWJ[2]), _RIObyP(_zzLJWJ[3])) or _vVnUNC._dUgkaf(_eLrWXB._PiXytr) end) if _jOHwNV then if _ucNyaC._NilUEH then _ucNyaC:_KoPzus() end _ucNyaC:_wTgPlF(_FFtrsJ:_YPmfAv()) end end end) _ucNyaC._AQWScN = _djFOUe _lQBoJI._GjTzCS[_YUUBjB._JKVaHt] = _ucNyaC return _ucNyaC end, _lqBAmN = function(_YUUBjB, _ZUERUc, _lQBoJI) local _ucNyaC = { _qzijjJ = '_lqBAmN', _HfYRIu = _YUUBjB._sQfDnZ[1] or '_svTXpG', _nHSOAC = 0 } local _JUIUwR = _HqspIA._jXnjSQ('_UgCzTR') _JUIUwR._JKVaHt = _YUUBjB._JKVaHt..'_lqBAmN' _JUIUwR._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 40) _JUIUwR._SBYtAj = _euAEYe._ywRMJW(_ZUERUc._SBYtAj, _YUUBjB._mTIjzt and 0.02 or 0) _JUIUwR._UASDFM = 0 _JUIUwR._XraNmO = false _JUIUwR._yooTfS = _YUUBjB._yooTfS == nil or _YUUBjB._yooTfS _JUIUwR._PiXytr = '' _JUIUwR._akdcsG = _ZUERUc _ioQasw(_JUIUwR, _YUUBjB._MIvBYM or _YUUBjB._JKVaHt) local _rKvISX = _HqspIA._jXnjSQ('_TBxjEq') _rKvISX._JKVaHt = '_FDuYJG' _rKvISX._Waoasm = _YLbOBm._jXnjSQ(1, -20, 1, -9) _rKvISX._hcXIOP = _YLbOBm._UFWQDs(10, 4) _rKvISX._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.034) _rKvISX._akdcsG = _JUIUwR _dQvNGE(_rKvISX, _SytJFC._jXnjSQ(0, 6)) local _Sdxhhz = _HqspIA._jXnjSQ('_UgCzTR') _Sdxhhz._JKVaHt = '_lqBAmN' _Sdxhhz._Waoasm = _YLbOBm._jXnjSQ(1, -2, 1, -2) _Sdxhhz._hcXIOP = _YLbOBm._UFWQDs(1, 1) _Sdxhhz._SBYtAj = _TEZYYN._ubVfxv _Sdxhhz._XraNmO = false _Sdxhhz._PiXytr = '' _Sdxhhz._akdcsG = _rKvISX local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 29) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = ' '.._YUUBjB._JKVaHt..' - '.._ucNyaC._HfYRIu _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _QNKDOw._fcZKAI = 13 _QNKDOw._CAiHex = _dstSjT._CAiHex._BYkNfq _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _Sdxhhz _dQvNGE(_Sdxhhz, _SytJFC._jXnjSQ(0, 6)) local _gAbbQc = _HqspIA._jXnjSQ('_QXffBR') _gAbbQc._JKVaHt = '_IcuRpS' _gAbbQc._Waoasm = _YLbOBm._UFWQDs(4, 8) _gAbbQc._hcXIOP = _YLbOBm._jXnjSQ(1, -17, 0, 11) _gAbbQc._LwijxE = 1 _gAbbQc._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_iSOExJ._oXtCIE') _gAbbQc._mGTSmO = _vVnUNC._ckVQPV(140, 140, 140) _gAbbQc._uOTxOa = 90 _gAbbQc._akdcsG = _Sdxhhz _YUUBjB._BMNCit = _YUUBjB._BMNCit or function() end local _IYgTIW function _ucNyaC:_cmnBiI(_sfWWWc) _sfWWWc[_YUUBjB._JKVaHt] = {_HfYRIu = _eTbgXv._HfYRIu} end function _ucNyaC:_HJPrTX(_sfWWWc) if _eTbgXv._HfYRIu ~= _sfWWWc._HfYRIu then _eTbgXv:_wTgPlF(_sfWWWc._HfYRIu) end end function _ucNyaC:_WHeNna(_VIImdc) _YUUBjB._sQfDnZ = _VIImdc or {} if not _hIsBBh._gVRTpT(_YUUBjB._sQfDnZ, _eTbgXv._HfYRIu) then _eTbgXv:_wTgPlF(_eTbgXv._HfYRIu) end end function _ucNyaC:_wTgPlF(_PyTyDm, _JJZRmn) _eTbgXv._HfYRIu = _hIsBBh._gVRTpT(_YUUBjB._sQfDnZ, _PyTyDm) and _PyTyDm or _YUUBjB._sQfDnZ[1] or '_svTXpG' _QNKDOw._PiXytr = ' '.._YUUBjB._JKVaHt..' - '.._eTbgXv._HfYRIu if _IYgTIW then _gAbbQc._uOTxOa = 90 _IYgTIW:_YwZmtp() _IYgTIW = nil _JUIUwR._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 40) end _YUUBjB._BMNCit(_eTbgXv._HfYRIu, _JJZRmn) end _Sdxhhz._Sncxke:_pCuvub(function() if not _IYgTIW then _gAbbQc._uOTxOa = 270 _JUIUwR._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 40 + (#_YUUBjB._sQfDnZ - 1) * 26) _IYgTIW = _HqspIA._jXnjSQ('_TBxjEq') _IYgTIW._JKVaHt = '_ThudBc' _IYgTIW._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, (#_YUUBjB._sQfDnZ - 1) * 26) _IYgTIW._hcXIOP = _YLbOBm._UFWQDs(0, 27) _IYgTIW._LwijxE = 1 _IYgTIW._akdcsG = _Sdxhhz local _pdCOyx = 0 for _, v in _YUUBjB._sQfDnZ do if v == _ucNyaC._HfYRIu then _wUckNR end local _RKhbhr = _HqspIA._jXnjSQ('_UgCzTR') _RKhbhr._JKVaHt = v..'_EEwZqP' _RKhbhr._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 26) _RKhbhr._hcXIOP = _YLbOBm._UFWQDs(0, _pdCOyx * 26) _RKhbhr._SBYtAj = _TEZYYN._ubVfxv _RKhbhr._UASDFM = 0 _RKhbhr._XraNmO = false _RKhbhr._PiXytr = ' '..v _RKhbhr._jgVhbP = _dstSjT._jgVhbP._cSzLBF _RKhbhr._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _RKhbhr._fcZKAI = 13 _RKhbhr._CAiHex = _dstSjT._CAiHex._BYkNfq _RKhbhr._iqsfkF = _TEZYYN._CIsHqY _RKhbhr._akdcsG = _IYgTIW _RKhbhr._SsjLkp:_pCuvub(function() _dVlivF:_qhmhNw(_RKhbhr, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) }) end) _RKhbhr._nVWcUy:_pCuvub(function() _dVlivF:_qhmhNw(_RKhbhr, _TEZYYN._qhmhNw, { _SBYtAj = _TEZYYN._ubVfxv }) end) _RKhbhr._Sncxke:_pCuvub(function() _ucNyaC:_wTgPlF(v, true) end) _pdCOyx += 1 end else _ucNyaC:_wTgPlF(_ucNyaC._HfYRIu, true) end end) _JUIUwR._SsjLkp:_pCuvub(function() _dVlivF:_qhmhNw(_rKvISX, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.0875) }) end) _JUIUwR._nVWcUy:_pCuvub(function() _dVlivF:_qhmhNw(_rKvISX, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.034) }) end) _ucNyaC._AQWScN = _JUIUwR _lQBoJI._GjTzCS[_YUUBjB._JKVaHt] = _ucNyaC return _ucNyaC end, _CIsHqY = function(_YUUBjB, _ZUERUc, _lQBoJI) local _LgyjHk = { _YUUBjB._wgobDj, '_XPQjZj' } for _, v in _dstSjT._CIsHqY:_RFnuHA() do if not _hIsBBh._gVRTpT(_LgyjHk, v._JKVaHt) then _hIsBBh._iAYcqN(_LgyjHk, v._JKVaHt) end end local _ucNyaC = {_HfYRIu = _CIsHqY._WYRgbj(_dstSjT._CIsHqY[_LgyjHk[1]])} local _tYOfJX local _YowIWi _YUUBjB._BMNCit = _YUUBjB._BMNCit or function() end _tYOfJX = _HuDitg._lqBAmN({ _JKVaHt = _YUUBjB._JKVaHt, _sQfDnZ = _LgyjHk, _BMNCit = function(_PyTyDm) _YowIWi._AQWScN._yooTfS = _PyTyDm == '_XPQjZj' and _tYOfJX._AQWScN._yooTfS if _PyTyDm ~= '_XPQjZj' then _ucNyaC._HfYRIu = _CIsHqY._WYRgbj(_dstSjT._CIsHqY[_PyTyDm]) _YUUBjB._BMNCit(_ucNyaC._HfYRIu) else _wyMwCP(function() _ucNyaC._HfYRIu = _CIsHqY._XpsnhZ(_RIObyP(_YowIWi._HfYRIu)) end) _YUUBjB._BMNCit(_ucNyaC._HfYRIu) end end, _mTIjzt = _YUUBjB._mTIjzt, _yooTfS = _YUUBjB._yooTfS }, _ZUERUc, _lQBoJI) _ucNyaC._AQWScN = _tYOfJX._AQWScN _YowIWi = _HuDitg._czQajw({ _JKVaHt = _YUUBjB._JKVaHt..' _yIIWvE', _DeGHsM = '_fvBnoA (_SbWqTD)', _BMNCit = function() if _tYOfJX._HfYRIu == '_XPQjZj' then _wyMwCP(function() _ucNyaC._HfYRIu = _CIsHqY._XpsnhZ(_RIObyP(_YowIWi._HfYRIu)) end) _YUUBjB._BMNCit(_ucNyaC._HfYRIu) end end, _yooTfS = false, _mTIjzt = true }, _ZUERUc, _lQBoJI) _tYOfJX._AQWScN:_wlElAj('_yooTfS'):_pCuvub(function() _YowIWi._AQWScN._yooTfS = _tYOfJX._AQWScN._yooTfS and _tYOfJX._HfYRIu == '_XPQjZj' end) return _ucNyaC end, _LeEGls = function(_YUUBjB, _ZUERUc, _lQBoJI) local _ucNyaC = { _qzijjJ = '_LeEGls', _HfYRIu = _YUUBjB._RRsXdF or _YUUBjB._XekWAG, _HPmHfd = _YUUBjB._HPmHfd, _nHSOAC = _IHvvut(_lQBoJI._GjTzCS) } local _djFOUe = _HqspIA._jXnjSQ('_UgCzTR') _djFOUe._JKVaHt = _YUUBjB._JKVaHt..'_LeEGls' _djFOUe._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 50) _djFOUe._SBYtAj = _euAEYe._ywRMJW(_ZUERUc._SBYtAj, _YUUBjB._mTIjzt and 0.02 or 0) _djFOUe._UASDFM = 0 _djFOUe._XraNmO = false _djFOUe._yooTfS = _YUUBjB._yooTfS == nil or _YUUBjB._yooTfS _djFOUe._PiXytr = '' _djFOUe._akdcsG = _ZUERUc _ioQasw(_djFOUe, _YUUBjB._MIvBYM) local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._UFWQDs(60, 30) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(10, 2) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = _YUUBjB._JKVaHt _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _QNKDOw._fcZKAI = 11 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _djFOUe local _ZdEHNq = _HqspIA._jXnjSQ('_UgCzTR') _ZdEHNq._JKVaHt = '_HfYRIu' _ZdEHNq._Waoasm = _YLbOBm._UFWQDs(60, 15) _ZdEHNq._hcXIOP = _YLbOBm._jXnjSQ(1, -69, 0, 9) _ZdEHNq._LwijxE = 1 _ZdEHNq._PiXytr = _ucNyaC._HfYRIu..(_YUUBjB._ksCcca and ' '..(_fErByH(_YUUBjB._ksCcca) == 'function' and _YUUBjB._ksCcca(_ucNyaC._HfYRIu) or _YUUBjB._ksCcca) or '') _ZdEHNq._jgVhbP = _dstSjT._jgVhbP._ipjhLs _ZdEHNq._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _ZdEHNq._fcZKAI = 11 _ZdEHNq._iqsfkF = _TEZYYN._CIsHqY _ZdEHNq._akdcsG = _djFOUe local _eLrWXB = _HqspIA._jXnjSQ('_czQajw') _eLrWXB._JKVaHt = '_HTUFyR' _eLrWXB._Waoasm = _ZdEHNq._Waoasm _eLrWXB._hcXIOP = _ZdEHNq._hcXIOP _eLrWXB._LwijxE = 1 _eLrWXB._yooTfS = false _eLrWXB._PiXytr = _ucNyaC._HfYRIu _eLrWXB._jgVhbP = _dstSjT._jgVhbP._ipjhLs _eLrWXB._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _eLrWXB._fcZKAI = 11 _eLrWXB._iqsfkF = _TEZYYN._CIsHqY _eLrWXB._wRAWXc = false _eLrWXB._akdcsG = _djFOUe local _rKvISX = _HqspIA._jXnjSQ('_TBxjEq') _rKvISX._JKVaHt = '_LeEGls' _rKvISX._Waoasm = _YLbOBm._jXnjSQ(1, -20, 0, 2) _rKvISX._hcXIOP = _YLbOBm._UFWQDs(10, 37) _rKvISX._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.034) _rKvISX._UASDFM = 0 _rKvISX._akdcsG = _djFOUe local _ZKPxmL = _rKvISX:_tPFypN() _ZKPxmL._JKVaHt = '_voLzCs' _ZKPxmL._Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF((_ucNyaC._HfYRIu - _YUUBjB._XekWAG) / _YUUBjB._HPmHfd, 0.04, 0.96), 1) _ZKPxmL._hcXIOP = _YLbOBm._jXnjSQ() _ZKPxmL._SBYtAj = _vVnUNC._cuQvuk(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu) _ZKPxmL._akdcsG = _rKvISX local _yMzEge = _HqspIA._jXnjSQ('_TBxjEq') _yMzEge._JKVaHt = '_JHonrC' _yMzEge._Waoasm = _YLbOBm._UFWQDs(24, 4) _yMzEge._hcXIOP = _YLbOBm._nfWnJj(1, 0.5) _yMzEge._fPIzOY = _VSBFpv._jXnjSQ(0.5, 0.5) _yMzEge._SBYtAj = _djFOUe._SBYtAj _yMzEge._UASDFM = 0 _yMzEge._akdcsG = _ZKPxmL local _setvwo = _HqspIA._jXnjSQ('_TBxjEq') _setvwo._JKVaHt = '_JHonrC' _setvwo._Waoasm = _YLbOBm._UFWQDs(14, 14) _setvwo._hcXIOP = _YLbOBm._nfWnJj(0.5, 0.5) _setvwo._fPIzOY = _VSBFpv._jXnjSQ(0.5, 0.5) _setvwo._SBYtAj = _vVnUNC._cuQvuk(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu) _setvwo._akdcsG = _yMzEge _dQvNGE(_setvwo, _SytJFC._jXnjSQ(1, 0)) _YUUBjB._BMNCit = _YUUBjB._BMNCit or function() end _YUUBjB._vPMZFU = _YUUBjB._vPMZFU or 1 function _ucNyaC:_cmnBiI(_sfWWWc) _sfWWWc[_YUUBjB._JKVaHt] = { _HfYRIu = _eTbgXv._HfYRIu, _HPmHfd = _eTbgXv._HPmHfd } end function _ucNyaC:_HJPrTX(_sfWWWc) local _GuChDb = _sfWWWc._HfYRIu == _sfWWWc._HPmHfd and _sfWWWc._HPmHfd ~= _eTbgXv._HPmHfd and _eTbgXv._HPmHfd or _sfWWWc._HfYRIu if _eTbgXv._HfYRIu ~= _GuChDb then _eTbgXv:_wTgPlF(_GuChDb, nil, true) end end function _ucNyaC:_KSDfrX(_ZkFOzK, _pfgqKy, _PyTyDm, _gYSCBz) _ZKPxmL._SBYtAj = _gYSCBz and _vVnUNC._cuQvuk(_VPZknO:_KSDfrX((_ZkFOzK - (_eTbgXv._nHSOAC * 0.075)) % 1)) or _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) _setvwo._SBYtAj = _ZKPxmL._SBYtAj end function _ucNyaC:_wTgPlF(_QADddM, _DXWpVx, _GjkZWp) if _RIObyP(_QADddM) == _URXiHE._CrVtVs or _QADddM ~= _QADddM then return end local _ghJMgw = _eTbgXv._HfYRIu ~= _QADddM _eTbgXv._HfYRIu = _QADddM _dVlivF:_qhmhNw(_ZKPxmL, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_DXWpVx or _URXiHE._hZhCXF(_QADddM / _YUUBjB._HPmHfd, 0, 1), 0.04, 0.96), 1) }) _ZdEHNq._PiXytr = _eTbgXv._HfYRIu..(_YUUBjB._ksCcca and ' '..(_fErByH(_YUUBjB._ksCcca) == 'function' and _YUUBjB._ksCcca(_eTbgXv._HfYRIu) or _YUUBjB._ksCcca) or '') if _ghJMgw or _GjkZWp then _YUUBjB._BMNCit(_QADddM, _GjkZWp) end end _djFOUe._CFFdjI:_pCuvub(function(_xqaQbT) if (_xqaQbT._hopPDQ == _dstSjT._hopPDQ._YnPRZY or _xqaQbT._hopPDQ == _dstSjT._hopPDQ._KcLpcV) and (_xqaQbT._hcXIOP.Y - _djFOUe._ZmTyZP.Y) > (20 * _umqGsM._CPnCQP) then local _WjrSRk = _URXiHE._hZhCXF((_xqaQbT._hcXIOP.X - _rKvISX._ZmTyZP.X) / _rKvISX._tpKwbq.X, 0, 1) _ucNyaC:_wTgPlF(_URXiHE._jlbwsx((_YUUBjB._XekWAG + (_YUUBjB._HPmHfd - _YUUBjB._XekWAG) * _WjrSRk) * _YUUBjB._vPMZFU) / _YUUBjB._vPMZFU, _WjrSRk) local _sdNNPC = _ucNyaC._HfYRIu local _idIFAY = _WjrSRk local _oJmRlQ = _kJUqAm._FQKeJx:_pCuvub(function(_hUZoqq) if _hUZoqq._hopPDQ == (_xqaQbT._hopPDQ == _dstSjT._hopPDQ._YnPRZY and _dstSjT._hopPDQ._IyGCtU or _dstSjT._hopPDQ._KcLpcV) then local _WjrSRk = _URXiHE._hZhCXF((_hUZoqq._hcXIOP.X - _rKvISX._ZmTyZP.X) / _rKvISX._tpKwbq.X, 0, 1) _ucNyaC:_wTgPlF(_URXiHE._jlbwsx((_YUUBjB._XekWAG + (_YUUBjB._HPmHfd - _YUUBjB._XekWAG) * _WjrSRk) * _YUUBjB._vPMZFU) / _YUUBjB._vPMZFU, _WjrSRk) _sdNNPC = _ucNyaC._HfYRIu _idIFAY = _WjrSRk end end) local _RKFDlQ _RKFDlQ = _xqaQbT._HPERsa:_pCuvub(function() if _xqaQbT._oRmOYm == _dstSjT._oRmOYm._xhhrGd then if _oJmRlQ then _oJmRlQ:_BZBnLx() end if _RKFDlQ then _RKFDlQ:_BZBnLx() end _ucNyaC:_wTgPlF(_sdNNPC, _idIFAY, true) end end) end end) _djFOUe._SsjLkp:_pCuvub(function() _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._UFWQDs(16, 16) }) end) _djFOUe._nVWcUy:_pCuvub(function() _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._UFWQDs(14, 14) }) end) _ZdEHNq._Sncxke:_pCuvub(function() _ZdEHNq._yooTfS = false _eLrWXB._yooTfS = true _eLrWXB._PiXytr = _ucNyaC._HfYRIu _eLrWXB:_eCawEJ() end) _eLrWXB._qSbkyD:_pCuvub(function(_gQDLbR) _ZdEHNq._yooTfS = true _eLrWXB._yooTfS = false if _gQDLbR and _RIObyP(_eLrWXB._PiXytr) then _ucNyaC:_wTgPlF(_RIObyP(_eLrWXB._PiXytr), nil, true) end end) _ucNyaC._AQWScN = _djFOUe _lQBoJI._GjTzCS[_YUUBjB._JKVaHt] = _ucNyaC return _ucNyaC end, _xWMVbX = function(_YUUBjB, _ZUERUc, _lQBoJI) local _ucNyaC = { _qzijjJ = '_xWMVbX', _nHSOAC = _IHvvut(_lQBoJI._GjTzCS) } local _bTgYmn = _HqspIA._jXnjSQ('_UgCzTR') _bTgYmn._JKVaHt = '_xWMVbX' _bTgYmn._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 50) _bTgYmn._SBYtAj = _euAEYe._ywRMJW(_ZUERUc._SBYtAj, _YUUBjB._mTIjzt and 0.02 or 0) _bTgYmn._UASDFM = 0 _bTgYmn._XraNmO = false _bTgYmn._yooTfS = _YUUBjB._yooTfS == nil or _YUUBjB._yooTfS _bTgYmn._PiXytr = '' _bTgYmn._akdcsG = _ZUERUc _ioQasw(_bTgYmn, _YUUBjB._MIvBYM) local _rKvISX = _HqspIA._jXnjSQ('_TBxjEq') _rKvISX._JKVaHt = '_FDuYJG' _rKvISX._Waoasm = _YLbOBm._jXnjSQ(1, -20, 1, -9) _rKvISX._hcXIOP = _YLbOBm._UFWQDs(10, 4) _rKvISX._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.034) _rKvISX._akdcsG = _bTgYmn _dQvNGE(_rKvISX, _SytJFC._jXnjSQ(0, 4)) local _Sdxhhz = _HqspIA._jXnjSQ('_UgCzTR') _Sdxhhz._JKVaHt = '_exJTnu' _Sdxhhz._Waoasm = _YLbOBm._jXnjSQ(1, -2, 1, -2) _Sdxhhz._hcXIOP = _YLbOBm._UFWQDs(1, 1) _Sdxhhz._SBYtAj = _TEZYYN._ubVfxv _Sdxhhz._XraNmO = false _Sdxhhz._PiXytr = '' _Sdxhhz._akdcsG = _rKvISX local _TczBKk = _HqspIA._jXnjSQ('_rfJjAs') _TczBKk._JKVaHt = '_EPbikF' _TczBKk._Waoasm = _YLbOBm._jXnjSQ(1, -5, 0, 15) _TczBKk._hcXIOP = _YLbOBm._UFWQDs(5, 6) _TczBKk._LwijxE = 1 _TczBKk._PiXytr = '_xzhciZ:' _TczBKk._jgVhbP = _dstSjT._jgVhbP._cSzLBF _TczBKk._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _TczBKk._fcZKAI = 15 _TczBKk._CAiHex = _dstSjT._CAiHex._BYkNfq _TczBKk._iqsfkF = _TEZYYN._CIsHqY _TczBKk._akdcsG = _Sdxhhz local _eJynvu = _TczBKk:_tPFypN() _eJynvu._JKVaHt = '_OVtLwG' _eJynvu._hcXIOP = _YLbOBm._UFWQDs(5, 21) _eJynvu._PiXytr = '_kwkrOy _rfIfAW' _eJynvu._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _eJynvu._fcZKAI = 11 _eJynvu._akdcsG = _Sdxhhz _dQvNGE(_Sdxhhz, _SytJFC._jXnjSQ(0, 4)) local _VxCTsP = _HqspIA._jXnjSQ('_TBxjEq') _VxCTsP._Waoasm = _YLbOBm._UFWQDs(65, 12) _VxCTsP._hcXIOP = _YLbOBm._UFWQDs(52, 8) _VxCTsP._LwijxE = 1 _VxCTsP._akdcsG = _Sdxhhz local _gLpNck = _HqspIA._jXnjSQ('_QhjgFh') _gLpNck._ZKksgj = _dstSjT._ZKksgj._vZwykn _gLpNck._JtwlHo = _SytJFC._jXnjSQ(0, 6) _gLpNck._akdcsG = _VxCTsP local _hopsmQ = _HqspIA._jXnjSQ('_UgCzTR') _hopsmQ._JKVaHt = '_WHnroy' _hopsmQ._Waoasm = _YLbOBm._UFWQDs(220, 145) _hopsmQ._SBYtAj = _TEZYYN._ubVfxv _hopsmQ._UASDFM = 0 _hopsmQ._XraNmO = false _hopsmQ._yooTfS = false _hopsmQ._PiXytr = '' _hopsmQ._akdcsG = _qYsMpg _ucNyaC._nwdJlT = _hopsmQ _KIEDuO(_hopsmQ) _dQvNGE(_hopsmQ) local _eQWkhk = _HqspIA._jXnjSQ('_QXffBR') _eQWkhk._JKVaHt = '_ScLbxU' _eQWkhk._Waoasm = _YLbOBm._UFWQDs(18, 12) _eQWkhk._hcXIOP = _YLbOBm._UFWQDs(10, 15) _eQWkhk._LwijxE = 1 _eQWkhk._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_nzuHeA._oXtCIE') _eQWkhk._akdcsG = _hopsmQ local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._jXnjSQ(1, -36, 0, 20) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(_URXiHE._knhIbc(_QNKDOw._Waoasm.X._gINIiO), 11) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = '_xzhciZ _sOHDlr' _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _TEZYYN._PiXytr _QNKDOw._fcZKAI = 13 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _hopsmQ local _kuFJpl = _TxKfdd(_hopsmQ) _YUUBjB._BMNCit = _YUUBjB._BMNCit or function() end function _ucNyaC:_cmnBiI(_sfWWWc) _sfWWWc._xWMVbX = { _ICqBrN = _eTbgXv._ICqBrN._QMKVhv, _rGOCui = _eTbgXv._rGOCui._QMKVhv, _debhNv = _eTbgXv._debhNv._QMKVhv, _rZVWMb = _eTbgXv._rZVWMb._QMKVhv } end function _ucNyaC:_HJPrTX(_sfWWWc) if _eTbgXv._ICqBrN._QMKVhv ~= _sfWWWc._ICqBrN then _eTbgXv._ICqBrN:_KoPzus() end if _eTbgXv._rGOCui._QMKVhv ~= _sfWWWc._rGOCui then _eTbgXv._rGOCui:_KoPzus() end if _eTbgXv._debhNv._QMKVhv ~= _sfWWWc._debhNv then _eTbgXv._debhNv:_KoPzus() end if _eTbgXv._rZVWMb._QMKVhv ~= _sfWWWc._rZVWMb then _eTbgXv._rZVWMb:_KoPzus() end end function _ucNyaC:_KSDfrX(_ZkFOzK, _pfgqKy, _PyTyDm, _gYSCBz) _rKvISX._SBYtAj = _gYSCBz and _vVnUNC._cuQvuk(_VPZknO:_KSDfrX((_ZkFOzK - (_eTbgXv._nHSOAC * 0.075)) % 1)) or _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) if _eTbgXv._ICqBrN._QMKVhv then _dVlivF:_WHQQDU(_eTbgXv._ICqBrN._AQWScN._TBxjEq) _eTbgXv._ICqBrN._AQWScN._TBxjEq._SBYtAj = _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) end if _eTbgXv._rGOCui._QMKVhv then _dVlivF:_WHQQDU(_eTbgXv._rGOCui._AQWScN._TBxjEq) _eTbgXv._rGOCui._AQWScN._TBxjEq._SBYtAj = _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) end if _eTbgXv._debhNv._QMKVhv then _dVlivF:_WHQQDU(_eTbgXv._debhNv._AQWScN._JHonrC) _eTbgXv._debhNv._AQWScN._JHonrC._SBYtAj = _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) end if _eTbgXv._rZVWMb._QMKVhv then _dVlivF:_WHQQDU(_eTbgXv._rZVWMb._AQWScN._JHonrC) _eTbgXv._rZVWMb._AQWScN._JHonrC._SBYtAj = _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) end end _ucNyaC._ICqBrN = _HuDitg._GOJrID({ _hcXIOP = _YLbOBm._UFWQDs(11, 45), _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_ndtZBW._oXtCIE'), _eVOSCp = _YLbOBm._UFWQDs(15, 16), _EBQKXK = _VxCTsP, _rmFgmg = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_WZIKBg._oXtCIE'), _sSZeyg = _YLbOBm._UFWQDs(11, 12), _MIvBYM = '_ICqBrN', _BMNCit = _YUUBjB._BMNCit }, _hopsmQ, _VxCTsP) _ucNyaC._rGOCui = _HuDitg._GOJrID({ _hcXIOP = _YLbOBm._UFWQDs(112, 45), _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_VzwLyq._oXtCIE'), _eVOSCp = _YLbOBm._UFWQDs(12, 16), _EBQKXK = _VxCTsP, _rmFgmg = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_wyLMez._oXtCIE'), _sSZeyg = _YLbOBm._UFWQDs(9, 12), _MIvBYM = '_rGOCui', _BMNCit = _YUUBjB._BMNCit }, _hopsmQ, _VxCTsP) _ucNyaC._debhNv = _HuDitg._KoPzus({ _JKVaHt = '_kwkrOy _mpZjnY', _BMNCit = function() local _oynnGu = '_rfIfAW' if _ucNyaC._debhNv._QMKVhv then _oynnGu = '_mpZjnY' end if _ucNyaC._rZVWMb._QMKVhv then _oynnGu = _oynnGu == '_rfIfAW' and '_VhFrIU _NjirGI' or _oynnGu..', _VhFrIU _NjirGI' end _eJynvu._PiXytr = '_kwkrOy '.._oynnGu _YUUBjB._BMNCit() end }, _hopsmQ, {_GjTzCS = {}}) _ucNyaC._debhNv._AQWScN._hcXIOP = _YLbOBm._UFWQDs(0, 81) _ucNyaC._rZVWMb = _HuDitg._KoPzus({ _JKVaHt = '_kwkrOy _VhFrIU _NjirGI', _BMNCit = function() local _oynnGu = '_rfIfAW' if _ucNyaC._debhNv._QMKVhv then _oynnGu = '_mpZjnY' end if _ucNyaC._rZVWMb._QMKVhv then _oynnGu = _oynnGu == '_rfIfAW' and '_VhFrIU _NjirGI' or _oynnGu..', _VhFrIU _NjirGI' end _eJynvu._PiXytr = '_kwkrOy '.._oynnGu _YUUBjB._BMNCit() end }, _hopsmQ, {_GjTzCS = {}}) _ucNyaC._rZVWMb._AQWScN._hcXIOP = _YLbOBm._UFWQDs(0, 111) if _YUUBjB._ICqBrN then _ucNyaC._ICqBrN:_KoPzus() end if _YUUBjB._rGOCui then _ucNyaC._rGOCui:_KoPzus() end if _YUUBjB._debhNv then _ucNyaC._debhNv:_KoPzus() end if _YUUBjB._rZVWMb then _ucNyaC._rZVWMb:_KoPzus() end _kuFJpl._Sncxke:_pCuvub(function() _hopsmQ._yooTfS = false end) _Sdxhhz._Sncxke:_pCuvub(function() _hopsmQ._yooTfS = not _hopsmQ._yooTfS _dVlivF:_WHQQDU(_rKvISX) _rKvISX._SBYtAj = _hopsmQ._yooTfS and _vVnUNC._cuQvuk(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu) or _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) end) _bTgYmn._SsjLkp:_pCuvub(function() if not _ucNyaC._nwdJlT._yooTfS then _dVlivF:_qhmhNw(_rKvISX, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) }) end end) _bTgYmn._nVWcUy:_pCuvub(function() if not _ucNyaC._nwdJlT._yooTfS then _dVlivF:_qhmhNw(_rKvISX, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.034) }) end end) _bTgYmn:_wlElAj('_ZmTyZP'):_pCuvub(function() if _VPZknO._LemRBW then _aSbcev(8) end local _BONJeG = (_bTgYmn._ZmTyZP + _VSBFpv._jXnjSQ(0, 60)) / _umqGsM._CPnCQP _hopsmQ._hcXIOP = _YLbOBm._UFWQDs(_BONJeG.X + 220, _BONJeG.Y) end) _ucNyaC._AQWScN = _bTgYmn _lQBoJI._GjTzCS._xWMVbX = _ucNyaC return _ucNyaC end, _GOJrID = function(_YUUBjB, _ZUERUc, _lQBoJI) local _ucNyaC = {_QMKVhv = false} local _yBcwal = _HqspIA._jXnjSQ('_UgCzTR') _yBcwal._Waoasm = _YLbOBm._UFWQDs(98, 31) _yBcwal._hcXIOP = _YUUBjB._hcXIOP _yBcwal._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.05) _yBcwal._XraNmO = false _yBcwal._yooTfS = _YUUBjB._yooTfS == nil or _YUUBjB._yooTfS _yBcwal._PiXytr = '' _yBcwal._akdcsG = _ZUERUc _dQvNGE(_yBcwal) _ioQasw(_yBcwal, _YUUBjB._MIvBYM) local _rKvISX = _HqspIA._jXnjSQ('_TBxjEq') _rKvISX._Waoasm = _YLbOBm._jXnjSQ(1, -2, 1, -2) _rKvISX._hcXIOP = _YLbOBm._UFWQDs(1, 1) _rKvISX._SBYtAj = _TEZYYN._ubVfxv _rKvISX._akdcsG = _yBcwal _dQvNGE(_rKvISX) local _eQWkhk = _HqspIA._jXnjSQ('_QXffBR') _eQWkhk._Waoasm = _YUUBjB._eVOSCp _eQWkhk._hcXIOP = _YLbOBm._nfWnJj(0.5, 0.5) _eQWkhk._fPIzOY = _VSBFpv._jXnjSQ(0.5, 0.5) _eQWkhk._LwijxE = 1 _eQWkhk._dMWcuD = _YUUBjB._ScLbxU _eQWkhk._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _eQWkhk._akdcsG = _rKvISX _YUUBjB._BMNCit = _YUUBjB._BMNCit or function() end local _yxDqtg function _ucNyaC:_KoPzus() _eTbgXv._QMKVhv = not _eTbgXv._QMKVhv _dVlivF:_qhmhNw(_rKvISX, _TEZYYN._qhmhNw, { _SBYtAj = _eTbgXv._QMKVhv and _vVnUNC._cuQvuk(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu) or _TEZYYN._ubVfxv }) _dVlivF:_qhmhNw(_eQWkhk, _TEZYYN._qhmhNw, { _mGTSmO = _eTbgXv._QMKVhv and _vVnUNC._jXnjSQ(1, 1, 1) or _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) }) if _yxDqtg then _yxDqtg:_YwZmtp() end if _eTbgXv._QMKVhv then _yxDqtg = _HqspIA._jXnjSQ('_QXffBR') _yxDqtg._Waoasm = _YUUBjB._sSZeyg _yxDqtg._LwijxE = 1 _yxDqtg._dMWcuD = _YUUBjB._rmFgmg _yxDqtg._mGTSmO = _TEZYYN._PiXytr _yxDqtg._akdcsG = _YUUBjB._EBQKXK end _YUUBjB._BMNCit(_eTbgXv._QMKVhv) end _yBcwal._SsjLkp:_pCuvub(function() if not _ucNyaC._QMKVhv then _dVlivF:_qhmhNw(_rKvISX, _TEZYYN._qhmhNw, { _SBYtAj = _vVnUNC._cuQvuk(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu - 0.25) }) _dVlivF:_qhmhNw(_eQWkhk, _TEZYYN._qhmhNw, { _mGTSmO = _vVnUNC._jXnjSQ(1, 1, 1) }) end end) _yBcwal._nVWcUy:_pCuvub(function() if not _ucNyaC._QMKVhv then _dVlivF:_qhmhNw(_rKvISX, _TEZYYN._qhmhNw, { _SBYtAj = _TEZYYN._ubVfxv }) _dVlivF:_qhmhNw(_eQWkhk, _TEZYYN._qhmhNw, { _mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) }) end end) _yBcwal._Sncxke:_pCuvub(function() _ucNyaC:_KoPzus() end) _ucNyaC._AQWScN = _yBcwal return _ucNyaC end, _czQajw = function(_YUUBjB, _ZUERUc, _lQBoJI) local _ucNyaC = { _qzijjJ = '_czQajw', _HfYRIu = _YUUBjB._RRsXdF or '', _nHSOAC = 0 } local _BclVUd = _HqspIA._jXnjSQ('_UgCzTR') _BclVUd._JKVaHt = _YUUBjB._JKVaHt..'_czQajw' _BclVUd._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 58) _BclVUd._SBYtAj = _euAEYe._ywRMJW(_ZUERUc._SBYtAj, _YUUBjB._mTIjzt and 0.02 or 0) _BclVUd._UASDFM = 0 _BclVUd._XraNmO = false _BclVUd._yooTfS = _YUUBjB._yooTfS == nil or _YUUBjB._yooTfS _BclVUd._PiXytr = '' _BclVUd._akdcsG = _ZUERUc _ioQasw(_BclVUd, _YUUBjB._MIvBYM) local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._Waoasm = _YLbOBm._jXnjSQ(1, -10, 0, 20) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(10, 3) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = _YUUBjB._JKVaHt _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _TEZYYN._PiXytr _QNKDOw._fcZKAI = 12 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _BclVUd local _rKvISX = _HqspIA._jXnjSQ('_TBxjEq') _rKvISX._JKVaHt = '_FDuYJG' _rKvISX._Waoasm = _YLbOBm._jXnjSQ(1, -20, 0, 29) _rKvISX._hcXIOP = _YLbOBm._UFWQDs(10, 23) _rKvISX._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) _rKvISX._akdcsG = _BclVUd _dQvNGE(_rKvISX, _SytJFC._jXnjSQ(0, 4)) local _KUnywc = _HqspIA._jXnjSQ('_czQajw') _KUnywc._Waoasm = _YLbOBm._jXnjSQ(1, -8, 1, 0) _KUnywc._hcXIOP = _YLbOBm._UFWQDs(8, 0) _KUnywc._LwijxE = 1 _KUnywc._PiXytr = _YUUBjB._RRsXdF or '' _KUnywc._rYhGGt = _YUUBjB._DeGHsM or '_yHMWoi to _nFaRKi' _KUnywc._jgVhbP = _dstSjT._jgVhbP._cSzLBF _KUnywc._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _KUnywc._hJflHK = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.31) _KUnywc._fcZKAI = 12 _KUnywc._iqsfkF = _TEZYYN._CIsHqY _KUnywc._wRAWXc = false _KUnywc._akdcsG = _rKvISX _YUUBjB._BMNCit = _YUUBjB._BMNCit or function() end function _ucNyaC:_cmnBiI(_sfWWWc) _sfWWWc[_YUUBjB._JKVaHt] = {_HfYRIu = _eTbgXv._HfYRIu} end function _ucNyaC:_HJPrTX(_sfWWWc) if _eTbgXv._HfYRIu ~= _sfWWWc._HfYRIu then _eTbgXv:_wTgPlF(_sfWWWc._HfYRIu) end end function _ucNyaC:_wTgPlF(_PyTyDm, _gQDLbR) _eTbgXv._HfYRIu = _PyTyDm _KUnywc._PiXytr = _PyTyDm _YUUBjB._BMNCit(_gQDLbR) end _BclVUd._Sncxke:_pCuvub(function() _KUnywc:_eCawEJ() end) _KUnywc._qSbkyD:_pCuvub(function(_gQDLbR) _ucNyaC:_wTgPlF(_KUnywc._PiXytr, _gQDLbR) end) _KUnywc:_wlElAj('_PiXytr'):_pCuvub(function() _ucNyaC:_wTgPlF(_KUnywc._PiXytr) end) _ucNyaC._AQWScN = _BclVUd _lQBoJI._GjTzCS[_YUUBjB._JKVaHt] = _ucNyaC return _ucNyaC end, _exJTnu = function(_YUUBjB, _ZUERUc, _lQBoJI) local _ucNyaC = { _qzijjJ = '_exJTnu', _sQfDnZ = _YUUBjB._RRsXdF or {}, _HeyjKy = _YUUBjB._RRsXdF or {}, _acxpIG = {}, _nwdJlT = {_yooTfS = false}, _nHSOAC = _IHvvut(_lQBoJI._GjTzCS) } _YUUBjB._KSDfrX = _YUUBjB._KSDfrX or _vVnUNC._ckVQPV(5, 134, 105) local _bTgYmn = _HqspIA._jXnjSQ('_UgCzTR') _bTgYmn._JKVaHt = _YUUBjB._JKVaHt..'_exJTnu' _bTgYmn._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 50) _bTgYmn._SBYtAj = _euAEYe._ywRMJW(_ZUERUc._SBYtAj, _YUUBjB._mTIjzt and 0.02 or 0) _bTgYmn._UASDFM = 0 _bTgYmn._XraNmO = false _bTgYmn._yooTfS = _YUUBjB._yooTfS == nil or _YUUBjB._yooTfS _bTgYmn._PiXytr = '' _bTgYmn._akdcsG = _ZUERUc _ioQasw(_bTgYmn, _YUUBjB._MIvBYM) local _rKvISX = _HqspIA._jXnjSQ('_TBxjEq') _rKvISX._JKVaHt = '_FDuYJG' _rKvISX._Waoasm = _YLbOBm._jXnjSQ(1, -20, 1, -9) _rKvISX._hcXIOP = _YLbOBm._UFWQDs(10, 4) _rKvISX._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.034) _rKvISX._akdcsG = _bTgYmn _dQvNGE(_rKvISX, _SytJFC._jXnjSQ(0, 4)) local _Sdxhhz = _HqspIA._jXnjSQ('_UgCzTR') _Sdxhhz._JKVaHt = '_exJTnu' _Sdxhhz._Waoasm = _YLbOBm._jXnjSQ(1, -2, 1, -2) _Sdxhhz._hcXIOP = _YLbOBm._UFWQDs(1, 1) _Sdxhhz._SBYtAj = _TEZYYN._ubVfxv _Sdxhhz._XraNmO = false _Sdxhhz._PiXytr = '' _Sdxhhz._akdcsG = _rKvISX local _hIOnCy = _HqspIA._jXnjSQ('_QXffBR') _hIOnCy._JKVaHt = '_ScLbxU' _hIOnCy._Waoasm = _YLbOBm._UFWQDs(14, 12) _hIOnCy._hcXIOP = _YLbOBm._UFWQDs(10, 14) _hIOnCy._LwijxE = 1 _hIOnCy._dMWcuD = _YUUBjB._ScLbxU or _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_NUJsHC._oXtCIE') _hIOnCy._akdcsG = _Sdxhhz local _TczBKk = _HqspIA._jXnjSQ('_rfJjAs') _TczBKk._JKVaHt = '_EPbikF' _TczBKk._Waoasm = _YLbOBm._jXnjSQ(1, -35, 0, 15) _TczBKk._hcXIOP = _YLbOBm._UFWQDs(35, 6) _TczBKk._LwijxE = 1 _TczBKk._PiXytr = _YUUBjB._JKVaHt _TczBKk._jgVhbP = _dstSjT._jgVhbP._cSzLBF _TczBKk._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _TczBKk._fcZKAI = 15 _TczBKk._CAiHex = _dstSjT._CAiHex._BYkNfq _TczBKk._iqsfkF = _TEZYYN._CIsHqY _TczBKk._akdcsG = _Sdxhhz local _HilIYm = _TczBKk:_tPFypN() _HilIYm._JKVaHt = '_acLJfa' _HilIYm._Waoasm = _YLbOBm._jXnjSQ(1, -13, 0, 15) _HilIYm._hcXIOP = _YLbOBm._UFWQDs(0, 6) _HilIYm._PiXytr = '0' _HilIYm._jgVhbP = _dstSjT._jgVhbP._ipjhLs _HilIYm._akdcsG = _Sdxhhz local _eJynvu = _TczBKk:_tPFypN() _eJynvu._JKVaHt = '_OVtLwG' _eJynvu._hcXIOP = _YLbOBm._UFWQDs(35, 21) _eJynvu._PiXytr = '_svTXpG' _eJynvu._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) _eJynvu._fcZKAI = 11 _eJynvu._akdcsG = _Sdxhhz _dQvNGE(_Sdxhhz, _SytJFC._jXnjSQ(0, 4)) local _hopsmQ = _HqspIA._jXnjSQ('_UgCzTR') _hopsmQ._JKVaHt = _YUUBjB._JKVaHt..'_DvCviP' _hopsmQ._Waoasm = _YLbOBm._UFWQDs(220, 85) _hopsmQ._SBYtAj = _TEZYYN._ubVfxv _hopsmQ._UASDFM = 0 _hopsmQ._XraNmO = false _hopsmQ._yooTfS = false _hopsmQ._PiXytr = '' _hopsmQ._akdcsG = _lQBoJI._imeQtB and _VPZknO._imeQtB._nwdJlT or _qYsMpg _ucNyaC._nwdJlT = _hopsmQ _KIEDuO(_hopsmQ) _dQvNGE(_hopsmQ) local _eQWkhk = _HqspIA._jXnjSQ('_QXffBR') _eQWkhk._JKVaHt = '_ScLbxU' _eQWkhk._Waoasm = _YUUBjB._XlGOoT or _YLbOBm._UFWQDs(19, 16) _eQWkhk._hcXIOP = _YLbOBm._UFWQDs(10, 13) _eQWkhk._LwijxE = 1 _eQWkhk._dMWcuD = _YUUBjB._rnCxrl or _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_GZVhHE._oXtCIE') _eQWkhk._akdcsG = _hopsmQ local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._jXnjSQ(1, -36, 0, 20) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(_URXiHE._knhIbc(_QNKDOw._Waoasm.X._gINIiO), 11) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = _YUUBjB._JKVaHt _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _TEZYYN._PiXytr _QNKDOw._fcZKAI = 13 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _hopsmQ local _kuFJpl = _TxKfdd(_hopsmQ) local _HnOACL = _HqspIA._jXnjSQ('_TBxjEq') _HnOACL._JKVaHt = '_uFHGta' _HnOACL._Waoasm = _YLbOBm._UFWQDs(200, 31) _HnOACL._hcXIOP = _YLbOBm._UFWQDs(10, 45) _HnOACL._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) _HnOACL._akdcsG = _hopsmQ _dQvNGE(_HnOACL) local _MaCbdK = _HnOACL:_tPFypN() _MaCbdK._Waoasm = _YLbOBm._jXnjSQ(1, -2, 1, -2) _MaCbdK._hcXIOP = _YLbOBm._UFWQDs(1, 1) _MaCbdK._SBYtAj = _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.02) _MaCbdK._akdcsG = _HnOACL local _IvxPwI = _HqspIA._jXnjSQ('_czQajw') _IvxPwI._Waoasm = _YLbOBm._jXnjSQ(1, -35, 1, 0) _IvxPwI._hcXIOP = _YLbOBm._UFWQDs(10, 0) _IvxPwI._LwijxE = 1 _IvxPwI._PiXytr = '' _IvxPwI._rYhGGt = _YUUBjB._DeGHsM or '_uFHGta _XPARxU...' _IvxPwI._jgVhbP = _dstSjT._jgVhbP._cSzLBF _IvxPwI._qnaMkt = _vVnUNC._jXnjSQ(1, 1, 1) _IvxPwI._fcZKAI = 15 _IvxPwI._iqsfkF = _TEZYYN._CIsHqY _IvxPwI._wRAWXc = false _IvxPwI._akdcsG = _HnOACL local _DgJsBd = _HqspIA._jXnjSQ('_hMCrWE') _DgJsBd._JKVaHt = '_QEmVgy' _DgJsBd._Waoasm = _YLbOBm._UFWQDs(16, 16) _DgJsBd._hcXIOP = _YLbOBm._jXnjSQ(1, -26, 0, 8) _DgJsBd._LwijxE = 1 _DgJsBd._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_PxPxvq._oXtCIE') _DgJsBd._mGTSmO = _YUUBjB._KSDfrX _DgJsBd._CzQtWh = 0.3 _DgJsBd._akdcsG = _HnOACL _YUUBjB._BMNCit = _YUUBjB._BMNCit or function() end function _ucNyaC:_cmnBiI(_sfWWWc) _sfWWWc[_YUUBjB._JKVaHt] = { _sQfDnZ = _eTbgXv._sQfDnZ, _HeyjKy = _eTbgXv._HeyjKy } end function _ucNyaC:_HJPrTX(_sfWWWc) _eTbgXv._sQfDnZ = _sfWWWc._sQfDnZ or {} _eTbgXv._HeyjKy = _sfWWWc._HeyjKy or {} _eTbgXv:_rXIxMs() end function _ucNyaC:_KSDfrX(_ZkFOzK, _pfgqKy, _PyTyDm, _gYSCBz) if _hopsmQ._yooTfS then _rKvISX._SBYtAj = _gYSCBz and _vVnUNC._cuQvuk(_VPZknO:_KSDfrX((_ZkFOzK - (_eTbgXv._nHSOAC * 0.075)) % 1)) or _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) end end function _ucNyaC:_rXIxMs(_PyTyDm) if _PyTyDm then local _pdCOyx = _hIsBBh._gVRTpT(_eTbgXv._sQfDnZ, _PyTyDm) if _pdCOyx then _hIsBBh._BcnbFo(_eTbgXv._sQfDnZ, _pdCOyx) _pdCOyx = _hIsBBh._gVRTpT(_eTbgXv._HeyjKy, _PyTyDm) if _pdCOyx then _hIsBBh._BcnbFo(_eTbgXv._HeyjKy, _pdCOyx) end else _hIsBBh._iAYcqN(_eTbgXv._sQfDnZ, _PyTyDm) _hIsBBh._iAYcqN(_eTbgXv._HeyjKy, _PyTyDm) end end _YUUBjB._BMNCit(_eTbgXv._sQfDnZ) for _, v in _eTbgXv._acxpIG do v:_YwZmtp() end _hIsBBh._DCSjmN(_eTbgXv._acxpIG) _hopsmQ._Waoasm = _YLbOBm._UFWQDs(220, 85 + (#_eTbgXv._sQfDnZ * 35)) _HilIYm._PiXytr = #_eTbgXv._sQfDnZ local _bMneNu = '_svTXpG' for i, v in _eTbgXv._HeyjKy do if i == 1 then _bMneNu = '' end _bMneNu = _bMneNu..(i == 1 and v or ', '..v) end _eJynvu._PiXytr = _bMneNu for i, v in _eTbgXv._sQfDnZ do local _QwlEFT = _hIsBBh._gVRTpT(_eTbgXv._HeyjKy, v) local _TANlhJ = _HqspIA._jXnjSQ('_UgCzTR') _TANlhJ._JKVaHt = v _TANlhJ._Waoasm = _YLbOBm._UFWQDs(200, 32) _TANlhJ._hcXIOP = _YLbOBm._UFWQDs(10, 47 + (i * 35)) _TANlhJ._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) _TANlhJ._XraNmO = false _TANlhJ._PiXytr = '' _TANlhJ._akdcsG = _hopsmQ _dQvNGE(_TANlhJ) local _bloKGb = _HqspIA._jXnjSQ('_TBxjEq') _bloKGb._JKVaHt = '_FDuYJG' _bloKGb._Waoasm = _YLbOBm._jXnjSQ(1, -2, 1, -2) _bloKGb._hcXIOP = _YLbOBm._UFWQDs(1, 1) _bloKGb._SBYtAj = _TEZYYN._ubVfxv _bloKGb._yooTfS = false _bloKGb._akdcsG = _TANlhJ _dQvNGE(_bloKGb) local _pnbAaa = _HqspIA._jXnjSQ('_TBxjEq') _pnbAaa._JKVaHt = '_ZmFybl' _pnbAaa._Waoasm = _YLbOBm._UFWQDs(10, 11) _pnbAaa._hcXIOP = _YLbOBm._UFWQDs(10, 12) _pnbAaa._SBYtAj = _QwlEFT and _YUUBjB._KSDfrX or _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _pnbAaa._akdcsG = _TANlhJ _dQvNGE(_pnbAaa, _SytJFC._jXnjSQ(1, 0)) local _gEQUqM = _pnbAaa:_tPFypN() _gEQUqM._Waoasm = _YLbOBm._UFWQDs(8, 9) _gEQUqM._hcXIOP = _YLbOBm._UFWQDs(1, 1) _gEQUqM._SBYtAj = _QwlEFT and _YUUBjB._KSDfrX or _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) _gEQUqM._akdcsG = _pnbAaa local _wAUxSr = _HqspIA._jXnjSQ('_rfJjAs') _wAUxSr._JKVaHt = '_EPbikF' _wAUxSr._Waoasm = _YLbOBm._jXnjSQ(1, -30, 1, 0) _wAUxSr._hcXIOP = _YLbOBm._UFWQDs(30, 0) _wAUxSr._LwijxE = 1 _wAUxSr._PiXytr = v _wAUxSr._jgVhbP = _dstSjT._jgVhbP._cSzLBF _wAUxSr._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _wAUxSr._fcZKAI = 15 _wAUxSr._iqsfkF = _TEZYYN._CIsHqY _wAUxSr._akdcsG = _TANlhJ local _kuFJpl = _HqspIA._jXnjSQ('_hMCrWE') _kuFJpl._JKVaHt = '_TAFYoO' _kuFJpl._Waoasm = _YLbOBm._UFWQDs(16, 16) _kuFJpl._hcXIOP = _YLbOBm._jXnjSQ(1, -26, 0, 8) _kuFJpl._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _kuFJpl._LwijxE = 1 _kuFJpl._XraNmO = false _kuFJpl._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_zJuDsn._oXtCIE') _kuFJpl._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._PiXytr, 0.2) _kuFJpl._CzQtWh = 0.5 _kuFJpl._akdcsG = _TANlhJ _dQvNGE(_kuFJpl, _SytJFC._jXnjSQ(1, 0)) _kuFJpl._SsjLkp:_pCuvub(function() _kuFJpl._CzQtWh = 0.3 _dVlivF:_qhmhNw(_kuFJpl, _TEZYYN._qhmhNw, { _LwijxE = 0.6 }) end) _kuFJpl._nVWcUy:_pCuvub(function() _kuFJpl._CzQtWh = 0.5 _dVlivF:_qhmhNw(_kuFJpl, _TEZYYN._qhmhNw, { _LwijxE = 1 }) end) _kuFJpl._Sncxke:_pCuvub(function() _eTbgXv:_rXIxMs(v) end) _TANlhJ._SsjLkp:_pCuvub(function() _bloKGb._yooTfS = true end) _TANlhJ._nVWcUy:_pCuvub(function() _bloKGb._yooTfS = false end) _TANlhJ._Sncxke:_pCuvub(function() local _pdCOyx = _hIsBBh._gVRTpT(_eTbgXv._HeyjKy, v) if _pdCOyx then _hIsBBh._BcnbFo(_eTbgXv._HeyjKy, _pdCOyx) _pnbAaa._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _gEQUqM._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) else _hIsBBh._iAYcqN(_eTbgXv._HeyjKy, v) _pnbAaa._SBYtAj = _YUUBjB._KSDfrX _gEQUqM._SBYtAj = _YUUBjB._KSDfrX end local _bMneNu = '_svTXpG' for i, v in _eTbgXv._HeyjKy do if i == 1 then _bMneNu = '' end _bMneNu = _bMneNu..(i == 1 and v or ', '..v) end _eJynvu._PiXytr = _bMneNu _YUUBjB._BMNCit() end) _hIsBBh._iAYcqN(_eTbgXv._acxpIG, _TANlhJ) end end _DgJsBd._SsjLkp:_pCuvub(function() _DgJsBd._CzQtWh = 0 end) _DgJsBd._nVWcUy:_pCuvub(function() _DgJsBd._CzQtWh = 0.3 end) _DgJsBd._Sncxke:_pCuvub(function() if not _hIsBBh._gVRTpT(_ucNyaC._sQfDnZ, _IvxPwI._PiXytr) then _ucNyaC:_rXIxMs(_IvxPwI._PiXytr) _IvxPwI._PiXytr = '' end end) _IvxPwI._qSbkyD:_pCuvub(function(_gQDLbR) if _gQDLbR and not _hIsBBh._gVRTpT(_ucNyaC._sQfDnZ, _IvxPwI._PiXytr) then _ucNyaC:_rXIxMs(_IvxPwI._PiXytr) _IvxPwI._PiXytr = '' end end) _IvxPwI._SsjLkp:_pCuvub(function() _dVlivF:_qhmhNw(_HnOACL, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.14) }) end) _IvxPwI._nVWcUy:_pCuvub(function() _dVlivF:_qhmhNw(_HnOACL, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) }) end) _kuFJpl._Sncxke:_pCuvub(function() _hopsmQ._yooTfS = false end) _Sdxhhz._Sncxke:_pCuvub(function() _hopsmQ._yooTfS = not _hopsmQ._yooTfS _dVlivF:_WHQQDU(_rKvISX) _rKvISX._SBYtAj = _hopsmQ._yooTfS and _vVnUNC._cuQvuk(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu) or _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) end) _bTgYmn._SsjLkp:_pCuvub(function() if not _ucNyaC._nwdJlT._yooTfS then _dVlivF:_qhmhNw(_rKvISX, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) }) end end) _bTgYmn._nVWcUy:_pCuvub(function() if not _ucNyaC._nwdJlT._yooTfS then _dVlivF:_qhmhNw(_rKvISX, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.034) }) end end) _bTgYmn:_wlElAj('_ZmTyZP'):_pCuvub(function() if _VPZknO._LemRBW then _aSbcev(8) end local _BONJeG = (_bTgYmn._ZmTyZP - (_lQBoJI._imeQtB and _VPZknO._imeQtB._nwdJlT._ZmTyZP or -_ntrtlh:_pqDOyX())) / _umqGsM._CPnCQP _hopsmQ._hcXIOP = _YLbOBm._UFWQDs(_BONJeG.X + 220, _BONJeG.Y) end) if _YUUBjB._RRsXdF then _ucNyaC:_rXIxMs() end _ucNyaC._AQWScN = _bTgYmn _lQBoJI._GjTzCS[_YUUBjB._JKVaHt] = _ucNyaC return _ucNyaC end, _KoPzus = function(_YUUBjB, _ZUERUc, _lQBoJI) local _ucNyaC = { _qzijjJ = '_KoPzus', _QMKVhv = false, _nHSOAC = _IHvvut(_lQBoJI._GjTzCS) } local _uxvIaU = false local _cGmaKJ = _HqspIA._jXnjSQ('_UgCzTR') _cGmaKJ._JKVaHt = _YUUBjB._JKVaHt..'_KoPzus' _cGmaKJ._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 30) _cGmaKJ._SBYtAj = _euAEYe._ywRMJW(_ZUERUc._SBYtAj, _YUUBjB._mTIjzt and 0.02 or 0) _cGmaKJ._UASDFM = 0 _cGmaKJ._XraNmO = false _cGmaKJ._yooTfS = _YUUBjB._yooTfS == nil or _YUUBjB._yooTfS _cGmaKJ._PiXytr = ' '.._YUUBjB._JKVaHt _cGmaKJ._jgVhbP = _dstSjT._jgVhbP._cSzLBF _cGmaKJ._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _cGmaKJ._fcZKAI = 14 _cGmaKJ._iqsfkF = _TEZYYN._CIsHqY _cGmaKJ._akdcsG = _ZUERUc _ioQasw(_cGmaKJ, _YUUBjB._MIvBYM) local _yMzEge = _HqspIA._jXnjSQ('_TBxjEq') _yMzEge._JKVaHt = '_JHonrC' _yMzEge._Waoasm = _YLbOBm._UFWQDs(22, 12) _yMzEge._hcXIOP = _YLbOBm._jXnjSQ(1, -30, 0, 9) _yMzEge._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.14) _yMzEge._akdcsG = _cGmaKJ _dQvNGE(_yMzEge, _SytJFC._jXnjSQ(1, 0)) local _setvwo = _yMzEge:_tPFypN() _setvwo._Waoasm = _YLbOBm._UFWQDs(8, 8) _setvwo._hcXIOP = _YLbOBm._UFWQDs(2, 2) _setvwo._SBYtAj = _TEZYYN._ubVfxv _setvwo._akdcsG = _yMzEge _YUUBjB._BMNCit = _YUUBjB._BMNCit or function() end function _ucNyaC:_cmnBiI(_sfWWWc) _sfWWWc[_YUUBjB._JKVaHt] = {_QMKVhv = _eTbgXv._QMKVhv} end function _ucNyaC:_HJPrTX(_sfWWWc) if _eTbgXv._QMKVhv ~= _sfWWWc._QMKVhv then _eTbgXv:_KoPzus() end end function _ucNyaC:_KSDfrX(_ZkFOzK, _pfgqKy, _PyTyDm, _gYSCBz) if _eTbgXv._QMKVhv then _dVlivF:_WHQQDU(_yMzEge) _yMzEge._SBYtAj = _gYSCBz and _vVnUNC._cuQvuk(_VPZknO:_KSDfrX((_ZkFOzK - (_eTbgXv._nHSOAC * 0.075)) % 1)) or _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) end end function _ucNyaC:_KoPzus() _eTbgXv._QMKVhv = not _eTbgXv._QMKVhv local _gYSCBz = _VPZknO._KZGVne._NilUEH and _VPZknO._RiJDzr._HfYRIu ~= '_zEKaRT' _dVlivF:_qhmhNw(_yMzEge, _TEZYYN._qhmhNw, { _SBYtAj = _eTbgXv._QMKVhv and (_gYSCBz and _vVnUNC._cuQvuk(_VPZknO:_KSDfrX((_VPZknO._KZGVne._mStgrp - (_eTbgXv._nHSOAC * 0.075)) % 1)) or _vVnUNC._cuQvuk(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu)) or (_uxvIaU and _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) or _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.14)) }) _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _hcXIOP = _YLbOBm._UFWQDs(_eTbgXv._QMKVhv and 12 or 2, 2) }) _YUUBjB._BMNCit(_eTbgXv._QMKVhv) end _cGmaKJ._SsjLkp:_pCuvub(function() _uxvIaU = true if not _ucNyaC._QMKVhv then _dVlivF:_qhmhNw(_yMzEge, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) }) end end) _cGmaKJ._nVWcUy:_pCuvub(function() _uxvIaU = false if not _ucNyaC._QMKVhv then _dVlivF:_qhmhNw(_yMzEge, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.14) }) end end) _cGmaKJ._Sncxke:_pCuvub(function() _ucNyaC:_KoPzus() end) if _YUUBjB._RRsXdF then _ucNyaC:_KoPzus() end _ucNyaC._AQWScN = _cGmaKJ _lQBoJI._GjTzCS[_YUUBjB._JKVaHt] = _ucNyaC return _ucNyaC end, _TgpwYV = function(_YUUBjB, _ZUERUc, _lQBoJI) local _ucNyaC = { _qzijjJ = '_TgpwYV', _dqADQS = _YUUBjB._oNPCDu or _YUUBjB._XekWAG, _erpYiL = _YUUBjB._TEQxTS or 10, _HPmHfd = _YUUBjB._HPmHfd, _nHSOAC = _IHvvut(_lQBoJI._GjTzCS) } local _djFOUe = _HqspIA._jXnjSQ('_UgCzTR') _djFOUe._JKVaHt = _YUUBjB._JKVaHt..'_LeEGls' _djFOUe._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 50) _djFOUe._SBYtAj = _euAEYe._ywRMJW(_ZUERUc._SBYtAj, _YUUBjB._mTIjzt and 0.02 or 0) _djFOUe._UASDFM = 0 _djFOUe._XraNmO = false _djFOUe._yooTfS = _YUUBjB._yooTfS == nil or _YUUBjB._yooTfS _djFOUe._PiXytr = '' _djFOUe._akdcsG = _ZUERUc _ioQasw(_djFOUe, _YUUBjB._MIvBYM) local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._UFWQDs(60, 30) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(10, 2) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = _YUUBjB._JKVaHt _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _QNKDOw._fcZKAI = 11 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _djFOUe local _ZdEHNq = _HqspIA._jXnjSQ('_UgCzTR') _ZdEHNq._JKVaHt = '_HfYRIu' _ZdEHNq._Waoasm = _YLbOBm._UFWQDs(60, 15) _ZdEHNq._hcXIOP = _YLbOBm._jXnjSQ(1, -69, 0, 9) _ZdEHNq._LwijxE = 1 _ZdEHNq._PiXytr = _ucNyaC._erpYiL _ZdEHNq._jgVhbP = _dstSjT._jgVhbP._ipjhLs _ZdEHNq._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _ZdEHNq._fcZKAI = 11 _ZdEHNq._iqsfkF = _TEZYYN._CIsHqY _ZdEHNq._akdcsG = _djFOUe local _WQzVNV = _ZdEHNq:_tPFypN() _WQzVNV._hcXIOP = _YLbOBm._jXnjSQ(1, -125, 0, 9) _WQzVNV._PiXytr = _ucNyaC._dqADQS _WQzVNV._akdcsG = _djFOUe local _eLrWXB = _HqspIA._jXnjSQ('_czQajw') _eLrWXB._JKVaHt = '_HTUFyR' _eLrWXB._Waoasm = _ZdEHNq._Waoasm _eLrWXB._hcXIOP = _ZdEHNq._hcXIOP _eLrWXB._LwijxE = 1 _eLrWXB._yooTfS = false _eLrWXB._PiXytr = _ucNyaC._dqADQS _eLrWXB._jgVhbP = _dstSjT._jgVhbP._ipjhLs _eLrWXB._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _eLrWXB._fcZKAI = 11 _eLrWXB._iqsfkF = _TEZYYN._CIsHqY _eLrWXB._wRAWXc = false _eLrWXB._akdcsG = _djFOUe local _MAWQTh = _eLrWXB:_tPFypN() _MAWQTh._hcXIOP = _WQzVNV._hcXIOP _MAWQTh._akdcsG = _djFOUe local _rKvISX = _HqspIA._jXnjSQ('_TBxjEq') _rKvISX._JKVaHt = '_LeEGls' _rKvISX._Waoasm = _YLbOBm._jXnjSQ(1, -20, 0, 2) _rKvISX._hcXIOP = _YLbOBm._UFWQDs(10, 37) _rKvISX._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.034) _rKvISX._UASDFM = 0 _rKvISX._akdcsG = _djFOUe local _ZKPxmL = _rKvISX:_tPFypN() _ZKPxmL._JKVaHt = '_voLzCs' _ZKPxmL._hcXIOP = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_ucNyaC._dqADQS / _YUUBjB._HPmHfd, 0.04, 0.96), 0) _ZKPxmL._Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_URXiHE._hZhCXF(_ucNyaC._erpYiL / _YUUBjB._HPmHfd, 0, 1), 0.04, 0.96) - _ZKPxmL._hcXIOP.X._CPnCQP, 1) _ZKPxmL._SBYtAj = _vVnUNC._cuQvuk(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu) _ZKPxmL._akdcsG = _rKvISX local _yMzEge = _HqspIA._jXnjSQ('_TBxjEq') _yMzEge._JKVaHt = '_JHonrC' _yMzEge._Waoasm = _YLbOBm._UFWQDs(16, 4) _yMzEge._hcXIOP = _YLbOBm._nfWnJj(0, 0.5) _yMzEge._fPIzOY = _VSBFpv._jXnjSQ(0.5, 0.5) _yMzEge._SBYtAj = _djFOUe._SBYtAj _yMzEge._UASDFM = 0 _yMzEge._akdcsG = _ZKPxmL local _setvwo = _HqspIA._jXnjSQ('_QXffBR') _setvwo._JKVaHt = '_JHonrC' _setvwo._Waoasm = _YLbOBm._UFWQDs(9, 16) _setvwo._hcXIOP = _YLbOBm._nfWnJj(0.5, 0.5) _setvwo._fPIzOY = _VSBFpv._jXnjSQ(0.5, 0.5) _setvwo._LwijxE = 1 _setvwo._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_SRwxEt._oXtCIE') _setvwo._mGTSmO = _vVnUNC._cuQvuk(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu) _setvwo._akdcsG = _yMzEge local _UanJKu = _yMzEge:_tPFypN() _UanJKu._JKVaHt = '_aWtBFH' _UanJKu._hcXIOP = _YLbOBm._nfWnJj(1, 0.5) _UanJKu._akdcsG = _ZKPxmL _UanJKu._JHonrC._uOTxOa = 180 local _gAbbQc = _HqspIA._jXnjSQ('_QXffBR') _gAbbQc._JKVaHt = '_IcuRpS' _gAbbQc._Waoasm = _YLbOBm._UFWQDs(12, 6) _gAbbQc._hcXIOP = _YLbOBm._jXnjSQ(1, -56, 0, 10) _gAbbQc._LwijxE = 1 _gAbbQc._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_gvTwQf._oXtCIE') _gAbbQc._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.14) _gAbbQc._akdcsG = _djFOUe _YUUBjB._BMNCit = _YUUBjB._BMNCit or function() end _YUUBjB._vPMZFU = _YUUBjB._vPMZFU or 1 local _pTtnLG = _xLSYdi._jXnjSQ() function _ucNyaC:_cmnBiI(_sfWWWc) _sfWWWc[_YUUBjB._JKVaHt] = {_dqADQS = _eTbgXv._dqADQS, _erpYiL = _eTbgXv._erpYiL} end function _ucNyaC:_HJPrTX(_sfWWWc) if _eTbgXv._dqADQS ~= _sfWWWc._dqADQS then _eTbgXv:_wTgPlF(false, _sfWWWc._dqADQS) end if _eTbgXv._erpYiL ~= _sfWWWc._erpYiL then _eTbgXv:_wTgPlF(true, _sfWWWc._erpYiL) end end function _ucNyaC:_KSDfrX(_ZkFOzK, _pfgqKy, _PyTyDm, _gYSCBz) _ZKPxmL._SBYtAj = _gYSCBz and _vVnUNC._cuQvuk(_VPZknO:_KSDfrX((_ZkFOzK - (_eTbgXv._nHSOAC * 0.075)) % 1)) or _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) _setvwo._mGTSmO = _ZKPxmL._SBYtAj _UanJKu._JHonrC._mGTSmO = _ZKPxmL._SBYtAj end function _ucNyaC:_kkgtYG() return _pTtnLG:_LqLJXg(_ucNyaC._dqADQS, _ucNyaC._erpYiL) end function _ucNyaC:_wTgPlF(_Qgmjkz, _QADddM) if _RIObyP(_QADddM) == _URXiHE._CrVtVs or _QADddM ~= _QADddM then return end _eTbgXv[_Qgmjkz and '_erpYiL' or '_dqADQS'] = _QADddM _ZdEHNq._PiXytr = _eTbgXv._erpYiL _WQzVNV._PiXytr = _eTbgXv._dqADQS local _FHRNzo = _URXiHE._hZhCXF(_URXiHE._hZhCXF(_eTbgXv._dqADQS / _YUUBjB._HPmHfd, 0, 1), 0.04, 0.96) _dVlivF:_qhmhNw(_ZKPxmL, _uCVxNa._jXnjSQ(0.1), { _hcXIOP = _YLbOBm._nfWnJj(_FHRNzo, 0), _Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_URXiHE._hZhCXF(_URXiHE._hZhCXF(_eTbgXv._erpYiL / _YUUBjB._HPmHfd, 0.04, 0.96), 0.04, 0.96) - _FHRNzo, 0, 1), 1) }) end _yMzEge._SsjLkp:_pCuvub(function() _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._UFWQDs(11, 18) }) end) _yMzEge._nVWcUy:_pCuvub(function() _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._UFWQDs(9, 16) }) end) _UanJKu._SsjLkp:_pCuvub(function() _dVlivF:_qhmhNw(_UanJKu._JHonrC, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._UFWQDs(11, 18) }) end) _UanJKu._nVWcUy:_pCuvub(function() _dVlivF:_qhmhNw(_UanJKu._JHonrC, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._UFWQDs(9, 16) }) end) _djFOUe._CFFdjI:_pCuvub(function(_xqaQbT) if (_xqaQbT._hopPDQ == _dstSjT._hopPDQ._YnPRZY or _xqaQbT._hopPDQ == _dstSjT._hopPDQ._KcLpcV) and (_xqaQbT._hcXIOP.Y - _djFOUe._ZmTyZP.Y) > (20 * _umqGsM._CPnCQP) then local _KEhOVz = (_xqaQbT._hcXIOP.X - _UanJKu._ZmTyZP.X) > -10 local _WjrSRk = _URXiHE._hZhCXF((_xqaQbT._hcXIOP.X - _rKvISX._ZmTyZP.X) / _rKvISX._tpKwbq.X, 0, 1) _ucNyaC:_wTgPlF(_KEhOVz, _URXiHE._jlbwsx((_YUUBjB._XekWAG + (_YUUBjB._HPmHfd - _YUUBjB._XekWAG) * _WjrSRk) * _YUUBjB._vPMZFU) / _YUUBjB._vPMZFU, _WjrSRk) local _oJmRlQ = _kJUqAm._FQKeJx:_pCuvub(function(_hUZoqq) if _hUZoqq._hopPDQ == (_xqaQbT._hopPDQ == _dstSjT._hopPDQ._YnPRZY and _dstSjT._hopPDQ._IyGCtU or _dstSjT._hopPDQ._KcLpcV) then local _WjrSRk = _URXiHE._hZhCXF((_hUZoqq._hcXIOP.X - _rKvISX._ZmTyZP.X) / _rKvISX._tpKwbq.X, 0, 1) _ucNyaC:_wTgPlF(_KEhOVz, _URXiHE._jlbwsx((_YUUBjB._XekWAG + (_YUUBjB._HPmHfd - _YUUBjB._XekWAG) * _WjrSRk) * _YUUBjB._vPMZFU) / _YUUBjB._vPMZFU, _WjrSRk) end end) local _RKFDlQ _RKFDlQ = _xqaQbT._HPERsa:_pCuvub(function() if _xqaQbT._oRmOYm == _dstSjT._oRmOYm._xhhrGd then if _oJmRlQ then _oJmRlQ:_BZBnLx() end if _RKFDlQ then _RKFDlQ:_BZBnLx() end end end) end end) _ZdEHNq._Sncxke:_pCuvub(function() _ZdEHNq._yooTfS = false _eLrWXB._yooTfS = true _eLrWXB._PiXytr = _ucNyaC._erpYiL _eLrWXB:_eCawEJ() end) _WQzVNV._Sncxke:_pCuvub(function() _WQzVNV._yooTfS = false _MAWQTh._yooTfS = true _MAWQTh._PiXytr = _ucNyaC._dqADQS _MAWQTh:_eCawEJ() end) _eLrWXB._qSbkyD:_pCuvub(function(_gQDLbR) _ZdEHNq._yooTfS = true _eLrWXB._yooTfS = false if _gQDLbR and _RIObyP(_eLrWXB._PiXytr) then _ucNyaC:_wTgPlF(true, _RIObyP(_eLrWXB._PiXytr)) end end) _MAWQTh._qSbkyD:_pCuvub(function(_gQDLbR) _WQzVNV._yooTfS = true _MAWQTh._yooTfS = false if _gQDLbR and _RIObyP(_MAWQTh._PiXytr) then _ucNyaC:_wTgPlF(false, _RIObyP(_MAWQTh._PiXytr)) end end) _ucNyaC._AQWScN = _djFOUe _lQBoJI._GjTzCS[_YUUBjB._JKVaHt] = _ucNyaC return _ucNyaC end, _pFRiAc = function(_ZUERUc, _oynnGu) local _oWlkPY = _HqspIA._jXnjSQ('_TBxjEq') _oWlkPY._JKVaHt = '_pFRiAc' _oWlkPY._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 1) _oWlkPY._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) _oWlkPY._UASDFM = 0 _oWlkPY._akdcsG = _ZUERUc if _oynnGu then local _UWUbAH = _HqspIA._jXnjSQ('_rfJjAs') _UWUbAH._JKVaHt = '_EibsNY' _UWUbAH._Waoasm = _YLbOBm._UFWQDs(218, 27) _UWUbAH._LwijxE = 1 _UWUbAH._PiXytr = ' '.._oynnGu:_QKqHaf() _UWUbAH._jgVhbP = _dstSjT._jgVhbP._cSzLBF _UWUbAH._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) _UWUbAH._fcZKAI = 9 _UWUbAH._iqsfkF = _TEZYYN._CIsHqY _UWUbAH._akdcsG = _ZUERUc _oWlkPY._hcXIOP = _YLbOBm._UFWQDs(0, 26) _oWlkPY._akdcsG = _UWUbAH end end } _VPZknO._tLkmuW = _aQXvch(_HuDitg, { _aNvGxK = function(_eTbgXv, _pdCOyx, _WWlIpj) for _, v in _VPZknO._YWFqMq do _ZpfyLX(v, '_zFFBmw'.._pdCOyx, function(_, _sOHDlr) return _WWlIpj(_sOHDlr, v._ThudBc, v) end) end if _VPZknO._imeQtB then for _, v in _VPZknO._imeQtB._YWFqMq do _ZpfyLX(v, '_zFFBmw'.._pdCOyx, function(_, _sOHDlr) return _WWlIpj(_sOHDlr, v._ThudBc, v) end) end end _ZpfyLX(_eTbgXv, _pdCOyx, _WWlIpj) end }) _KCGrIF._GgxKrU(function() repeat local _ZkFOzK = _AuVqzJ() * (0.2 * _VPZknO._pzWoQc._HfYRIu) % 1 for _, v in _VPZknO._bFvgWL do if v._qzijjJ == '_RXUjcu' then v:_wTgPlF(_VPZknO:_KSDfrX(_ZkFOzK)) else v:_wTgPlF(_ZkFOzK) end end _KCGrIF._AKYNGq(1 / _VPZknO._bUhFuU._HfYRIu) until _VPZknO._TSMUvi == nil end) function _VPZknO:_hSClhq() if _eTbgXv._LemRBW then _aSbcev(8) _XzXBvV:_ioBFVb((_qYsMpg._yooTfS or _ntrtlh:_SLkKGJ() ~= _dstSjT._QKWhNo.OK) and _eTbgXv._DLpHSn._QMKVhv) end end _GozGIi(_VPZknO) function _VPZknO:_UYQdSe() local _aTyjjp = { _qzijjJ = '_HWmImD', _pyfsCD = {}, _GjTzCS = {} } local _hopsmQ = _HqspIA._jXnjSQ('_UgCzTR') _hopsmQ._JKVaHt = '_grrazz' _hopsmQ._hcXIOP = _YLbOBm._UFWQDs(6, 60) _hopsmQ._SBYtAj = _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.02) _hopsmQ._XraNmO = false _hopsmQ._PiXytr = '' _hopsmQ._akdcsG = _qYsMpg _KIEDuO(_hopsmQ) _dQvNGE(_hopsmQ) _xDNuqj(_hopsmQ) local _yZupmS = _HqspIA._jXnjSQ('_QXffBR') _yZupmS._JKVaHt = '_OGVAWi' _yZupmS._Waoasm = _YLbOBm._UFWQDs(62, 18) _yZupmS._hcXIOP = _YLbOBm._UFWQDs(11, 10) _yZupmS._LwijxE = 1 _yZupmS._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_rqzKbc._oXtCIE') _yZupmS._mGTSmO = _mqzolL(3, _TEZYYN._ubVfxv:_YPmfAv()) > 0.5 and _TEZYYN._PiXytr or _vVnUNC._jXnjSQ(1, 1, 1) _yZupmS._akdcsG = _hopsmQ local _IIDFnO = _HqspIA._jXnjSQ('_QXffBR') _IIDFnO._JKVaHt = '_HJMNCW' _IIDFnO._Waoasm = _YLbOBm._UFWQDs(28, 16) _IIDFnO._hcXIOP = _YLbOBm._jXnjSQ(1, 1, 0, 1) _IIDFnO._LwijxE = 1 _IIDFnO._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_GOThwU._oXtCIE') _IIDFnO._akdcsG = _yZupmS local _ZUERUc = _HqspIA._jXnjSQ('_TBxjEq') _ZUERUc._JKVaHt = '_ThudBc' _ZUERUc._Waoasm = _YLbOBm._jXnjSQ(1, 0, 1, -33) _ZUERUc._hcXIOP = _YLbOBm._UFWQDs(0, 37) _ZUERUc._LwijxE = 1 _ZUERUc._akdcsG = _hopsmQ local _PbJlbn = _HqspIA._jXnjSQ('_QhjgFh') _PbJlbn._fizqIu = _dstSjT._fizqIu._aKmIWn _PbJlbn._PZSSNc = _dstSjT._PZSSNc._bUchrx _PbJlbn._akdcsG = _ZUERUc local _lZRjIK = _HqspIA._jXnjSQ('_UgCzTR') _lZRjIK._JKVaHt = '_jzCifs' _lZRjIK._Waoasm = _YLbOBm._UFWQDs(40, 40) _lZRjIK._hcXIOP = _YLbOBm._jXnjSQ(1, -40, 0, 0) _lZRjIK._LwijxE = 1 _lZRjIK._PiXytr = '' _lZRjIK._akdcsG = _hopsmQ _ioQasw(_lZRjIK, '_HHPWVu _sOHDlr') local _wvFmYS = _HqspIA._jXnjSQ('_QXffBR') _wvFmYS._Waoasm = _YLbOBm._UFWQDs(14, 14) _wvFmYS._hcXIOP = _YLbOBm._UFWQDs(15, 12) _wvFmYS._LwijxE = 1 _wvFmYS._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_dLlCJR._oXtCIE') _wvFmYS._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _wvFmYS._akdcsG = _lZRjIK local _SJyhkS = _HqspIA._jXnjSQ('_UgCzTR') _SJyhkS._Waoasm = _YLbOBm._nfWnJj(1, 1) _SJyhkS._SBYtAj = _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.02) _SJyhkS._XraNmO = false _SJyhkS._yooTfS = false _SJyhkS._PiXytr = '' _SJyhkS._akdcsG = _hopsmQ local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._jXnjSQ(1, -36, 0, 20) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(_URXiHE._knhIbc(_QNKDOw._Waoasm.X._gINIiO), 11) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = '_jzCifs' _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _TEZYYN._PiXytr _QNKDOw._fcZKAI = 13 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _SJyhkS local _kuFJpl = _TxKfdd(_SJyhkS) local _hVMMVW = _HqspIA._jXnjSQ('_hMCrWE') _hVMMVW._JKVaHt = '_KvFHEx' _hVMMVW._Waoasm = _YLbOBm._UFWQDs(16, 16) _hVMMVW._hcXIOP = _YLbOBm._UFWQDs(11, 13) _hVMMVW._LwijxE = 1 _hVMMVW._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_hVMMVW._oXtCIE') _hVMMVW._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _hVMMVW._akdcsG = _SJyhkS local _RgvmTX = _HqspIA._jXnjSQ('_rfJjAs') _RgvmTX._JKVaHt = '_XcUosH' _RgvmTX._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 16) _RgvmTX._hcXIOP = _YLbOBm._jXnjSQ(0, 0, 1, -16) _RgvmTX._LwijxE = 1 _RgvmTX._PiXytr = '_CSRSbK '.._VPZknO._XcUosH..' '..( _susVHu('_tqUYWH/_QMSihT/_IjFwhk._HvUhtW') and _bxvhEq('_tqUYWH/_QMSihT/_IjFwhk._HvUhtW'):_JFREKH(1, 6) or '' )..' ' _RgvmTX._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) _RgvmTX._jgVhbP = _dstSjT._jgVhbP._ipjhLs _RgvmTX._fcZKAI = 10 _RgvmTX._iqsfkF = _TEZYYN._CIsHqY _RgvmTX._akdcsG = _SJyhkS _dQvNGE(_SJyhkS) local _LZtVmo = _HqspIA._jXnjSQ('_TBxjEq') _LZtVmo._JKVaHt = '_ThudBc' _LZtVmo._Waoasm = _YLbOBm._jXnjSQ(1, 0, 1, -57) _LZtVmo._hcXIOP = _YLbOBm._UFWQDs(0, 41) _LZtVmo._SBYtAj = _TEZYYN._ubVfxv _LZtVmo._UASDFM = 0 _LZtVmo._akdcsG = _SJyhkS local _dWrANi = _HqspIA._jXnjSQ('_QhjgFh') _dWrANi._fizqIu = _dstSjT._fizqIu._aKmIWn _dWrANi._PZSSNc = _dstSjT._PZSSNc._bUchrx _dWrANi._akdcsG = _LZtVmo _aTyjjp._AQWScN = _hopsmQ function _aTyjjp:_yLidoj() local _ucNyaC = {_TMdeMy = {'_ryKFcX'}} local _Sdxhhz = _HqspIA._jXnjSQ('_UgCzTR') _Sdxhhz._Waoasm = _YLbOBm._UFWQDs(220, 40) _Sdxhhz._SBYtAj = _TEZYYN._ubVfxv _Sdxhhz._UASDFM = 0 _Sdxhhz._XraNmO = false _Sdxhhz._PiXytr = ' _KtDWti _ALyYNV' _Sdxhhz._jgVhbP = _dstSjT._jgVhbP._cSzLBF _Sdxhhz._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _Sdxhhz._fcZKAI = 14 _Sdxhhz._iqsfkF = _TEZYYN._CIsHqY _Sdxhhz._akdcsG = _LZtVmo _ioQasw(_Sdxhhz, '_WHeNna _xvvYKT _WgTYYZ of _xvvYKT _ALyYNV') local _WgTYYZ = _HqspIA._jXnjSQ('_UgCzTR') _WgTYYZ._JKVaHt = '_TMdeMy' _WgTYYZ._Waoasm = _YLbOBm._UFWQDs(20, 21) _WgTYYZ._hcXIOP = _YLbOBm._jXnjSQ(1, -10, 0, 9) _WgTYYZ._fPIzOY = _VSBFpv._jXnjSQ(1, 0) _WgTYYZ._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _WgTYYZ._LwijxE = 0.92 _WgTYYZ._UASDFM = 0 _WgTYYZ._XraNmO = false _WgTYYZ._PiXytr = '' _WgTYYZ._akdcsG = _Sdxhhz _ioQasw(_WgTYYZ, '_yHMWoi to _WgTYYZ') _dQvNGE(_WgTYYZ, _SytJFC._jXnjSQ(0, 4)) local _eQWkhk = _HqspIA._jXnjSQ('_QXffBR') _eQWkhk._JKVaHt = '_ScLbxU' _eQWkhk._Waoasm = _YLbOBm._UFWQDs(12, 12) _eQWkhk._hcXIOP = _YLbOBm._jXnjSQ(0.5, -6, 0, 5) _eQWkhk._LwijxE = 1 _eQWkhk._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_WgTYYZ._oXtCIE') _eQWkhk._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) _eQWkhk._akdcsG = _WgTYYZ local _UWUbAH = _HqspIA._jXnjSQ('_rfJjAs') _UWUbAH._JKVaHt = '_PiXytr' _UWUbAH._Waoasm = _YLbOBm._nfWnJj(1, 1) _UWUbAH._hcXIOP = _YLbOBm._UFWQDs(0, 1) _UWUbAH._LwijxE = 1 _UWUbAH._yooTfS = false _UWUbAH._PiXytr = '' _UWUbAH._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) _UWUbAH._fcZKAI = 12 _UWUbAH._iqsfkF = _TEZYYN._CIsHqY _UWUbAH._akdcsG = _WgTYYZ function _ucNyaC:_oMdhPy(_sfWWWc) _VPZknO._mLKToH = #_sfWWWc <= 0 and _VPZknO._mLKToH or _hIsBBh._Pqribz(_sfWWWc) _eTbgXv._TMdeMy = _VPZknO._mLKToH if _VPZknO._DObakz then _VPZknO._DObakz:_YwZmtp() _VPZknO._DObakz = nil end _WgTYYZ._yooTfS = true _UWUbAH._yooTfS = true _eQWkhk._yooTfS = false _UWUbAH._PiXytr = _hIsBBh._vHZGIS(_VPZknO._mLKToH, ' + '):_QKqHaf() _WgTYYZ._Waoasm = _YLbOBm._UFWQDs(_URXiHE._Qgmjkz(_ycqBdh(_UWUbAH._PiXytr, _UWUbAH._fcZKAI, _UWUbAH._CIsHqY).X + 10, 20), 21) end _WgTYYZ._SsjLkp:_pCuvub(function() _UWUbAH._yooTfS = false _eQWkhk._yooTfS = not _UWUbAH._yooTfS _eQWkhk._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_OmoRdp._oXtCIE') _eQWkhk._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) end) _WgTYYZ._nVWcUy:_pCuvub(function() _UWUbAH._yooTfS = true _eQWkhk._yooTfS = not _UWUbAH._yooTfS _eQWkhk._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_WgTYYZ._oXtCIE') _eQWkhk._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) end) _WgTYYZ._Sncxke:_pCuvub(function() _VPZknO._NGHAgV = _ucNyaC end) _aTyjjp._GjTzCS._TMdeMy = _ucNyaC return _ucNyaC end function _aTyjjp:_sRYYrf(_iBZLLy) local _ucNyaC = { _QMKVhv = false, _nHSOAC = _IHvvut(_aTyjjp._pyfsCD) } local _Sdxhhz = _HqspIA._jXnjSQ('_UgCzTR') _Sdxhhz._JKVaHt = _iBZLLy._JKVaHt _Sdxhhz._Waoasm = _YLbOBm._UFWQDs(220, 40) _Sdxhhz._SBYtAj = _TEZYYN._ubVfxv _Sdxhhz._UASDFM = 0 _Sdxhhz._XraNmO = false _Sdxhhz._PiXytr = (_iBZLLy._ScLbxU and ' ' or ' ').._iBZLLy._JKVaHt _Sdxhhz._jgVhbP = _dstSjT._jgVhbP._cSzLBF _Sdxhhz._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _Sdxhhz._fcZKAI = 14 _Sdxhhz._iqsfkF = _TEZYYN._CIsHqY _Sdxhhz._akdcsG = _ZUERUc local _eQWkhk if _iBZLLy._ScLbxU then _eQWkhk = _HqspIA._jXnjSQ('_QXffBR') _eQWkhk._JKVaHt = '_ScLbxU' _eQWkhk._Waoasm = _iBZLLy._Waoasm _eQWkhk._hcXIOP = _YLbOBm._UFWQDs(13, 13) _eQWkhk._LwijxE = 1 _eQWkhk._dMWcuD = _iBZLLy._ScLbxU _eQWkhk._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _eQWkhk._akdcsG = _Sdxhhz end if _iBZLLy._JKVaHt == '_zBTPVG' then local _UWUbAH = _HqspIA._jXnjSQ('_rfJjAs') _UWUbAH._JKVaHt = '_fXfbcQ' _UWUbAH._Waoasm = _YLbOBm._UFWQDs(53, 24) _UWUbAH._hcXIOP = _YLbOBm._jXnjSQ(1, -36, 0, 8) _UWUbAH._fPIzOY = _VSBFpv._jXnjSQ(1, 0) _UWUbAH._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.04) _UWUbAH._PiXytr = '_GDbvBN' _UWUbAH._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.29) _UWUbAH._fcZKAI = 12 _UWUbAH._iqsfkF = _TEZYYN._CIsHqY _UWUbAH._akdcsG = _Sdxhhz _dQvNGE(_UWUbAH) _VPZknO._fXfbcQ = _UWUbAH end local _gAbbQc = _HqspIA._jXnjSQ('_QXffBR') _gAbbQc._JKVaHt = '_IcuRpS' _gAbbQc._Waoasm = _YLbOBm._UFWQDs(4, 8) _gAbbQc._hcXIOP = _YLbOBm._jXnjSQ(1, -20, 0, 16) _gAbbQc._LwijxE = 1 _gAbbQc._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_iSOExJ._oXtCIE') _gAbbQc._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _gAbbQc._akdcsG = _Sdxhhz _ucNyaC._JKVaHt = _iBZLLy._JKVaHt _ucNyaC._ScLbxU = _eQWkhk _ucNyaC._AQWScN = _Sdxhhz function _ucNyaC:_KoPzus() _eTbgXv._QMKVhv = not _eTbgXv._QMKVhv _dVlivF:_qhmhNw(_gAbbQc, _TEZYYN._qhmhNw, { _hcXIOP = _YLbOBm._jXnjSQ(1, _eTbgXv._QMKVhv and -14 or -20, 0, 16) }) _Sdxhhz._qnaMkt = _eTbgXv._QMKVhv and _vVnUNC._cuQvuk(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu) or _TEZYYN._PiXytr if _eQWkhk then _eQWkhk._mGTSmO = _Sdxhhz._qnaMkt end _Sdxhhz._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) _iBZLLy._nwdJlT._yooTfS = _eTbgXv._QMKVhv end _Sdxhhz._SsjLkp:_pCuvub(function() if not _ucNyaC._QMKVhv then _Sdxhhz._qnaMkt = _TEZYYN._PiXytr if _hIOnCy then _hIOnCy._mGTSmO = _TEZYYN._PiXytr end _Sdxhhz._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) end end) _Sdxhhz._nVWcUy:_pCuvub(function() if not _ucNyaC._QMKVhv then _Sdxhhz._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) if _hIOnCy then _hIOnCy._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) end _Sdxhhz._SBYtAj = _TEZYYN._ubVfxv end end) _Sdxhhz._Sncxke:_pCuvub(function() _ucNyaC:_KoPzus() end) _aTyjjp._pyfsCD[_iBZLLy._JKVaHt] = _ucNyaC return _ucNyaC end function _aTyjjp:_zXqzEX(_oynnGu) return _HuDitg._pFRiAc(_ZUERUc, _oynnGu) end function _aTyjjp:_yzckHO() local _ucNyaC = {_bLUDnN = {}} local _AOLLQZ = _HqspIA._jXnjSQ('_TBxjEq') _AOLLQZ._JKVaHt = '_zWtjCx' _AOLLQZ._Waoasm = _YLbOBm._UFWQDs(220, 36) _AOLLQZ._SBYtAj = _TEZYYN._ubVfxv _AOLLQZ._UASDFM = 0 _AOLLQZ._akdcsG = _ZUERUc _HuDitg._pFRiAc(_AOLLQZ) local _Sdxhhz = _HqspIA._jXnjSQ('_hMCrWE') _Sdxhhz._Waoasm = _YLbOBm._UFWQDs(24, 24) _Sdxhhz._hcXIOP = _YLbOBm._jXnjSQ(1, -29, 0, 7) _Sdxhhz._LwijxE = 1 _Sdxhhz._XraNmO = false _Sdxhhz._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_qNMHiC._oXtCIE') _Sdxhhz._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _Sdxhhz._akdcsG = _AOLLQZ _dQvNGE(_Sdxhhz, _SytJFC._jXnjSQ(1, 0)) _ioQasw(_Sdxhhz, '_HHPWVu _lUVGNI _KqbtvB') local _pDitCT = _HqspIA._jXnjSQ('_UgCzTR') _pDitCT._JKVaHt = '_zTvvio' _pDitCT._Waoasm = _YLbOBm._jXnjSQ(1, 0, 1, -5) _pDitCT._SBYtAj = _vVnUNC._jXnjSQ() _pDitCT._LwijxE = 1 _pDitCT._XraNmO = false _pDitCT._nrATZG = true _pDitCT._yooTfS = false _pDitCT._PiXytr = '' _pDitCT._akdcsG = _hopsmQ _dQvNGE(_pDitCT) local _hopsmQ = _HqspIA._jXnjSQ('_TBxjEq') _hopsmQ._Waoasm = _YLbOBm._UFWQDs(220, 42) _hopsmQ._hcXIOP = _YLbOBm._nfWnJj(0, 1) _hopsmQ._SBYtAj = _TEZYYN._ubVfxv _hopsmQ._akdcsG = _pDitCT _dQvNGE(_hopsmQ) local _eQWkhk = _HqspIA._jXnjSQ('_QXffBR') _eQWkhk._JKVaHt = '_ScLbxU' _eQWkhk._Waoasm = _YLbOBm._UFWQDs(14, 12) _eQWkhk._hcXIOP = _YLbOBm._UFWQDs(10, 13) _eQWkhk._LwijxE = 1 _eQWkhk._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_yYGkMJ._oXtCIE') _eQWkhk._mGTSmO = _TEZYYN._PiXytr _eQWkhk._akdcsG = _hopsmQ local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._jXnjSQ(1, -36, 0, 38) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(36, 0) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = '_zWtjCx' _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _TEZYYN._PiXytr _QNKDOw._fcZKAI = 15 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _hopsmQ local _kuFJpl = _TxKfdd(_hopsmQ, 7) local _oWlkPY = _HqspIA._jXnjSQ('_TBxjEq') _oWlkPY._JKVaHt = '_pFRiAc' _oWlkPY._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 1) _oWlkPY._hcXIOP = _YLbOBm._UFWQDs(0, 37) _oWlkPY._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) _oWlkPY._UASDFM = 0 _oWlkPY._akdcsG = _hopsmQ local _KvvJhY = _HqspIA._jXnjSQ('_TBxjEq') _KvvJhY._hcXIOP = _YLbOBm._UFWQDs(0, 38) _KvvJhY._LwijxE = 1 _KvvJhY._akdcsG = _hopsmQ local _PbJlbn = _HqspIA._jXnjSQ('_QhjgFh') _PbJlbn._fizqIu = _dstSjT._fizqIu._aKmIWn _PbJlbn._PZSSNc = _dstSjT._PZSSNc._bUchrx _PbJlbn._akdcsG = _KvvJhY function _ucNyaC:_JCMPNT(_iescsQ) local _vpgRrT = { _QMKVhv = false, _nHSOAC = _IHvvut(_ucNyaC._bLUDnN) } local _uxvIaU = false local _cGmaKJ = _HqspIA._jXnjSQ('_UgCzTR') _cGmaKJ._JKVaHt = _iescsQ._JKVaHt..'_KoPzus' _cGmaKJ._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 40) _cGmaKJ._LwijxE = 1 _cGmaKJ._XraNmO = false _cGmaKJ._PiXytr = _eTMjhq._IsytUZ(' ', 33 * _umqGsM._CPnCQP).._iescsQ._JKVaHt _cGmaKJ._jgVhbP = _dstSjT._jgVhbP._cSzLBF _cGmaKJ._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _cGmaKJ._fcZKAI = 14 _cGmaKJ._iqsfkF = _TEZYYN._CIsHqY _cGmaKJ._akdcsG = _KvvJhY local _eQWkhk = _HqspIA._jXnjSQ('_QXffBR') _eQWkhk._JKVaHt = '_ScLbxU' _eQWkhk._Waoasm = _iescsQ._Waoasm _eQWkhk._hcXIOP = _iescsQ._hcXIOP _eQWkhk._LwijxE = 1 _eQWkhk._dMWcuD = _iescsQ._ScLbxU _eQWkhk._mGTSmO = _TEZYYN._PiXytr _eQWkhk._akdcsG = _cGmaKJ local _setvwo = _HqspIA._jXnjSQ('_TBxjEq') _setvwo._JKVaHt = '_JHonrC' _setvwo._Waoasm = _YLbOBm._UFWQDs(22, 12) _setvwo._hcXIOP = _YLbOBm._jXnjSQ(1, -30, 0, 14) _setvwo._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.14) _setvwo._akdcsG = _cGmaKJ _dQvNGE(_setvwo, _SytJFC._jXnjSQ(1, 0)) local _skvUPr = _setvwo:_tPFypN() _skvUPr._Waoasm = _YLbOBm._UFWQDs(8, 8) _skvUPr._hcXIOP = _YLbOBm._UFWQDs(2, 2) _skvUPr._SBYtAj = _TEZYYN._ubVfxv _skvUPr._akdcsG = _setvwo _vpgRrT._AQWScN = _cGmaKJ function _vpgRrT:_KoPzus() _eTbgXv._QMKVhv = not _eTbgXv._QMKVhv _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _SBYtAj = _eTbgXv._QMKVhv and _vVnUNC._cuQvuk( _VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu ) or (_uxvIaU and _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) or _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.14)) }) _dVlivF:_qhmhNw(_skvUPr, _TEZYYN._qhmhNw, { _hcXIOP = _YLbOBm._UFWQDs(_eTbgXv._QMKVhv and 12 or 2, 2) }) _iescsQ._BMNCit(_eTbgXv._QMKVhv) end _umqGsM:_wlElAj('_CPnCQP'):_pCuvub(function() _cGmaKJ._PiXytr = _eTMjhq._IsytUZ(' ', 33 * _umqGsM._CPnCQP).._iescsQ._JKVaHt end) _cGmaKJ._SsjLkp:_pCuvub(function() _uxvIaU = true if not _vpgRrT._QMKVhv then _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) }) end end) _cGmaKJ._nVWcUy:_pCuvub(function() _uxvIaU = false if not _vpgRrT._QMKVhv then _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.14) }) end end) _cGmaKJ._Sncxke:_pCuvub(function() _vpgRrT:_KoPzus() end) _hIsBBh._iAYcqN(_ucNyaC._bLUDnN, _vpgRrT) return _vpgRrT end _Sdxhhz._SsjLkp:_pCuvub(function() _Sdxhhz._mGTSmO = _TEZYYN._PiXytr _dVlivF:_qhmhNw(_Sdxhhz, _TEZYYN._qhmhNw, { _LwijxE = 0.9 }) end) _Sdxhhz._nVWcUy:_pCuvub(function() _Sdxhhz._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _dVlivF:_qhmhNw(_Sdxhhz, _TEZYYN._qhmhNw, { _LwijxE = 1 }) end) _Sdxhhz._Sncxke:_pCuvub(function() _pDitCT._yooTfS = true _dVlivF:_qhmhNw(_pDitCT, _TEZYYN._qhmhNw, { _LwijxE = 0.5 }) _dVlivF:_qhmhNw(_hopsmQ, _TEZYYN._qhmhNw, { _hcXIOP = _YLbOBm._jXnjSQ(0, 0, 1, -(_hopsmQ._Waoasm.Y._gINIiO)) }) end) _kuFJpl._Sncxke:_pCuvub(function() _dVlivF:_qhmhNw(_pDitCT, _TEZYYN._qhmhNw, { _LwijxE = 1 }) _dVlivF:_qhmhNw(_hopsmQ, _TEZYYN._qhmhNw, { _hcXIOP = _YLbOBm._nfWnJj(0, 1) }) _KCGrIF._AKYNGq(0.2) _pDitCT._yooTfS = false end) _pDitCT._Sncxke:_pCuvub(function() _dVlivF:_qhmhNw(_pDitCT, _TEZYYN._qhmhNw, { _LwijxE = 1 }) _dVlivF:_qhmhNw(_hopsmQ, _TEZYYN._qhmhNw, { _hcXIOP = _YLbOBm._nfWnJj(0, 1) }) _KCGrIF._AKYNGq(0.2) _pDitCT._yooTfS = false end) _PbJlbn:_wlElAj('_bamSMD'):_pCuvub(function() if _VPZknO._LemRBW then _aSbcev(8) end _hopsmQ._Waoasm = _YLbOBm._UFWQDs(220, _URXiHE._Gbxmjh(37 + _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP, 605)) _KvvJhY._Waoasm = _YLbOBm._UFWQDs(220, _hopsmQ._Waoasm.Y._gINIiO - 5) end) _VPZknO._zWtjCx = _ucNyaC return _ucNyaC end function _aTyjjp:_WViTFn() _HuDitg._pFRiAc(_LZtVmo) end function _aTyjjp:_tppbQT(_iBZLLy) local _ucNyaC = {} local _Sdxhhz = _HqspIA._jXnjSQ('_UgCzTR') _Sdxhhz._JKVaHt = _iBZLLy._JKVaHt _Sdxhhz._Waoasm = _YLbOBm._UFWQDs(220, 40) _Sdxhhz._SBYtAj = _TEZYYN._ubVfxv _Sdxhhz._UASDFM = 0 _Sdxhhz._XraNmO = false _Sdxhhz._PiXytr = ' '.._iBZLLy._JKVaHt _Sdxhhz._jgVhbP = _dstSjT._jgVhbP._cSzLBF _Sdxhhz._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _Sdxhhz._fcZKAI = 14 _Sdxhhz._iqsfkF = _TEZYYN._CIsHqY _Sdxhhz._akdcsG = _LZtVmo local _gAbbQc = _HqspIA._jXnjSQ('_QXffBR') _gAbbQc._JKVaHt = '_IcuRpS' _gAbbQc._Waoasm = _YLbOBm._UFWQDs(4, 8) _gAbbQc._hcXIOP = _YLbOBm._jXnjSQ(1, -20, 0, 16) _gAbbQc._LwijxE = 1 _gAbbQc._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_iSOExJ._oXtCIE') _gAbbQc._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _gAbbQc._akdcsG = _Sdxhhz local _SJyhkS = _HqspIA._jXnjSQ('_UgCzTR') _SJyhkS._Waoasm = _YLbOBm._nfWnJj(1, 1) _SJyhkS._SBYtAj = _TEZYYN._ubVfxv _SJyhkS._XraNmO = false _SJyhkS._yooTfS = false _SJyhkS._PiXytr = '' _SJyhkS._akdcsG = _hopsmQ local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._jXnjSQ(1, -36, 0, 20) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(_URXiHE._knhIbc(_QNKDOw._Waoasm.X._gINIiO), 11) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = _iBZLLy._JKVaHt _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _TEZYYN._PiXytr _QNKDOw._fcZKAI = 13 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _SJyhkS local _kuFJpl = _TxKfdd(_SJyhkS) local _hVMMVW = _HqspIA._jXnjSQ('_hMCrWE') _hVMMVW._JKVaHt = '_KvFHEx' _hVMMVW._Waoasm = _YLbOBm._UFWQDs(16, 16) _hVMMVW._hcXIOP = _YLbOBm._UFWQDs(11, 13) _hVMMVW._LwijxE = 1 _hVMMVW._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_hVMMVW._oXtCIE') _hVMMVW._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _hVMMVW._akdcsG = _SJyhkS _dQvNGE(_SJyhkS) local _LZtVmo = _HqspIA._jXnjSQ('_TBxjEq') _LZtVmo._JKVaHt = '_ThudBc' _LZtVmo._Waoasm = _YLbOBm._jXnjSQ(1, 0, 1, -57) _LZtVmo._hcXIOP = _YLbOBm._UFWQDs(0, 41) _LZtVmo._SBYtAj = _TEZYYN._ubVfxv _LZtVmo._UASDFM = 0 _LZtVmo._akdcsG = _SJyhkS local _oWlkPY = _HqspIA._jXnjSQ('_TBxjEq') _oWlkPY._JKVaHt = '_pFRiAc' _oWlkPY._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 1) _oWlkPY._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _oWlkPY._LwijxE = 0.928 _oWlkPY._UASDFM = 0 _oWlkPY._akdcsG = _LZtVmo local _dWrANi = _HqspIA._jXnjSQ('_QhjgFh') _dWrANi._fizqIu = _dstSjT._fizqIu._aKmIWn _dWrANi._PZSSNc = _dstSjT._PZSSNc._bUchrx _dWrANi._akdcsG = _LZtVmo for i, v in _HuDitg do _ucNyaC['_zFFBmw'..i] = function(_, _sOHDlr) return v(_sOHDlr, _LZtVmo, _aTyjjp) end end _hVMMVW._SsjLkp:_pCuvub(function() _hVMMVW._mGTSmO = _TEZYYN._PiXytr end) _hVMMVW._nVWcUy:_pCuvub(function() _hVMMVW._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) end) _hVMMVW._Sncxke:_pCuvub(function() _SJyhkS._yooTfS = false end) _Sdxhhz._SsjLkp:_pCuvub(function() _Sdxhhz._qnaMkt = _TEZYYN._PiXytr _Sdxhhz._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) end) _Sdxhhz._nVWcUy:_pCuvub(function() _Sdxhhz._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _Sdxhhz._SBYtAj = _TEZYYN._ubVfxv end) _Sdxhhz._Sncxke:_pCuvub(function() _SJyhkS._yooTfS = true end) _kuFJpl._Sncxke:_pCuvub(function() _SJyhkS._yooTfS = false end) _PbJlbn:_wlElAj('_bamSMD'):_pCuvub(function() if _VPZknO._LemRBW then _aSbcev(8) end _hopsmQ._Waoasm = _YLbOBm._UFWQDs(220, 45 + _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP) for _, v in _aTyjjp._pyfsCD do if v._ScLbxU then v._AQWScN._PiXytr = _eTMjhq._IsytUZ(' ', 33 * _umqGsM._CPnCQP)..v._JKVaHt end end end) return _ucNyaC end function _aTyjjp:_LAcsfU(_YUUBjB) local _ucNyaC = { _qzijjJ = '_RXUjcu', _HkcyyM = 4, _mStgrp = 0.46, _bwPQRS = 0.96, _HfYRIu = 0.52, _NilUEH = false, _GnceAz = false } local _TyYFcR = { _vVnUNC._ckVQPV(250, 50, 56), _vVnUNC._ckVQPV(242, 99, 33), _vVnUNC._ckVQPV(252, 179, 22), _vVnUNC._ckVQPV(5, 133, 104), _vVnUNC._ckVQPV(47, 122, 229), _vVnUNC._ckVQPV(126, 84, 217), _vVnUNC._ckVQPV(232, 96, 152) } local _geolVp = { 4, 33, 62, 90, 119, 148, 177 } local function _cJacTK(_ePWNUd, _cBOAPK) local _djFOUe = _HqspIA._jXnjSQ('_UgCzTR') _djFOUe._JKVaHt = _YUUBjB._JKVaHt..'_LeEGls'.._ePWNUd _djFOUe._Waoasm = _YLbOBm._UFWQDs(220, 50) _djFOUe._SBYtAj = _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.02) _djFOUe._UASDFM = 0 _djFOUe._XraNmO = false _djFOUe._yooTfS = false _djFOUe._PiXytr = '' _djFOUe._akdcsG = _LZtVmo local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._UFWQDs(60, 30) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(10, 2) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = _ePWNUd _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _QNKDOw._fcZKAI = 11 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _djFOUe local _SWmKHJ = _HqspIA._jXnjSQ('_TBxjEq') _SWmKHJ._JKVaHt = '_LeEGls' _SWmKHJ._Waoasm = _YLbOBm._UFWQDs(200, 2) _SWmKHJ._hcXIOP = _YLbOBm._UFWQDs(10, 37) _SWmKHJ._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _SWmKHJ._UASDFM = 0 _SWmKHJ._akdcsG = _djFOUe local _VJhSTM = _HqspIA._jXnjSQ('_ljyDVW') _VJhSTM._KSDfrX = _cBOAPK _VJhSTM._akdcsG = _SWmKHJ local _ZKPxmL = _SWmKHJ:_tPFypN() _ZKPxmL._JKVaHt = '_voLzCs' _ZKPxmL._Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(1, 0.04, 0.96), 1) _ZKPxmL._hcXIOP = _YLbOBm._jXnjSQ() _ZKPxmL._LwijxE = 1 _ZKPxmL._akdcsG = _SWmKHJ local _RgvjNj = _HqspIA._jXnjSQ('_TBxjEq') _RgvjNj._JKVaHt = '_JHonrC' _RgvjNj._Waoasm = _YLbOBm._UFWQDs(24, 4) _RgvjNj._hcXIOP = _YLbOBm._nfWnJj(1, 0.5) _RgvjNj._fPIzOY = _VSBFpv._jXnjSQ(0.5, 0.5) _RgvjNj._SBYtAj = _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.02) _RgvjNj._UASDFM = 0 _RgvjNj._akdcsG = _ZKPxmL local _setvwo = _HqspIA._jXnjSQ('_TBxjEq') _setvwo._JKVaHt = '_JHonrC' _setvwo._Waoasm = _YLbOBm._UFWQDs(14, 14) _setvwo._hcXIOP = _YLbOBm._nfWnJj(0.5, 0.5) _setvwo._fPIzOY = _VSBFpv._jXnjSQ(0.5, 0.5) _setvwo._SBYtAj = _TEZYYN._PiXytr _setvwo._akdcsG = _RgvjNj _dQvNGE(_setvwo, _SytJFC._jXnjSQ(1, 0)) if _ePWNUd == '_XPQjZj _euAEYe' then local _JhXDWk = _HqspIA._jXnjSQ('_UgCzTR') _JhXDWk._Waoasm = _YLbOBm._UFWQDs(45, 20) _JhXDWk._hcXIOP = _YLbOBm._jXnjSQ(1, -52, 0, 5) _JhXDWk._LwijxE = 1 _JhXDWk._PiXytr = '_hEMKMr' _JhXDWk._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _JhXDWk._fcZKAI = 11 _JhXDWk._iqsfkF = _TEZYYN._CIsHqY _JhXDWk._akdcsG = _djFOUe _JhXDWk._Sncxke:_pCuvub(function() _ucNyaC:_wTgPlF(nil, nil, nil, 4) end) end _djFOUe._CFFdjI:_pCuvub(function(_xqaQbT) if (_xqaQbT._hopPDQ == _dstSjT._hopPDQ._YnPRZY or _xqaQbT._hopPDQ == _dstSjT._hopPDQ._KcLpcV) and (_xqaQbT._hcXIOP.Y - _djFOUe._ZmTyZP.Y) > (20 * _umqGsM._CPnCQP) then local _oJmRlQ = _kJUqAm._FQKeJx:_pCuvub(function(_hUZoqq) if _hUZoqq._hopPDQ == (_xqaQbT._hopPDQ == _dstSjT._hopPDQ._YnPRZY and _dstSjT._hopPDQ._IyGCtU or _dstSjT._hopPDQ._KcLpcV) then local _QADddM = _URXiHE._hZhCXF((_hUZoqq._hcXIOP.X - _SWmKHJ._ZmTyZP.X) / _SWmKHJ._tpKwbq.X, 0, 1) _ucNyaC:_wTgPlF( _ePWNUd == '_XPQjZj _euAEYe' and _QADddM or nil, _ePWNUd == '_BQQInx' and _QADddM or nil, _ePWNUd == '_bLZrLc' and _QADddM or nil, _ePWNUd == '_OfTZFX' and _QADddM or nil ) end end) local _RKFDlQ _RKFDlQ = _xqaQbT._HPERsa:_pCuvub(function() if _xqaQbT._oRmOYm == _dstSjT._oRmOYm._xhhrGd then if _oJmRlQ then _oJmRlQ:_BZBnLx() end if _RKFDlQ then _RKFDlQ:_BZBnLx() end end end) end end) _djFOUe._SsjLkp:_pCuvub(function() _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._UFWQDs(16, 16) }) end) _djFOUe._nVWcUy:_pCuvub(function() _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._UFWQDs(14, 14) }) end) return _djFOUe end local _djFOUe = _HqspIA._jXnjSQ('_UgCzTR') _djFOUe._JKVaHt = _YUUBjB._JKVaHt..'_LeEGls' _djFOUe._Waoasm = _YLbOBm._UFWQDs(220, 50) _djFOUe._LwijxE = 1 _djFOUe._XraNmO = false _djFOUe._PiXytr = '' _djFOUe._akdcsG = _LZtVmo local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._UFWQDs(60, 30) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(10, 2) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = _YUUBjB._JKVaHt _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _QNKDOw._fcZKAI = 11 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _djFOUe local _SWmKHJ = _HqspIA._jXnjSQ('_TBxjEq') _SWmKHJ._JKVaHt = '_LeEGls' _SWmKHJ._Waoasm = _YLbOBm._UFWQDs(200, 2) _SWmKHJ._hcXIOP = _YLbOBm._UFWQDs(10, 37) _SWmKHJ._LwijxE = 1 _SWmKHJ._UASDFM = 0 _SWmKHJ._akdcsG = _djFOUe local _meRhdj = 0 for i, _euAEYe in _TyYFcR do local _cnNUkQ = _HqspIA._jXnjSQ('_TBxjEq') _cnNUkQ._Waoasm = _YLbOBm._UFWQDs(27 + (((i + 1) % 2) == 0 and 1 or 0), 2) _cnNUkQ._hcXIOP = _YLbOBm._UFWQDs(_meRhdj, 0) _cnNUkQ._SBYtAj = _euAEYe _cnNUkQ._UASDFM = 0 _cnNUkQ._akdcsG = _SWmKHJ _meRhdj += (_cnNUkQ._Waoasm.X._gINIiO + 1) end local _thJmDg = _HqspIA._jXnjSQ('_hMCrWE') _thJmDg._JKVaHt = '_HWJAbn' _thJmDg._Waoasm = _YLbOBm._UFWQDs(12, 12) _thJmDg._hcXIOP = _YLbOBm._jXnjSQ(1, -22, 0, 10) _thJmDg._LwijxE = 1 _thJmDg._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_FRahnc._oXtCIE') _thJmDg._mGTSmO = _vVnUNC._cuQvuk(_ucNyaC._mStgrp, 1, 1) _thJmDg._akdcsG = _djFOUe local _eLrWXB = _HqspIA._jXnjSQ('_czQajw') _eLrWXB._JKVaHt = '_HTUFyR' _eLrWXB._Waoasm = _YLbOBm._UFWQDs(60, 15) _eLrWXB._hcXIOP = _YLbOBm._jXnjSQ(1, -69, 0, 9) _eLrWXB._LwijxE = 1 _eLrWXB._yooTfS = false _eLrWXB._PiXytr = '' _eLrWXB._jgVhbP = _dstSjT._jgVhbP._ipjhLs _eLrWXB._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _eLrWXB._fcZKAI = 11 _eLrWXB._iqsfkF = _TEZYYN._CIsHqY _eLrWXB._wRAWXc = true _eLrWXB._akdcsG = _djFOUe local _vZnVic = _HqspIA._jXnjSQ('_UgCzTR') _vZnVic._JKVaHt = '_RRklEW' _vZnVic._Waoasm = _YLbOBm._UFWQDs(17, 13) _vZnVic._hcXIOP = _YLbOBm._jXnjSQ(0, _ycqBdh(_QNKDOw._PiXytr, _QNKDOw._fcZKAI, _QNKDOw._CIsHqY).X + 11, 0, 7) _vZnVic._LwijxE = 1 _vZnVic._PiXytr = '' _vZnVic._akdcsG = _djFOUe local _vBTSUU = _HqspIA._jXnjSQ('_QXffBR') _vBTSUU._JKVaHt = '_RRklEW' _vBTSUU._Waoasm = _YLbOBm._UFWQDs(9, 5) _vBTSUU._hcXIOP = _YLbOBm._UFWQDs(4, 4) _vBTSUU._LwijxE = 1 _vBTSUU._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_vBTSUU._oXtCIE') _vBTSUU._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) _vBTSUU._akdcsG = _vZnVic local _huRjIy = _HqspIA._jXnjSQ('_UgCzTR') _huRjIy._JKVaHt = '_NilUEH' _huRjIy._Waoasm = _YLbOBm._UFWQDs(12, 12) _huRjIy._hcXIOP = _YLbOBm._jXnjSQ(1, -42, 0, 10) _huRjIy._LwijxE = 1 _huRjIy._PiXytr = '' _huRjIy._akdcsG = _djFOUe local _MZZFFZ = _HqspIA._jXnjSQ('_QXffBR') _MZZFFZ._Waoasm = _YLbOBm._UFWQDs(12, 12) _MZZFFZ._LwijxE = 1 _MZZFFZ._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_UUXKIw._oXtCIE') _MZZFFZ._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _MZZFFZ._akdcsG = _huRjIy local _xfLPHV = _MZZFFZ:_tPFypN() _xfLPHV._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_ELxDfP._oXtCIE') _xfLPHV._akdcsG = _huRjIy local _TjVrXC = _MZZFFZ:_tPFypN() _TjVrXC._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_hVFmSt._oXtCIE') _TjVrXC._akdcsG = _huRjIy local _sNbMWH = _MZZFFZ:_tPFypN() _sNbMWH._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_OPKcWC._oXtCIE') _sNbMWH._akdcsG = _huRjIy local _setvwo = _HqspIA._jXnjSQ('_QXffBR') _setvwo._JKVaHt = '_JHonrC' _setvwo._Waoasm = _YLbOBm._UFWQDs(26, 12) _setvwo._hcXIOP = _YLbOBm._UFWQDs(_geolVp[4] - 3, -5) _setvwo._LwijxE = 1 _setvwo._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_ThDGtd._oXtCIE') _setvwo._mGTSmO = _TyYFcR[4] _setvwo._akdcsG = _SWmKHJ _YUUBjB._BMNCit = _YUUBjB._BMNCit or function() end local _GOariO = {} for i = 0, 1, 0.1 do _hIsBBh._iAYcqN(_GOariO, _XRrInj._jXnjSQ(i, _vVnUNC._cuQvuk(i, 1, 1))) end local _bBdnfF = _cJacTK('_XPQjZj _euAEYe', _pLOpvD._jXnjSQ(_GOariO)) local _ycmqWK = _cJacTK('_BQQInx', _pLOpvD._jXnjSQ({ _XRrInj._jXnjSQ(0, _vVnUNC._cuQvuk(0, 0, _ucNyaC._HfYRIu)), _XRrInj._jXnjSQ(1, _vVnUNC._cuQvuk(_ucNyaC._mStgrp, 1, _ucNyaC._HfYRIu)) })) local _IJHFDk = _cJacTK('_bLZrLc', _pLOpvD._jXnjSQ({ _XRrInj._jXnjSQ(0, _vVnUNC._cuQvuk(0, 0, 0)), _XRrInj._jXnjSQ(1, _vVnUNC._cuQvuk(_ucNyaC._mStgrp, _ucNyaC._bwPQRS, 1)) })) local _rpyEjH = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_ThDGtd._oXtCIE') local _LBqjuZ = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_qtZKUF._oXtCIE') local _ciAJEI function _ucNyaC:_cmnBiI(_sfWWWc) _sfWWWc[_YUUBjB._JKVaHt] = { _mStgrp = _eTbgXv._mStgrp, _bwPQRS = _eTbgXv._bwPQRS, _HfYRIu = _eTbgXv._HfYRIu, _HkcyyM = _eTbgXv._HkcyyM, _GnceAz = _eTbgXv._GnceAz, _NilUEH = _eTbgXv._NilUEH } end function _ucNyaC:_HJPrTX(_sfWWWc) if _sfWWWc._NilUEH then _eTbgXv:_KoPzus() end if _eTbgXv._NilUEH or _sfWWWc._GnceAz then _eTbgXv:_wTgPlF(_sfWWWc._mStgrp, _sfWWWc._bwPQRS, _sfWWWc._HfYRIu) else _eTbgXv:_wTgPlF(nil, nil, nil, _sfWWWc._HkcyyM) end end function _ucNyaC:_wTgPlF(h, s, v, n) if n then if _eTbgXv._NilUEH then _eTbgXv:_KoPzus() end _eTbgXv._GnceAz = false h, s, v = _TyYFcR[n]:_YPmfAv() else _eTbgXv._GnceAz = true end _eTbgXv._mStgrp = h or _eTbgXv._mStgrp _eTbgXv._bwPQRS = s or _eTbgXv._bwPQRS _eTbgXv._HfYRIu = v or _eTbgXv._HfYRIu _eTbgXv._HkcyyM = n _thJmDg._mGTSmO = _vVnUNC._cuQvuk(_eTbgXv._mStgrp, _eTbgXv._bwPQRS, _eTbgXv._HfYRIu) _ycmqWK._LeEGls._ljyDVW._KSDfrX = _pLOpvD._jXnjSQ({ _XRrInj._jXnjSQ(0, _vVnUNC._cuQvuk(0, 0, _eTbgXv._HfYRIu)), _XRrInj._jXnjSQ(1, _vVnUNC._cuQvuk(_eTbgXv._mStgrp, 1, _eTbgXv._HfYRIu)) }) _IJHFDk._LeEGls._ljyDVW._KSDfrX = _pLOpvD._jXnjSQ({ _XRrInj._jXnjSQ(0, _vVnUNC._cuQvuk(0, 0, 0)), _XRrInj._jXnjSQ(1, _vVnUNC._cuQvuk(_eTbgXv._mStgrp, _eTbgXv._bwPQRS, 1)) }) if _eTbgXv._NilUEH or _eTbgXv._GnceAz then _setvwo._dMWcuD = _LBqjuZ _setvwo._mGTSmO = _vVnUNC._jXnjSQ(1, 1, 1) _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _hcXIOP = _YLbOBm._UFWQDs(_geolVp[4] - 3, -5) }) else _setvwo._dMWcuD = _rpyEjH _setvwo._mGTSmO = _vVnUNC._cuQvuk(_eTbgXv._mStgrp, _eTbgXv._bwPQRS, _eTbgXv._HfYRIu) _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _hcXIOP = _YLbOBm._UFWQDs(_geolVp[n or 4] - 3, -5) }) end if _eTbgXv._NilUEH then if h then _bBdnfF._LeEGls._voLzCs._Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_eTbgXv._mStgrp, 0.04, 0.96), 1) end if s then _ycmqWK._LeEGls._voLzCs._Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_eTbgXv._bwPQRS, 0.04, 0.96), 1) end if v then _IJHFDk._LeEGls._voLzCs._Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_eTbgXv._HfYRIu, 0.04, 0.96), 1) end else if h then _dVlivF:_qhmhNw(_bBdnfF._LeEGls._voLzCs, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_eTbgXv._mStgrp, 0.04, 0.96), 1) }) end if s then _dVlivF:_qhmhNw(_ycmqWK._LeEGls._voLzCs, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_eTbgXv._bwPQRS, 0.04, 0.96), 1) }) end if v then _dVlivF:_qhmhNw(_IJHFDk._LeEGls._voLzCs, _TEZYYN._qhmhNw, { _Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_eTbgXv._HfYRIu, 0.04, 0.96), 1) }) end end _YUUBjB._BMNCit(_eTbgXv._mStgrp, _eTbgXv._bwPQRS, _eTbgXv._HfYRIu) end function _ucNyaC:_KoPzus() _eTbgXv._NilUEH = not _eTbgXv._NilUEH if _ciAJEI then _KCGrIF._mPgCEG(_ciAJEI) end if _eTbgXv._NilUEH then _setvwo._dMWcuD = _LBqjuZ _hIsBBh._iAYcqN(_VPZknO._bFvgWL, _eTbgXv) _MZZFFZ._mGTSmO = _vVnUNC._ckVQPV(5, 127, 100) _ciAJEI = _KCGrIF._yyLRLO(0.1, function() _xfLPHV._mGTSmO = _vVnUNC._ckVQPV(228, 125, 43) _ciAJEI = _KCGrIF._yyLRLO(0.1, function() _TjVrXC._mGTSmO = _vVnUNC._ckVQPV(225, 46, 52) _ciAJEI = nil end) end) else _eTbgXv:_wTgPlF(nil, nil, nil, 4) _setvwo._dMWcuD = _rpyEjH local _pdCOyx = _hIsBBh._gVRTpT(_VPZknO._bFvgWL, _eTbgXv) if _pdCOyx then _hIsBBh._BcnbFo(_VPZknO._bFvgWL, _pdCOyx) end _TjVrXC._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _ciAJEI = _KCGrIF._yyLRLO(0.1, function() _xfLPHV._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _ciAJEI = _KCGrIF._yyLRLO(0.1, function() _MZZFFZ._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) end) end) end end _vZnVic._SsjLkp:_pCuvub(function() _vBTSUU._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) end) _vZnVic._nVWcUy:_pCuvub(function() _vBTSUU._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) end) _vZnVic._Sncxke:_pCuvub(function() _bBdnfF._yooTfS = not _bBdnfF._yooTfS _ycmqWK._yooTfS = _bBdnfF._yooTfS _IJHFDk._yooTfS = _ycmqWK._yooTfS _vBTSUU._uOTxOa = _ycmqWK._yooTfS and 180 or 0 end) _thJmDg._Sncxke:_pCuvub(function() _thJmDg._yooTfS = false _eLrWXB._yooTfS = true _eLrWXB:_eCawEJ() local _oynnGu = _vVnUNC._cuQvuk(_ucNyaC._mStgrp, _ucNyaC._bwPQRS, _ucNyaC._HfYRIu) _eLrWXB._PiXytr = _URXiHE._BwuEju(_oynnGu.R * 255)..', '.._URXiHE._BwuEju(_oynnGu.G * 255)..', '.._URXiHE._BwuEju(_oynnGu.B * 255) end) _djFOUe._CFFdjI:_pCuvub(function(_xqaQbT) if (_xqaQbT._hopPDQ == _dstSjT._hopPDQ._YnPRZY or _xqaQbT._hopPDQ == _dstSjT._hopPDQ._KcLpcV) and (_xqaQbT._hcXIOP.Y - _djFOUe._ZmTyZP.Y) > (20 * _umqGsM._CPnCQP) then local _oJmRlQ = _kJUqAm._FQKeJx:_pCuvub(function(_hUZoqq) if _hUZoqq._hopPDQ == (_xqaQbT._hopPDQ == _dstSjT._hopPDQ._YnPRZY and _dstSjT._hopPDQ._IyGCtU or _dstSjT._hopPDQ._KcLpcV) then _ucNyaC:_wTgPlF(nil, nil, nil, _URXiHE._hZhCXF(_URXiHE._BwuEju((_hUZoqq._hcXIOP.X - _SWmKHJ._ZmTyZP.X) / _umqGsM._CPnCQP / 27), 1, 7)) end end) local _RKFDlQ _RKFDlQ = _xqaQbT._HPERsa:_pCuvub(function() if _xqaQbT._oRmOYm == _dstSjT._oRmOYm._xhhrGd then if _oJmRlQ then _oJmRlQ:_BZBnLx() end if _RKFDlQ then _RKFDlQ:_BZBnLx() end end end) _ucNyaC:_wTgPlF(nil, nil, nil, _URXiHE._hZhCXF(_URXiHE._BwuEju((_xqaQbT._hcXIOP.X - _SWmKHJ._ZmTyZP.X) / _umqGsM._CPnCQP / 27), 1, 7)) end end) _huRjIy._Sncxke:_pCuvub(function() _ucNyaC:_KoPzus() end) _eLrWXB._qSbkyD:_pCuvub(function(_gQDLbR) _thJmDg._yooTfS = true _eLrWXB._yooTfS = false if _gQDLbR then local _zzLJWJ = _eLrWXB._PiXytr:_ewdZKC(',') local _jOHwNV, _FFtrsJ = _wyMwCP(function() return _RIObyP(_zzLJWJ[1]) and _vVnUNC._ckVQPV( _RIObyP(_zzLJWJ[1]), _RIObyP(_zzLJWJ[2]), _RIObyP(_zzLJWJ[3]) ) or _vVnUNC._dUgkaf(_eLrWXB._PiXytr) end) if _jOHwNV then if _ucNyaC._NilUEH then _ucNyaC:_KoPzus() end _ucNyaC:_wTgPlF(_FFtrsJ:_YPmfAv()) end end end) _ucNyaC._AQWScN = _djFOUe _aTyjjp._GjTzCS[_YUUBjB._JKVaHt] = _ucNyaC return _ucNyaC end _hVMMVW._SsjLkp:_pCuvub(function() _hVMMVW._mGTSmO = _TEZYYN._PiXytr end) _hVMMVW._nVWcUy:_pCuvub(function() _hVMMVW._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) end) _hVMMVW._Sncxke:_pCuvub(function() _SJyhkS._yooTfS = false end) _kuFJpl._Sncxke:_pCuvub(function() _SJyhkS._yooTfS = false end) _lZRjIK._SsjLkp:_pCuvub(function() _wvFmYS._mGTSmO = _TEZYYN._PiXytr end) _lZRjIK._nVWcUy:_pCuvub(function() _wvFmYS._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) end) _lZRjIK._Sncxke:_pCuvub(function() _SJyhkS._yooTfS = true end) _PbJlbn:_wlElAj('_bamSMD'):_pCuvub(function() if _eTbgXv._LemRBW then _aSbcev(8) end _hopsmQ._Waoasm = _YLbOBm._UFWQDs(220, 42 + _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP) for _, v in _aTyjjp._pyfsCD do if v._ScLbxU then v._AQWScN._PiXytr = _eTMjhq._IsytUZ(' ', 36 * _umqGsM._CPnCQP)..v._JKVaHt end end end) _eTbgXv._xKGQUu._ubVfxv = _aTyjjp return _aTyjjp end function _VPZknO:_FYSCoA(_iBZLLy) local _aTyjjp = { _qzijjJ = '_XdkjdP', _RRlXLy = false } local _hopsmQ = _HqspIA._jXnjSQ('_UgCzTR') _hopsmQ._JKVaHt = _iBZLLy._JKVaHt..'_XdkjdP' _hopsmQ._Waoasm = _YLbOBm._UFWQDs(220, 41) _hopsmQ._hcXIOP = _YLbOBm._UFWQDs(236, 60) _hopsmQ._SBYtAj = _TEZYYN._ubVfxv _hopsmQ._XraNmO = false _hopsmQ._yooTfS = false _hopsmQ._PiXytr = '' _hopsmQ._akdcsG = _qYsMpg _KIEDuO(_hopsmQ) _dQvNGE(_hopsmQ) _xDNuqj(_hopsmQ) local _eQWkhk = _HqspIA._jXnjSQ('_QXffBR') _eQWkhk._JKVaHt = '_ScLbxU' _eQWkhk._Waoasm = _iBZLLy._Waoasm _eQWkhk._hcXIOP = _YLbOBm._UFWQDs(12, (_eQWkhk._Waoasm.X._gINIiO > 20 and 14 or 13)) _eQWkhk._LwijxE = 1 _eQWkhk._dMWcuD = _iBZLLy._ScLbxU _eQWkhk._mGTSmO = _TEZYYN._PiXytr _eQWkhk._akdcsG = _hopsmQ local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._jXnjSQ(1, -(_iBZLLy._Waoasm.X._gINIiO > 18 and 40 or 33), 0, 41) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(_URXiHE._knhIbc(_QNKDOw._Waoasm.X._gINIiO), 0) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = _iBZLLy._JKVaHt _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _TEZYYN._PiXytr _QNKDOw._fcZKAI = 13 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _hopsmQ local _NTzSVL = _HqspIA._jXnjSQ('_UgCzTR') _NTzSVL._JKVaHt = '_IcuRpS' _NTzSVL._Waoasm = _YLbOBm._UFWQDs(40, 40) _NTzSVL._hcXIOP = _YLbOBm._jXnjSQ(1, -40, 0, 0) _NTzSVL._LwijxE = 1 _NTzSVL._PiXytr = '' _NTzSVL._akdcsG = _hopsmQ local _gAbbQc = _HqspIA._jXnjSQ('_QXffBR') _gAbbQc._JKVaHt = '_IcuRpS' _gAbbQc._Waoasm = _YLbOBm._UFWQDs(9, 4) _gAbbQc._hcXIOP = _YLbOBm._UFWQDs(20, 18) _gAbbQc._LwijxE = 1 _gAbbQc._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_PCnNXd._oXtCIE') _gAbbQc._mGTSmO = _vVnUNC._ckVQPV(140, 140, 140) _gAbbQc._uOTxOa = 180 _gAbbQc._akdcsG = _NTzSVL local _ZUERUc = _HqspIA._jXnjSQ('_YEIROa') _ZUERUc._JKVaHt = '_ThudBc' _ZUERUc._Waoasm = _YLbOBm._jXnjSQ(1, 0, 1, -41) _ZUERUc._hcXIOP = _YLbOBm._UFWQDs(0, 37) _ZUERUc._LwijxE = 1 _ZUERUc._UASDFM = 0 _ZUERUc._yooTfS = false _ZUERUc._JvozRJ = 2 _ZUERUc._kTEmJh = 0.75 _ZUERUc._xkHbVe = _YLbOBm._jXnjSQ() _ZUERUc._akdcsG = _hopsmQ local _oWlkPY = _HqspIA._jXnjSQ('_TBxjEq') _oWlkPY._JKVaHt = '_pFRiAc' _oWlkPY._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 1) _oWlkPY._hcXIOP = _YLbOBm._UFWQDs(0, 37) _oWlkPY._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _oWlkPY._LwijxE = 0.928 _oWlkPY._UASDFM = 0 _oWlkPY._yooTfS = false _oWlkPY._akdcsG = _hopsmQ local _PbJlbn = _HqspIA._jXnjSQ('_QhjgFh') _PbJlbn._fizqIu = _dstSjT._fizqIu._aKmIWn _PbJlbn._PZSSNc = _dstSjT._PZSSNc._bUchrx _PbJlbn._akdcsG = _ZUERUc function _aTyjjp:_TmogEH(_HVTHRn) if _VPZknO._YWFqMq[_HVTHRn._JKVaHt] then _VPZknO:_wXQAcP(_HVTHRn._JKVaHt) end local _xEoyuy = { _QMKVhv = false, _GjTzCS = {}, _TMdeMy = {}, _nHSOAC = _IHvvut(_VPZknO._YWFqMq), _MVxAIa = _HVTHRn._MVxAIa, _JKVaHt = _HVTHRn._JKVaHt, _XdkjdP = _iBZLLy._JKVaHt } local _uxvIaU = false local _eApWYr = _HqspIA._jXnjSQ('_UgCzTR') _eApWYr._JKVaHt = _HVTHRn._JKVaHt _eApWYr._Waoasm = _YLbOBm._UFWQDs(220, 40) _eApWYr._SBYtAj = _TEZYYN._ubVfxv _eApWYr._UASDFM = 0 _eApWYr._XraNmO = false _eApWYr._PiXytr = ' '.._HVTHRn._JKVaHt _eApWYr._jgVhbP = _dstSjT._jgVhbP._cSzLBF _eApWYr._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _eApWYr._fcZKAI = 14 _eApWYr._iqsfkF = _TEZYYN._CIsHqY _eApWYr._akdcsG = _ZUERUc local _BSuQCm = _HqspIA._jXnjSQ('_ljyDVW') _BSuQCm._uOTxOa = 90 _BSuQCm._QMKVhv = false _BSuQCm._akdcsG = _eApWYr local _eEphmn = _HqspIA._jXnjSQ('_uIeLyO') local _WgTYYZ = _HqspIA._jXnjSQ('_UgCzTR') _ioQasw(_eApWYr, _HVTHRn._MIvBYM) _ioQasw(_WgTYYZ, '_yHMWoi to _WgTYYZ') _WgTYYZ._JKVaHt = '_TMdeMy' _WgTYYZ._Waoasm = _YLbOBm._UFWQDs(20, 21) _WgTYYZ._hcXIOP = _YLbOBm._jXnjSQ(1, -36, 0, 9) _WgTYYZ._fPIzOY = _VSBFpv._jXnjSQ(1, 0) _WgTYYZ._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _WgTYYZ._LwijxE = 0.92 _WgTYYZ._UASDFM = 0 _WgTYYZ._XraNmO = false _WgTYYZ._yooTfS = false _WgTYYZ._PiXytr = '' _dQvNGE(_WgTYYZ, _SytJFC._jXnjSQ(0, 4)) local _gtIFej = _HqspIA._jXnjSQ('_QXffBR') _gtIFej._JKVaHt = '_ScLbxU' _gtIFej._Waoasm = _YLbOBm._UFWQDs(12, 12) _gtIFej._hcXIOP = _YLbOBm._jXnjSQ(0.5, -6, 0, 5) _gtIFej._LwijxE = 1 _gtIFej._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_WgTYYZ._oXtCIE') _gtIFej._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) _gtIFej._akdcsG = _WgTYYZ local _Mpcekm = _HqspIA._jXnjSQ('_rfJjAs') _Mpcekm._Waoasm = _YLbOBm._nfWnJj(1, 1) _Mpcekm._hcXIOP = _YLbOBm._UFWQDs(0, 1) _Mpcekm._LwijxE = 1 _Mpcekm._yooTfS = false _Mpcekm._PiXytr = '' _Mpcekm._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) _Mpcekm._fcZKAI = 12 _Mpcekm._iqsfkF = _TEZYYN._CIsHqY _Mpcekm._akdcsG = _WgTYYZ local _tKbjkU = _HqspIA._jXnjSQ('_QXffBR') _tKbjkU._JKVaHt = '_MiKBXo' _tKbjkU._Waoasm = _YLbOBm._UFWQDs(154, 40) _tKbjkU._LwijxE = 1 _tKbjkU._yooTfS = false _tKbjkU._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_ziaBhA._oXtCIE') _tKbjkU._ooVSrn = _dstSjT._ooVSrn._dKVHsP _tKbjkU._xWzgWh = _dGTcjT._jXnjSQ(0, 0, 141, 40) _tKbjkU._akdcsG = _eApWYr local _cgEwlN = _HqspIA._jXnjSQ('_rfJjAs') _cgEwlN._JKVaHt = '_PiXytr' _cgEwlN._Waoasm = _YLbOBm._jXnjSQ(1, -10, 1, -3) _cgEwlN._LwijxE = 1 _cgEwlN._PiXytr = '_rPvLdN A _lPUTlJ TO _RDMpsy' _cgEwlN._qnaMkt = _TEZYYN._PiXytr _cgEwlN._fcZKAI = 11 _cgEwlN._iqsfkF = _TEZYYN._CIsHqY _cgEwlN._akdcsG = _tKbjkU _WgTYYZ._akdcsG = _eApWYr local _fbivaB = _HqspIA._jXnjSQ('_UgCzTR') _fbivaB._JKVaHt = '_sCzmGq' _fbivaB._Waoasm = _YLbOBm._UFWQDs(25, 40) _fbivaB._hcXIOP = _YLbOBm._jXnjSQ(1, -25, 0, 0) _fbivaB._LwijxE = 1 _fbivaB._PiXytr = '' _fbivaB._akdcsG = _eApWYr local _IzaNlN = _HqspIA._jXnjSQ('_QXffBR') _IzaNlN._JKVaHt = '_sCzmGq' _IzaNlN._Waoasm = _YLbOBm._UFWQDs(3, 16) _IzaNlN._hcXIOP = _YLbOBm._UFWQDs(4, 12) _IzaNlN._LwijxE = 1 _IzaNlN._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_IzaNlN._oXtCIE') _IzaNlN._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _IzaNlN._akdcsG = _fbivaB _eEphmn._JKVaHt = _HVTHRn._JKVaHt..'_ThudBc' _eEphmn._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 0) _eEphmn._SBYtAj = _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.02) _eEphmn._UASDFM = 0 _eEphmn._yooTfS = false _eEphmn._akdcsG = _ZUERUc _xEoyuy._ThudBc = _eEphmn local _PbJlbn = _HqspIA._jXnjSQ('_QhjgFh') _PbJlbn._fizqIu = _dstSjT._fizqIu._aKmIWn _PbJlbn._PZSSNc = _dstSjT._PZSSNc._bUchrx _PbJlbn._akdcsG = _eEphmn local _oWlkPY = _HqspIA._jXnjSQ('_TBxjEq') _oWlkPY._JKVaHt = '_pFRiAc' _oWlkPY._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 1) _oWlkPY._hcXIOP = _YLbOBm._jXnjSQ(0, 0, 1, -1) _oWlkPY._SBYtAj = _vVnUNC._jXnjSQ(0.19, 0.19, 0.19) _oWlkPY._LwijxE = 0.52 _oWlkPY._UASDFM = 0 _oWlkPY._yooTfS = false _oWlkPY._akdcsG = _eApWYr _HVTHRn._BMNCit = _HVTHRn._BMNCit or function() end _GozGIi(_xEoyuy) function _xEoyuy:_oMdhPy(_sfWWWc, _JJZRmn) if _sfWWWc._Ofnxkr then _FYsNHp(_xEoyuy, _VSBFpv._jXnjSQ(_sfWWWc.X, _sfWWWc.Y)) return end _eTbgXv._TMdeMy = _hIsBBh._Pqribz(_sfWWWc) if _JJZRmn then _cgEwlN._PiXytr = #_sfWWWc <= 0 and '_RDMpsy _QXeTXt' or '_jwmJgt TO' _tKbjkU._Waoasm = _YLbOBm._UFWQDs(_ycqBdh(_cgEwlN._PiXytr, _cgEwlN._fcZKAI).X + 20, 40) _KCGrIF._yyLRLO(1, function() _tKbjkU._yooTfS = false end) end if #_sfWWWc <= 0 then _Mpcekm._yooTfS = false _gtIFej._yooTfS = true _WgTYYZ._Waoasm = _YLbOBm._UFWQDs(20, 21) else _WgTYYZ._yooTfS = true _Mpcekm._yooTfS = true _gtIFej._yooTfS = false _Mpcekm._PiXytr = _hIsBBh._vHZGIS(_sfWWWc, ' + '):_QKqHaf() _WgTYYZ._Waoasm = _YLbOBm._UFWQDs(_URXiHE._Qgmjkz(_ycqBdh(_Mpcekm._PiXytr, _Mpcekm._fcZKAI, _Mpcekm._CIsHqY).X + 10, 20), 21) end end function _xEoyuy:_KoPzus(_MqKZjS) if _VPZknO._LemRBW then _aSbcev(8) end _eTbgXv._QMKVhv = not _eTbgXv._QMKVhv _oWlkPY._yooTfS = _eTbgXv._QMKVhv _BSuQCm._QMKVhv = _eTbgXv._QMKVhv _eApWYr._qnaMkt = (_uxvIaU or _eEphmn._yooTfS) and _TEZYYN._PiXytr or _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _eApWYr._SBYtAj = (_uxvIaU or _eEphmn._yooTfS) and _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) or _TEZYYN._ubVfxv _IzaNlN._mGTSmO = _eTbgXv._QMKVhv and _vVnUNC._ckVQPV(50, 50, 50) or _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _gtIFej._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) _Mpcekm._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) if not _eTbgXv._QMKVhv then for _, v in _eTbgXv._ygAOTu do v:_BZBnLx() end _hIsBBh._DCSjmN(_eTbgXv._ygAOTu) end if not _MqKZjS then _VPZknO:_zhyZwc() end _KCGrIF._GgxKrU(_HVTHRn._BMNCit, _eTbgXv._QMKVhv) end for i, v in _HuDitg do _xEoyuy['_zFFBmw'..i] = function(_, _YUUBjB) return v(_YUUBjB, _eEphmn, _xEoyuy) end end _WgTYYZ._SsjLkp:_pCuvub(function() _Mpcekm._yooTfS = false _gtIFej._yooTfS = not _Mpcekm._yooTfS _gtIFej._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_OmoRdp._oXtCIE') if not _xEoyuy._QMKVhv then _gtIFej._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) end end) _WgTYYZ._nVWcUy:_pCuvub(function() _Mpcekm._yooTfS = #_xEoyuy._TMdeMy > 0 _gtIFej._yooTfS = not _Mpcekm._yooTfS _gtIFej._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_WgTYYZ._oXtCIE') if not _xEoyuy._QMKVhv then _gtIFej._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) end end) _WgTYYZ._Sncxke:_pCuvub(function() _cgEwlN._PiXytr = '_rPvLdN A _lPUTlJ TO _RDMpsy' _tKbjkU._Waoasm = _YLbOBm._UFWQDs(_ycqBdh(_cgEwlN._PiXytr, _cgEwlN._fcZKAI).X + 20, 40) _tKbjkU._yooTfS = true _VPZknO._NGHAgV = _xEoyuy end) _fbivaB._SsjLkp:_pCuvub(function() if not _xEoyuy._QMKVhv then _IzaNlN._mGTSmO = _TEZYYN._PiXytr end end) _fbivaB._nVWcUy:_pCuvub(function() if not _xEoyuy._QMKVhv then _IzaNlN._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) end end) local _arrNRd: _sgQsnU = false local function _tzDWok() _arrNRd = not _arrNRd if _arrNRd then _eEphmn._yooTfS = _arrNRd _eEphmn._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 0) _dVlivF:_qhmhNw(_eEphmn, _uCVxNa._jXnjSQ(0.5, _dstSjT._cjMCsI._EQcfNa), { _Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP) }) else _JEnRCr = _dVlivF:_qhmhNw(_eEphmn, _uCVxNa._jXnjSQ(0.4, _dstSjT._cjMCsI._EQcfNa), { _Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 0) }) _KCGrIF._yyLRLO(0.5,function() _eEphmn._yooTfS = _arrNRd end); end; end; _fbivaB._Sncxke:_pCuvub(function() _tzDWok() end) _fbivaB._gJmIOl:_pCuvub(function() _tzDWok() end) _eApWYr._SsjLkp:_pCuvub(function() _uxvIaU = true if not _xEoyuy._QMKVhv and not _eEphmn._yooTfS then _eApWYr._qnaMkt = _TEZYYN._PiXytr _eApWYr._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) end _WgTYYZ._yooTfS = #_xEoyuy._TMdeMy > 0 or _uxvIaU or _eEphmn._yooTfS end) _eApWYr._nVWcUy:_pCuvub(function() _uxvIaU = false if not _xEoyuy._QMKVhv and not _eEphmn._yooTfS then _eApWYr._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _eApWYr._SBYtAj = _TEZYYN._ubVfxv end _WgTYYZ._yooTfS = #_xEoyuy._TMdeMy > 0 or _uxvIaU or _eEphmn._yooTfS end) _eApWYr._Sncxke:_pCuvub(function() _xEoyuy:_KoPzus() end) _eApWYr._gJmIOl:_pCuvub(function() _tzDWok() end) if _kJUqAm._XvHzKH then local _MIbeFR = false _eApWYr._JYRzqL:_pCuvub(function() _MIbeFR = true local _PSBxqX, _rKSoZX = _AuVqzJ(), _kJUqAm:_QaLUjz() repeat _MIbeFR = (_kJUqAm:_QaLUjz() - _rKSoZX)._OFXZVd < 3 _KCGrIF._AKYNGq() until (_AuVqzJ() - _PSBxqX) > 1 or not _MIbeFR or not _qYsMpg._yooTfS if _MIbeFR and _qYsMpg._yooTfS then if _VPZknO._LemRBW then _aSbcev(8) end _qYsMpg._yooTfS = false _oOkTnL._yooTfS = false _VPZknO:_hSClhq() for _, _XxiWNt in _VPZknO._YWFqMq do if _XxiWNt._TMdeMy._UTnRYN then _XxiWNt._TMdeMy._UTnRYN._yooTfS = true end end local _QLevRp _QLevRp = _kJUqAm._CFFdjI:_pCuvub(function(_YwddQi) if _YwddQi._hopPDQ == _dstSjT._hopPDQ._KcLpcV then if _VPZknO._LemRBW then _aSbcev(8) end _FYsNHp(_xEoyuy, _YwddQi._hcXIOP + _rZhIGz._jXnjSQ(0, _ntrtlh:_pqDOyX().Y, 0)) _qYsMpg._yooTfS = true _VPZknO:_hSClhq() for _, _XxiWNt in _VPZknO._YWFqMq do if _XxiWNt._TMdeMy._UTnRYN then _XxiWNt._TMdeMy._UTnRYN._yooTfS = false end end _QLevRp:_BZBnLx() end end) end end) _eApWYr._xDnvJL:_pCuvub(function() _MIbeFR = false end) end _PbJlbn:_wlElAj('_bamSMD'):_pCuvub(function() if _VPZknO._LemRBW then _aSbcev(8) end _eEphmn._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP) end) _xEoyuy._AQWScN = _eApWYr _VPZknO._YWFqMq[_HVTHRn._JKVaHt] = _xEoyuy local _GtQEhy = {} for _, v in _VPZknO._YWFqMq do _GtQEhy[v._XdkjdP] = _GtQEhy[v._XdkjdP] or {} _hIsBBh._iAYcqN(_GtQEhy[v._XdkjdP], v._JKVaHt) end for _, _IaDYkc in _GtQEhy do _hIsBBh._IaDYkc(_IaDYkc) for i, v in _IaDYkc do _VPZknO._YWFqMq[v]._nHSOAC = i _VPZknO._YWFqMq[v]._AQWScN._aKmIWn = i _VPZknO._YWFqMq[v]._ThudBc._aKmIWn = i end end return _xEoyuy end local _tnXISo function _aTyjjp:_RRklEW() _eTbgXv._RRlXLy = not _eTbgXv._RRlXLy if _eTbgXv._RRlXLy then _ZUERUc._yooTfS = _eTbgXv._RRlXLy _ZUERUc._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, -41) _tnXISo = _dVlivF:_qhmhNw(_ZUERUc, _uCVxNa._jXnjSQ(0.5, _dstSjT._cjMCsI._EQcfNa), { _Waoasm = _YLbOBm._jXnjSQ(1, 0, 1, -41) }); else _tnXISo = _dVlivF:_qhmhNw(_ZUERUc, _uCVxNa._jXnjSQ(0.5, _dstSjT._cjMCsI._EQcfNa), { _Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, -41) }); _oWlkPY._yooTfS = false; _KCGrIF._yyLRLO(0.3,function() _ZUERUc._yooTfS = _eTbgXv._RRlXLy; _oWlkPY._yooTfS = _ZUERUc._DeocxI.Y > 10 and _ZUERUc._yooTfS; end); end; _gAbbQc._uOTxOa = _eTbgXv._RRlXLy and 0 or 180 _dVlivF:_qhmhNw(_hopsmQ, _uCVxNa._jXnjSQ(0.4, _dstSjT._cjMCsI._EQcfNa), { _Waoasm = _YLbOBm._UFWQDs(220, _eTbgXv._RRlXLy and _URXiHE._Gbxmjh(41 + _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP, 601) or 41) }); _oWlkPY._yooTfS = _ZUERUc._DeocxI.Y > 10 and _ZUERUc._yooTfS end _NTzSVL._Sncxke:_pCuvub(function() _aTyjjp:_RRklEW() end) _NTzSVL._gJmIOl:_pCuvub(function() _aTyjjp:_RRklEW() end) _NTzSVL._SsjLkp:_pCuvub(function() _gAbbQc._mGTSmO = _vVnUNC._ckVQPV(220, 220, 220) end) _NTzSVL._nVWcUy:_pCuvub(function() _gAbbQc._mGTSmO = _vVnUNC._ckVQPV(140, 140, 140) end) _ZUERUc:_wlElAj('_DeocxI'):_pCuvub(function() if _eTbgXv._LemRBW then _aSbcev(8) end _oWlkPY._yooTfS = _ZUERUc._DeocxI.Y > 10 and _ZUERUc._yooTfS end) _hopsmQ._CFFdjI:_pCuvub(function(_xqaQbT) if _xqaQbT._hcXIOP.Y < _hopsmQ._ZmTyZP.Y + 41 and _xqaQbT._hopPDQ == _dstSjT._hopPDQ._ZreYQE then _aTyjjp:_RRklEW() end end) _PbJlbn:_wlElAj('_bamSMD'):_pCuvub(function() if _eTbgXv._LemRBW then _aSbcev(8) end _ZUERUc._xkHbVe = _YLbOBm._UFWQDs(0, _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP) if _aTyjjp._RRlXLy then _hopsmQ._Waoasm = _YLbOBm._UFWQDs(220, _URXiHE._Gbxmjh(41 + _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP, 601)) end end) _aTyjjp._UTnRYN = _eTbgXv._xKGQUu._ubVfxv:_sRYYrf({ _JKVaHt = _iBZLLy._JKVaHt, _ScLbxU = _iBZLLy._ScLbxU, _Waoasm = _iBZLLy._Waoasm, _nwdJlT = _hopsmQ }) _aTyjjp._AQWScN = _hopsmQ _eTbgXv._xKGQUu[_iBZLLy._JKVaHt] = _aTyjjp return _aTyjjp end function _VPZknO:_AhNzMj(_iBZLLy) local _hopsmQ local _aTyjjp _aTyjjp = { _qzijjJ = '_yVTuBp', _RRlXLy = false, _UTnRYN = _eTbgXv._zWtjCx:_JCMPNT({ _JKVaHt = _iBZLLy._JKVaHt, _BMNCit = function(_OPzZWP) _hopsmQ._yooTfS = _OPzZWP and (_qYsMpg._yooTfS or _aTyjjp._lvDkxr) if not _OPzZWP then for _, v in _aTyjjp._ygAOTu do v:_BZBnLx() end _hIsBBh._DCSjmN(_aTyjjp._ygAOTu) end if _iBZLLy._BMNCit then _KCGrIF._GgxKrU(_iBZLLy._BMNCit, _OPzZWP) end end, _ScLbxU = _iBZLLy._ScLbxU, _Waoasm = _iBZLLy._Waoasm, _hcXIOP = _iBZLLy._hcXIOP }), _lvDkxr = false, _GjTzCS = {} } _hopsmQ = _HqspIA._jXnjSQ('_UgCzTR') _hopsmQ._JKVaHt = _iBZLLy._JKVaHt..'_yVTuBp' _hopsmQ._Waoasm = _YLbOBm._UFWQDs(_iBZLLy._XdwWnV or 220, 41) _hopsmQ._hcXIOP = _YLbOBm._UFWQDs(240, 46) _hopsmQ._SBYtAj = _TEZYYN._ubVfxv _hopsmQ._XraNmO = false _hopsmQ._yooTfS = false _hopsmQ._PiXytr = '' _hopsmQ._akdcsG = _rTtpyQ local _thhvcr = _KIEDuO(_hopsmQ) _dQvNGE(_hopsmQ) _xDNuqj(_hopsmQ) local _eQWkhk = _HqspIA._jXnjSQ('_QXffBR') _eQWkhk._JKVaHt = '_ScLbxU' _eQWkhk._Waoasm = _iBZLLy._Waoasm _eQWkhk._hcXIOP = _YLbOBm._UFWQDs(12, (_eQWkhk._Waoasm.X._gINIiO > 14 and 14 or 13)) _eQWkhk._LwijxE = 1 _eQWkhk._dMWcuD = _iBZLLy._ScLbxU _eQWkhk._mGTSmO = _TEZYYN._PiXytr _eQWkhk._akdcsG = _hopsmQ local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._jXnjSQ(1, -32, 0, 41) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(_URXiHE._knhIbc(_QNKDOw._Waoasm.X._gINIiO), 0) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = _iBZLLy._JKVaHt _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _TEZYYN._PiXytr _QNKDOw._fcZKAI = 13 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _hopsmQ local _efoQei = _HqspIA._jXnjSQ('_hMCrWE') _efoQei._JKVaHt = '_PuZFRH' _efoQei._Waoasm = _YLbOBm._UFWQDs(16, 16) _efoQei._hcXIOP = _YLbOBm._jXnjSQ(1, -47, 0, 12) _efoQei._LwijxE = 1 _efoQei._XraNmO = false _efoQei._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_efoQei._oXtCIE') _efoQei._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) _efoQei._akdcsG = _hopsmQ local _fbivaB = _HqspIA._jXnjSQ('_UgCzTR') _fbivaB._JKVaHt = '_sCzmGq' _fbivaB._Waoasm = _YLbOBm._UFWQDs(17, 40) _fbivaB._hcXIOP = _YLbOBm._jXnjSQ(1, -17, 0, 0) _fbivaB._LwijxE = 1 _fbivaB._PiXytr = '' _fbivaB._akdcsG = _hopsmQ local _IzaNlN = _HqspIA._jXnjSQ('_QXffBR') _IzaNlN._JKVaHt = '_sCzmGq' _IzaNlN._Waoasm = _YLbOBm._UFWQDs(3, 16) _IzaNlN._hcXIOP = _YLbOBm._UFWQDs(4, 12) _IzaNlN._LwijxE = 1 _IzaNlN._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_IzaNlN._oXtCIE') _IzaNlN._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _IzaNlN._akdcsG = _fbivaB local _VdVMpJ = _HqspIA._jXnjSQ('_TBxjEq') _VdVMpJ._JKVaHt = '_SmSwdU' _VdVMpJ._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 200) _VdVMpJ._hcXIOP = _YLbOBm._nfWnJj(0, 1) _VdVMpJ._LwijxE = 1 _VdVMpJ._akdcsG = _hopsmQ local _ZUERUc = _HqspIA._jXnjSQ('_YEIROa') _ZUERUc._JKVaHt = '_ThudBc' _ZUERUc._Waoasm = _YLbOBm._jXnjSQ(1, 0, 1, -41) _ZUERUc._hcXIOP = _YLbOBm._UFWQDs(0, 37) _ZUERUc._SBYtAj = _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.02) _ZUERUc._UASDFM = 0 _ZUERUc._yooTfS = false _ZUERUc._JvozRJ = 2 _ZUERUc._kTEmJh = 0.75 _ZUERUc._xkHbVe = _YLbOBm._jXnjSQ() _ZUERUc._akdcsG = _hopsmQ local _PbJlbn = _HqspIA._jXnjSQ('_QhjgFh') _PbJlbn._fizqIu = _dstSjT._fizqIu._aKmIWn _PbJlbn._PZSSNc = _dstSjT._PZSSNc._bUchrx _PbJlbn._akdcsG = _ZUERUc _GozGIi(_aTyjjp) function _aTyjjp:_RRklEW(_ghJMgw) if _ghJMgw and not _thhvcr._yooTfS then return end _eTbgXv._RRlXLy = not _eTbgXv._RRlXLy _ZUERUc._yooTfS = _eTbgXv._RRlXLy _IzaNlN._mGTSmO = _eTbgXv._RRlXLy and _TEZYYN._PiXytr or _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) if _eTbgXv._RRlXLy then _hopsmQ._Waoasm = _YLbOBm._UFWQDs(_hopsmQ._Waoasm.X._gINIiO, _URXiHE._Gbxmjh(41 + _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP, 601)) else _hopsmQ._Waoasm = _YLbOBm._UFWQDs(_hopsmQ._Waoasm.X._gINIiO, 41) end end function _aTyjjp:_PuZFRH() _eTbgXv._lvDkxr = not _eTbgXv._lvDkxr _efoQei._mGTSmO = _eTbgXv._lvDkxr and _TEZYYN._PiXytr or _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) end function _aTyjjp:_hkXJgu() _hopsmQ._yooTfS = _eTbgXv._UTnRYN._QMKVhv and (_qYsMpg._yooTfS or _eTbgXv._lvDkxr) if _eTbgXv._RRlXLy then _eTbgXv:_RRklEW() end if _qYsMpg._yooTfS then _hopsmQ._Waoasm = _YLbOBm._UFWQDs(_hopsmQ._Waoasm.X._gINIiO, 41) _hopsmQ._LwijxE = 0 _thhvcr._yooTfS = true _eQWkhk._yooTfS = true _QNKDOw._yooTfS = true _efoQei._yooTfS = true _fbivaB._yooTfS = true else _hopsmQ._Waoasm = _YLbOBm._UFWQDs(_hopsmQ._Waoasm.X._gINIiO, 0) _hopsmQ._LwijxE = 1 _thhvcr._yooTfS = false _eQWkhk._yooTfS = false _QNKDOw._yooTfS = false _efoQei._yooTfS = false _fbivaB._yooTfS = false end end for i, v in _HuDitg do _aTyjjp['_zFFBmw'..i] = function(_eTbgXv, _YUUBjB) return v(_YUUBjB, _ZUERUc, _aTyjjp) end end _fbivaB._SsjLkp:_pCuvub(function() if not _ZUERUc._yooTfS then _IzaNlN._mGTSmO = _TEZYYN._PiXytr end end) _fbivaB._nVWcUy:_pCuvub(function() if not _ZUERUc._yooTfS then _IzaNlN._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) end end) _fbivaB._Sncxke:_pCuvub(function() _aTyjjp:_RRklEW(true) end) _fbivaB._gJmIOl:_pCuvub(function() _aTyjjp:_RRklEW(true) end) _efoQei._Sncxke:_pCuvub(function() _aTyjjp:_PuZFRH() end) _hopsmQ._gJmIOl:_pCuvub(function() _aTyjjp:_RRklEW(true) end) _PbJlbn:_wlElAj('_bamSMD'):_pCuvub(function() if _eTbgXv._LemRBW then _aSbcev(8) end _ZUERUc._xkHbVe = _YLbOBm._UFWQDs(0, _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP) if _aTyjjp._RRlXLy then _hopsmQ._Waoasm = _YLbOBm._UFWQDs(_hopsmQ._Waoasm.X._gINIiO, _URXiHE._Gbxmjh(41 + _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP, 601)) end end) _eTbgXv:_ZnMfdr(_qYsMpg:_wlElAj('_yooTfS'):_pCuvub(function() _aTyjjp:_hkXJgu() end)) _aTyjjp:_hkXJgu() _aTyjjp._AQWScN = _hopsmQ _aTyjjp._ThudBc = _VdVMpJ _eTbgXv._xKGQUu[_iBZLLy._JKVaHt] = _aTyjjp return _aTyjjp end function _VPZknO:_VcexbC(_iBZLLy) local _aTyjjp = { _qzijjJ = '_GrRFcN', _RRlXLy = false, _sQfDnZ = {}, _HeyjKy = {}, _acxpIG = {}, _GjTzCS = {} } _iBZLLy._KSDfrX = _iBZLLy._KSDfrX or _vVnUNC._ckVQPV(5, 134, 105) local _hopsmQ = _HqspIA._jXnjSQ('_UgCzTR') _hopsmQ._JKVaHt = _iBZLLy._JKVaHt..'_GrRFcN' _hopsmQ._Waoasm = _YLbOBm._UFWQDs(220, 45) _hopsmQ._hcXIOP = _YLbOBm._UFWQDs(240, 46) _hopsmQ._SBYtAj = _TEZYYN._ubVfxv _hopsmQ._XraNmO = false _hopsmQ._yooTfS = false _hopsmQ._PiXytr = '' _hopsmQ._akdcsG = _qYsMpg _KIEDuO(_hopsmQ) _dQvNGE(_hopsmQ) _xDNuqj(_hopsmQ) local _eQWkhk = _HqspIA._jXnjSQ('_QXffBR') _eQWkhk._JKVaHt = '_ScLbxU' _eQWkhk._Waoasm = _iBZLLy._Waoasm _eQWkhk._hcXIOP = _iBZLLy._hcXIOP or _YLbOBm._UFWQDs(12, (_iBZLLy._Waoasm.X._gINIiO > 20 and 13 or 12)) _eQWkhk._LwijxE = 1 _eQWkhk._dMWcuD = _iBZLLy._ScLbxU _eQWkhk._mGTSmO = _TEZYYN._PiXytr _eQWkhk._akdcsG = _hopsmQ local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._jXnjSQ(1, -(_iBZLLy._Waoasm.X._gINIiO > 20 and 44 or 36), 0, 20) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(_URXiHE._knhIbc(_QNKDOw._Waoasm.X._gINIiO), 12) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = _iBZLLy._JKVaHt _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _TEZYYN._PiXytr _QNKDOw._fcZKAI = 13 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _hopsmQ local _NTzSVL = _HqspIA._jXnjSQ('_UgCzTR') _NTzSVL._JKVaHt = '_IcuRpS' _NTzSVL._Waoasm = _YLbOBm._UFWQDs(40, 40) _NTzSVL._hcXIOP = _YLbOBm._jXnjSQ(1, -40, 0, 0) _NTzSVL._LwijxE = 1 _NTzSVL._PiXytr = '' _NTzSVL._akdcsG = _hopsmQ local _gAbbQc = _HqspIA._jXnjSQ('_QXffBR') _gAbbQc._JKVaHt = '_IcuRpS' _gAbbQc._Waoasm = _YLbOBm._UFWQDs(9, 4) _gAbbQc._hcXIOP = _YLbOBm._UFWQDs(20, 19) _gAbbQc._LwijxE = 1 _gAbbQc._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_PCnNXd._oXtCIE') _gAbbQc._mGTSmO = _vVnUNC._ckVQPV(140, 140, 140) _gAbbQc._uOTxOa = 180 _gAbbQc._akdcsG = _NTzSVL local _ZUERUc = _HqspIA._jXnjSQ('_YEIROa') _ZUERUc._JKVaHt = '_ThudBc' _ZUERUc._Waoasm = _YLbOBm._jXnjSQ(1, 0, 1, -45) _ZUERUc._hcXIOP = _YLbOBm._UFWQDs(0, 45) _ZUERUc._LwijxE = 1 _ZUERUc._UASDFM = 0 _ZUERUc._yooTfS = false _ZUERUc._JvozRJ = 2 _ZUERUc._kTEmJh = 0.75 _ZUERUc._xkHbVe = _YLbOBm._jXnjSQ() _ZUERUc._akdcsG = _hopsmQ local _QykhZx = _HqspIA._jXnjSQ('_TBxjEq') _QykhZx._LwijxE = 1 _QykhZx._SBYtAj = _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.02) _QykhZx._yooTfS = false _QykhZx._akdcsG = _ZUERUc local _sOHDlr = _HqspIA._jXnjSQ('_hMCrWE') _sOHDlr._JKVaHt = '_jzCifs' _sOHDlr._Waoasm = _YLbOBm._UFWQDs(16, 16) _sOHDlr._hcXIOP = _YLbOBm._jXnjSQ(1, -52, 0, 13) _sOHDlr._LwijxE = 1 _sOHDlr._XraNmO = false _sOHDlr._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_QxBZtV._oXtCIE') _sOHDlr._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) _sOHDlr._akdcsG = _hopsmQ local _oWlkPY = _HqspIA._jXnjSQ('_TBxjEq') _oWlkPY._JKVaHt = '_pFRiAc' _oWlkPY._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 1) _oWlkPY._hcXIOP = _YLbOBm._UFWQDs(0, 41) _oWlkPY._UASDFM = 0 _oWlkPY._yooTfS = false _oWlkPY._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _oWlkPY._LwijxE = 0.928 _oWlkPY._akdcsG = _hopsmQ local _PbJlbn = _HqspIA._jXnjSQ('_QhjgFh') _PbJlbn._fizqIu = _dstSjT._fizqIu._aKmIWn _PbJlbn._PZSSNc = _dstSjT._PZSSNc._bUchrx _PbJlbn._JtwlHo = _SytJFC._jXnjSQ(0, 3) _PbJlbn._akdcsG = _ZUERUc local _VImGNM = _HqspIA._jXnjSQ('_QhjgFh') _VImGNM._fizqIu = _dstSjT._fizqIu._aKmIWn _VImGNM._PZSSNc = _dstSjT._PZSSNc._bUchrx _VImGNM._akdcsG = _QykhZx local _HnOACL = _HqspIA._jXnjSQ('_TBxjEq') _HnOACL._JKVaHt = '_uFHGta' _HnOACL._Waoasm = _YLbOBm._UFWQDs(200, 31) _HnOACL._hcXIOP = _YLbOBm._UFWQDs(10, 45) _HnOACL._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) _HnOACL._akdcsG = _ZUERUc _dQvNGE(_HnOACL) local _MaCbdK = _HnOACL:_tPFypN() _MaCbdK._Waoasm = _YLbOBm._jXnjSQ(1, -2, 1, -2) _MaCbdK._hcXIOP = _YLbOBm._UFWQDs(1, 1) _MaCbdK._SBYtAj = _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.02) _MaCbdK._akdcsG = _HnOACL local _IvxPwI = _HqspIA._jXnjSQ('_czQajw') _IvxPwI._Waoasm = _YLbOBm._jXnjSQ(1, -35, 1, 0) _IvxPwI._hcXIOP = _YLbOBm._UFWQDs(10, 0) _IvxPwI._LwijxE = 1 _IvxPwI._PiXytr = '' _IvxPwI._rYhGGt = _iBZLLy._DeGHsM or '_uFHGta _XPARxU...' _IvxPwI._jgVhbP = _dstSjT._jgVhbP._cSzLBF _IvxPwI._qnaMkt = _vVnUNC._jXnjSQ(1, 1, 1) _IvxPwI._fcZKAI = 15 _IvxPwI._iqsfkF = _TEZYYN._CIsHqY _IvxPwI._wRAWXc = false _IvxPwI._akdcsG = _HnOACL local _DgJsBd = _HqspIA._jXnjSQ('_hMCrWE') _DgJsBd._JKVaHt = '_QEmVgy' _DgJsBd._Waoasm = _YLbOBm._UFWQDs(16, 16) _DgJsBd._hcXIOP = _YLbOBm._jXnjSQ(1, -26, 0, 8) _DgJsBd._LwijxE = 1 _DgJsBd._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_PxPxvq._oXtCIE') _DgJsBd._mGTSmO = _iBZLLy._KSDfrX _DgJsBd._CzQtWh = 0.3 _DgJsBd._akdcsG = _HnOACL local _FdzbbV = _HqspIA._jXnjSQ('_TBxjEq') _FdzbbV._Waoasm = _YLbOBm._UFWQDs() _FdzbbV._LwijxE = 1 _FdzbbV._akdcsG = _ZUERUc _iBZLLy._BMNCit = _iBZLLy._BMNCit or function() end function _aTyjjp:_rXIxMs(_PyTyDm) if _PyTyDm then if _iBZLLy._zBTPVG then local _pdCOyx = _eTbgXv:_gSpoPr(_PyTyDm) if _pdCOyx then if _PyTyDm ~= '_GDbvBN' then _hIsBBh._BcnbFo(_VPZknO._zBTPVG, _pdCOyx) if _susVHu('_tqUYWH/_QMSihT/'.._PyTyDm.._VPZknO._miEakS..'._HvUhtW') and _UeFMDt then _UeFMDt('_tqUYWH/_QMSihT/'.._PyTyDm.._VPZknO._miEakS..'._HvUhtW') end end else _hIsBBh._iAYcqN(_VPZknO._zBTPVG, {_JKVaHt = _PyTyDm, _TMdeMy = {}}) end else local _pdCOyx = _hIsBBh._gVRTpT(_eTbgXv._sQfDnZ, _PyTyDm) if _pdCOyx then _hIsBBh._BcnbFo(_eTbgXv._sQfDnZ, _pdCOyx) _pdCOyx = _hIsBBh._gVRTpT(_eTbgXv._HeyjKy, _PyTyDm) if _pdCOyx then _hIsBBh._BcnbFo(_eTbgXv._HeyjKy, _pdCOyx) end else _hIsBBh._iAYcqN(_eTbgXv._sQfDnZ, _PyTyDm) _hIsBBh._iAYcqN(_eTbgXv._HeyjKy, _PyTyDm) end end end _iBZLLy._BMNCit() for _, v in _eTbgXv._acxpIG do v:_YwZmtp() end _hIsBBh._DCSjmN(_eTbgXv._acxpIG) _eTbgXv._ixDkjC = nil for i, v in (_iBZLLy._zBTPVG and _VPZknO._zBTPVG or _eTbgXv._sQfDnZ) do if _iBZLLy._zBTPVG then local _TANlhJ = _HqspIA._jXnjSQ('_UgCzTR') _TANlhJ._JKVaHt = v._JKVaHt _TANlhJ._Waoasm = _YLbOBm._UFWQDs(200, 33) _TANlhJ._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) _TANlhJ._XraNmO = false _TANlhJ._PiXytr = '' _TANlhJ._akdcsG = _ZUERUc _dQvNGE(_TANlhJ) local _EYYdxW = _HqspIA._jXnjSQ('_zZNYqi') _EYYdxW._KSDfrX = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.1) _EYYdxW._PkHyxh = _dstSjT._PkHyxh._utYKvv _EYYdxW._QMKVhv = false _EYYdxW._akdcsG = _TANlhJ local _wAUxSr = _HqspIA._jXnjSQ('_rfJjAs') _wAUxSr._JKVaHt = '_EPbikF' _wAUxSr._Waoasm = _YLbOBm._jXnjSQ(1, -10, 1, 0) _wAUxSr._hcXIOP = _YLbOBm._UFWQDs(10, 0) _wAUxSr._LwijxE = 1 _wAUxSr._PiXytr = v._JKVaHt _wAUxSr._jgVhbP = _dstSjT._jgVhbP._cSzLBF _wAUxSr._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.4) _wAUxSr._fcZKAI = 15 _wAUxSr._iqsfkF = _TEZYYN._CIsHqY _wAUxSr._akdcsG = _TANlhJ local _fbivaB = _HqspIA._jXnjSQ('_UgCzTR') _fbivaB._JKVaHt = '_sCzmGq' _fbivaB._Waoasm = _YLbOBm._UFWQDs(25, 33) _fbivaB._hcXIOP = _YLbOBm._jXnjSQ(1, -25, 0, 0) _fbivaB._LwijxE = 1 _fbivaB._PiXytr = '' _fbivaB._akdcsG = _TANlhJ local _IzaNlN = _HqspIA._jXnjSQ('_QXffBR') _IzaNlN._JKVaHt = '_sCzmGq' _IzaNlN._Waoasm = _YLbOBm._UFWQDs(3, 16) _IzaNlN._hcXIOP = _YLbOBm._UFWQDs(10, 9) _IzaNlN._LwijxE = 1 _IzaNlN._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_IzaNlN._oXtCIE') _IzaNlN._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _IzaNlN._akdcsG = _fbivaB local _WgTYYZ = _HqspIA._jXnjSQ('_UgCzTR') _ioQasw(_WgTYYZ, '_yHMWoi to _WgTYYZ') _WgTYYZ._JKVaHt = '_TMdeMy' _WgTYYZ._Waoasm = _YLbOBm._UFWQDs(20, 21) _WgTYYZ._hcXIOP = _YLbOBm._jXnjSQ(1, -30, 0, 6) _WgTYYZ._fPIzOY = _VSBFpv._jXnjSQ(1, 0) _WgTYYZ._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _WgTYYZ._LwijxE = 0.92 _WgTYYZ._UASDFM = 0 _WgTYYZ._XraNmO = false _WgTYYZ._yooTfS = false _WgTYYZ._PiXytr = '' _dQvNGE(_WgTYYZ, _SytJFC._jXnjSQ(0, 4)) local _gtIFej = _HqspIA._jXnjSQ('_QXffBR') _gtIFej._JKVaHt = '_ScLbxU' _gtIFej._Waoasm = _YLbOBm._UFWQDs(12, 12) _gtIFej._hcXIOP = _YLbOBm._jXnjSQ(0.5, -6, 0, 5) _gtIFej._LwijxE = 1 _gtIFej._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_WgTYYZ._oXtCIE') _gtIFej._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) _gtIFej._akdcsG = _WgTYYZ local _Mpcekm = _HqspIA._jXnjSQ('_rfJjAs') _Mpcekm._Waoasm = _YLbOBm._nfWnJj(1, 1) _Mpcekm._hcXIOP = _YLbOBm._UFWQDs(0, 1) _Mpcekm._LwijxE = 1 _Mpcekm._yooTfS = false _Mpcekm._PiXytr = '' _Mpcekm._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) _Mpcekm._fcZKAI = 12 _Mpcekm._iqsfkF = _TEZYYN._CIsHqY _Mpcekm._akdcsG = _WgTYYZ _WgTYYZ._SsjLkp:_pCuvub(function() _Mpcekm._yooTfS = false _gtIFej._yooTfS = not _Mpcekm._yooTfS _gtIFej._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_OmoRdp._oXtCIE') if v._JKVaHt ~= _VPZknO._vavVeQ then _gtIFej._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) end end) _WgTYYZ._nVWcUy:_pCuvub(function() _Mpcekm._yooTfS = #v._TMdeMy > 0 _gtIFej._yooTfS = not _Mpcekm._yooTfS _gtIFej._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_WgTYYZ._oXtCIE') if v._JKVaHt ~= _VPZknO._vavVeQ then _gtIFej._mGTSmO = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.43) end end) local _tKbjkU = _HqspIA._jXnjSQ('_QXffBR') _tKbjkU._JKVaHt = '_MiKBXo' _tKbjkU._Waoasm = _YLbOBm._UFWQDs(154, 33) _tKbjkU._LwijxE = 1 _tKbjkU._yooTfS = false _tKbjkU._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_ziaBhA._oXtCIE') _tKbjkU._ooVSrn = _dstSjT._ooVSrn._dKVHsP _tKbjkU._xWzgWh = _dGTcjT._jXnjSQ(0, 0, 141, 40) _tKbjkU._akdcsG = _TANlhJ local _cgEwlN = _HqspIA._jXnjSQ('_rfJjAs') _cgEwlN._JKVaHt = '_PiXytr' _cgEwlN._Waoasm = _YLbOBm._jXnjSQ(1, -10, 1, -3) _cgEwlN._LwijxE = 1 _cgEwlN._PiXytr = '_rPvLdN A _lPUTlJ TO _RDMpsy' _cgEwlN._qnaMkt = _TEZYYN._PiXytr _cgEwlN._fcZKAI = 11 _cgEwlN._iqsfkF = _TEZYYN._CIsHqY _cgEwlN._akdcsG = _tKbjkU _WgTYYZ._akdcsG = _TANlhJ _fbivaB._SsjLkp:_pCuvub(function() if v._JKVaHt ~= _VPZknO._vavVeQ then _IzaNlN._mGTSmO = _TEZYYN._PiXytr end end) _fbivaB._nVWcUy:_pCuvub(function() if v._JKVaHt ~= _VPZknO._vavVeQ then _IzaNlN._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) end end) _fbivaB._Sncxke:_pCuvub(function() if v._JKVaHt ~= _VPZknO._vavVeQ then _aTyjjp:_rXIxMs(v._JKVaHt) end end) _TANlhJ._Sncxke:_pCuvub(function() _VPZknO:_cmnBiI(v._JKVaHt) _VPZknO:_HJPrTX(true) end) _TANlhJ._SsjLkp:_pCuvub(function() _WgTYYZ._yooTfS = true if v._JKVaHt ~= _VPZknO._vavVeQ then _EYYdxW._QMKVhv = true _wAUxSr._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) end end) _TANlhJ._nVWcUy:_pCuvub(function() _WgTYYZ._yooTfS = #v._TMdeMy > 0 if v._JKVaHt ~= _VPZknO._vavVeQ then _EYYdxW._QMKVhv = false _wAUxSr._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.4) end end) local function _BGuOQX(_eTbgXv, _sfWWWc, _JJZRmn) v._TMdeMy = _hIsBBh._Pqribz(_sfWWWc) if _JJZRmn then _cgEwlN._PiXytr = #_sfWWWc <= 0 and '_RDMpsy _QXeTXt' or '_jwmJgt TO '.._hIsBBh._vHZGIS(_sfWWWc, ' + '):_QKqHaf() _tKbjkU._Waoasm = _YLbOBm._UFWQDs(_ycqBdh(_cgEwlN._PiXytr, _cgEwlN._fcZKAI).X + 20, 40) _KCGrIF._yyLRLO(1, function() _tKbjkU._yooTfS = false end) end if #_sfWWWc <= 0 then _Mpcekm._yooTfS = false _gtIFej._yooTfS = true _WgTYYZ._Waoasm = _YLbOBm._UFWQDs(20, 21) else _WgTYYZ._yooTfS = true _Mpcekm._yooTfS = true _gtIFej._yooTfS = false _Mpcekm._PiXytr = _hIsBBh._vHZGIS(_sfWWWc, ' + '):_QKqHaf() _WgTYYZ._Waoasm = _YLbOBm._UFWQDs(_URXiHE._Qgmjkz(_ycqBdh(_Mpcekm._PiXytr, _Mpcekm._fcZKAI, _Mpcekm._CIsHqY).X + 10, 20), 21) end end _BGuOQX({}, v._TMdeMy) _WgTYYZ._Sncxke:_pCuvub(function() _cgEwlN._PiXytr = '_rPvLdN A _lPUTlJ TO _RDMpsy' _tKbjkU._Waoasm = _YLbOBm._UFWQDs(_ycqBdh(_cgEwlN._PiXytr, _cgEwlN._fcZKAI).X + 20, 40) _tKbjkU._yooTfS = true _VPZknO._NGHAgV = {_oMdhPy = _BGuOQX, _TMdeMy = v._TMdeMy} end) if v._JKVaHt == _VPZknO._vavVeQ then _eTbgXv._ixDkjC = _TANlhJ end _hIsBBh._iAYcqN(_eTbgXv._acxpIG, _TANlhJ) else local _QwlEFT = _hIsBBh._gVRTpT(_eTbgXv._HeyjKy, v) local _TANlhJ = _HqspIA._jXnjSQ('_UgCzTR') _TANlhJ._JKVaHt = v _TANlhJ._Waoasm = _YLbOBm._UFWQDs(200, 32) _TANlhJ._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) _TANlhJ._XraNmO = false _TANlhJ._PiXytr = '' _TANlhJ._akdcsG = _ZUERUc _dQvNGE(_TANlhJ) local _bloKGb = _HqspIA._jXnjSQ('_TBxjEq') _bloKGb._JKVaHt = '_FDuYJG' _bloKGb._Waoasm = _YLbOBm._jXnjSQ(1, -2, 1, -2) _bloKGb._hcXIOP = _YLbOBm._UFWQDs(1, 1) _bloKGb._SBYtAj = _TEZYYN._ubVfxv _bloKGb._yooTfS = false _bloKGb._akdcsG = _TANlhJ _dQvNGE(_bloKGb) local _pnbAaa = _HqspIA._jXnjSQ('_TBxjEq') _pnbAaa._JKVaHt = '_ZmFybl' _pnbAaa._Waoasm = _YLbOBm._UFWQDs(10, 11) _pnbAaa._hcXIOP = _YLbOBm._UFWQDs(10, 12) _pnbAaa._SBYtAj = _QwlEFT and _iBZLLy._KSDfrX or _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _pnbAaa._akdcsG = _TANlhJ _dQvNGE(_pnbAaa, _SytJFC._jXnjSQ(1, 0)) local _gEQUqM = _pnbAaa:_tPFypN() _gEQUqM._Waoasm = _YLbOBm._UFWQDs(8, 9) _gEQUqM._hcXIOP = _YLbOBm._UFWQDs(1, 1) _gEQUqM._SBYtAj = _QwlEFT and _iBZLLy._KSDfrX or _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) _gEQUqM._akdcsG = _pnbAaa local _wAUxSr = _HqspIA._jXnjSQ('_rfJjAs') _wAUxSr._JKVaHt = '_EPbikF' _wAUxSr._Waoasm = _YLbOBm._jXnjSQ(1, -30, 1, 0) _wAUxSr._hcXIOP = _YLbOBm._UFWQDs(30, 0) _wAUxSr._LwijxE = 1 _wAUxSr._PiXytr = v _wAUxSr._jgVhbP = _dstSjT._jgVhbP._cSzLBF _wAUxSr._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _wAUxSr._fcZKAI = 15 _wAUxSr._iqsfkF = _TEZYYN._CIsHqY _wAUxSr._akdcsG = _TANlhJ if _VPZknO._LemRBW then _aSbcev(8) end local _kuFJpl = _HqspIA._jXnjSQ('_hMCrWE') _kuFJpl._JKVaHt = '_TAFYoO' _kuFJpl._Waoasm = _YLbOBm._UFWQDs(16, 16) _kuFJpl._hcXIOP = _YLbOBm._jXnjSQ(1, -23, 0, 8) _kuFJpl._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _kuFJpl._LwijxE = 1 _kuFJpl._XraNmO = false _kuFJpl._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_zJuDsn._oXtCIE') _kuFJpl._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._PiXytr, 0.2) _kuFJpl._CzQtWh = 0.5 _kuFJpl._akdcsG = _TANlhJ _dQvNGE(_kuFJpl, _SytJFC._jXnjSQ(1, 0)) _kuFJpl._SsjLkp:_pCuvub(function() _kuFJpl._CzQtWh = 0.3 _dVlivF:_qhmhNw(_kuFJpl, _TEZYYN._qhmhNw, { _LwijxE = 0.6 }) end) _kuFJpl._nVWcUy:_pCuvub(function() _kuFJpl._CzQtWh = 0.5 _dVlivF:_qhmhNw(_kuFJpl, _TEZYYN._qhmhNw, { _LwijxE = 1 }) end) _kuFJpl._Sncxke:_pCuvub(function() _aTyjjp:_rXIxMs(v) end) _TANlhJ._SsjLkp:_pCuvub(function() _bloKGb._yooTfS = true end) _TANlhJ._nVWcUy:_pCuvub(function() _bloKGb._yooTfS = false end) _TANlhJ._Sncxke:_pCuvub(function() local _pdCOyx = _hIsBBh._gVRTpT(_eTbgXv._HeyjKy, v) if _pdCOyx then _hIsBBh._BcnbFo(_eTbgXv._HeyjKy, _pdCOyx) _pnbAaa._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _gEQUqM._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) else _hIsBBh._iAYcqN(_eTbgXv._HeyjKy, v) _pnbAaa._SBYtAj = _iBZLLy._KSDfrX _gEQUqM._SBYtAj = _iBZLLy._KSDfrX end _iBZLLy._BMNCit() end) _hIsBBh._iAYcqN(_eTbgXv._acxpIG, _TANlhJ) end end _VPZknO:_lDymoF(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu) end function _aTyjjp:_RRklEW() _eTbgXv._RRlXLy = not _eTbgXv._RRlXLy _ZUERUc._yooTfS = _eTbgXv._RRlXLy _gAbbQc._uOTxOa = _eTbgXv._RRlXLy and 0 or 180 _hopsmQ._Waoasm = _YLbOBm._UFWQDs(220, _eTbgXv._RRlXLy and _URXiHE._Gbxmjh(51 + _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP, 611) or 45) _oWlkPY._yooTfS = _ZUERUc._DeocxI.Y > 10 and _ZUERUc._yooTfS end function _aTyjjp:_gSpoPr(_ePWNUd) for i, v in _VPZknO._zBTPVG do if v._JKVaHt == _ePWNUd then return i end end end for i, v in _HuDitg do _aTyjjp['_zFFBmw'..i] = function(_eTbgXv, _YUUBjB) return v(_YUUBjB, _QykhZx, _aTyjjp) end end _DgJsBd._SsjLkp:_pCuvub(function() _DgJsBd._CzQtWh = 0 end) _DgJsBd._nVWcUy:_pCuvub(function() _DgJsBd._CzQtWh = 0.3 end) _DgJsBd._Sncxke:_pCuvub(function() if not _hIsBBh._gVRTpT(_aTyjjp._sQfDnZ, _IvxPwI._PiXytr) then _aTyjjp:_rXIxMs(_IvxPwI._PiXytr) _IvxPwI._PiXytr = '' end end) _NTzSVL._SsjLkp:_pCuvub(function() _gAbbQc._mGTSmO = _vVnUNC._ckVQPV(220, 220, 220) end) _NTzSVL._nVWcUy:_pCuvub(function() _gAbbQc._mGTSmO = _vVnUNC._ckVQPV(140, 140, 140) end) _NTzSVL._Sncxke:_pCuvub(function() _aTyjjp:_RRklEW() end) _NTzSVL._gJmIOl:_pCuvub(function() _aTyjjp:_RRklEW() end) _IvxPwI._qSbkyD:_pCuvub(function(_gQDLbR) if _gQDLbR and not _hIsBBh._gVRTpT(_aTyjjp._sQfDnZ, _IvxPwI._PiXytr) then _aTyjjp:_rXIxMs(_IvxPwI._PiXytr) _IvxPwI._PiXytr = '' end end) _IvxPwI._SsjLkp:_pCuvub(function() _dVlivF:_qhmhNw(_HnOACL, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.14) }) end) _IvxPwI._nVWcUy:_pCuvub(function() _dVlivF:_qhmhNw(_HnOACL, _TEZYYN._qhmhNw, { _SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) }) end) _ZUERUc:_wlElAj('_DeocxI'):_pCuvub(function() _oWlkPY._yooTfS = _ZUERUc._DeocxI.Y > 10 and _ZUERUc._yooTfS end) _sOHDlr._SsjLkp:_pCuvub(function() _sOHDlr._mGTSmO = _TEZYYN._PiXytr end) _sOHDlr._nVWcUy:_pCuvub(function() _sOHDlr._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) end) _sOHDlr._Sncxke:_pCuvub(function() _QykhZx._yooTfS = not _QykhZx._yooTfS end) _hopsmQ._CFFdjI:_pCuvub(function(_xqaQbT) if _xqaQbT._hcXIOP.Y < _hopsmQ._ZmTyZP.Y + 41 and _xqaQbT._hopPDQ == _dstSjT._hopPDQ._ZreYQE then _aTyjjp:_RRklEW() end end) _PbJlbn:_wlElAj('_bamSMD'):_pCuvub(function() if _eTbgXv._LemRBW then _aSbcev(8) end _ZUERUc._xkHbVe = _YLbOBm._UFWQDs(0, _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP) if _aTyjjp._RRlXLy then _hopsmQ._Waoasm = _YLbOBm._UFWQDs(220, _URXiHE._Gbxmjh(51 + _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP, 611)) end end) _VImGNM:_wlElAj('_bamSMD'):_pCuvub(function() if _eTbgXv._LemRBW then _aSbcev(8) end _QykhZx._Waoasm = _YLbOBm._UFWQDs(220, _VImGNM._bamSMD.Y) end) _aTyjjp._UTnRYN = _eTbgXv._xKGQUu._ubVfxv:_sRYYrf({ _JKVaHt = _iBZLLy._JKVaHt, _ScLbxU = _iBZLLy._VBOJRk, _Waoasm = _iBZLLy._XdwWnV, _nwdJlT = _hopsmQ }) _aTyjjp._AQWScN = _hopsmQ _eTbgXv._xKGQUu[_iBZLLy._JKVaHt] = _aTyjjp return _aTyjjp end function _VPZknO:_WUVhfF() local _bGsExt = _HqspIA._jXnjSQ('_TBxjEq') _bGsExt._JKVaHt = '_iaWkwQ' _bGsExt._Waoasm = _YLbOBm._UFWQDs(220, 37) _bGsExt._hcXIOP = _YLbOBm._jXnjSQ(0.5, 0, 0, 13) _bGsExt._fPIzOY = _VSBFpv._jXnjSQ(0.5, 0) _bGsExt._SBYtAj = _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.02) _bGsExt._akdcsG = _qYsMpg local _tbFQlD = _HqspIA._jXnjSQ('_QXffBR') _tbFQlD._JKVaHt = '_ScLbxU' _tbFQlD._Waoasm = _YLbOBm._UFWQDs(14, 14) _tbFQlD._hcXIOP = _YLbOBm._jXnjSQ(1, -23, 0, 11) _tbFQlD._LwijxE = 1 _tbFQlD._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_RpWJRv._oXtCIE') _tbFQlD._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _tbFQlD._akdcsG = _bGsExt local _kyjrUs = _HqspIA._jXnjSQ('_hMCrWE') _kyjrUs._JKVaHt = '_imeQtB' _kyjrUs._Waoasm = _YLbOBm._UFWQDs(29, 16) _kyjrUs._hcXIOP = _YLbOBm._UFWQDs(8, 11) _kyjrUs._LwijxE = 1 _kyjrUs._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_EvoZXe._oXtCIE') _kyjrUs._akdcsG = _bGsExt local _PMIKhb = _HqspIA._jXnjSQ('_TBxjEq') _PMIKhb._JKVaHt = '_JHowwz' _PMIKhb._Waoasm = _YLbOBm._UFWQDs(2, 12) _PMIKhb._hcXIOP = _YLbOBm._UFWQDs(43, 13) _PMIKhb._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.14) _PMIKhb._UASDFM = 0 _PMIKhb._akdcsG = _bGsExt _KIEDuO(_bGsExt) _dQvNGE(_bGsExt) local _RpWJRv = _HqspIA._jXnjSQ('_czQajw') _RpWJRv._Waoasm = _YLbOBm._jXnjSQ(1, -50, 0, 37) _RpWJRv._hcXIOP = _YLbOBm._UFWQDs(50, 0) _RpWJRv._LwijxE = 1 _RpWJRv._PiXytr = '' _RpWJRv._rYhGGt = '' _RpWJRv._jgVhbP = _dstSjT._jgVhbP._cSzLBF _RpWJRv._qnaMkt = _TEZYYN._PiXytr _RpWJRv._fcZKAI = 12 _RpWJRv._iqsfkF = _TEZYYN._CIsHqY _RpWJRv._wRAWXc = false _RpWJRv._akdcsG = _bGsExt local _ZUERUc = _HqspIA._jXnjSQ('_YEIROa') _ZUERUc._JKVaHt = '_ThudBc' _ZUERUc._Waoasm = _YLbOBm._jXnjSQ(1, 0, 1, -37) _ZUERUc._hcXIOP = _YLbOBm._UFWQDs(0, 34) _ZUERUc._LwijxE = 1 _ZUERUc._UASDFM = 0 _ZUERUc._JvozRJ = 2 _ZUERUc._kTEmJh = 0.75 _ZUERUc._xkHbVe = _YLbOBm._jXnjSQ() _ZUERUc._akdcsG = _bGsExt local _oWlkPY = _HqspIA._jXnjSQ('_TBxjEq') _oWlkPY._JKVaHt = '_pFRiAc' _oWlkPY._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 1) _oWlkPY._hcXIOP = _YLbOBm._UFWQDs(0, 33) _oWlkPY._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _oWlkPY._LwijxE = 0.928 _oWlkPY._UASDFM = 0 _oWlkPY._yooTfS = false _oWlkPY._akdcsG = _bGsExt local _PbJlbn = _HqspIA._jXnjSQ('_QhjgFh') _PbJlbn._fizqIu = _dstSjT._fizqIu._aKmIWn _PbJlbn._PZSSNc = _dstSjT._PZSSNc._bUchrx _PbJlbn._akdcsG = _ZUERUc _ZUERUc:_wlElAj('_DeocxI'):_pCuvub(function() _oWlkPY._yooTfS = _ZUERUc._DeocxI.Y > 10 and _ZUERUc._yooTfS end) _kyjrUs._Sncxke:_pCuvub(function() _qYsMpg._yooTfS = false _eTbgXv._imeQtB._nwdJlT._yooTfS = true _eTbgXv._imeQtB._nwdJlT._hcXIOP = _YLbOBm._jXnjSQ(0.5, -350, 0.5, -194) end) _RpWJRv:_wlElAj('_PiXytr'):_pCuvub(function() for _, v in _ZUERUc:_tOeskI() do if v:_UFamFy('_UgCzTR') then v:_YwZmtp() end end if _RpWJRv._PiXytr == '' then return end for i, v in _eTbgXv._YWFqMq do if i:_kkPsRr():_gVRTpT(_RpWJRv._PiXytr:_kkPsRr()) then local _Sdxhhz = v._AQWScN:_tPFypN() _Sdxhhz._TMdeMy:_YwZmtp() _Sdxhhz._Sncxke:_pCuvub(function() v:_KoPzus() end) _Sdxhhz._gJmIOl:_pCuvub(function() v._AQWScN._akdcsG._akdcsG._yooTfS = true local v = v._AQWScN._akdcsG local _Ybzmns = _HqspIA._jXnjSQ('_TBxjEq') _Ybzmns._Waoasm = _YLbOBm._nfWnJj(1, 1) _Ybzmns._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _Ybzmns._LwijxE = 0.6 _Ybzmns._UASDFM = 0 _Ybzmns._akdcsG = v._AQWScN _dVlivF:_qhmhNw(_Ybzmns, _uCVxNa._jXnjSQ(0.5), { _LwijxE = 1 }) _KCGrIF._yyLRLO(0.5, _Ybzmns._YwZmtp, _Ybzmns) v._DeocxI = _VSBFpv._jXnjSQ(0, (v._AQWScN._aKmIWn * 40) - (_URXiHE._Gbxmjh(v._xkHbVe.Y._gINIiO, 600) / 2)) end) _Sdxhhz._akdcsG = _ZUERUc _KCGrIF._GgxKrU(function() repeat for _, v2 in {'_PiXytr', '_qnaMkt', '_SBYtAj'} do _Sdxhhz[v2] = v._AQWScN[v2] end _Sdxhhz._ljyDVW._KSDfrX = v._AQWScN._ljyDVW._KSDfrX _Sdxhhz._ljyDVW._QMKVhv = v._AQWScN._ljyDVW._QMKVhv _Sdxhhz._sCzmGq._sCzmGq._mGTSmO = v._AQWScN._sCzmGq._sCzmGq._mGTSmO _KCGrIF._AKYNGq() until not _Sdxhhz._akdcsG end) end end end) _PbJlbn:_wlElAj('_bamSMD'):_pCuvub(function() if _eTbgXv._LemRBW then _aSbcev(8) end _ZUERUc._xkHbVe = _YLbOBm._UFWQDs(0, _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP) _bGsExt._Waoasm = _YLbOBm._UFWQDs(220, _URXiHE._Gbxmjh(37 + _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP, 437)) end) _eTbgXv._imeQtB._ScLbxU = _kyjrUs end function _VPZknO:_jJgGTx() local _llNXCl = {_YWFqMq = {}} local _hopsmQ = _HqspIA._jXnjSQ('_TBxjEq') _hopsmQ._JKVaHt = '_joAYAB' _hopsmQ._Waoasm = _YLbOBm._UFWQDs(700, 389) _hopsmQ._hcXIOP = _YLbOBm._jXnjSQ(0.5, -350, 0.5, -194) _hopsmQ._SBYtAj = _TEZYYN._ubVfxv _hopsmQ._yooTfS = false _hopsmQ._akdcsG = _rTtpyQ _KIEDuO(_hopsmQ) _dQvNGE(_hopsmQ) _xDNuqj(_hopsmQ) local _fFmVJY = _HqspIA._jXnjSQ('_UgCzTR') _fFmVJY._LwijxE = 1 _fFmVJY._PiXytr = '' _fFmVJY._CdSxAa = true _fFmVJY._akdcsG = _hopsmQ local _eQWkhk = _HqspIA._jXnjSQ('_QXffBR') _eQWkhk._JKVaHt = '_ScLbxU' _eQWkhk._Waoasm = _YLbOBm._UFWQDs(16, 16) _eQWkhk._hcXIOP = _YLbOBm._UFWQDs(18, 13) _eQWkhk._LwijxE = 1 _eQWkhk._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_sWPqyC._oXtCIE') _eQWkhk._mGTSmO = _TEZYYN._PiXytr _eQWkhk._akdcsG = _hopsmQ local _kuFJpl = _TxKfdd(_hopsmQ) local _ZUERUc = _HqspIA._jXnjSQ('_YEIROa') _ZUERUc._JKVaHt = '_ThudBc' _ZUERUc._Waoasm = _YLbOBm._UFWQDs(684, 340) _ZUERUc._hcXIOP = _YLbOBm._UFWQDs(14, 41) _ZUERUc._LwijxE = 1 _ZUERUc._UASDFM = 0 _ZUERUc._JvozRJ = 2 _ZUERUc._kTEmJh = 0.75 _ZUERUc._xkHbVe = _YLbOBm._jXnjSQ() _ZUERUc._akdcsG = _hopsmQ local _PbJlbn = _HqspIA._jXnjSQ('_OWpMGI') _PbJlbn._fizqIu = _dstSjT._fizqIu._aKmIWn _PbJlbn._fnGwxl = 4 _PbJlbn._hNOsDd = _YLbOBm._UFWQDs(163, 114) _PbJlbn._pbJAYU = _YLbOBm._UFWQDs(6, 5) _PbJlbn._akdcsG = _ZUERUc _llNXCl._nwdJlT = _hopsmQ _hIsBBh._iAYcqN(_VPZknO._ecujQK, _hopsmQ) function _llNXCl:_TmogEH(_HVTHRn) _VPZknO:_wXQAcP(_HVTHRn._JKVaHt) local _xEoyuy = { _QMKVhv = false, _GjTzCS = {}, _JKVaHt = _HVTHRn._JKVaHt, _imeQtB = true } local _OdEJpm = _HqspIA._jXnjSQ('_UgCzTR') _OdEJpm._JKVaHt = _HVTHRn._JKVaHt _OdEJpm._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) _OdEJpm._PiXytr = '' _OdEJpm._XraNmO = false _OdEJpm._akdcsG = _ZUERUc _ioQasw(_OdEJpm, _HVTHRn._MIvBYM) _dQvNGE(_OdEJpm) local _QNKDOw = _HqspIA._jXnjSQ('_rfJjAs') _QNKDOw._JKVaHt = '_EPbikF' _QNKDOw._Waoasm = _YLbOBm._jXnjSQ(1, -16, 0, 20) _QNKDOw._hcXIOP = _YLbOBm._UFWQDs(16, 81) _QNKDOw._LwijxE = 1 _QNKDOw._PiXytr = _HVTHRn._JKVaHt _QNKDOw._jgVhbP = _dstSjT._jgVhbP._cSzLBF _QNKDOw._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.31) _QNKDOw._fcZKAI = 13 _QNKDOw._iqsfkF = _TEZYYN._CIsHqY _QNKDOw._akdcsG = _OdEJpm local _setvwo = _HqspIA._jXnjSQ('_TBxjEq') _setvwo._JKVaHt = '_JHonrC' _setvwo._Waoasm = _YLbOBm._UFWQDs(22, 12) _setvwo._hcXIOP = _YLbOBm._jXnjSQ(1, -57, 0, 14) _setvwo._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.14) _setvwo._akdcsG = _OdEJpm _dQvNGE(_setvwo, _SytJFC._jXnjSQ(1, 0)) local _skvUPr = _setvwo:_tPFypN() _skvUPr._Waoasm = _YLbOBm._UFWQDs(8, 8) _skvUPr._hcXIOP = _YLbOBm._UFWQDs(2, 2) _skvUPr._SBYtAj = _TEZYYN._ubVfxv _skvUPr._akdcsG = _setvwo local _fbivaB = _HqspIA._jXnjSQ('_UgCzTR') _fbivaB._JKVaHt = '_sCzmGq' _fbivaB._Waoasm = _YLbOBm._UFWQDs(14, 24) _fbivaB._hcXIOP = _YLbOBm._jXnjSQ(1, -27, 0, 8) _fbivaB._LwijxE = 1 _fbivaB._PiXytr = '' _fbivaB._akdcsG = _OdEJpm local _IzaNlN = _HqspIA._jXnjSQ('_QXffBR') _IzaNlN._JKVaHt = '_sCzmGq' _IzaNlN._Waoasm = _YLbOBm._UFWQDs(2, 12) _IzaNlN._hcXIOP = _YLbOBm._UFWQDs(6, 6) _IzaNlN._LwijxE = 1 _IzaNlN._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_IzaNlN._oXtCIE') _IzaNlN._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _IzaNlN._akdcsG = _fbivaB local _pDitCT = _HqspIA._jXnjSQ('_UgCzTR') _pDitCT._JKVaHt = '_zTvvio' _pDitCT._Waoasm = _YLbOBm._jXnjSQ(1, 0, 1, -5) _pDitCT._SBYtAj = _vVnUNC._jXnjSQ() _pDitCT._LwijxE = 1 _pDitCT._XraNmO = false _pDitCT._nrATZG = true _pDitCT._yooTfS = false _pDitCT._PiXytr = '' _pDitCT._akdcsG = _hopsmQ _dQvNGE(_pDitCT) local _SJyhkS = _HqspIA._jXnjSQ('_UgCzTR') _SJyhkS._Waoasm = _YLbOBm._jXnjSQ(0, 220, 1, 0) _SJyhkS._hcXIOP = _YLbOBm._nfWnJj(1, 0) _SJyhkS._SBYtAj = _TEZYYN._ubVfxv _SJyhkS._XraNmO = false _SJyhkS._PiXytr = '' _SJyhkS._akdcsG = _pDitCT local _WkiSOc = _HqspIA._jXnjSQ('_rfJjAs') _WkiSOc._JKVaHt = '_EPbikF' _WkiSOc._Waoasm = _YLbOBm._jXnjSQ(1, -36, 0, 20) _WkiSOc._hcXIOP = _YLbOBm._UFWQDs(36, 12) _WkiSOc._LwijxE = 1 _WkiSOc._PiXytr = _HVTHRn._JKVaHt _WkiSOc._jgVhbP = _dstSjT._jgVhbP._cSzLBF _WkiSOc._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _WkiSOc._fcZKAI = 13 _WkiSOc._iqsfkF = _TEZYYN._CIsHqY _WkiSOc._akdcsG = _SJyhkS local _hVMMVW = _HqspIA._jXnjSQ('_hMCrWE') _hVMMVW._JKVaHt = '_KvFHEx' _hVMMVW._Waoasm = _YLbOBm._UFWQDs(16, 16) _hVMMVW._hcXIOP = _YLbOBm._UFWQDs(11, 13) _hVMMVW._LwijxE = 1 _hVMMVW._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_hVMMVW._oXtCIE') _hVMMVW._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) _hVMMVW._akdcsG = _SJyhkS _dQvNGE(_SJyhkS) local _LZtVmo = _HqspIA._jXnjSQ('_YEIROa') _LZtVmo._JKVaHt = '_ThudBc' _LZtVmo._Waoasm = _YLbOBm._jXnjSQ(1, 0, 1, -45) _LZtVmo._hcXIOP = _YLbOBm._UFWQDs(0, 41) _LZtVmo._SBYtAj = _TEZYYN._ubVfxv _LZtVmo._UASDFM = 0 _LZtVmo._JvozRJ = 2 _LZtVmo._kTEmJh = 0.75 _LZtVmo._xkHbVe = _YLbOBm._jXnjSQ() _LZtVmo._akdcsG = _SJyhkS local _dWrANi = _HqspIA._jXnjSQ('_QhjgFh') _dWrANi._fizqIu = _dstSjT._fizqIu._aKmIWn _dWrANi._PZSSNc = _dstSjT._PZSSNc._bUchrx _dWrANi._akdcsG = _LZtVmo if _HVTHRn._Waoasm then local _eEphmn = _HqspIA._jXnjSQ('_TBxjEq') _eEphmn._Waoasm = _HVTHRn._Waoasm _eEphmn._LwijxE = 1 _eEphmn._yooTfS = false _eEphmn._akdcsG = _rTtpyQ _xDNuqj(_eEphmn, _hopsmQ) local _EYYdxW = _HqspIA._jXnjSQ('_zZNYqi') _EYYdxW._KSDfrX = _vVnUNC._ckVQPV(5, 134, 105) _EYYdxW._PkHyxh = _dstSjT._PkHyxh._utYKvv _EYYdxW._oKIjJo = 0 _EYYdxW._akdcsG = _eEphmn _xEoyuy._ThudBc = _eEphmn end _HVTHRn._BMNCit = _HVTHRn._BMNCit or function() end _GozGIi(_xEoyuy) function _xEoyuy:_KoPzus() _xEoyuy._QMKVhv = not _xEoyuy._QMKVhv if _xEoyuy._ThudBc then _xEoyuy._ThudBc._yooTfS = _xEoyuy._QMKVhv end _QNKDOw._qnaMkt = _xEoyuy._QMKVhv and _euAEYe._FPMhEc(_TEZYYN._PiXytr, 0.2) or _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.31) _OdEJpm._SBYtAj = _xEoyuy._QMKVhv and _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.05) or _OdEJpm._SBYtAj _dVlivF:_qhmhNw(_setvwo, _TEZYYN._qhmhNw, { _SBYtAj = _xEoyuy._QMKVhv and _vVnUNC._cuQvuk(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu) or _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.14) }) _dVlivF:_qhmhNw(_skvUPr, _TEZYYN._qhmhNw, { _hcXIOP = _YLbOBm._UFWQDs(_xEoyuy._QMKVhv and 12 or 2, 2) }) if not _xEoyuy._QMKVhv then for _, v in _xEoyuy._ygAOTu do v:_BZBnLx() end _hIsBBh._DCSjmN(_xEoyuy._ygAOTu) end _KCGrIF._GgxKrU(_HVTHRn._BMNCit, _xEoyuy._QMKVhv) end _hVMMVW._SsjLkp:_pCuvub(function() _hVMMVW._mGTSmO = _TEZYYN._PiXytr end) _hVMMVW._nVWcUy:_pCuvub(function() _hVMMVW._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) end) _hVMMVW._Sncxke:_pCuvub(function() _dVlivF:_qhmhNw(_pDitCT, _TEZYYN._qhmhNw, { _LwijxE = 1 }) _dVlivF:_qhmhNw(_SJyhkS, _TEZYYN._qhmhNw, { _hcXIOP = _YLbOBm._nfWnJj(1, 0) }) _KCGrIF._AKYNGq(0.2) _pDitCT._yooTfS = false end) _fbivaB._Sncxke:_pCuvub(function() _pDitCT._yooTfS = true _dVlivF:_qhmhNw(_pDitCT, _TEZYYN._qhmhNw, { _LwijxE = 0.5 }) _dVlivF:_qhmhNw(_SJyhkS, _TEZYYN._qhmhNw, { _hcXIOP = _YLbOBm._jXnjSQ(1, -220, 0, 0) }) end) _fbivaB._SsjLkp:_pCuvub(function() _IzaNlN._mGTSmO = _TEZYYN._PiXytr end) _fbivaB._nVWcUy:_pCuvub(function() _IzaNlN._mGTSmO = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) end) _OdEJpm._SsjLkp:_pCuvub(function() if not _xEoyuy._QMKVhv then _OdEJpm._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.05) end end) _OdEJpm._nVWcUy:_pCuvub(function() if not _xEoyuy._QMKVhv then _OdEJpm._SBYtAj = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) end end) _OdEJpm._Sncxke:_pCuvub(function() _xEoyuy:_KoPzus() end) _OdEJpm._gJmIOl:_pCuvub(function() _pDitCT._yooTfS = true _dVlivF:_qhmhNw(_pDitCT, _TEZYYN._qhmhNw, { _LwijxE = 0.5 }) _dVlivF:_qhmhNw(_SJyhkS, _TEZYYN._qhmhNw, { _hcXIOP = _YLbOBm._jXnjSQ(1, -220, 0, 0) }) end) _pDitCT._Sncxke:_pCuvub(function() _dVlivF:_qhmhNw(_pDitCT, _TEZYYN._qhmhNw, { _LwijxE = 1 }) _dVlivF:_qhmhNw(_SJyhkS, _TEZYYN._qhmhNw, { _hcXIOP = _YLbOBm._nfWnJj(1, 0) }) _KCGrIF._AKYNGq(0.2) _pDitCT._yooTfS = false end) _dWrANi:_wlElAj('_bamSMD'):_pCuvub(function() if _VPZknO._LemRBW then _aSbcev(8) end _LZtVmo._xkHbVe = _YLbOBm._UFWQDs(0, _dWrANi._bamSMD.Y / _umqGsM._CPnCQP) end) for i, v in _HuDitg do _xEoyuy['_zFFBmw'..i] = function(_, _YUUBjB) return v(_YUUBjB, _LZtVmo, _xEoyuy) end end _xEoyuy._AQWScN = _OdEJpm _llNXCl._YWFqMq[_HVTHRn._JKVaHt] = _xEoyuy local _GtQEhy = {} for _, v in _llNXCl._YWFqMq do _hIsBBh._iAYcqN(_GtQEhy, v._JKVaHt) end _hIsBBh._IaDYkc(_GtQEhy) for i, v in _GtQEhy do _llNXCl._YWFqMq[v]._AQWScN._aKmIWn = i end return _xEoyuy end local function _UkEPCN() for _, v in _llNXCl._YWFqMq do if v._ThudBc then local _glJeNw = _qYsMpg._yooTfS for _, v2 in _eTbgXv._ecujQK do _glJeNw = _glJeNw or v2._yooTfS end v._ThudBc._yooTfS = (not _glJeNw or _hopsmQ._yooTfS) and v._QMKVhv end end end _kuFJpl._Sncxke:_pCuvub(function() _hopsmQ._yooTfS = false _qYsMpg._yooTfS = true end) _eTbgXv:_ZnMfdr(_qYsMpg:_wlElAj('_yooTfS'):_pCuvub(_UkEPCN)) _hopsmQ:_wlElAj('_yooTfS'):_pCuvub(function() _eTbgXv:_lDymoF(_eTbgXv._KZGVne._mStgrp, _eTbgXv._KZGVne._bwPQRS, _eTbgXv._KZGVne._HfYRIu) _UkEPCN() end) _PbJlbn:_wlElAj('_bamSMD'):_pCuvub(function() if _eTbgXv._LemRBW then _aSbcev(8) end _ZUERUc._xkHbVe = _YLbOBm._UFWQDs(0, _PbJlbn._bamSMD.Y / _umqGsM._CPnCQP) end) _eTbgXv._imeQtB = _llNXCl return _llNXCl end function _VPZknO:_bpPgZl(_QNKDOw, _oynnGu, _KQcVNd, _fErByH) if not _eTbgXv._qOLlag._QMKVhv then return end _KCGrIF._yyLRLO(0, function() if _eTbgXv._LemRBW then _aSbcev(8) end local i = #_eCjevx:_tOeskI() + 1 local _JyKBcP = _HqspIA._jXnjSQ('_QXffBR') _JyKBcP._JKVaHt = '_DVHlFE' _JyKBcP._Waoasm = _YLbOBm._UFWQDs(_URXiHE._Qgmjkz(_ycqBdh(_QpJkHj(_oynnGu), 14, _TEZYYN._CIsHqY).X + 80, 266), 75) _JyKBcP._hcXIOP = _YLbOBm._jXnjSQ(1, 0, 1, -(29 + (78 * i))) _JyKBcP._tqCDcD = 5 _JyKBcP._LwijxE = 1 _JyKBcP._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_JyKBcP._oXtCIE') _JyKBcP._ooVSrn = _dstSjT._ooVSrn._dKVHsP _JyKBcP._xWzgWh = _dGTcjT._jXnjSQ(7, 7, 9, 9) _JyKBcP._akdcsG = _eCjevx _KIEDuO(_JyKBcP, true) local _qZsZKr = _HqspIA._jXnjSQ('_QXffBR') _qZsZKr._JKVaHt = '_ScLbxU' _qZsZKr._Waoasm = _YLbOBm._UFWQDs(60, 60) _qZsZKr._hcXIOP = _YLbOBm._UFWQDs(-5, -8) _qZsZKr._tqCDcD = 5 _qZsZKr._LwijxE = 1 _qZsZKr._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/'..(_fErByH or '_MrTRDM')..'._oXtCIE') _qZsZKr._mGTSmO = _vVnUNC._jXnjSQ() _qZsZKr._CzQtWh = 0.5 _qZsZKr._akdcsG = _JyKBcP local _eQWkhk = _qZsZKr:_tPFypN() _eQWkhk._hcXIOP = _YLbOBm._UFWQDs(-1, -1) _eQWkhk._mGTSmO = _vVnUNC._jXnjSQ(1, 1, 1) _eQWkhk._CzQtWh = 0 _eQWkhk._akdcsG = _qZsZKr local _wYycZQ = _HqspIA._jXnjSQ('_rfJjAs') _wYycZQ._JKVaHt = '_EPbikF' _wYycZQ._Waoasm = _YLbOBm._jXnjSQ(1, -56, 0, 20) _wYycZQ._hcXIOP = _YLbOBm._UFWQDs(46, 16) _wYycZQ._tqCDcD = 5 _wYycZQ._LwijxE = 1 _wYycZQ._PiXytr = "<_oABUhS _euAEYe='#_BVpbrP' _BrPEWv='_BwuEju' _XKRyNo='0.3' _OdjYUS='0.5'>".._QNKDOw..'</_oABUhS>' _wYycZQ._jgVhbP = _dstSjT._jgVhbP._cSzLBF _wYycZQ._yZIJRr = _dstSjT._yZIJRr._IcHZgQ _wYycZQ._qnaMkt = _vVnUNC._ckVQPV(209, 209, 209) _wYycZQ._fcZKAI = 14 _wYycZQ._gBYFZZ = true _wYycZQ._iqsfkF = _TEZYYN._QenoRc _wYycZQ._akdcsG = _JyKBcP local _TNCMEB = _wYycZQ:_tPFypN() _TNCMEB._JKVaHt = '_PiXytr' _TNCMEB._hcXIOP = _YLbOBm._UFWQDs(47, 44) _TNCMEB._PiXytr = _QpJkHj(_oynnGu) _TNCMEB._qnaMkt = _vVnUNC._jXnjSQ() _TNCMEB._mORUhG = 0.5 _TNCMEB._gBYFZZ = false _TNCMEB._iqsfkF = _TEZYYN._CIsHqY _TNCMEB._akdcsG = _JyKBcP local _SbyRby = _TNCMEB:_tPFypN() _SbyRby._hcXIOP = _YLbOBm._UFWQDs(-1, -1) _SbyRby._PiXytr = _oynnGu _SbyRby._qnaMkt = _vVnUNC._ckVQPV(170, 170, 170) _SbyRby._mORUhG = 0 _SbyRby._gBYFZZ = true _SbyRby._akdcsG = _TNCMEB local _uzFAqP = _HqspIA._jXnjSQ('_TBxjEq') _uzFAqP._JKVaHt = '_shcJJF' _uzFAqP._Waoasm = _YLbOBm._jXnjSQ(1, -13, 0, 2) _uzFAqP._hcXIOP = _YLbOBm._jXnjSQ(0, 3, 1, -4) _uzFAqP._tqCDcD = 5 _uzFAqP._SBYtAj = _fErByH == '_pnuHUS' and _vVnUNC._ckVQPV(250, 50, 56) or _fErByH == '_APYLPU' and _vVnUNC._ckVQPV(91, 63, 211) or _vVnUNC._ckVQPV(220, 220, 220) _uzFAqP._UASDFM = 0 _uzFAqP._akdcsG = _JyKBcP if _dVlivF._qhmhNw then _dVlivF:_qhmhNw(_JyKBcP, _uCVxNa._jXnjSQ(0.4, _dstSjT._cjMCsI._EQcfNa), { _fPIzOY = _VSBFpv._jXnjSQ(1, 0) }, _dVlivF._aUhCeU) _dVlivF:_qhmhNw(_uzFAqP, _uCVxNa._jXnjSQ(_KQcVNd, _dstSjT._cjMCsI._NRwaQg), { _Waoasm = _YLbOBm._UFWQDs(0, 2) }) end _KCGrIF._yyLRLO(_KQcVNd, function() if _dVlivF._qhmhNw then _dVlivF:_qhmhNw(_JyKBcP, _uCVxNa._jXnjSQ(0.4, _dstSjT._cjMCsI._EQcfNa), { _fPIzOY = _VSBFpv._jXnjSQ(0, 0) }, _dVlivF._aUhCeU) end _KCGrIF._AKYNGq(0.2) _JyKBcP:_eRmmgr() _JyKBcP:_YwZmtp() end) end) end function _VPZknO:_HJPrTX(_smtHvX, _iPYqAo) if not _smtHvX then _eTbgXv._KZGVne:_wTgPlF(nil, nil, nil, 4) end local _ivQEwZ = {} local _OItvNr = true if _susVHu('_tqUYWH/_QMSihT/'.._xwbqnU._yayIMi..'._cKxHBL._HvUhtW') then _ivQEwZ = _nYyipe('_tqUYWH/_QMSihT/'.._xwbqnU._yayIMi..'._cKxHBL._HvUhtW') if not _ivQEwZ then _ivQEwZ = {_xKGQUu = {}} _eTbgXv:_bpPgZl('_CSRSbK', '_vpaKyy to _oaykWr _ALyYNV _sOHDlr.', 10, '_pnuHUS') _OItvNr = false end if not _smtHvX then _eTbgXv._mLKToH = _ivQEwZ._mLKToH for i, v in _ivQEwZ._xKGQUu do local _TANlhJ = _eTbgXv._xKGQUu[i] if not _TANlhJ then _wUckNR end if _TANlhJ._GjTzCS and v._GjTzCS then _eTbgXv:_eyfRfX(_TANlhJ, v._GjTzCS) end if v._QMKVhv then _TANlhJ._UTnRYN:_KoPzus() end if v._lvDkxr then _TANlhJ:_PuZFRH() end if v._RRlXLy and _TANlhJ._RRklEW then _TANlhJ:_RRklEW() end if v._sQfDnZ and (#_TANlhJ._sQfDnZ > 0 or #v._sQfDnZ > 0) then _TANlhJ._sQfDnZ = v._sQfDnZ or {} _TANlhJ._HeyjKy = v._HeyjKy or {} _TANlhJ:_rXIxMs() end if v._hcXIOP then _TANlhJ._AQWScN._hcXIOP = _YLbOBm._UFWQDs(v._hcXIOP.X, v._hcXIOP.Y) end end end end _eTbgXv._vavVeQ = _iPYqAo or _ivQEwZ._vavVeQ or '_GDbvBN' _eTbgXv._zBTPVG = _ivQEwZ._zBTPVG or {{ _JKVaHt = '_GDbvBN', _TMdeMy = {} }} _eTbgXv._xKGQUu._zBTPVG:_rXIxMs() if _eTbgXv._fXfbcQ then _eTbgXv._fXfbcQ._PiXytr = #_eTbgXv._vavVeQ > 10 and _eTbgXv._vavVeQ:_JFREKH(1, 10)..'...' or _eTbgXv._vavVeQ _eTbgXv._fXfbcQ._Waoasm = _YLbOBm._UFWQDs(_ycqBdh(_eTbgXv._fXfbcQ._PiXytr, _eTbgXv._fXfbcQ._fcZKAI, _eTbgXv._fXfbcQ._CIsHqY).X + 16, 24) end if _susVHu('_tqUYWH/_QMSihT/'.._eTbgXv._vavVeQ.._eTbgXv._miEakS..'._HvUhtW') then local _MxnOWc = _nYyipe('_tqUYWH/_QMSihT/'.._eTbgXv._vavVeQ.._eTbgXv._miEakS..'._HvUhtW') if not _MxnOWc then _MxnOWc = {_xKGQUu = {}, _YWFqMq = {}, _imeQtB = {}} _eTbgXv:_bpPgZl('_CSRSbK', '_vpaKyy to _oaykWr '.._eTbgXv._vavVeQ..' _iPYqAo.', 10, '_pnuHUS') _OItvNr = false end for i, v in _MxnOWc._xKGQUu do local _TANlhJ = _eTbgXv._xKGQUu[i] if not _TANlhJ then _wUckNR end if _TANlhJ._GjTzCS and v._GjTzCS then _eTbgXv:_eyfRfX(_TANlhJ, v._GjTzCS) end if v._lvDkxr ~= _TANlhJ._lvDkxr then _TANlhJ:_PuZFRH() end if v._RRlXLy ~= nil and v._RRlXLy ~= _TANlhJ._RRlXLy then _TANlhJ:_RRklEW() end if _TANlhJ._UTnRYN and (v._QMKVhv or false) ~= _TANlhJ._UTnRYN._QMKVhv then _TANlhJ._UTnRYN:_KoPzus() end if v._sQfDnZ and (#_TANlhJ._sQfDnZ > 0 or #v._sQfDnZ > 0) then _TANlhJ._sQfDnZ = v._sQfDnZ or {} _TANlhJ._HeyjKy = v._HeyjKy or {} _TANlhJ:_rXIxMs() end _TANlhJ._AQWScN._hcXIOP = _YLbOBm._UFWQDs(v._hcXIOP.X, v._hcXIOP.Y) end for i, v in _MxnOWc._YWFqMq do local _TANlhJ = _eTbgXv._YWFqMq[i] if not _TANlhJ then _wUckNR end if _TANlhJ._GjTzCS and v._GjTzCS then _eTbgXv:_eyfRfX(_TANlhJ, v._GjTzCS) end if v._QMKVhv ~= _TANlhJ._QMKVhv then if _smtHvX then if _eTbgXv._pjLIvt._QMKVhv then _eTbgXv:_bpPgZl('_mjywtW _ohQALA', i.."<_fvBnoA _euAEYe='#_BVpbrP'> _xjYznZ _fgkuHN </_fvBnoA>"..(v._QMKVhv and "<_fvBnoA _euAEYe='#5AFF5A'>_QMKVhv</_fvBnoA>" or "<_fvBnoA _euAEYe='#_YXapbV'>_hcafqZ</_fvBnoA>").."<_fvBnoA _euAEYe='#_BVpbrP'>!</_fvBnoA>", 0.75) end end _TANlhJ:_KoPzus(true) end _TANlhJ:_oMdhPy(v._TMdeMy) _TANlhJ._AQWScN._TMdeMy._yooTfS = #v._TMdeMy > 0 end for i, v in _MxnOWc._imeQtB do local _TANlhJ = _eTbgXv._imeQtB._YWFqMq[i] if not _TANlhJ then _wUckNR end if _TANlhJ._GjTzCS and v._GjTzCS then _eTbgXv:_eyfRfX(_TANlhJ, v._GjTzCS) end if _TANlhJ._QMKVhv ~= v._QMKVhv then _TANlhJ:_KoPzus() end if v._hcXIOP and _TANlhJ._ThudBc then _TANlhJ._ThudBc._hcXIOP = _YLbOBm._UFWQDs(v._hcXIOP.X, v._hcXIOP.Y) end end _eTbgXv:_zhyZwc(true) else _eTbgXv:_cmnBiI() end if _eTbgXv._eZUnNh then _eTbgXv._eZUnNh:_YwZmtp() _eTbgXv._eZUnNh = nil end _eTbgXv._TSMUvi = _OItvNr _eTbgXv._xKGQUu._ubVfxv._GjTzCS._TMdeMy:_oMdhPy(_eTbgXv._mLKToH) if _kJUqAm._XvHzKH or #_eTbgXv._mLKToH == 1 or _eTbgXv._mLKToH[1] == '_ryKFcX' then _VPZknO:_XDJSJJ(); end end function _VPZknO:_XDJSJJ() if _kJUqAm._XvHzKH or #_eTbgXv._mLKToH == 1 or _eTbgXv._mLKToH[1] == '_ryKFcX' then local _Sdxhhz = _HqspIA._jXnjSQ('_UgCzTR') _Sdxhhz._Waoasm = _YLbOBm._UFWQDs(32, 32) _Sdxhhz._hcXIOP = _YLbOBm._jXnjSQ(1, -90, 0, 4) _Sdxhhz._SBYtAj = _vVnUNC._jXnjSQ() _Sdxhhz._LwijxE = 0.5 _Sdxhhz._PiXytr = '' _Sdxhhz._akdcsG = _cKxHBL local _PPthyo = _HqspIA._jXnjSQ('_QXffBR') _PPthyo._Waoasm = _YLbOBm._UFWQDs(26, 26) _PPthyo._hcXIOP = _YLbOBm._UFWQDs(3, 3) _PPthyo._LwijxE = 1 _PPthyo._dMWcuD = '_OdALmI://14338041181' _PPthyo._akdcsG = _Sdxhhz local _jvslwI = _HqspIA._jXnjSQ('_GLqVpP') _jvslwI._akdcsG = _Sdxhhz _eTbgXv._DObakz = _Sdxhhz _Sdxhhz._Sncxke:_pCuvub(function() if _eTbgXv._LemRBW then _aSbcev(8); end; for _, v in _eTbgXv._ecujQK do v._yooTfS = false; end; for _, _XxiWNt in _eTbgXv._YWFqMq do if _XxiWNt._TMdeMy._UTnRYN then _XxiWNt._TMdeMy._UTnRYN._yooTfS = _qYsMpg._yooTfS; end; end; _qYsMpg._yooTfS = not _qYsMpg._yooTfS; _oOkTnL._yooTfS = false; _eTbgXv:_hSClhq(); end); end; end; function _VPZknO:_eyfRfX(_TANlhJ, _znDVIT) for i, v in _znDVIT do local _vLkAjs = _TANlhJ._GjTzCS[i] if not _vLkAjs then _wUckNR end _vLkAjs:_HJPrTX(v) end end function _VPZknO:_wXQAcP(_RDgXxS) local _sfWWWc = (_eTbgXv._YWFqMq[_RDgXxS] and _eTbgXv._YWFqMq or _eTbgXv._imeQtB._YWFqMq[_RDgXxS] and _eTbgXv._imeQtB._YWFqMq or _eTbgXv._xKGQUu) if _sfWWWc and _sfWWWc[_RDgXxS] then local _fqJSIo = _sfWWWc[_RDgXxS] if _eTbgXv._LemRBW then _aSbcev(8) end for _, v in {'_AQWScN', '_ThudBc', '_KoPzus', '_UTnRYN'} do local _dzzTzD = _MTaNML(_fqJSIo[v]) == '_hIsBBh' and _fqJSIo[v]._AQWScN or _fqJSIo[v] if _MTaNML(_dzzTzD) == '_HqspIA' then _dzzTzD:_YwZmtp() _dzzTzD:_eRmmgr() end end _jeVrGQ(_fqJSIo) _sfWWWc[_RDgXxS] = nil end end function _VPZknO:_cmnBiI(_gAwHXo) if not _eTbgXv._TSMUvi then return end local _ivQEwZ = { _xKGQUu = {}, _vavVeQ = _gAwHXo or _eTbgXv._vavVeQ, _zBTPVG = _eTbgXv._zBTPVG, _mLKToH = _eTbgXv._mLKToH } local _MxnOWc = { _YWFqMq = {}, _xKGQUu = {}, _imeQtB = {} } for i, v in _eTbgXv._xKGQUu do (v._qzijjJ ~= '_XdkjdP' and i ~= '_ubVfxv' and _MxnOWc or _ivQEwZ)._xKGQUu[i] = { _QMKVhv = i ~= '_ubVfxv' and v._UTnRYN._QMKVhv or nil, _RRlXLy = v._qzijjJ ~= '_yVTuBp' and v._RRlXLy or nil, _lvDkxr = v._lvDkxr, _hcXIOP = {X = v._AQWScN._hcXIOP.X._gINIiO, Y = v._AQWScN._hcXIOP.Y._gINIiO}, _GjTzCS = _VPZknO:_vcXUoY(v, v._GjTzCS), _sQfDnZ = v._sQfDnZ, _HeyjKy = v._HeyjKy } end for i, v in _eTbgXv._YWFqMq do _MxnOWc._YWFqMq[i] = { _QMKVhv = v._QMKVhv, _TMdeMy = v._TMdeMy._UTnRYN and {_Ofnxkr = true, X = v._TMdeMy._UTnRYN._hcXIOP.X._gINIiO, Y = v._TMdeMy._UTnRYN._hcXIOP.Y._gINIiO} or v._TMdeMy, _GjTzCS = _VPZknO:_vcXUoY(v, true) } end for i, v in _eTbgXv._imeQtB._YWFqMq do _MxnOWc._imeQtB[i] = { _QMKVhv = v._QMKVhv, _hcXIOP = v._ThudBc and {X = v._ThudBc._hcXIOP.X._gINIiO, Y = v._ThudBc._hcXIOP.Y._gINIiO} or nil, _GjTzCS = _VPZknO:_vcXUoY(v, v._GjTzCS) } end _XfkdsB('_tqUYWH/_QMSihT/'.._xwbqnU._yayIMi..'._cKxHBL._HvUhtW', _CwEzDq:_EoUzYB(_ivQEwZ)) _XfkdsB('_tqUYWH/_QMSihT/'.._eTbgXv._vavVeQ.._eTbgXv._miEakS..'._HvUhtW', _CwEzDq:_EoUzYB(_MxnOWc)) end function _VPZknO:_vcXUoY(_TANlhJ, _znDVIT) if not _znDVIT then return end _znDVIT = {} for _, v in _TANlhJ._GjTzCS do if not v._cmnBiI then _wUckNR end v:_cmnBiI(_znDVIT) end return _znDVIT end function _VPZknO:_wlZJor() _VPZknO:_cmnBiI() _VPZknO._TSMUvi = nil for _, v in _eTbgXv._YWFqMq do if v._QMKVhv then v:_KoPzus() end end for _, v in _eTbgXv._imeQtB._YWFqMq do if v._QMKVhv then v:_KoPzus() end end for _, v in _eTbgXv._xKGQUu do if v._qzijjJ == '_yVTuBp' and v._UTnRYN._QMKVhv then v._UTnRYN:_KoPzus() end end for _, v in _VPZknO._ygAOTu do _wyMwCP(function() v:_BZBnLx() end) end if _VPZknO._LemRBW then _aSbcev(8) _qYsMpg._yooTfS = false _VPZknO:_hSClhq() end _VPZknO._cKxHBL:_eRmmgr() _VPZknO._cKxHBL:_YwZmtp() _hIsBBh._DCSjmN(_VPZknO._adVtUh) _jeVrGQ(_VPZknO) _RqnnZU._rqDNXJ = nil _RqnnZU._xdoPdz = nil _RqnnZU._UclreZ = nil end _cKxHBL = _HqspIA._jXnjSQ('_sMcYeu') _cKxHBL._JKVaHt = _qzPwJY() _cKxHBL._kOTNRR = 9999999 _cKxHBL._elCMhM = _dstSjT._elCMhM._brVmeI _cKxHBL._LVocSa = true _cKxHBL._XyupZq = true if _VPZknO._LemRBW then _cKxHBL._akdcsG = _qtxEoR(_xwbqnU:_vGlouh('_tzHxHB')) else _cKxHBL._akdcsG = _qtxEoR(_xwbqnU:_vGlouh('_ICqBrN'))._wIbBkJ._KlVcty _cKxHBL._AreCnm = false end _VPZknO._cKxHBL = _cKxHBL _rTtpyQ = _HqspIA._jXnjSQ('_TBxjEq') _rTtpyQ._JKVaHt = '_idZQJs' _rTtpyQ._Waoasm = _YLbOBm._nfWnJj(1, 1) _rTtpyQ._LwijxE = 1 _rTtpyQ._akdcsG = _cKxHBL _qYsMpg = _HqspIA._jXnjSQ('_TBxjEq') _qYsMpg._JKVaHt = '_DoeeZX' _qYsMpg._Waoasm = _YLbOBm._nfWnJj(1, 1) _qYsMpg._LwijxE = 1 _qYsMpg._yooTfS = false _qYsMpg._akdcsG = _rTtpyQ local _fFmVJY = _HqspIA._jXnjSQ('_UgCzTR') _fFmVJY._LwijxE = 1 _fFmVJY._CdSxAa = true _fFmVJY._PiXytr = '' _fFmVJY._akdcsG = _qYsMpg local _xvrRie = _HqspIA._jXnjSQ('_QXffBR') _xvrRie._Waoasm = _YLbOBm._UFWQDs(64, 64) _xvrRie._LwijxE = 1 _xvrRie._yooTfS = false _xvrRie._dMWcuD = '_SbWqTD://_xkOaCB/_LqAqBN/_rjLBPe/_rsggha._oXtCIE' _xvrRie._akdcsG = _cKxHBL _eCjevx = _HqspIA._jXnjSQ('_lpFmPO') _eCjevx._JKVaHt = '_qOLlag' _eCjevx._akdcsG = _rTtpyQ _oOkTnL = _HqspIA._jXnjSQ('_rfJjAs') _oOkTnL._JKVaHt = '_MIvBYM' _oOkTnL._hcXIOP = _YLbOBm._nfWnJj(-1, -1) _oOkTnL._tqCDcD = 5 _oOkTnL._SBYtAj = _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.02) _oOkTnL._yooTfS = false _oOkTnL._PiXytr = '' _oOkTnL._qnaMkt = _euAEYe._ywRMJW(_TEZYYN._PiXytr, 0.16) _oOkTnL._fcZKAI = 12 _oOkTnL._iqsfkF = _TEZYYN._CIsHqY _oOkTnL._akdcsG = _rTtpyQ _AydZRL = _KIEDuO(_oOkTnL) _dQvNGE(_oOkTnL) local _lLRHFT = _HqspIA._jXnjSQ('_TBxjEq') _lLRHFT._Waoasm = _YLbOBm._jXnjSQ(1, -2, 1, -2) _lLRHFT._hcXIOP = _YLbOBm._UFWQDs(1, 1) _lLRHFT._tqCDcD = 6 _lLRHFT._LwijxE = 1 _lLRHFT._akdcsG = _oOkTnL local _cOJyED = _HqspIA._jXnjSQ('_zZNYqi') _cOJyED._KSDfrX = _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.02) _cOJyED._akdcsG = _lLRHFT _dQvNGE(_lLRHFT, _SytJFC._jXnjSQ(0, 4)) _umqGsM = _HqspIA._jXnjSQ('_CpJScX') _umqGsM._CPnCQP = _URXiHE._Qgmjkz(_cKxHBL._tpKwbq.X / 1920, 0.6) _umqGsM._akdcsG = _rTtpyQ _VPZknO._tbRGtr = _umqGsM _rTtpyQ._Waoasm = _YLbOBm._nfWnJj(1 / _umqGsM._CPnCQP, 1 / _umqGsM._CPnCQP) _VPZknO:_ZnMfdr(_cKxHBL:_wlElAj('_tpKwbq'):_pCuvub(function() if _VPZknO._CPnCQP._QMKVhv then _umqGsM._CPnCQP = _URXiHE._Qgmjkz(_cKxHBL._tpKwbq.X / 1920, 0.6) end end)) _VPZknO:_ZnMfdr(_umqGsM:_wlElAj('_CPnCQP'):_pCuvub(function() _rTtpyQ._Waoasm = _YLbOBm._nfWnJj(1 / _umqGsM._CPnCQP, 1 / _umqGsM._CPnCQP) for _, v in _rTtpyQ:_VlMCAW() do if v:_UFamFy('_sRmcdI') and v._yooTfS then v._yooTfS = false v._yooTfS = true end end end)) _VPZknO:_ZnMfdr(_qYsMpg:_wlElAj('_yooTfS'):_pCuvub(function() _VPZknO:_lDymoF(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu, true) if _qYsMpg._yooTfS and _kJUqAm._niBysj then repeat local _UkEPCN = _qYsMpg._yooTfS for _, v in _VPZknO._ecujQK do _UkEPCN = _UkEPCN or v._yooTfS end if not _UkEPCN then break end _xvrRie._yooTfS = not _kJUqAm._ItvCUq if _xvrRie._yooTfS then local _MpcSDb = _kJUqAm:_QaLUjz() _xvrRie._hcXIOP = _YLbOBm._UFWQDs(_MpcSDb.X - 31, _MpcSDb.Y - 32) end _KCGrIF._AKYNGq() until _VPZknO._TSMUvi == nil _xvrRie._yooTfS = false end end)) _VPZknO:_UYQdSe() _VPZknO._xKGQUu._ubVfxv:_zXqzEX() _VPZknO:_FYSCoA({ _JKVaHt = '_dGZqzU', _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_rlgEBS._oXtCIE'), _Waoasm = _YLbOBm._UFWQDs(13, 14) }) _VPZknO:_FYSCoA({ _JKVaHt = '_JRwFVe', _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_pdtgPq._oXtCIE'), _Waoasm = _YLbOBm._UFWQDs(14, 14) }) _VPZknO:_FYSCoA({ _JKVaHt = '_ORPwmG', _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_cMaRHm._oXtCIE'), _Waoasm = _YLbOBm._UFWQDs(15, 14) }) _VPZknO:_FYSCoA({ _JKVaHt = '_KqMYCT', _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_pGfAiB._oXtCIE'), _Waoasm = _YLbOBm._UFWQDs(15, 14) }) _VPZknO:_FYSCoA({ _JKVaHt = '_AOAMSw', _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_xapGzv._oXtCIE'), _Waoasm = _YLbOBm._UFWQDs(14, 14) }) _VPZknO:_FYSCoA({ _JKVaHt = '_ploPhe', _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_mYaLJa._oXtCIE'), _Waoasm = _YLbOBm._UFWQDs(15, 14) }) _VPZknO:_FYSCoA({ _JKVaHt = '_eVqZSO', _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_CcHTcq._oXtCIE'), _Waoasm = _YLbOBm._UFWQDs(19, 12) }) _VPZknO._xKGQUu._ubVfxv:_zXqzEX('_NYTBWL') _VPZknO:_FYSCoA({ _JKVaHt = '_oiGGUP', _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_KZAfgY._oXtCIE'), _Waoasm = _YLbOBm._UFWQDs(14, 14) }) _rEhQNp ]] local _KhBAha local _Oafnhw = { _mStgrp = 1, _bwPQRS = 1, _HfYRIu = 1 } local _jrCgKZ = { _JKVaHt = '_rEhQNp', _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_jQnoKs._oXtCIE'), _Waoasm = _YLbOBm._UFWQDs(17, 16), _DeGHsM = '_jcjpem _NTjhTs', _KSDfrX = _vVnUNC._ckVQPV(5, 134, 105), _BMNCit = function() _KhBAha._hkXJgu:_JYqCDN() _KhBAha._SnImDy:_JYqCDN(_Oafnhw._mStgrp, _Oafnhw._bwPQRS, _Oafnhw._HfYRIu) end } _KhBAha = _VPZknO:_VcexbC(_jrCgKZ) _KhBAha._hkXJgu = _HqspIA._jXnjSQ('_lrJejJ') _KhBAha._SnImDy = _HqspIA._jXnjSQ('_lrJejJ') _KhBAha:_JCMPNT({ _JKVaHt = '_rJrWBW _CYkYfz', _mTIjzt = true, _RRsXdF = true, _BMNCit = function() _KhBAha._hkXJgu:_JYqCDN() _KhBAha._SnImDy:_JYqCDN(_Oafnhw._mStgrp, _Oafnhw._bwPQRS, _Oafnhw._HfYRIu) end }) _Oafnhw = _KhBAha:_aoIZbE({ _JKVaHt = '_rEhQNp _euAEYe', _mTIjzt = true, _BMNCit = function(_ZkFOzK, _pfgqKy, _PyTyDm) for _, v in _KhBAha._AQWScN._ThudBc:_tOeskI() do local _mUlUpj = v:_SwVvim('_ZmFybl') if _mUlUpj and _mUlUpj._SBYtAj ~= _euAEYe._FPMhEc(_TEZYYN._ubVfxv, 0.37) then _mUlUpj._SBYtAj = _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) _mUlUpj._ZmFybl._SBYtAj = _mUlUpj._SBYtAj end end _jrCgKZ._KSDfrX = _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) _KhBAha._SnImDy:_JYqCDN(_ZkFOzK, _pfgqKy, _PyTyDm) end }) _KhBAha:_JCMPNT({ _JKVaHt = '_aasNPm _KhBAha', _mTIjzt = true, _RRsXdF = true, _BMNCit = function() _KhBAha._hkXJgu:_JYqCDN() _KhBAha._SnImDy:_JYqCDN(_Oafnhw._mStgrp, _Oafnhw._bwPQRS, _Oafnhw._HfYRIu) end }) _VPZknO:_ZnMfdr(_KhBAha._hkXJgu) _VPZknO:_ZnMfdr(_KhBAha._SnImDy) _zBTPVG ]] _VPZknO:_VcexbC({ _JKVaHt = '_zBTPVG', _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_ehXdDk._oXtCIE'), _Waoasm = _YLbOBm._UFWQDs(17, 10), _hcXIOP = _YLbOBm._UFWQDs(12, 16), _DeGHsM = '_qzijjJ _ePWNUd', _zBTPVG = true }) _xWMVbX ]] local _HluQMf _HluQMf = _VPZknO:_VcexbC({ _JKVaHt = '_xWMVbX', _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_jQnoKs._oXtCIE'), _Waoasm = _YLbOBm._UFWQDs(17, 16), _DeGHsM = '_jcjpem _NTjhTs', _BMNCit = function() _HluQMf._hkXJgu:_JYqCDN() end }) _HluQMf._hkXJgu = _HqspIA._jXnjSQ('_lrJejJ') _VPZknO:_ZnMfdr(_HluQMf._hkXJgu) _VPZknO:_jJgGTx() _VPZknO:_WUVhfF() _VPZknO._xKGQUu._ubVfxv:_yzckHO() _VPZknO._xKGQUu._ubVfxv:_WViTFn() _aRozCp _jzCifs ]] local _QVZRDt = _VPZknO._xKGQUu._ubVfxv:_tppbQT({_JKVaHt = '_aRozCp'}) _VPZknO._TGfrml = _QVZRDt:_JCMPNT({ _JKVaHt = '_xcGaRI _dHScWX-_aaIttz', _MIvBYM = '_JkLwMO _MqKZjS _euOGbR to be _gAkAbc to a _OdEJpm (eg. G + H)' }) _QVZRDt:_sRYYrf({ _JKVaHt = '_viBrtd _FpixZM _iPYqAo', _BMNCit = function() _VPZknO._cmnBiI = function() end if _susVHu('_tqUYWH/_QMSihT/'.._VPZknO._vavVeQ.._VPZknO._miEakS..'._HvUhtW') and _UeFMDt then _UeFMDt('_tqUYWH/_QMSihT/'.._VPZknO._vavVeQ.._VPZknO._miEakS..'._HvUhtW') end _RqnnZU._xdoPdz = true if _RqnnZU._TiORrx then _JhcstJ(_bxvhEq('_tqUYWH/_sDRoib._pMiXDl'), '_sDRoib')() else _JhcstJ(_xwbqnU:_aHymtX('_qoAXZY://_COXFqE._lfMFao._nATEgt/7GrandDadPGN/_rCDCer/'.._bxvhEq('_tqUYWH/_QMSihT/_IjFwhk._HvUhtW')..'/_sDRoib._pMiXDl', true))() end end, _MIvBYM = '_DwfwEP _DCGnWV _nFaRKi _lDkybk _iPYqAo to _xvvYKT _GDbvBN _sOHDlr of _CSRSbK' }) _QVZRDt:_sRYYrf({ _JKVaHt = '_Zcmtmt _HRuLCJ', _BMNCit = function() _VPZknO:_wlZJor() end, _MIvBYM = '_GTfvfC _rqDNXJ _IhmlPV _xvvYKT _FpixZM _xwbqnU' }) _QVZRDt:_sRYYrf({ _JKVaHt = '_FqEuoH', _BMNCit = function() _RqnnZU._xdoPdz = true if _RqnnZU._TiORrx then _JhcstJ(_bxvhEq('_tqUYWH/_sDRoib._pMiXDl'), '_sDRoib')() else _JhcstJ(_xwbqnU:_aHymtX('_qoAXZY://_COXFqE._lfMFao._nATEgt/7GrandDadPGN/_rCDCer/'.._bxvhEq('_tqUYWH/_QMSihT/_IjFwhk._HvUhtW')..'/_sDRoib._pMiXDl', true))() end end, _MIvBYM = '_NxYRKd _rqDNXJ for _njhVTN _xGLSMs' }) _mjywtW _jzCifs ]] local _MKyUpj = _VPZknO._xKGQUu._ubVfxv:_tppbQT({_JKVaHt = '_YWFqMq'}) _MKyUpj:_JCMPNT({ _JKVaHt = '_fvBCXJ by _QBGQln', _MIvBYM = '_kwkrOy _ybESgD on _lDkybk _CeiokG _GmpItz by _xvvYKT _QBGQln', _RRsXdF = true, _BMNCit = function() if _VPZknO._adVtUh._iNMjEK and _VPZknO._adVtUh._iNMjEK._jDbubD then _VPZknO._adVtUh._iNMjEK._reJmvF() end end }) _MKyUpj:_JCMPNT({ _JKVaHt = '_aasNPm _CeiokG _euAEYe', _MIvBYM = '_WqNbhf _xvvYKT _CfTTbL _ecFanM on _ybESgD for _qvNvke _MKyUpj', _RRsXdF = true, _BMNCit = function() if _VPZknO._adVtUh._iNMjEK and _VPZknO._adVtUh._iNMjEK._jDbubD then _VPZknO._adVtUh._iNMjEK._reJmvF() end end }) _ALyYNV _jzCifs ]] local _RuAabE = _VPZknO._xKGQUu._ubVfxv:_tppbQT({_JKVaHt = '_ALyYNV'}) _VPZknO._DLpHSn = _RuAabE:_JCMPNT({ _JKVaHt = '_DLpHSn _kErFoz', _BMNCit = function() _VPZknO:_hSClhq() end, _RRsXdF = true, _MIvBYM = '_DLpHSn _xvvYKT _kErFoz of _xvvYKT _ALyYNV' }) _RuAabE:_JCMPNT({ _JKVaHt = '_ALyYNV _WgTYYZ _STXTVt', _RRsXdF = true, _MIvBYM = "_pcrCGG a _GjCINl _BmdXhN _lDkybk _ALyYNV _wuSonO _cwYApf.\nI.E. '_SuvewR _oaqWGU to _KUgOWa _ALyYNV'" }) _RuAabE:_JCMPNT({ _JKVaHt = '_VMicfc _uhYLHn', _BMNCit = function(_QwlEFT) _oOkTnL._yooTfS = false _AydZRL._yooTfS = _QwlEFT end, _RRsXdF = true, _MIvBYM = '_bLUDnN _GbrTyk of _jbzupk' }) _RuAabE:_JCMPNT({ _JKVaHt = '_VMicfc _EvoZXe _dpqnig', _BMNCit = function(_QwlEFT) _qYsMpg._iaWkwQ._imeQtB._yooTfS = _QwlEFT _qYsMpg._iaWkwQ._JHowwz._yooTfS = _QwlEFT _qYsMpg._iaWkwQ._czQajw._Waoasm = _YLbOBm._jXnjSQ(1, _QwlEFT and -50 or -10, 0, 37) _qYsMpg._iaWkwQ._czQajw._hcXIOP = _YLbOBm._UFWQDs(_QwlEFT and 50 or 10, 0) end, _RRsXdF = true, _MIvBYM = '_yajmBF _xvvYKT _Sdxhhz to _eXBbBm to _imeQtB _zRcqWM' }) local _XPqaSB = {_AQWScN = {}, _HfYRIu = 1} _VPZknO._CPnCQP = _RuAabE:_JCMPNT({ _JKVaHt = '_GAetnk _WehhLe', _RRsXdF = true, _BMNCit = function(_OPzZWP) _XPqaSB._AQWScN._yooTfS = not _OPzZWP if _OPzZWP then _umqGsM._CPnCQP = _URXiHE._Qgmjkz(_cKxHBL._tpKwbq.X / 1920, 0.6) else _umqGsM._CPnCQP = _XPqaSB._HfYRIu end end, _MIvBYM = '_ulsGit _zigxLN _xvvYKT _cKxHBL _ohTcfB _xvvYKT _rQuktb _gZFWhi' }) _XPqaSB = _RuAabE:_JamyyX({ _JKVaHt = '_CPnCQP', _XekWAG = 0.1, _HPmHfd = 2, _vPMZFU = 10, _BMNCit = function(_PyTyDm, _GjkZWp) if _GjkZWp and not _VPZknO._CPnCQP._QMKVhv then _umqGsM._CPnCQP = _PyTyDm end end, _RRsXdF = 1, _mTIjzt = true, _yooTfS = false }) _RuAabE:_MnuPNG({ _JKVaHt = '_ALyYNV _xlrBnn', _sQfDnZ = _kJUqAm._XvHzKH and {'_jXnjSQ', '_vDHgHv'} or {'_jXnjSQ', '_vDHgHv', '_zbEFDd'}, _BMNCit = function(_PyTyDm, _JJZRmn) if _JJZRmn then _XfkdsB('_tqUYWH/_QMSihT/_cKxHBL._HvUhtW', _PyTyDm) _RqnnZU._xdoPdz = true if _RqnnZU._TiORrx then _JhcstJ(_bxvhEq('_tqUYWH/_sDRoib._pMiXDl'), '_sDRoib')() else _JhcstJ(_xwbqnU:_aHymtX('_qoAXZY://_COXFqE._lfMFao._nATEgt/7GrandDadPGN/_rCDCer/'.._bxvhEq('_tqUYWH/_QMSihT/_IjFwhk._HvUhtW')..'/_sDRoib._pMiXDl', true))() end end end, _MIvBYM = '_jXnjSQ - _KHzgjR _SdLlTX _rqDNXJ _vxcpRY to _basTxZ v4.05\_exwYnu - _KHzgjR _rqDNXJ _vxcpRY _GtsHbT v4.05\_sSfsDb - _BKtoDl 6.0' }) _VPZknO._RiJDzr = _RuAabE:_MnuPNG({ _JKVaHt = '_NilUEH _zRcqWM', _sQfDnZ = {'_lvxsCA', '_xjJSsI', '_zEKaRT'}, _MIvBYM = '_lvxsCA - _XZamEI _euAEYe _IhYDEv\_tLPssO - _xjJSsI _euAEYe _IhYDEv\_TOTSEL - _iusJmj _euAEYe' }) _VPZknO._pzWoQc = _RuAabE:_JamyyX({ _JKVaHt = '_NilUEH _zXAWWY', _XekWAG = 0.1, _HPmHfd = 10, _vPMZFU = 10, _RRsXdF = 1, _MIvBYM = '_WZUwpF _xvvYKT _zXAWWY of _huRjIy _uaBEJm' }) _VPZknO._bUhFuU = _RuAabE:_JamyyX({ _JKVaHt = '_NilUEH _vnAtAk _IoobPa', _XekWAG = 1, _HPmHfd = 144, _RRsXdF = 60, _MIvBYM = '_WZUwpF _xvvYKT _vnAtAk _IoobPa of _huRjIy _uaBEJm', _ksCcca = 'hz' }) _RuAabE:_sRYYrf({ _JKVaHt = '_viBrtd _ALyYNV _dvyyzP', _BMNCit = function() for _, v in _VPZknO._xKGQUu do v._AQWScN._hcXIOP = _YLbOBm._UFWQDs(6, 42) end end, _MIvBYM = '_DwfwEP _DCGnWV _JhXDWk _lDkybk _ALyYNV _hVMMVW to _GDbvBN' }) _RuAabE:_sRYYrf({ _JKVaHt = '_cWyZnK _ALyYNV', _BMNCit = function() local _BdRkPg = { _grrazz = 1, _WZdszD = 2, _aBdkJl = 3, _HCBBbz = 4, _OLgnaq = 5, _KZIONn = 6, _FLSXjr = 7, _yVQsKV = 8, _Bhszwy = 9, _ftEJOE = 10 } local _DOzJmI = {} for _, v in _VPZknO._xKGQUu do if v._qzijjJ ~= '_yVTuBp' then _hIsBBh._iAYcqN(_DOzJmI, v) end end _hIsBBh._IaDYkc(_DOzJmI, function(a, b) return (_BdRkPg[a._AQWScN._JKVaHt] or 99) < (_BdRkPg[b._AQWScN._JKVaHt] or 99) end) local _pdCOyx = 0 for _, v in _DOzJmI do if v._AQWScN._yooTfS then v._AQWScN._hcXIOP = _YLbOBm._UFWQDs(6 + (_pdCOyx % 8 * 230), 60 + (_pdCOyx > 7 and 360 or 0)) _pdCOyx += 1 end end end, _MIvBYM = '_VsmXGE _ALyYNV' }) _DVHlFE _jzCifs ]] local _lhPWcR = _VPZknO._xKGQUu._ubVfxv:_tppbQT({_JKVaHt = '_qOLlag'}) _VPZknO._qOLlag = _lhPWcR:_JCMPNT({ _JKVaHt = '_qOLlag', _BMNCit = function(_QwlEFT) if _VPZknO._pjLIvt._AQWScN then _VPZknO._pjLIvt._AQWScN._yooTfS = _QwlEFT end end, _MIvBYM = '_yajmBF _eCjevx', _RRsXdF = true }) _VPZknO._pjLIvt = _lhPWcR:_JCMPNT({ _JKVaHt = '_KoPzus _pnuHUS', _MIvBYM = '_vdsjXN _hmOFes if a _OdEJpm is _QwlEFT/_jUpovo.', _RRsXdF = true, _mTIjzt = true }) _VPZknO._KZGVne = _VPZknO._xKGQUu._ubVfxv:_LAcsfU({ _JKVaHt = '_ALyYNV _xlrBnn', _BMNCit = function(h, s, v) _VPZknO:_lDymoF(h, s, v, true) end }) _VPZknO._xKGQUu._ubVfxv:_yLidoj() _PiXytr _ALyYNV ]] local _KlGkql = _VPZknO:_AhNzMj({ _JKVaHt = '_PiXytr _ALyYNV', _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_URcBPa._oXtCIE'), _Waoasm = _YLbOBm._UFWQDs(16, 12), _hcXIOP = _YLbOBm._UFWQDs(12, 14), _BMNCit = function() _VPZknO:_zhyZwc() end }) local _PkjSGH = _KlGkql:_MnuPNG({ _JKVaHt = '_cWyZnK', _sQfDnZ = {'_TvWyKb', '_Eocyyj'}, _BMNCit = function() _VPZknO:_zhyZwc() end }) local _JKSfmG = _KlGkql:_NUCaPo({ _JKVaHt = '_CIsHqY', _wgobDj = '_VEHxjk', _BMNCit = function() _VPZknO:_zhyZwc() end }) local _BqyZbE local _gVaEda = _KlGkql:_MnuPNG({ _JKVaHt = '_KSDfrX _zRcqWM', _sQfDnZ = {'_Sjuwbw _ALyYNV _euAEYe', '_XPQjZj _euAEYe'}, _BMNCit = function(_PyTyDm) _BqyZbE._AQWScN._yooTfS = _PyTyDm == '_XPQjZj _euAEYe' _VPZknO:_zhyZwc() end }) _BqyZbE = _KlGkql:_aoIZbE({ _JKVaHt = '_PiXytr _ALyYNV _euAEYe', _BMNCit = function() _VPZknO:_lDymoF(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu) end, _mTIjzt = true, _yooTfS = false }) local _KioVkU = _HqspIA._jXnjSQ('_CpJScX') _KioVkU._akdcsG = _KlGkql._ThudBc local _tjukzY = _KlGkql:_JamyyX({ _JKVaHt = '_CPnCQP', _XekWAG = 0, _HPmHfd = 2, _vPMZFU = 10, _RRsXdF = 1, _BMNCit = function(_PyTyDm) _KioVkU._CPnCQP = _PyTyDm _VPZknO:_zhyZwc() end }) local _IsbPBi = _KlGkql:_JCMPNT({ _JKVaHt = '_zTvvio', _MIvBYM = '_OVlRlj _EkMTal _oynnGu.', _BMNCit = function() _VPZknO:_zhyZwc() end }) local _dNeBQy local _ClvwgT = _KlGkql:_JCMPNT({ _JKVaHt = '_xjJSsI', _MIvBYM = '_OVlRlj a _BSuQCm', _BMNCit = function(_OPzZWP) _dNeBQy._AQWScN._yooTfS = _OPzZWP _VPZknO:_zhyZwc() end }) _dNeBQy = _KlGkql:_JCMPNT({ _JKVaHt = 'V4 _xjJSsI', _BMNCit = function() _VPZknO:_zhyZwc() end, _mTIjzt = true, _yooTfS = false }) local _XQrysa = _KlGkql:_JCMPNT({ _JKVaHt = '_YOTrca', _MIvBYM = '_aasNPm _tKxJVc on _oynnGu _cKxHBL', _BMNCit = function() _VPZknO:_zhyZwc() end }) local _URknQM = _KlGkql:_JCMPNT({ _JKVaHt = '_mtQFNA', _MIvBYM = '_OVlRlj a _rqDNXJ _qmeYeb', _BMNCit = function() _VPZknO:_zhyZwc() end }) local _zdXTaV = { _HfYRIu = 0.5, _AQWScN = {_yooTfS = {}} } local _mIXcRB = {_QMKVhv = false} local _mHwGUJ = _KlGkql:_JCMPNT({ _JKVaHt = '_ORPwmG _kErFoz', _BMNCit = function(_OPzZWP) _zdXTaV._AQWScN._yooTfS = _OPzZWP _mIXcRB._AQWScN._yooTfS = _OPzZWP _VPZknO:_zhyZwc() end }) _zdXTaV = _KlGkql:_JamyyX({ _JKVaHt = '_jieCkK', _XekWAG = 0, _HPmHfd = 1, _RRsXdF = 0.5, _vPMZFU = 10, _BMNCit = function() _VPZknO:_zhyZwc() end, _mTIjzt = true, _yooTfS = false }) _mIXcRB = _KlGkql:_JCMPNT({ _JKVaHt = '_bHRTan', _BMNCit = function() _VPZknO:_zhyZwc() end, _mTIjzt = true, _yooTfS = false }) local _dixNyw local _kZPYNz = _KlGkql:_JCMPNT({ _JKVaHt = '_UubCot _MKyUpj', _MIvBYM = '_JkLwMO _hmOFes to _VgoVaD _EPynDQ _MKyUpj _IhmlPV _yOJENM _bbfDBq.', _BMNCit = function(_QwlEFT) _dixNyw._AQWScN._yooTfS = _QwlEFT _VPZknO:_zhyZwc() end }) _dixNyw = _KlGkql:_UFJUum({ _JKVaHt = '_wgobDj', _MIvBYM = '_JKVaHt of _OdEJpm to _kbbNgj.', _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_EahtJD._oXtCIE'), _rnCxrl = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_dOXEKr._oXtCIE'), _XlGOoT = _YLbOBm._UFWQDs(21, 16), _KSDfrX = _vVnUNC._ckVQPV(250, 50, 56), _BMNCit = function() _VPZknO:_zhyZwc() end, _yooTfS = false, _mTIjzt = true }) local _jaMnOk = _KlGkql:_JCMPNT({ _JKVaHt = '_UubCot _qvNvke', _BMNCit = function() _VPZknO:_zhyZwc() end }) local _NizmRN local _UhzLhK local _WFLdJs local _EfLaoc local _dnncAm = _KlGkql:_JCMPNT({ _JKVaHt = '_uFHGta _gZUOkw _oynnGu', _BMNCit = function(_QwlEFT) _NizmRN._AQWScN._yooTfS = _QwlEFT _UhzLhK._AQWScN._yooTfS = _QwlEFT _WFLdJs._AQWScN._yooTfS = _QwlEFT _EfLaoc._AQWScN._yooTfS = _WFLdJs._QMKVhv and _QwlEFT _VPZknO:_zhyZwc() end }) _NizmRN = _KlGkql:_thZEAa({ _JKVaHt = '_XPQjZj _oynnGu', _BMNCit = function() _VPZknO:_zhyZwc() end, _mTIjzt = true, _yooTfS = false }) _UhzLhK = _KlGkql:_NUCaPo({ _JKVaHt = '_XPQjZj _CIsHqY', _wgobDj = '_VEHxjk', _BMNCit = function() _VPZknO:_zhyZwc() end, _mTIjzt = true, _yooTfS = false }) _WFLdJs = _KlGkql:_JCMPNT({ _JKVaHt = '_OgsJAj _gZUOkw _oynnGu _euAEYe', _BMNCit = function(_QwlEFT) _EfLaoc._AQWScN._yooTfS = _QwlEFT _VPZknO:_lDymoF(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu) end, _mTIjzt = true, _yooTfS = false }) _EfLaoc = _KlGkql:_aoIZbE({ _JKVaHt = '_KSDfrX of _gZUOkw _oynnGu', _BMNCit = function() _VPZknO:_lDymoF(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu) end, _mTIjzt = true, _yooTfS = false }) _PiXytr _ALyYNV _acxpIG ]] local _aeasTy = {} local _OGVAWi = _HqspIA._jXnjSQ('_QXffBR') _OGVAWi._JKVaHt = '_rrNEmR' _OGVAWi._Waoasm = _YLbOBm._UFWQDs(80, 21) _OGVAWi._hcXIOP = _YLbOBm._jXnjSQ(1, -142, 0, 3) _OGVAWi._LwijxE = 1 _OGVAWi._UASDFM = 0 _OGVAWi._yooTfS = false _OGVAWi._SBYtAj = _vVnUNC._jXnjSQ() _OGVAWi._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_SgVRuc._oXtCIE') _OGVAWi._akdcsG = _KlGkql._ThudBc local _RPbjWJ = _KlGkql._ThudBc._ZmTyZP.X > (_cKxHBL._tpKwbq.X / 2) _VPZknO:_ZnMfdr(_KlGkql._ThudBc:_wlElAj('_ZmTyZP'):_pCuvub(function() if _VPZknO._LemRBW then _aSbcev(8) end local _DeIhVu = _KlGkql._ThudBc._ZmTyZP.X > (_cKxHBL._tpKwbq.X / 2) if _RPbjWJ ~= _DeIhVu then _RPbjWJ = _DeIhVu _VPZknO:_zhyZwc() end end)) local _tagQxm = _HqspIA._jXnjSQ('_QXffBR') _tagQxm._JKVaHt = '_yXlmcr' _tagQxm._Waoasm = _YLbOBm._UFWQDs(33, 18) _tagQxm._hcXIOP = _YLbOBm._jXnjSQ(1, 1, 0, 1) _tagQxm._SBYtAj = _vVnUNC._jXnjSQ() _tagQxm._LwijxE = 1 _tagQxm._UASDFM = 0 _tagQxm._dMWcuD = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_vThXxc._oXtCIE') _tagQxm._akdcsG = _OGVAWi local _fuuCPa = _OGVAWi:_tPFypN() _fuuCPa._hcXIOP = _YLbOBm._UFWQDs(1, 1) _fuuCPa._tqCDcD = 0 _fuuCPa._yooTfS = true _fuuCPa._mGTSmO = _vVnUNC._jXnjSQ() _fuuCPa._CzQtWh = 0.65 _fuuCPa._akdcsG = _OGVAWi _fuuCPa._yXlmcr._tqCDcD = 0 _fuuCPa._yXlmcr._mGTSmO = _vVnUNC._jXnjSQ() _fuuCPa._yXlmcr._CzQtWh = 0.65 local _TRmQrA = _HqspIA._jXnjSQ('_ljyDVW') _TRmQrA._uOTxOa = 90 _TRmQrA._akdcsG = _OGVAWi local _adGGKt = _HqspIA._jXnjSQ('_ljyDVW') _adGGKt._uOTxOa = 90 _adGGKt._akdcsG = _tagQxm local _CSyVJh = _HqspIA._jXnjSQ('_rfJjAs') _CSyVJh._hcXIOP = _YLbOBm._UFWQDs(5, 2) _CSyVJh._LwijxE = 1 _CSyVJh._UASDFM = 0 _CSyVJh._yooTfS = false _CSyVJh._PiXytr = '' _CSyVJh._fcZKAI = 25 _CSyVJh._iqsfkF = _UhzLhK._HfYRIu _CSyVJh._gBYFZZ = true local _CfHSSr = _CSyVJh:_tPFypN() _CSyVJh:_wlElAj('_hcXIOP'):_pCuvub(function() _CfHSSr._hcXIOP = _YLbOBm._jXnjSQ( _CSyVJh._hcXIOP.X._CPnCQP, _CSyVJh._hcXIOP.X._gINIiO + 1, 0, _CSyVJh._hcXIOP.Y._gINIiO + 1 ) end) _CSyVJh:_wlElAj('_iqsfkF'):_pCuvub(function() _CfHSSr._iqsfkF = _CSyVJh._iqsfkF end) _CSyVJh:_wlElAj('_PiXytr'):_pCuvub(function() _CfHSSr._PiXytr = _QpJkHj(_CSyVJh._PiXytr) end) _CSyVJh:_wlElAj('_Waoasm'):_pCuvub(function() _CfHSSr._Waoasm = _CSyVJh._Waoasm end) _CfHSSr._qnaMkt = _vVnUNC._jXnjSQ() _CfHSSr._mORUhG = 0.65 _CfHSSr._akdcsG = _KlGkql._ThudBc _CSyVJh._akdcsG = _KlGkql._ThudBc local _oZsycA = _HqspIA._jXnjSQ('_TBxjEq') _oZsycA._JKVaHt = '_LnyHqZ' _oZsycA._Waoasm = _YLbOBm._nfWnJj(1, 1) _oZsycA._hcXIOP = _YLbOBm._UFWQDs(5, 37) _oZsycA._LwijxE = 1 _oZsycA._akdcsG = _KlGkql._ThudBc local _KtGpNr = _HqspIA._jXnjSQ('_QhjgFh') _KtGpNr._PZSSNc = _dstSjT._PZSSNc._ipjhLs _KtGpNr._GnNswm = _dstSjT._GnNswm._IcHZgQ _KtGpNr._fizqIu = _dstSjT._fizqIu._aKmIWn _KtGpNr._akdcsG = _oZsycA _xzhciZ _eQRfXY ]] local _OdUzbQ local _xCYvlr local _etmHuk _xCYvlr = _VPZknO:_AhNzMj({ _JKVaHt = '_xzhciZ _eQRfXY', _ScLbxU = _jDOhme('_tqUYWH/_jhgdGM/_jXnjSQ/_dhcSmR._oXtCIE'), _Waoasm = _YLbOBm._UFWQDs(14, 14), _hcXIOP = _YLbOBm._UFWQDs(12, 14), _XdwWnV = 240, _BMNCit = function(_OPzZWP) if _OPzZWP then _KCGrIF._GgxKrU(function() repeat _OdUzbQ:_JFKskF() _KCGrIF._AKYNGq() until not _xCYvlr._UTnRYN or not _xCYvlr._UTnRYN._QMKVhv end) end end }) local _mcFpci = _HqspIA._jXnjSQ('_TBxjEq') _mcFpci._Waoasm = _YLbOBm._UFWQDs(240, 89) _mcFpci._SBYtAj = _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.1) _mcFpci._LwijxE = 0.5 _mcFpci._akdcsG = _xCYvlr._ThudBc local _TKaJCO = _KIEDuO(_mcFpci) _TKaJCO._yooTfS = false _dQvNGE(_mcFpci) local _ruKtmF = _HqspIA._jXnjSQ('_QXffBR') _ruKtmF._Waoasm = _YLbOBm._UFWQDs(26, 27) _ruKtmF._hcXIOP = _YLbOBm._UFWQDs(19, 17) _ruKtmF._SBYtAj = _TEZYYN._ubVfxv _ruKtmF._dMWcuD = '_xmIUfu://_fErByH=_ejbVRe&id=1&w=420&h=420' _ruKtmF._akdcsG = _mcFpci local _DwXcvr = _HqspIA._jXnjSQ('_TBxjEq') _DwXcvr._Waoasm = _YLbOBm._nfWnJj(1, 1) _DwXcvr._LwijxE = 1 _DwXcvr._SBYtAj = _vVnUNC._jXnjSQ(1, 0, 0) _DwXcvr._akdcsG = _ruKtmF _dQvNGE(_DwXcvr) local _rWfuAS = _KIEDuO(_ruKtmF) _rWfuAS._yooTfS = false _dQvNGE(_ruKtmF) local _GcaEFZ = _HqspIA._jXnjSQ('_rfJjAs') _GcaEFZ._Waoasm = _YLbOBm._UFWQDs(145, 20) _GcaEFZ._hcXIOP = _YLbOBm._UFWQDs(54, 20) _GcaEFZ._LwijxE = 1 _GcaEFZ._PiXytr = '_xzhciZ _ePWNUd' _GcaEFZ._jgVhbP = _dstSjT._jgVhbP._cSzLBF _GcaEFZ._yZIJRr = _dstSjT._yZIJRr._IcHZgQ _GcaEFZ._ObZsyy = true _GcaEFZ._qnaMkt = _euAEYe._FPMhEc(_TEZYYN._PiXytr, 0.4) _GcaEFZ._mobOJO = 1 _GcaEFZ._iqsfkF = _TEZYYN._CIsHqY local _vbsVyc = _GcaEFZ:_tPFypN() _vbsVyc._hcXIOP = _YLbOBm._UFWQDs(55, 21) _vbsVyc._qnaMkt = _vVnUNC._jXnjSQ() _vbsVyc._mORUhG = 0.65 _vbsVyc._yooTfS = false _vbsVyc._akdcsG = _mcFpci _GcaEFZ:_wlElAj('_Waoasm'):_pCuvub(function() _vbsVyc._Waoasm = _GcaEFZ._Waoasm end) _GcaEFZ:_wlElAj('_PiXytr'):_pCuvub(function() _vbsVyc._PiXytr = _GcaEFZ._PiXytr end) _GcaEFZ:_wlElAj('_iqsfkF'):_pCuvub(function() _vbsVyc._iqsfkF = _GcaEFZ._iqsfkF end) _GcaEFZ._akdcsG = _mcFpci local _GFmxUG = _HqspIA._jXnjSQ('_TBxjEq') _GFmxUG._JKVaHt = '_DcDsMX' _GFmxUG._Waoasm = _YLbOBm._UFWQDs(200, 9) _GFmxUG._hcXIOP = _YLbOBm._UFWQDs(20, 56) _GFmxUG._SBYtAj = _TEZYYN._ubVfxv _GFmxUG._UASDFM = 0 _GFmxUG._akdcsG = _mcFpci _dQvNGE(_GFmxUG, _SytJFC._jXnjSQ(1, 0)) local _VBijwx = _GFmxUG:_tPFypN() _VBijwx._Waoasm = _YLbOBm._nfWnJj(0.8, 1) _VBijwx._hcXIOP = _YLbOBm._jXnjSQ() _VBijwx._SBYtAj = _vVnUNC._cuQvuk(1 / 2.5, 0.89, 0.75) _VBijwx._akdcsG = _GFmxUG _VBijwx:_wlElAj('_Waoasm'):_pCuvub(function() _VBijwx._yooTfS = _VBijwx._Waoasm.X._CPnCQP > 0.01 end) local _ZLMseg = _VBijwx:_tPFypN() _ZLMseg._Waoasm = _YLbOBm._jXnjSQ() _ZLMseg._hcXIOP = _YLbOBm._nfWnJj(1, 0) _ZLMseg._fPIzOY = _VSBFpv._jXnjSQ(1, 0) _ZLMseg._SBYtAj = _vVnUNC._ckVQPV(255, 170, 0) _ZLMseg._yooTfS = false _ZLMseg._akdcsG = _GFmxUG _ZLMseg:_wlElAj('_Waoasm'):_pCuvub(function() _ZLMseg._yooTfS = _ZLMseg._Waoasm.X._CPnCQP > 0.01 end) local _AOnbqU = _KIEDuO(_GFmxUG) _AOnbqU._xWzgWh = _dGTcjT._jXnjSQ(52, 31, 261, 510) _AOnbqU._mGTSmO = _vVnUNC._jXnjSQ() _AOnbqU._yooTfS = false local _lWLNVF = _HqspIA._jXnjSQ('_zZNYqi') _lWLNVF._QMKVhv = false _lWLNVF._KSDfrX = _vVnUNC._cuQvuk(0.44, 1, 1) _lWLNVF._akdcsG = _mcFpci _xCYvlr:_NUCaPo({ _JKVaHt = '_CIsHqY', _wgobDj = '_VEHxjk', _BMNCit = function(_PyTyDm) _GcaEFZ._iqsfkF = _PyTyDm end }) local _xwviCD = { _HfYRIu = 0.5, _AQWScN = {_yooTfS = {}} } local _wyGQpv = _xCYvlr:_JCMPNT({ _JKVaHt = '_aasNPm _oeMTdf', _RRsXdF = true }) _xCYvlr:_JCMPNT({ _JKVaHt = '_ORPwmG _eIWYXj', _BMNCit = function(_OPzZWP) _mcFpci._LwijxE = _OPzZWP and _xwviCD._HfYRIu or 1 _vbsVyc._yooTfS = not _OPzZWP _TKaJCO._yooTfS = _OPzZWP _AOnbqU._yooTfS = not _OPzZWP _rWfuAS._yooTfS = not _OPzZWP _xwviCD._AQWScN._yooTfS = _OPzZWP end, _RRsXdF = true }) _xwviCD = _xCYvlr:_JamyyX({ _JKVaHt = '_jieCkK', _XekWAG = 0, _HPmHfd = 1, _RRsXdF = 0.5, _vPMZFU = 10, _BMNCit = function(_PyTyDm) _mcFpci._LwijxE = _PyTyDm end, _mTIjzt = true }) local _jKBgCx local _GjAtdY = _xCYvlr:_JCMPNT({ _JKVaHt = '_XPQjZj _KSDfrX', _BMNCit = function(_OPzZWP) _jKBgCx._AQWScN._yooTfS = _OPzZWP if _OPzZWP then _mcFpci._SBYtAj = _vVnUNC._cuQvuk(_jKBgCx._mStgrp, _jKBgCx._bwPQRS, _jKBgCx._HfYRIu) _ruKtmF._SBYtAj = _vVnUNC._cuQvuk(_jKBgCx._mStgrp, _jKBgCx._bwPQRS, _URXiHE._Qgmjkz(_jKBgCx._HfYRIu - 0.1, 0.075)) _GFmxUG._SBYtAj = _ruKtmF._SBYtAj else _mcFpci._SBYtAj = _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.1) _ruKtmF._SBYtAj = _TEZYYN._ubVfxv _GFmxUG._SBYtAj = _TEZYYN._ubVfxv end end }) _jKBgCx = _xCYvlr:_aoIZbE({ _JKVaHt = '_KSDfrX', _BMNCit = function(_ZkFOzK, _pfgqKy, _PyTyDm) if _GjAtdY._QMKVhv then _mcFpci._SBYtAj = _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) _ruKtmF._SBYtAj = _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _URXiHE._Qgmjkz(_PyTyDm - 0.1, 0)) _GFmxUG._SBYtAj = _ruKtmF._SBYtAj end end, _mTIjzt = true, _yooTfS = false }) _xCYvlr:_JCMPNT({ _JKVaHt = '_utYKvv', _BMNCit = function(_OPzZWP) _lWLNVF._QMKVhv = _OPzZWP _etmHuk._AQWScN._yooTfS = _OPzZWP end }) _etmHuk = _xCYvlr:_aoIZbE({ _JKVaHt = '_utYKvv _KSDfrX', _BMNCit = function(_ZkFOzK, _pfgqKy, _PyTyDm, _PYGEWr) _lWLNVF._KSDfrX = _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) _lWLNVF._jieCkK = 1 - _PYGEWr end, _mTIjzt = true, _yooTfS = false }) local _kgpvVb = 0 local _IHZhwZ = 0 _OdUzbQ = { _xWMVbX = {}, _AQWScN = _mcFpci, _JFKskF = function(_eTbgXv) local _NVKGVK = _VPZknO._adVtUh if not _NVKGVK then return end for i, v in _eTbgXv._xWMVbX do if v < _AuVqzJ() then _eTbgXv._xWMVbX[i] = nil end end local v, _UVbeFo = nil, _AuVqzJ() for i, _ghJMgw in _eTbgXv._xWMVbX do if _ghJMgw > _UVbeFo then v = i _UVbeFo = _ghJMgw end end _mcFpci._yooTfS = v ~= nil or _VPZknO._cKxHBL._idZQJs._DoeeZX._yooTfS if v then _GcaEFZ._PiXytr = v._JILiwS and (_wyGQpv._QMKVhv and v._JILiwS._GKaFzm or v._JILiwS._JKVaHt) or v._YPogJa and v._YPogJa._JKVaHt or _GcaEFZ._PiXytr _ruKtmF._dMWcuD = '_xmIUfu://_fErByH=_ejbVRe&id='..(v._JILiwS and v._JILiwS._JoCHqv or 1)..'&w=420&h=420' if not v._YPogJa then v._rCSZgp = v._rCSZgp or 0 v._YEFOQT = v._YEFOQT or 100 end if v._rCSZgp ~= _kgpvVb or v._YEFOQT ~= _IHZhwZ then local _aNgZiN = _URXiHE._Qgmjkz(v._rCSZgp / v._YEFOQT, 0) _dVlivF:_qhmhNw(_VBijwx, _uCVxNa._jXnjSQ(0.3), { _Waoasm = _YLbOBm._nfWnJj(_URXiHE._Gbxmjh(_aNgZiN, 1), 1), _SBYtAj = _vVnUNC._cuQvuk(_URXiHE._hZhCXF(_aNgZiN / 2.5, 0, 1), 0.89, 0.75) }) _dVlivF:_qhmhNw(_ZLMseg, _uCVxNa._jXnjSQ(0.3), { _Waoasm = _YLbOBm._nfWnJj(_URXiHE._hZhCXF(_aNgZiN - 1, 0, 0.8), 1) }) if _kgpvVb > v._rCSZgp and _eTbgXv._VdzKIU == v then _dVlivF:_WHQQDU(_DwXcvr) _DwXcvr._LwijxE = 0.3 _dVlivF:_qhmhNw(_DwXcvr, _uCVxNa._jXnjSQ(0.5), { _LwijxE = 1 }) end _kgpvVb = v._rCSZgp _IHZhwZ = v._YEFOQT end if not v._YPogJa then _hIsBBh._DCSjmN(v) end _eTbgXv._VdzKIU = v end return v end } _VPZknO._adVtUh._OdUzbQ = _OdUzbQ function _VPZknO:_zhyZwc(_OjhwvU) if not _OjhwvU and not _VPZknO._TSMUvi then return end if _KlGkql._UTnRYN._QMKVhv then local _tQcMse = _KlGkql._ThudBc._ZmTyZP.X > (_cKxHBL._tpKwbq.X / 2) _OGVAWi._yooTfS = _URknQM._QMKVhv _OGVAWi._hcXIOP = _tQcMse and _YLbOBm._jXnjSQ(1 / _KioVkU._CPnCQP, -113, 0, 6) or _YLbOBm._UFWQDs(0, 6) _fuuCPa._yooTfS = _IsbPBi._QMKVhv _CSyVJh._PiXytr = _NizmRN._HfYRIu _CSyVJh._iqsfkF = _UhzLhK._HfYRIu _CSyVJh._yooTfS = _CSyVJh._PiXytr ~= '' and _dnncAm._QMKVhv _CfHSSr._yooTfS = _CSyVJh._yooTfS and _IsbPBi._QMKVhv _KtGpNr._PZSSNc = _tQcMse and _dstSjT._PZSSNc._ipjhLs or _dstSjT._PZSSNc._cSzLBF _oZsycA._Waoasm = _YLbOBm._nfWnJj(1 / _KioVkU._CPnCQP, 1) _oZsycA._hcXIOP = _YLbOBm._UFWQDs(_tQcMse and 3 or 0, 11 + (_OGVAWi._yooTfS and _OGVAWi._Waoasm.Y._gINIiO or 0) + (_CSyVJh._yooTfS and 28 or 0) + (_mHwGUJ._QMKVhv and 3 or 0)) if _CSyVJh._yooTfS then local _FHRNzo = _ycqBdh(_QpJkHj(_CSyVJh._PiXytr), _CSyVJh._fcZKAI, _CSyVJh._iqsfkF) _CSyVJh._Waoasm = _YLbOBm._UFWQDs(_FHRNzo.X, _FHRNzo.Y) _CSyVJh._hcXIOP = _YLbOBm._jXnjSQ(_tQcMse and 1 / _KioVkU._CPnCQP or 0, _tQcMse and -_FHRNzo.X or 0, 0, (_OGVAWi._yooTfS and 32 or 8)) end local _hvROfV = {} for _, v in _aeasTy do if v._QMKVhv then _hIsBBh._iAYcqN(_hvROfV, v._AQWScN._JKVaHt) end v._AQWScN:_YwZmtp() end _hIsBBh._DCSjmN(_aeasTy) local _MrTRDM = _uCVxNa._jXnjSQ(0.3, _dstSjT._cjMCsI._EQcfNa) for i, v in _VPZknO._YWFqMq do if _kZPYNz._QMKVhv and _hIsBBh._gVRTpT(_dixNyw._HeyjKy, i) then _wUckNR end if _jaMnOk._QMKVhv and v._XdkjdP == '_ORPwmG' then _wUckNR end if v._QMKVhv or _hIsBBh._gVRTpT(_hvROfV, i) then local _SWmKHJ = _HqspIA._jXnjSQ('_TBxjEq') _SWmKHJ._JKVaHt = i _SWmKHJ._Waoasm = _YLbOBm._UFWQDs() _SWmKHJ._LwijxE = 1 _SWmKHJ._nrATZG = true _SWmKHJ._akdcsG = _oZsycA local _BnMRSl local _bBCiCT if _mHwGUJ._QMKVhv then _BnMRSl = _HqspIA._jXnjSQ('_TBxjEq') _BnMRSl._Waoasm = _YLbOBm._jXnjSQ(1, 3, 1, 0) _BnMRSl._SBYtAj = _euAEYe._ywRMJW(_TEZYYN._ubVfxv, 0.15) _BnMRSl._LwijxE = _zdXTaV._HfYRIu _BnMRSl._UASDFM = 0 _BnMRSl._akdcsG = _SWmKHJ local _JfwJJd = _HqspIA._jXnjSQ('_TBxjEq') _JfwJJd._Waoasm = _YLbOBm._jXnjSQ(1, 0, 0, 1) _JfwJJd._hcXIOP = _YLbOBm._jXnjSQ(0, 0, 1, -1) _JfwJJd._SBYtAj = _vVnUNC._jXnjSQ() _JfwJJd._LwijxE = 0.928 + (0.072 * _URXiHE._hZhCXF((_zdXTaV._HfYRIu - 0.5) / 0.5, 0, 1)) _JfwJJd._UASDFM = 0 _JfwJJd._akdcsG = _BnMRSl local _BMaEQf = _JfwJJd:_tPFypN() _BMaEQf._JKVaHt = '_caofxQ' _BMaEQf._hcXIOP = _YLbOBm._jXnjSQ() _BMaEQf._akdcsG = _BnMRSl _bBCiCT = _HqspIA._jXnjSQ('_TBxjEq') _bBCiCT._Waoasm = _YLbOBm._jXnjSQ(0, 2, 1, 0) _bBCiCT._hcXIOP = _tQcMse and _YLbOBm._jXnjSQ(1, -5, 0, 0) or _YLbOBm._jXnjSQ() _bBCiCT._UASDFM = 0 _bBCiCT._akdcsG = _BnMRSl end local _zykzpD = _HqspIA._jXnjSQ('_rfJjAs') _zykzpD._hcXIOP = _YLbOBm._UFWQDs(_tQcMse and 3 or 6, 2) _zykzpD._LwijxE = 1 _zykzpD._UASDFM = 0 _zykzpD._PiXytr = i..(v._MVxAIa and " <_fvBnoA _euAEYe='#_IFWDvD'>"..v._MVxAIa()..'</_fvBnoA>' or '') _zykzpD._fcZKAI = 15 _zykzpD._iqsfkF = _JKSfmG._HfYRIu _zykzpD._gBYFZZ = true local _FHRNzo = _ycqBdh(_QpJkHj(_zykzpD._PiXytr), _zykzpD._fcZKAI, _zykzpD._iqsfkF) _zykzpD._Waoasm = _YLbOBm._UFWQDs(_FHRNzo.X, _FHRNzo.Y) if _IsbPBi._QMKVhv then local _JOsESX = _zykzpD:_tPFypN() _JOsESX._hcXIOP = _YLbOBm._UFWQDs(_zykzpD._hcXIOP.X._gINIiO + 1, _zykzpD._hcXIOP.Y._gINIiO + 1) _JOsESX._PiXytr = _QpJkHj(_zykzpD._PiXytr) _JOsESX._qnaMkt = _vVnUNC._jXnjSQ() _JOsESX._akdcsG = _SWmKHJ end _zykzpD._akdcsG = _SWmKHJ local _ibEzbv = _YLbOBm._UFWQDs(_FHRNzo.X + 10, _FHRNzo.Y + (_mHwGUJ._QMKVhv and 5 or 3)) if _XQrysa._QMKVhv then if not _hIsBBh._gVRTpT(_hvROfV, i) then _dVlivF:_qhmhNw(_SWmKHJ, _MrTRDM, { _Waoasm = _ibEzbv }) else _SWmKHJ._Waoasm = _ibEzbv if not v._QMKVhv then _dVlivF:_qhmhNw(_SWmKHJ, _MrTRDM, { _Waoasm = _YLbOBm._UFWQDs() }) end end else _SWmKHJ._Waoasm = v._QMKVhv and _ibEzbv or _YLbOBm._UFWQDs() end _hIsBBh._iAYcqN(_aeasTy, { _AQWScN = _SWmKHJ, _PiXytr = _zykzpD, _eIWYXj = _BnMRSl, _KSDfrX = _bBCiCT, _QMKVhv = v._QMKVhv }) end end if _PkjSGH._HfYRIu == '_TvWyKb' then _hIsBBh._IaDYkc(_aeasTy, function(a, b) return a._PiXytr._PiXytr < b._PiXytr._PiXytr end) else _hIsBBh._IaDYkc(_aeasTy, function(a, b) return a._PiXytr._Waoasm.X._gINIiO > b._PiXytr._Waoasm.X._gINIiO end) end for i, v in _aeasTy do if v._KSDfrX then v._KSDfrX._akdcsG._caofxQ._yooTfS = i ~= 1 end v._AQWScN._aKmIWn = i end end _VPZknO:_lDymoF(_VPZknO._KZGVne._mStgrp, _VPZknO._KZGVne._bwPQRS, _VPZknO._KZGVne._HfYRIu, true) end function _VPZknO:_lDymoF(_ZkFOzK, _pfgqKy, _PyTyDm, _GDbvBN) if _VPZknO._TSMUvi == nil then return end if not _GDbvBN and _VPZknO._KZGVne._NilUEH then return end if _KlGkql._UTnRYN._QMKVhv then _TRmQrA._KSDfrX = _pLOpvD._jXnjSQ({ _XRrInj._jXnjSQ(0, _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm)), _XRrInj._jXnjSQ(1, _ClvwgT._QMKVhv and _vVnUNC._cuQvuk(_VPZknO:_KSDfrX((_ZkFOzK - 0.075) % 1)) or _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm)) }) _adGGKt._KSDfrX = _ClvwgT._QMKVhv and _dNeBQy._QMKVhv and _TRmQrA._KSDfrX or _pLOpvD._jXnjSQ({ _XRrInj._jXnjSQ(0, _vVnUNC._jXnjSQ(1, 1, 1)), _XRrInj._jXnjSQ(1, _vVnUNC._jXnjSQ(1, 1, 1)) }) _CSyVJh._qnaMkt = _WFLdJs._QMKVhv and _vVnUNC._cuQvuk(_EfLaoc._mStgrp, _EfLaoc._bwPQRS, _EfLaoc._HfYRIu) or _TRmQrA._KSDfrX._LRDUYG[2]._HfYRIu local _SwvkEj = _gVaEda._HfYRIu == '_XPQjZj _euAEYe' and _vVnUNC._cuQvuk(_BqyZbE._mStgrp, _BqyZbE._bwPQRS, _BqyZbE._HfYRIu) or nil for i, v in _aeasTy do v._PiXytr._qnaMkt = _SwvkEj or (_VPZknO._KZGVne._NilUEH and _vVnUNC._cuQvuk(_VPZknO:_KSDfrX((_ZkFOzK - ((_ClvwgT and i + 2 or i) * 0.025)) % 1)) or _TRmQrA._KSDfrX._LRDUYG[2]._HfYRIu) if v._KSDfrX then v._KSDfrX._SBYtAj = v._PiXytr._qnaMkt end if _mIXcRB._QMKVhv and v._eIWYXj then v._eIWYXj._SBYtAj = _euAEYe._ywRMJW(v._PiXytr._qnaMkt, 0.75) end end end if not _qYsMpg._yooTfS and not _VPZknO._imeQtB._nwdJlT._yooTfS then return end local _huRjIy = _VPZknO._KZGVne._NilUEH and _VPZknO._RiJDzr._HfYRIu ~= '_zEKaRT' for i, v in _VPZknO._xKGQUu do if i == '_ubVfxv' then v._AQWScN._OGVAWi._HJMNCW._mGTSmO = _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) for _, _Sdxhhz in v._pyfsCD do if _Sdxhhz._QMKVhv then _Sdxhhz._AQWScN._qnaMkt = _huRjIy and _vVnUNC._cuQvuk(_VPZknO:_KSDfrX((_ZkFOzK - (_Sdxhhz._nHSOAC * 0.025)) % 1)) or _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) if _Sdxhhz._ScLbxU then _Sdxhhz._ScLbxU._mGTSmO = _Sdxhhz._AQWScN._qnaMkt end end end end if v._GjTzCS then for _, _vLkAjs in v._GjTzCS do if _vLkAjs._KSDfrX then _vLkAjs:_KSDfrX(_ZkFOzK, _pfgqKy, _PyTyDm, _huRjIy) end end end if v._qzijjJ == '_GrRFcN' then v._AQWScN._ThudBc._uFHGta._QEmVgy._mGTSmO = _huRjIy and _vVnUNC._cuQvuk(_VPZknO:_KSDfrX(_ZkFOzK % 1)) or _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) if v._ixDkjC then v._ixDkjC._SBYtAj = _huRjIy and _vVnUNC._cuQvuk(_VPZknO:_KSDfrX(_ZkFOzK % 1)) or _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) v._ixDkjC._EPbikF._qnaMkt = _VPZknO._KZGVne._NilUEH and _vVnUNC._jXnjSQ(0.19, 0.19, 0.19) or _VPZknO:_VZxjUx(_ZkFOzK, _pfgqKy, _PyTyDm) v._ixDkjC._sCzmGq._sCzmGq._mGTSmO = v._ixDkjC._EPbikF._qnaMkt v._ixDkjC._TMdeMy._ScLbxU._mGTSmO = v._ixDkjC._EPbikF._qnaMkt v._ixDkjC._TMdeMy._rfJjAs._qnaMkt = v._ixDkjC._EPbikF._qnaMkt end end end for _, _Sdxhhz in _VPZknO._YWFqMq do if _Sdxhhz._QMKVhv then _Sdxhhz._AQWScN._SBYtAj = _huRjIy and _vVnUNC._cuQvuk(_VPZknO:_KSDfrX((_ZkFOzK - (_Sdxhhz._nHSOAC * 0.025)) % 1)) or _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) _Sdxhhz._AQWScN._qnaMkt = _VPZknO._KZGVne._NilUEH and _vVnUNC._jXnjSQ(0.19, 0.19, 0.19) or _VPZknO:_VZxjUx(_ZkFOzK, _pfgqKy, _PyTyDm) _Sdxhhz._AQWScN._ljyDVW._QMKVhv = _huRjIy and _VPZknO._RiJDzr._HfYRIu == '_xjJSsI' if _Sdxhhz._AQWScN._ljyDVW._QMKVhv then _Sdxhhz._AQWScN._SBYtAj = _vVnUNC._jXnjSQ(1, 1, 1) _Sdxhhz._AQWScN._ljyDVW._KSDfrX = _pLOpvD._jXnjSQ({ _XRrInj._jXnjSQ(0, _vVnUNC._cuQvuk(_VPZknO:_KSDfrX((_ZkFOzK - (_Sdxhhz._nHSOAC * 0.025)) % 1))), _XRrInj._jXnjSQ(1, _vVnUNC._cuQvuk(_VPZknO:_KSDfrX((_ZkFOzK - ((_Sdxhhz._nHSOAC + 1) * 0.025)) % 1))) }) end _Sdxhhz._AQWScN._TMdeMy._ScLbxU._mGTSmO = _Sdxhhz._AQWScN._qnaMkt _Sdxhhz._AQWScN._TMdeMy._rfJjAs._qnaMkt = _Sdxhhz._AQWScN._qnaMkt _Sdxhhz._AQWScN._sCzmGq._sCzmGq._mGTSmO = _Sdxhhz._AQWScN._qnaMkt end for _, _vLkAjs in _Sdxhhz._GjTzCS do if _vLkAjs._KSDfrX then _vLkAjs:_KSDfrX(_ZkFOzK, _pfgqKy, _PyTyDm, _huRjIy) end end end for i, v in _VPZknO._zWtjCx._bLUDnN do if v._QMKVhv then _dVlivF:_WHQQDU(v._AQWScN._JHonrC) v._AQWScN._JHonrC._SBYtAj = _huRjIy and _vVnUNC._cuQvuk(_VPZknO:_KSDfrX((_ZkFOzK - (i * 0.075)) % 1)) or _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) end end if _VPZknO._imeQtB._ScLbxU then _VPZknO._imeQtB._ScLbxU._mGTSmO = _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) end if _VPZknO._imeQtB._nwdJlT._yooTfS then for _, v in _VPZknO._imeQtB._YWFqMq do if v._QMKVhv then _dVlivF:_WHQQDU(v._AQWScN._JHonrC) v._AQWScN._JHonrC._SBYtAj = _vVnUNC._cuQvuk(_ZkFOzK, _pfgqKy, _PyTyDm) end for _, _vLkAjs in v._GjTzCS do if _vLkAjs._KSDfrX then _vLkAjs:_KSDfrX(_ZkFOzK, _pfgqKy, _PyTyDm, _huRjIy) end end end end end _VPZknO:_ZnMfdr(_eCjevx._OZkIQX:_pCuvub(function() for i, v in _eCjevx:_tOeskI() do if _dVlivF._qhmhNw then _dVlivF:_qhmhNw(v, _uCVxNa._jXnjSQ(0.4, _dstSjT._cjMCsI._EQcfNa), { _hcXIOP = _YLbOBm._jXnjSQ(1, 0, 1, -(29 + (78 * i))) }) end end end)) _VPZknO:_ZnMfdr(_kJUqAm._CFFdjI:_pCuvub(function(_xqaQbT) if not _kJUqAm:_YuuMDP() and _xqaQbT._BJywvY ~= _dstSjT._BJywvY._JvJzxb then _hIsBBh._iAYcqN(_VPZknO._zNxrjF, _xqaQbT._BJywvY._JKVaHt) if _VPZknO._NGHAgV then return end if _rtVFXg(_VPZknO._zNxrjF, _VPZknO._mLKToH, _xqaQbT._BJywvY._JKVaHt) then if _VPZknO._LemRBW then _aSbcev(8) end for _, v in _VPZknO._ecujQK do v._yooTfS = false end _qYsMpg._yooTfS = not _qYsMpg._yooTfS _oOkTnL._yooTfS = false _VPZknO:_hSClhq() end local _fuZHcN = false for i, v in _VPZknO._YWFqMq do if _rtVFXg(_VPZknO._zNxrjF, v._TMdeMy, _xqaQbT._BJywvY._JKVaHt) then _fuZHcN = true if _VPZknO._pjLIvt._QMKVhv then _VPZknO:_bpPgZl('_mjywtW _ohQALA', i.."<_fvBnoA _euAEYe='#_BVpbrP'> _xjYznZ _fgkuHN </_fvBnoA>"..(not v._QMKVhv and "<_fvBnoA _euAEYe='#5AFF5A'>_QMKVhv</_fvBnoA>" or "<_fvBnoA _euAEYe='#_YXapbV'>_hcafqZ</_fvBnoA>").."<_fvBnoA _euAEYe='#_BVpbrP'>!</_fvBnoA>", 0.75) end v:_KoPzus(true) end end if _fuZHcN then _VPZknO:_zhyZwc() end for _, v in _VPZknO._zBTPVG do if _rtVFXg(_VPZknO._zNxrjF, v._TMdeMy, _xqaQbT._BJywvY._JKVaHt) and v._JKVaHt ~= _VPZknO._vavVeQ then _VPZknO:_cmnBiI(v._JKVaHt) _VPZknO:_HJPrTX(true) break end end end end)) _VPZknO:_ZnMfdr(_kJUqAm._ZZnpMf:_pCuvub(function(_xqaQbT) if not _kJUqAm:_YuuMDP() and _xqaQbT._BJywvY ~= _dstSjT._BJywvY._JvJzxb then if _VPZknO._NGHAgV then if not _VPZknO._TGfrml._QMKVhv then _VPZknO._zNxrjF = {_xqaQbT._BJywvY._JKVaHt} end _VPZknO._NGHAgV:_oMdhPy(_rtVFXg(_VPZknO._zNxrjF, _VPZknO._NGHAgV._TMdeMy, _xqaQbT._BJywvY._JKVaHt) and {} or _VPZknO._zNxrjF, true) _VPZknO._NGHAgV = nil end end local _pdCOyx = _hIsBBh._gVRTpT(_VPZknO._zNxrjF, _xqaQbT._BJywvY._JKVaHt) if _pdCOyx then _hIsBBh._BcnbFo(_VPZknO._zNxrjF, _pdCOyx) end end)) return _VPZknO
+--[[
+
+    ____   ____     .__                .__  __          
+    \   \ /   /____ |  |   ____   ____ |__|/  |_ ___.__.
+     \   Y   // __ \|  |  /  _ \_/ ___\|  \   __<   |  |
+      \     /\  ___/|  |_(  <_> )  \___|  ||  |  \___  |
+       \___/  \___  >____/\____/ \___  >__||__|  / ____|
+                  \/                 \/          \/      
+
+       The #1 Roblox Bedwars Vape Config on the market.
+
+        - luc - modules / organizer
+		- null.wtf - modules 
+		- copium - modules
+		- sammz - modules
+		- lr - modules
+        - blanked - modules
+        - gamesense - modules
+        - sown - modules
+        - relevant - executor
+        - nick - first UI
+
+
+
+       _  _                       _                 __ _  _       _                     _    _          
+     _| |<_> ___ ___  ___  _ _  _| |    ___  ___   / /| |<_>._ _ | |__ _ _  ___  _ _  _| |_ <_> ___ ___ 
+    / . || |<_-</ | '/ . \| '_>/ . | _ / . |/ . | / / | || || ' || / /| | |/ ._>| '_>  | |  | |<_-</ ._>
+    \___||_|/__/\_|_.\___/|_|  \___|<_>\_. |\_. |/_/  |_||_||_|_||_\_\|__/ \___.|_|    |_|  |_|/__/\___.
+                                       <___'<___'                                                       
+
+]]--
+
+
+
+local mainapi: table = {
+	Categories = {},
+	GUIColor = {
+		Hue = 0.46,
+		Sat = 0.96,
+		Value = 0.52
+	},
+	HeldKeybinds = {},
+	Keybind = {'RightShift'},
+	Loaded = false,
+	Libraries = {},
+	Modules = {},
+	Place = game.PlaceId,
+	Profile = 'default',
+	Profiles = {},
+	RainbowSpeed = {Value = 1},
+	RainbowUpdateSpeed = {Value = 60},
+	RainbowTable = {},
+	Scale = {Value = 1},
+	ThreadFix = setthreadidentity and true or false,
+	ToggleNotifications = {},
+	Version = '4.19',
+	Windows = {}
+}
+
+local cloneref: any = cloneref or function(obj)
+	return obj
+end
+local tweenService: TweenService = cloneref(game:GetService('TweenService'))
+local inputService: InputService = cloneref(game:GetService('UserInputService'))
+local textService: TextService = cloneref(game:GetService('TextService'))
+local guiService: GuiService = cloneref(game:GetService('GuiService'))
+local runService: RunService = cloneref(game:GetService('RunService'))
+local httpService: HttpService = cloneref(game:GetService('HttpService'))
+
+local fontsize = Instance.new('GetTextBoundsParams')
+fontsize.Width = math.huge
+local notifications
+local assetfunction = getcustomasset
+local getcustomasset
+local clickgui
+local scaledgui
+local toolblur
+local tooltip
+local scale
+local gui
+
+local color: table = {}
+local tween: table = {
+	tweens = {},
+	tweenstwo = {}
+}
+local uipallet: table = {
+	Main = Color3.fromRGB(3, 3, 3),
+	Text = Color3.fromRGB(255, 255, 255),
+	Font = Font.fromEnum(Enum.Font.Gotham),
+	FontSemiBold = Font.fromEnum(Enum.Font.Gotham, Enum.FontWeight.Light),
+	Tween = TweenInfo.new(0.16, Enum.EasingStyle.Linear)
+}
+
+local getcustomassets: table = {
+	['newvape/assets/new/add.png'] = 'rbxassetid://14368300605',
+	['newvape/assets/new/alert.png'] = 'rbxassetid://14368301329',
+	['newvape/assets/new/allowedicon.png'] = 'rbxassetid://14368302000',
+	['newvape/assets/new/allowedtab.png'] = 'rbxassetid://14368302875',
+	['newvape/assets/new/arrowmodule.png'] = 'rbxassetid://14473354880',
+	['newvape/assets/new/back.png'] = 'rbxassetid://14368303894',
+	['newvape/assets/new/bind.png'] = 'rbxassetid://14368304734',
+	['newvape/assets/new/bindbkg.png'] = 'rbxassetid://14368305655',
+	['newvape/assets/new/blatanticon.png'] = 'rbxassetid://14368306745',
+	['newvape/assets/new/blockedicon.png'] = 'rbxassetid://14385669108',
+	['newvape/assets/new/blockedtab.png'] = 'rbxassetid://14385672881',
+	['newvape/assets/new/blur.png'] = 'rbxassetid://14898786664',
+	['newvape/assets/new/blurnotif.png'] = 'rbxassetid://16738720137',
+	['newvape/assets/new/close.png'] = 'rbxassetid://14368309446',
+	['newvape/assets/new/closemini.png'] = 'rbxassetid://14368310467',
+	['newvape/assets/new/colorpreview.png'] = 'rbxassetid://14368311578',
+	['newvape/assets/new/combaticon.png'] = 'rbxassetid://14368312652',
+	['newvape/assets/new/customsettings.png'] = 'rbxassetid://14403726449',
+	['newvape/assets/new/dots.png'] = 'rbxassetid://14368314459',
+	['newvape/assets/new/edit.png'] = 'rbxassetid://14368315443',
+	['newvape/assets/new/expandright.png'] = 'rbxassetid://14368316544',
+	['newvape/assets/new/expandup.png'] = 'rbxassetid://14368317595',
+	['newvape/assets/new/friendstab.png'] = 'rbxassetid://14397462778',
+	['newvape/assets/new/guisettings.png'] = 'rbxassetid://14368318994',
+	['newvape/assets/new/guislider.png'] = 'rbxassetid://14368320020',
+	['newvape/assets/new/guisliderrain.png'] = 'rbxassetid://14368321228',
+	['newvape/assets/new/guiv4.png'] = 'rbxassetid://14368322199',
+	['newvape/assets/new/guivape.png'] = 'rbxassetid://14657521312',
+	['newvape/assets/new/info.png'] = 'rbxassetid://14368324807',
+	['newvape/assets/new/inventoryicon.png'] = 'rbxassetid://14928011633',
+	['newvape/assets/new/legit.png'] = 'rbxassetid://14425650534',
+	['newvape/assets/new/legittab.png'] = 'rbxassetid://14426740825',
+	['newvape/assets/new/miniicon.png'] = 'rbxassetid://14368326029',
+	['newvape/assets/new/notification.png'] = 'rbxassetid://16738721069',
+	['newvape/assets/new/overlaysicon.png'] = 'rbxassetid://14368339581',
+	['newvape/assets/new/overlaystab.png'] = 'rbxassetid://14397380433',
+	['newvape/assets/new/pin.png'] = 'rbxassetid://14368342301',
+	['newvape/assets/new/profilesicon.png'] = 'rbxassetid://14397465323',
+	['newvape/assets/new/radaricon.png'] = 'rbxassetid://14338041181',
+	['newvape/assets/new/rainbow_1.png'] = 'rbxassetid://14368344374',
+	['newvape/assets/new/rainbow_2.png'] = 'rbxassetid://14368345149',
+	['newvape/assets/new/rainbow_3.png'] = 'rbxassetid://14368345840',
+	['newvape/assets/new/rainbow_4.png'] = 'rbxassetid://14368346696',
+	['newvape/assets/new/range.png'] = 'rbxassetid://14368347435',
+	['newvape/assets/new/rangearrow.png'] = 'rbxassetid://14368348640',
+	['newvape/assets/new/rendericon.png'] = 'rbxassetid://14368350193',
+	['newvape/assets/new/rendertab.png'] = 'rbxassetid://14397373458',
+	['newvape/assets/new/search.png'] = 'rbxassetid://14425646684',
+	['newvape/assets/new/expandicon.png'] = 'rbxassetid://14368353032',
+	['newvape/assets/new/targetinfoicon.png'] = 'rbxassetid://14368354234',
+	['newvape/assets/new/targetnpc1.png'] = 'rbxassetid://14497400332',
+	['newvape/assets/new/targetnpc2.png'] = 'rbxassetid://14497402744',
+	['newvape/assets/new/targetplayers1.png'] = 'rbxassetid://14497396015',
+	['newvape/assets/new/targetplayers2.png'] = 'rbxassetid://14497397862',
+	['newvape/assets/new/targetstab.png'] = 'rbxassetid://14497393895',
+	['newvape/assets/new/textguiicon.png'] = 'rbxassetid://14368355456',
+	['newvape/assets/new/textv4.png'] = 'rbxassetid://14368357095',
+	['newvape/assets/new/textvape.png'] = 'rbxassetid://14368358200',
+	['newvape/assets/new/utilityicon.png'] = 'rbxassetid://14368359107',
+	['newvape/assets/new/vape.png'] = 'rbxassetid://14373395239',
+	['newvape/assets/new/warning.png'] = 'rbxassetid://14368361552',
+	['newvape/assets/new/worldicon.png'] = 'rbxassetid://14368362492'
+}
+
+local isfile = isfile or function(file)
+	local suc, res = pcall(function()
+		return readfile(file)
+	end)
+	return suc and res ~= nil and res ~= ''
+end
+
+local getfontsize = function(text, size, font)
+	fontsize.Text = text
+	fontsize.Size = size
+	if typeof(font) == 'Font' then
+		fontsize.Font = font
+	end
+	return textService:GetTextBoundsAsync(fontsize)
+end
+
+local function addBlur(parent, notif)
+	local blur = Instance.new('ImageLabel')
+	blur.Name = 'Blur'
+	blur.Size = UDim2.new(1, 89, 1, 52)
+	blur.Position = UDim2.fromOffset(-48, -31)
+	blur.BackgroundTransparency = 1
+	blur.Image = getcustomasset('newvape/assets/new/'..(notif and 'blurnotif' or 'blur')..'.png')
+	blur.ScaleType = Enum.ScaleType.Slice
+	blur.SliceCenter = Rect.new(52, 31, 261, 502)
+	blur.Parent = parent
+
+	return blur
+end
+
+local function addCorner(parent, radius)
+	local corner = Instance.new('UICorner')
+	corner.CornerRadius = radius or UDim.new(0, 5)
+	corner.Parent = parent
+
+	return corner
+end
+
+local function addCloseButton(parent, offset)
+	local close = Instance.new('ImageButton')
+	close.Name = 'Close'
+	close.Size = UDim2.fromOffset(24, 24)
+	close.Position = UDim2.new(1, -35, 0, offset or 9)
+	close.BackgroundColor3 = Color3.new(1, 1, 1)
+	close.BackgroundTransparency = 1
+	close.AutoButtonColor = false
+	close.Image = getcustomasset('newvape/assets/new/close.png')
+	close.ImageColor3 = color.Light(uipallet.Text, 0.2)
+	close.ImageTransparency = 0.5
+	close.Parent = parent
+	addCorner(close, UDim.new(1, 0))
+
+	close.MouseEnter:Connect(function()
+		close.ImageTransparency = 0.3
+		tween:Tween(close, uipallet.Tween, {
+			BackgroundTransparency = 0.6
+		})
+	end)
+	close.MouseLeave:Connect(function()
+		close.ImageTransparency = 0.5
+		tween:Tween(close, uipallet.Tween, {
+			BackgroundTransparency = 1
+		})
+	end)
+
+	return close
+end
+
+local function addMaid(object)
+	object.Connections = {}
+	function object:Clean(callback)
+		if typeof(callback) == 'Instance' then
+			table.insert(self.Connections, {
+				Disconnect = function()
+					callback:ClearAllChildren()
+					callback:Destroy()
+				end
+			})
+		elseif type(callback) == 'function' then
+			table.insert(self.Connections, {
+				Disconnect = callback
+			})
+		else
+			table.insert(self.Connections, callback)
+		end
+	end
+end
+
+local function addTooltip(gui, text)
+	if not text then return end
+
+	local function tooltipMoved(x, y)
+		local right = x + 16 + tooltip.Size.X.Offset > (scale.Scale * 1920)
+		tooltip.Position = UDim2.fromOffset(
+			(right and x - (tooltip.Size.X.Offset * scale.Scale) - 16 or x + 16) / scale.Scale,
+			((y + 11) - (tooltip.Size.Y.Offset / 2)) / scale.Scale
+		)
+		tooltip.Visible = toolblur.Visible
+	end
+
+	gui.MouseEnter:Connect(function(x, y)
+		local tooltipSize = getfontsize(text, tooltip.TextSize, uipallet.Font)
+		tooltip.Size = UDim2.fromOffset(tooltipSize.X + 10, tooltipSize.Y + 10)
+		tooltip.Text = text
+		tooltipMoved(x, y)
+	end)
+	gui.MouseMoved:Connect(tooltipMoved)
+	gui.MouseLeave:Connect(function()
+		tooltip.Visible = false
+	end)
+end
+
+local function checkKeybinds(compare, target, key)
+	if type(target) == 'table' then
+		if table.find(target, key) then
+			for i, v in target do
+				if not table.find(compare, v) then
+					return false
+				end
+			end
+			return true
+		end
+	end
+
+	return false
+end
+
+local function createDownloader(text)
+	if mainapi.Loaded ~= true then
+		local downloader = mainapi.Downloader
+		if not downloader then
+			downloader = Instance.new('TextLabel')
+			downloader.Size = UDim2.new(1, 0, 0, 40)
+			downloader.BackgroundTransparency = 1
+			downloader.TextStrokeTransparency = 0
+			downloader.TextSize = 20
+			downloader.TextColor3 = Color3.new(1, 1, 1)
+			downloader.FontFace = uipallet.Font
+			downloader.Parent = mainapi.gui
+			mainapi.Downloader = downloader
+		end
+		downloader.Text = 'Downloading '..text
+	end
+end
+
+local function createMobileButton(buttonapi, position)
+	local heldbutton = false
+	local button = Instance.new('TextButton')
+	button.Size = UDim2.fromOffset(40, 40)
+	button.Position = UDim2.fromOffset(position.X, position.Y)
+	button.AnchorPoint = Vector2.new(0.5, 0.5)
+	button.BackgroundColor3 = buttonapi.Enabled and Color3.new(0, 0.7, 0) or Color3.new()
+	button.BackgroundTransparency = 0.5
+	button.Text = buttonapi.Name
+	button.TextColor3 = Color3.new(1, 1, 1)
+	button.TextScaled = true
+	button.Font = Enum.Font.Gotham
+	button.Parent = mainapi.gui
+	local buttonconstraint = Instance.new('UITextSizeConstraint')
+	buttonconstraint.MaxTextSize = 16
+	buttonconstraint.Parent = button
+	addCorner(button, UDim.new(1, 0))
+
+	button.MouseButton1Down:Connect(function()
+		heldbutton = true
+		local holdtime, holdpos = tick(), inputService:GetMouseLocation()
+		repeat
+			heldbutton = (inputService:GetMouseLocation() - holdpos).Magnitude < 6
+			task.wait()
+		until (tick() - holdtime) > 1 or not heldbutton
+		if heldbutton then
+			buttonapi.Bind = {}
+			button:Destroy()
+		end
+	end)
+	button.MouseButton1Up:Connect(function()
+		heldbutton = false
+	end)
+	button.MouseButton1Click:Connect(function()
+		buttonapi:Toggle()
+		button.BackgroundColor3 = buttonapi.Enabled and Color3.new(0, 0.7, 0) or Color3.new()
+	end)
+
+	buttonapi.Bind = {Button = button}
+end
+
+local function downloadFile(path, func)
+	if not isfile(path) then
+		createDownloader(path)
+		local suc, res = pcall(function()
+			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true)
+		end)
+		if not suc or res == '404: Not Found' then
+			error(res)
+		end
+		if path:find('.lua') then
+			--res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res
+		end
+		writefile(path, res)
+	end
+	return (func or readfile)(path)
+end
+
+getcustomasset = not inputService.TouchEnabled and assetfunction and function(path)
+	return downloadFile(path, assetfunction)
+end or function(path)
+	return getcustomassets[path] or ''
+end
+
+local function getTableSize(tab)
+	local ind = 0
+	for _ in tab do ind += 1 end
+	return ind
+end
+
+local function loopClean(tab)
+	for i, v in tab do
+		if type(v) == 'table' then
+			loopClean(v)
+		end
+		tab[i] = nil
+	end
+end
+
+local function loadJson(path)
+	local suc, res = pcall(function()
+		return httpService:JSONDecode(readfile(path))
+	end)
+	return suc and type(res) == 'table' and res or nil
+end
+
+local function makeDraggable(gui, window)
+	gui.InputBegan:Connect(function(inputObj)
+		if window and not window.Visible then return end
+		if
+			(inputObj.UserInputType == Enum.UserInputType.MouseButton1 or inputObj.UserInputType == Enum.UserInputType.Touch)
+			and (inputObj.Position.Y - gui.AbsolutePosition.Y < 40 or window)
+		then
+			local dragPosition = Vector2.new(
+				gui.AbsolutePosition.X - inputObj.Position.X,
+				gui.AbsolutePosition.Y - inputObj.Position.Y + guiService:GetGuiInset().Y
+			) / scale.Scale
+
+			local changed = inputService.InputChanged:Connect(function(input)
+				if input.UserInputType == (inputObj.UserInputType == Enum.UserInputType.MouseButton1 and Enum.UserInputType.MouseMovement or Enum.UserInputType.Touch) then
+					local position = input.Position
+					if inputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+						dragPosition = Vector2.new(
+							math.floor(dragPosition.X / 3) * 3,
+							math.floor(dragPosition.Y / 3) * 3
+						)
+						position = Vector2.new(
+							math.floor(position.X / 3) * 3, 
+							math.floor(position.Y / 3) * 3
+						)
+					end
+					gui.Position = UDim2.fromOffset((position.X / scale.Scale) + dragPosition.X, (position.Y / scale.Scale) + dragPosition.Y)
+				end
+			end)
+
+			local ended
+			ended = inputObj.Changed:Connect(function()
+				if inputObj.UserInputState == Enum.UserInputState.End then
+					if changed then
+						changed:Disconnect()
+					end
+					if ended then
+						ended:Disconnect()
+					end
+				end
+			end)
+		end
+	end)
+end
+
+local function randomString()
+	local array = {}
+	for i = 1, math.random(10, 100) do
+		array[i] = string.char(math.random(32, 126))
+	end
+	return table.concat(array)
+end
+
+local function removeTags(str)
+	str = str:gsub('<br%s*/>', '\n')
+	return str:gsub('<[^<>]->', '')
+end
+
+do
+	local res = isfile('newvape/profiles/color.txt') and loadJson('newvape/profiles/color.txt')
+	if res then
+		uipallet.Main = res.Main and Color3.fromRGB(unpack(res.Main)) or uipallet.Main
+		uipallet.Text = res.Text and Color3.fromRGB(unpack(res.Text)) or uipallet.Text
+		uipallet.Font = res.Font and Font.new(
+			res.Font:find('rbxasset') and res.Font
+			or string.format('rbxasset://fonts/families/%s.json', res.Font)
+		) or uipallet.Font
+		uipallet.FontSemiBold = Font.new(uipallet.Font.Family, Enum.FontWeight.SemiBold)
+	end
+	fontsize.Font = uipallet.Font
+end
+
+do
+	function color.Dark(col, num)
+		local h, s, v = col:ToHSV()
+		return Color3.fromHSV(h, s, math.clamp(select(3, uipallet.Main:ToHSV()) > 0.5 and v + num or v - num, 0, 1))
+	end
+
+	function color.Light(col, num)
+		local h, s, v = col:ToHSV()
+		return Color3.fromHSV(h, s, math.clamp(select(3, uipallet.Main:ToHSV()) > 0.5 and v - num or v + num, 0, 1))
+	end
+
+	function mainapi:Color(h)
+		local s = 0.75 + (0.15 * math.min(h / 0.03, 1))
+		if h > 0.57 then
+			s = 0.9 - (0.4 * math.min((h - 0.57) / 0.09, 1))
+		end
+		if h > 0.66 then
+			s = 0.5 + (0.4 * math.min((h - 0.66) / 0.16, 1))
+		end
+		if h > 0.87 then
+			s = 0.9 - (0.15 * math.min((h - 0.87) / 0.13, 1))
+		end
+		return h, s, 1
+	end
+
+	function mainapi:TextColor(h, s, v)
+		if v >= 0.7 and (s < 0.6 or h > 0.04 and h < 0.56) then
+			return Color3.new(0.19, 0.19, 0.19)
+		end
+		return Color3.new(1, 1, 1)
+	end
+end
+
+do
+	function tween:Tween(obj, tweeninfo, goal, tab)
+		tab = tab or self.tweens
+		if tab[obj] then
+			tab[obj]:Cancel()
+			tab[obj] = nil
+		end
+
+		if obj.Parent and obj.Visible then
+			tab[obj] = tweenService:Create(obj, tweeninfo, goal)
+			tab[obj].Completed:Once(function()
+				if tab then
+					tab[obj]:Destroy()
+					tab[obj] = nil
+					tab = nil
+				end
+			end)
+			tab[obj]:Play()
+		else
+			for i, v in goal do
+				obj[i] = v
+			end
+		end
+	end
+
+	function tween:Cancel(obj)
+		if self.tweens[obj] then
+			self.tweens[obj]:Cancel()
+			self.tweens[obj] = nil
+		end
+	end
+end
+
+mainapi.Libraries = {
+	color = color,
+	getcustomasset = getcustomasset,
+	getfontsize = getfontsize,
+	tween = tween,
+	uipallet = uipallet,
+}
+
+local components
+components = {
+	Button = function(optionsettings, children, api)
+		local button = Instance.new('TextButton')
+		button.Name = optionsettings.Name..'Button'
+		button.Size = UDim2.new(1, 0, 0, 31)
+		button.BackgroundColor3 = color.Dark(children.BackgroundColor3, optionsettings.Darker and 0.02 or 0)
+		button.BorderSizePixel = 0
+		button.AutoButtonColor = false
+		button.Visible = optionsettings.Visible == nil or optionsettings.Visible
+		button.Text = ''
+		button.Parent = children
+		addTooltip(button, optionsettings.Tooltip)
+		local bkg = Instance.new('Frame')
+		bkg.Size = UDim2.fromOffset(200, 27)
+		bkg.Position = UDim2.fromOffset(10, 2)
+		bkg.BackgroundColor3 = color.Light(uipallet.Main, 0.05)
+		bkg.Parent = button
+		addCorner(bkg)
+		local label = Instance.new('TextLabel')
+		label.Size = UDim2.new(1, -4, 1, -4)
+		label.Position = UDim2.fromOffset(2, 2)
+		label.BackgroundColor3 = uipallet.Main
+		label.Text = optionsettings.Name
+		label.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		label.TextSize = 14
+		label.FontFace = uipallet.Font
+		label.Parent = bkg
+		addCorner(label, UDim.new(0, 4))
+		optionsettings.Function = optionsettings.Function or function() end
+		
+		button.MouseEnter:Connect(function()
+			tween:Tween(bkg, uipallet.Tween, {
+				BackgroundColor3 = color.Light(uipallet.Main, 0.0875)
+			})
+		end)
+		button.MouseLeave:Connect(function()
+			tween:Tween(bkg, uipallet.Tween, {
+				BackgroundColor3 = color.Light(uipallet.Main, 0.05)
+			})
+		end)
+		button.MouseButton1Click:Connect(optionsettings.Function)
+	end,
+	ColorSlider = function(optionsettings, children, api)
+		local optionapi = {
+			Type = 'ColorSlider',
+			Hue = optionsettings.DefaultHue or 0.44,
+			Sat = optionsettings.DefaultSat or 1,
+			Value = optionsettings.DefaultValue or 1,
+			Opacity = optionsettings.DefaultOpacity or 1,
+			Rainbow = false,
+			Index = 0
+		}
+		
+		local function createSlider(name, gradientColor)
+			local slider = Instance.new('TextButton')
+			slider.Name = optionsettings.Name..'Slider'..name
+			slider.Size = UDim2.new(1, 0, 0, 50)
+			slider.BackgroundColor3 = color.Dark(children.BackgroundColor3, optionsettings.Darker and 0.02 or 0)
+			slider.BorderSizePixel = 0
+			slider.AutoButtonColor = false
+			slider.Visible = false
+			slider.Text = ''
+			slider.Parent = children
+			local title = Instance.new('TextLabel')
+			title.Name = 'Title'
+			title.Size = UDim2.fromOffset(60, 30)
+			title.Position = UDim2.fromOffset(10, 2)
+			title.BackgroundTransparency = 1
+			title.Text = name
+			title.TextXAlignment = Enum.TextXAlignment.Left
+			title.TextColor3 = color.Dark(uipallet.Text, 0.16)
+			title.TextSize = 11
+			title.FontFace = uipallet.Font
+			title.Parent = slider
+			local bkg = Instance.new('Frame')
+			bkg.Name = 'Slider'
+			bkg.Size = UDim2.new(1, -20, 0, 2)
+			bkg.Position = UDim2.fromOffset(10, 37)
+			bkg.BackgroundColor3 = Color3.new(1, 1, 1)
+			bkg.BorderSizePixel = 0
+			bkg.Parent = slider
+			local gradient = Instance.new('UIGradient')
+			gradient.Color = gradientColor
+			gradient.Parent = bkg
+			local fill = bkg:Clone()
+			fill.Name = 'Fill'
+			fill.Size = UDim2.fromScale(math.clamp(name == 'Saturation' and optionapi.Sat or name == 'Vibrance' and optionapi.Value or optionapi.Opacity, 0.04, 0.96), 1)
+			fill.Position = UDim2.new()
+			fill.BackgroundTransparency = 1
+			fill.Parent = bkg
+			local knobholder = Instance.new('Frame')
+			knobholder.Name = 'Knob'
+			knobholder.Size = UDim2.fromOffset(24, 4)
+			knobholder.Position = UDim2.fromScale(1, 0.5)
+			knobholder.AnchorPoint = Vector2.new(0.5, 0.5)
+			knobholder.BackgroundColor3 = slider.BackgroundColor3
+			knobholder.BorderSizePixel = 0
+			knobholder.Parent = fill
+			local knob = Instance.new('Frame')
+			knob.Name = 'Knob'
+			knob.Size = UDim2.fromOffset(14, 14)
+			knob.Position = UDim2.fromScale(0.5, 0.5)
+			knob.AnchorPoint = Vector2.new(0.5, 0.5)
+			knob.BackgroundColor3 = uipallet.Text
+			knob.Parent = knobholder
+			addCorner(knob, UDim.new(1, 0))
+		
+			slider.InputBegan:Connect(function(inputObj)
+				if
+					(inputObj.UserInputType == Enum.UserInputType.MouseButton1 or inputObj.UserInputType == Enum.UserInputType.Touch)
+					and (inputObj.Position.Y - slider.AbsolutePosition.Y) > (20 * scale.Scale)
+				then
+					local changed = inputService.InputChanged:Connect(function(input)
+						if input.UserInputType == (inputObj.UserInputType == Enum.UserInputType.MouseButton1 and Enum.UserInputType.MouseMovement or Enum.UserInputType.Touch) then
+							optionapi:SetValue(nil, name == 'Saturation' and math.clamp((input.Position.X - bkg.AbsolutePosition.X) / bkg.AbsoluteSize.X, 0, 1) or nil, name == 'Vibrance' and math.clamp((input.Position.X - bkg.AbsolutePosition.X) / bkg.AbsoluteSize.X, 0, 1) or nil, name == 'Opacity' and math.clamp((input.Position.X - bkg.AbsolutePosition.X) / bkg.AbsoluteSize.X, 0, 1) or nil)
+						end
+					end)
+		
+					local ended
+					ended = inputObj.Changed:Connect(function()
+						if inputObj.UserInputState == Enum.UserInputState.End then
+							if changed then changed:Disconnect() end
+							if ended then ended:Disconnect() end
+						end
+					end)
+				end
+			end)
+			slider.MouseEnter:Connect(function()
+				tween:Tween(knob, uipallet.Tween, {
+					Size = UDim2.fromOffset(16, 16)
+				})
+			end)
+			slider.MouseLeave:Connect(function()
+				tween:Tween(knob, uipallet.Tween, {
+					Size = UDim2.fromOffset(14, 14)
+				})
+			end)
+		
+			return slider
+		end
+		
+		local slider = Instance.new('TextButton')
+		slider.Name = optionsettings.Name..'Slider'
+		slider.Size = UDim2.new(1, 0, 0, 50)
+		slider.BackgroundColor3 = color.Dark(children.BackgroundColor3, optionsettings.Darker and 0.02 or 0)
+		slider.BorderSizePixel = 0
+		slider.AutoButtonColor = false
+		slider.Visible = optionsettings.Visible == nil or optionsettings.Visible
+		slider.Text = ''
+		slider.Parent = children
+		addTooltip(slider, optionsettings.Tooltip)
+		local title = Instance.new('TextLabel')
+		title.Name = 'Title'
+		title.Size = UDim2.fromOffset(60, 30)
+		title.Position = UDim2.fromOffset(10, 2)
+		title.BackgroundTransparency = 1
+		title.Text = optionsettings.Name
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		title.TextSize = 11
+		title.FontFace = uipallet.Font
+		title.Parent = slider
+		local valuebox = Instance.new('TextBox')
+		valuebox.Name = 'Box'
+		valuebox.Size = UDim2.fromOffset(60, 15)
+		valuebox.Position = UDim2.new(1, -69, 0, 9)
+		valuebox.BackgroundTransparency = 1
+		valuebox.Visible = false
+		valuebox.Text = ''
+		valuebox.TextXAlignment = Enum.TextXAlignment.Right
+		valuebox.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		valuebox.TextSize = 11
+		valuebox.FontFace = uipallet.Font
+		valuebox.ClearTextOnFocus = true
+		valuebox.Parent = slider
+		local bkg = Instance.new('Frame')
+		bkg.Name = 'Slider'
+		bkg.Size = UDim2.new(1, -20, 0, 2)
+		bkg.Position = UDim2.fromOffset(10, 39)
+		bkg.BackgroundColor3 = Color3.new(1, 1, 1)
+		bkg.BorderSizePixel = 0
+		bkg.Parent = slider
+		local rainbowTable = {}
+		for i = 0, 1, 0.1 do
+			table.insert(rainbowTable, ColorSequenceKeypoint.new(i, Color3.fromHSV(i, 1, 1)))
+		end
+		local gradient = Instance.new('UIGradient')
+		gradient.Color = ColorSequence.new(rainbowTable)
+		gradient.Parent = bkg
+		local fill = bkg:Clone()
+		fill.Name = 'Fill'
+		fill.Size = UDim2.fromScale(math.clamp(optionapi.Hue, 0.04, 0.96), 1)
+		fill.Position = UDim2.new()
+		fill.BackgroundTransparency = 1
+		fill.Parent = bkg
+		local preview = Instance.new('ImageButton')
+		preview.Name = 'Preview'
+		preview.Size = UDim2.fromOffset(12, 12)
+		preview.Position = UDim2.new(1, -22, 0, 10)
+		preview.BackgroundTransparency = 1
+		preview.Image = getcustomasset('newvape/assets/new/colorpreview.png')
+		preview.ImageColor3 = Color3.fromHSV(optionapi.Hue, optionapi.Sat, optionapi.Value)
+		preview.ImageTransparency = 1 - optionapi.Opacity
+		preview.Parent = slider
+		local expandbutton = Instance.new('TextButton')
+		expandbutton.Name = 'Expand'
+		expandbutton.Size = UDim2.fromOffset(17, 13)
+		expandbutton.Position = UDim2.new(0, textService:GetTextSize(title.Text, title.TextSize, title.Font, Vector2.new(1000, 1000)).X + 11, 0, 7)
+		expandbutton.BackgroundTransparency = 1
+		expandbutton.Text = ''
+		expandbutton.Parent = slider
+		local expand = Instance.new('ImageLabel')
+		expand.Name = 'Expand'
+		expand.Size = UDim2.fromOffset(9, 5)
+		expand.Position = UDim2.fromOffset(4, 4)
+		expand.BackgroundTransparency = 1
+		expand.Image = getcustomasset('newvape/assets/new/expandicon.png')
+		expand.ImageColor3 = color.Dark(uipallet.Text, 0.43)
+		expand.Parent = expandbutton
+		local rainbow = Instance.new('TextButton')
+		rainbow.Name = 'Rainbow'
+		rainbow.Size = UDim2.fromOffset(12, 12)
+		rainbow.Position = UDim2.new(1, -42, 0, 10)
+		rainbow.BackgroundTransparency = 1
+		rainbow.Text = ''
+		rainbow.Parent = slider
+		local rainbow1 = Instance.new('ImageLabel')
+		rainbow1.Size = UDim2.fromOffset(12, 12)
+		rainbow1.BackgroundTransparency = 1
+		rainbow1.Image = getcustomasset('newvape/assets/new/rainbow_1.png')
+		rainbow1.ImageColor3 = color.Light(uipallet.Main, 0.37)
+		rainbow1.Parent = rainbow
+		local rainbow2 = rainbow1:Clone()
+		rainbow2.Image = getcustomasset('newvape/assets/new/rainbow_2.png')
+		rainbow2.Parent = rainbow
+		local rainbow3 = rainbow1:Clone()
+		rainbow3.Image = getcustomasset('newvape/assets/new/rainbow_3.png')
+		rainbow3.Parent = rainbow
+		local rainbow4 = rainbow1:Clone()
+		rainbow4.Image = getcustomasset('newvape/assets/new/rainbow_4.png')
+		rainbow4.Parent = rainbow
+		local knobholder = Instance.new('Frame')
+		knobholder.Name = 'Knob'
+		knobholder.Size = UDim2.fromOffset(24, 4)
+		knobholder.Position = UDim2.fromScale(1, 0.5)
+		knobholder.AnchorPoint = Vector2.new(0.5, 0.5)
+		knobholder.BackgroundColor3 = slider.BackgroundColor3
+		knobholder.BorderSizePixel = 0
+		knobholder.Parent = fill
+		local knob = Instance.new('Frame')
+		knob.Name = 'Knob'
+		knob.Size = UDim2.fromOffset(14, 14)
+		knob.Position = UDim2.fromScale(0.5, 0.5)
+		knob.AnchorPoint = Vector2.new(0.5, 0.5)
+		knob.BackgroundColor3 = uipallet.Text
+		knob.Parent = knobholder
+		addCorner(knob, UDim.new(1, 0))
+		optionsettings.Function = optionsettings.Function or function() end
+		local satSlider = createSlider('Saturation', ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, optionapi.Value)),
+			ColorSequenceKeypoint.new(1, Color3.fromHSV(optionapi.Hue, 1, optionapi.Value))
+		}))
+		local vibSlider = createSlider('Vibrance', ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0)),
+			ColorSequenceKeypoint.new(1, Color3.fromHSV(optionapi.Hue, optionapi.Sat, 1))
+		}))
+		local opSlider = createSlider('Opacity', ColorSequence.new({
+			ColorSequenceKeypoint.new(0, color.Dark(uipallet.Main, 0.02)),
+			ColorSequenceKeypoint.new(1, Color3.fromHSV(optionapi.Hue, optionapi.Sat, optionapi.Value))
+		}))
+		
+		function optionapi:Save(tab)
+			tab[optionsettings.Name] = {
+				Hue = self.Hue,
+				Sat = self.Sat,
+				Value = self.Value,
+				Opacity = self.Opacity,
+				Rainbow = self.Rainbow
+			}
+		end
+		
+		function optionapi:Load(tab)
+			if tab.Rainbow ~= self.Rainbow then
+				self:Toggle()
+			end
+			if self.Hue ~= tab.Hue or self.Sat ~= tab.Sat or self.Value ~= tab.Value or self.Opacity ~= tab.Opacity then
+				self:SetValue(tab.Hue, tab.Sat, tab.Value, tab.Opacity)
+			end
+		end
+		
+		function optionapi:SetValue(h, s, v, o)
+			self.Hue = h or self.Hue
+			self.Sat = s or self.Sat
+			self.Value = v or self.Value
+			self.Opacity = o or self.Opacity
+			preview.ImageColor3 = Color3.fromHSV(self.Hue, self.Sat, self.Value)
+			preview.ImageTransparency = 1 - self.Opacity
+			satSlider.Slider.UIGradient.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, self.Value)),
+				ColorSequenceKeypoint.new(1, Color3.fromHSV(self.Hue, 1, self.Value))
+			})
+			vibSlider.Slider.UIGradient.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0)),
+				ColorSequenceKeypoint.new(1, Color3.fromHSV(self.Hue, self.Sat, 1))
+			})
+			opSlider.Slider.UIGradient.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, color.Dark(uipallet.Main, 0.02)),
+				ColorSequenceKeypoint.new(1, Color3.fromHSV(self.Hue, self.Sat, self.Value))
+			})
+		
+			if self.Rainbow then
+				fill.Size = UDim2.fromScale(math.clamp(self.Hue, 0.04, 0.96), 1)
+			else
+				tween:Tween(fill, uipallet.Tween, {
+					Size = UDim2.fromScale(math.clamp(self.Hue, 0.04, 0.96), 1)
+				})
+			end
+		
+			if s then
+				tween:Tween(satSlider.Slider.Fill, uipallet.Tween, {
+					Size = UDim2.fromScale(math.clamp(self.Sat, 0.04, 0.96), 1)
+				})
+			end
+			if v then
+				tween:Tween(vibSlider.Slider.Fill, uipallet.Tween, {
+					Size = UDim2.fromScale(math.clamp(self.Value, 0.04, 0.96), 1)
+				})
+			end
+			if o then
+				tween:Tween(opSlider.Slider.Fill, uipallet.Tween, {
+					Size = UDim2.fromScale(math.clamp(self.Opacity, 0.04, 0.96), 1)
+				})
+			end
+		
+			optionsettings.Function(self.Hue, self.Sat, self.Value, self.Opacity)
+		end
+		
+		function optionapi:Toggle()
+			self.Rainbow = not self.Rainbow
+			if self.Rainbow then
+				table.insert(mainapi.RainbowTable, self)
+				rainbow1.ImageColor3 = Color3.fromRGB(5, 127, 100)
+				task.delay(0.1, function()
+					if not self.Rainbow then return end
+					rainbow2.ImageColor3 = Color3.fromRGB(228, 125, 43)
+					task.delay(0.1, function()
+						if not self.Rainbow then return end
+						rainbow3.ImageColor3 = Color3.fromRGB(225, 46, 52)
+					end)
+				end)
+			else
+				local ind = table.find(mainapi.RainbowTable, self)
+				if ind then
+					table.remove(mainapi.RainbowTable, ind)
+				end
+				rainbow3.ImageColor3 = color.Light(uipallet.Main, 0.37)
+				task.delay(0.1, function()
+					if self.Rainbow then return end
+					rainbow2.ImageColor3 = color.Light(uipallet.Main, 0.37)
+					task.delay(0.1, function()
+						if self.Rainbow then return end
+						rainbow1.ImageColor3 = color.Light(uipallet.Main, 0.37)
+					end)
+				end)
+			end
+		end
+		
+		local doubleClick = tick()
+		preview.MouseButton1Click:Connect(function()
+			preview.Visible = false
+			valuebox.Visible = true
+			valuebox:CaptureFocus()
+			local text = Color3.fromHSV(optionapi.Hue, optionapi.Sat, optionapi.Value)
+			valuebox.Text = math.round(text.R * 255)..', '..math.round(text.G * 255)..', '..math.round(text.B * 255)
+		end)
+		slider.InputBegan:Connect(function(inputObj)
+			if
+				(inputObj.UserInputType == Enum.UserInputType.MouseButton1 or inputObj.UserInputType == Enum.UserInputType.Touch)
+				and (inputObj.Position.Y - slider.AbsolutePosition.Y) > (20 * scale.Scale)
+			then
+				if doubleClick > tick() then
+					optionapi:Toggle()
+				end
+				doubleClick = tick() + 0.3
+				local changed = inputService.InputChanged:Connect(function(input)
+					if input.UserInputType == (inputObj.UserInputType == Enum.UserInputType.MouseButton1 and Enum.UserInputType.MouseMovement or Enum.UserInputType.Touch) then
+						optionapi:SetValue(math.clamp((input.Position.X - bkg.AbsolutePosition.X) / bkg.AbsoluteSize.X, 0, 1))
+					end
+				end)
+		
+				local ended
+				ended = inputObj.Changed:Connect(function()
+					if inputObj.UserInputState == Enum.UserInputState.End then
+						if changed then
+							changed:Disconnect()
+						end
+						if ended then
+							ended:Disconnect()
+						end
+					end
+				end)
+			end
+		end)
+		slider.MouseEnter:Connect(function()
+			tween:Tween(knob, uipallet.Tween, {
+				Size = UDim2.fromOffset(16, 16)
+			})
+		end)
+		slider.MouseLeave:Connect(function()
+			tween:Tween(knob, uipallet.Tween, {
+				Size = UDim2.fromOffset(14, 14)
+			})
+		end)
+		slider:GetPropertyChangedSignal('Visible'):Connect(function()
+			satSlider.Visible = expand.Rotation == 180 and slider.Visible
+			vibSlider.Visible = satSlider.Visible
+			opSlider.Visible = satSlider.Visible
+		end)
+		expandbutton.MouseEnter:Connect(function()
+			expand.ImageColor3 = color.Dark(uipallet.Text, 0.16)
+		end)
+		expandbutton.MouseLeave:Connect(function()
+			expand.ImageColor3 = color.Dark(uipallet.Text, 0.43)
+		end)
+		expandbutton.MouseButton1Click:Connect(function()
+			satSlider.Visible = not satSlider.Visible
+			vibSlider.Visible = satSlider.Visible
+			opSlider.Visible = satSlider.Visible
+			expand.Rotation = satSlider.Visible and 180 or 0
+		end)
+		rainbow.MouseButton1Click:Connect(function()
+			optionapi:Toggle()
+		end)
+		valuebox.FocusLost:Connect(function(enter)
+			preview.Visible = true
+			valuebox.Visible = false
+			if enter then
+				local commas = valuebox.Text:split(',')
+				local suc, res = pcall(function()
+					return tonumber(commas[1]) and Color3.fromRGB(tonumber(commas[1]), tonumber(commas[2]), tonumber(commas[3])) or Color3.fromHex(valuebox.Text)
+				end)
+				if suc then
+					if optionapi.Rainbow then
+						optionapi:Toggle()
+					end
+					optionapi:SetValue(res:ToHSV())
+				end
+			end
+		end)
+		
+		optionapi.Object = slider
+		api.Options[optionsettings.Name] = optionapi
+		
+		return optionapi
+	end,
+	Dropdown = function(optionsettings, children, api)
+		local optionapi = {
+			Type = 'Dropdown',
+			Value = optionsettings.List[1] or 'None',
+			Index = 0
+		}
+		
+		local dropdown = Instance.new('TextButton')
+		dropdown.Name = optionsettings.Name..'Dropdown'
+		dropdown.Size = UDim2.new(1, 0, 0, 40)
+		dropdown.BackgroundColor3 = color.Dark(children.BackgroundColor3, optionsettings.Darker and 0.02 or 0)
+		dropdown.BorderSizePixel = 0
+		dropdown.AutoButtonColor = false
+		dropdown.Visible = optionsettings.Visible == nil or optionsettings.Visible
+		dropdown.Text = ''
+		dropdown.Parent = children
+		addTooltip(dropdown, optionsettings.Tooltip or optionsettings.Name)
+		local bkg = Instance.new('Frame')
+		bkg.Name = 'BKG'
+		bkg.Size = UDim2.new(1, -20, 1, -9)
+		bkg.Position = UDim2.fromOffset(10, 4)
+		bkg.BackgroundColor3 = color.Light(uipallet.Main, 0.034)
+		bkg.Parent = dropdown
+		addCorner(bkg, UDim.new(0, 6))
+		local button = Instance.new('TextButton')
+		button.Name = 'Dropdown'
+		button.Size = UDim2.new(1, -2, 1, -2)
+		button.Position = UDim2.fromOffset(1, 1)
+		button.BackgroundColor3 = uipallet.Main
+		button.AutoButtonColor = false
+		button.Text = ''
+		button.Parent = bkg
+		local title = Instance.new('TextLabel')
+		title.Name = 'Title'
+		title.Size = UDim2.new(1, 0, 0, 29)
+		title.BackgroundTransparency = 1
+		title.Text = '         '..optionsettings.Name..' - '..optionapi.Value
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		title.TextSize = 13
+		title.TextTruncate = Enum.TextTruncate.AtEnd
+		title.FontFace = uipallet.Font
+		title.Parent = button
+		addCorner(button, UDim.new(0, 6))
+		local arrow = Instance.new('ImageLabel')
+		arrow.Name = 'Arrow'
+		arrow.Size = UDim2.fromOffset(4, 8)
+		arrow.Position = UDim2.new(1, -17, 0, 11)
+		arrow.BackgroundTransparency = 1
+		arrow.Image = getcustomasset('newvape/assets/new/expandright.png')
+		arrow.ImageColor3 = Color3.fromRGB(140, 140, 140)
+		arrow.Rotation = 90
+		arrow.Parent = button
+		optionsettings.Function = optionsettings.Function or function() end
+		local dropdownchildren
+		
+		function optionapi:Save(tab)
+			tab[optionsettings.Name] = {Value = self.Value}
+		end
+		
+		function optionapi:Load(tab)
+			if self.Value ~= tab.Value then
+				self:SetValue(tab.Value)
+			end
+		end
+		
+		function optionapi:Change(list)
+			optionsettings.List = list or {}
+			if not table.find(optionsettings.List, self.Value) then
+				self:SetValue(self.Value)
+			end
+		end
+		
+		function optionapi:SetValue(val, mouse)
+			self.Value = table.find(optionsettings.List, val) and val or optionsettings.List[1] or 'None'
+			title.Text = '         '..optionsettings.Name..' - '..self.Value
+			if dropdownchildren then
+				arrow.Rotation = 90
+				dropdownchildren:Destroy()
+				dropdownchildren = nil
+				dropdown.Size = UDim2.new(1, 0, 0, 40)
+			end
+			optionsettings.Function(self.Value, mouse)
+		end
+		
+		button.MouseButton1Click:Connect(function()
+			if not dropdownchildren then
+				arrow.Rotation = 270
+				dropdown.Size = UDim2.new(1, 0, 0, 40 + (#optionsettings.List - 1) * 26)
+				dropdownchildren = Instance.new('Frame')
+				dropdownchildren.Name = 'Children'
+				dropdownchildren.Size = UDim2.new(1, 0, 0, (#optionsettings.List - 1) * 26)
+				dropdownchildren.Position = UDim2.fromOffset(0, 27)
+				dropdownchildren.BackgroundTransparency = 1
+				dropdownchildren.Parent = button
+				local ind = 0
+				for _, v in optionsettings.List do
+					if v == optionapi.Value then continue end
+					local dropdownoption = Instance.new('TextButton')
+					dropdownoption.Name = v..'Option'
+					dropdownoption.Size = UDim2.new(1, 0, 0, 26)
+					dropdownoption.Position = UDim2.fromOffset(0, ind * 26)
+					dropdownoption.BackgroundColor3 = uipallet.Main
+					dropdownoption.BorderSizePixel = 0
+					dropdownoption.AutoButtonColor = false
+					dropdownoption.Text = '         '..v
+					dropdownoption.TextXAlignment = Enum.TextXAlignment.Left
+					dropdownoption.TextColor3 = color.Dark(uipallet.Text, 0.16)
+					dropdownoption.TextSize = 13
+					dropdownoption.TextTruncate = Enum.TextTruncate.AtEnd
+					dropdownoption.FontFace = uipallet.Font
+					dropdownoption.Parent = dropdownchildren
+					dropdownoption.MouseEnter:Connect(function()
+						tween:Tween(dropdownoption, uipallet.Tween, {
+							BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+						})
+					end)
+					dropdownoption.MouseLeave:Connect(function()
+						tween:Tween(dropdownoption, uipallet.Tween, {
+							BackgroundColor3 = uipallet.Main
+						})
+					end)
+					dropdownoption.MouseButton1Click:Connect(function()
+						optionapi:SetValue(v, true)
+					end)
+					ind += 1
+				end
+			else
+				optionapi:SetValue(optionapi.Value, true)
+			end
+		end)
+		dropdown.MouseEnter:Connect(function()
+			tween:Tween(bkg, uipallet.Tween, {
+				BackgroundColor3 = color.Light(uipallet.Main, 0.0875)
+			})
+		end)
+		dropdown.MouseLeave:Connect(function()
+			tween:Tween(bkg, uipallet.Tween, {
+				BackgroundColor3 = color.Light(uipallet.Main, 0.034)
+			})
+		end)
+		
+		optionapi.Object = dropdown
+		api.Options[optionsettings.Name] = optionapi
+		
+		return optionapi
+	end,
+	Font = function(optionsettings, children, api)
+		local fonts = {
+			optionsettings.Blacklist,
+			'Custom'
+		}
+		for _, v in Enum.Font:GetEnumItems() do
+			if not table.find(fonts, v.Name) then
+				table.insert(fonts, v.Name)
+			end
+		end
+		
+		local optionapi = {Value = Font.fromEnum(Enum.Font[fonts[1]])}
+		local fontdropdown
+		local fontbox
+		optionsettings.Function = optionsettings.Function or function() end
+		
+		fontdropdown = components.Dropdown({
+			Name = optionsettings.Name,
+			List = fonts,
+			Function = function(val)
+				fontbox.Object.Visible = val == 'Custom' and fontdropdown.Object.Visible
+				if val ~= 'Custom' then
+					optionapi.Value = Font.fromEnum(Enum.Font[val])
+					optionsettings.Function(optionapi.Value)
+				else
+					pcall(function()
+						optionapi.Value = Font.fromId(tonumber(fontbox.Value))
+					end)
+					optionsettings.Function(optionapi.Value)
+				end
+			end,
+			Darker = optionsettings.Darker,
+			Visible = optionsettings.Visible
+		}, children, api)
+		optionapi.Object = fontdropdown.Object
+		fontbox = components.TextBox({
+			Name = optionsettings.Name..' Asset',
+			Placeholder = 'font (rbxasset)',
+			Function = function()
+				if fontdropdown.Value == 'Custom' then
+					pcall(function()
+						optionapi.Value = Font.fromId(tonumber(fontbox.Value))
+					end)
+					optionsettings.Function(optionapi.Value)
+				end
+			end,
+			Visible = false,
+			Darker = true
+		}, children, api)
+		
+		fontdropdown.Object:GetPropertyChangedSignal('Visible'):Connect(function()
+			fontbox.Object.Visible = fontdropdown.Object.Visible and fontdropdown.Value == 'Custom'
+		end)
+		
+		return optionapi
+	end,
+	Slider = function(optionsettings, children, api)
+		local optionapi = {
+			Type = 'Slider',
+			Value = optionsettings.Default or optionsettings.Min,
+			Max = optionsettings.Max,
+			Index = getTableSize(api.Options)
+		}
+		
+		local slider = Instance.new('TextButton')
+		slider.Name = optionsettings.Name..'Slider'
+		slider.Size = UDim2.new(1, 0, 0, 50)
+		slider.BackgroundColor3 = color.Dark(children.BackgroundColor3, optionsettings.Darker and 0.02 or 0)
+		slider.BorderSizePixel = 0
+		slider.AutoButtonColor = false
+		slider.Visible = optionsettings.Visible == nil or optionsettings.Visible
+		slider.Text = ''
+		slider.Parent = children
+		addTooltip(slider, optionsettings.Tooltip)
+		local title = Instance.new('TextLabel')
+		title.Name = 'Title'
+		title.Size = UDim2.fromOffset(60, 30)
+		title.Position = UDim2.fromOffset(10, 2)
+		title.BackgroundTransparency = 1
+		title.Text = optionsettings.Name
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		title.TextSize = 11
+		title.FontFace = uipallet.Font
+		title.Parent = slider
+		local valuebutton = Instance.new('TextButton')
+		valuebutton.Name = 'Value'
+		valuebutton.Size = UDim2.fromOffset(60, 15)
+		valuebutton.Position = UDim2.new(1, -69, 0, 9)
+		valuebutton.BackgroundTransparency = 1
+		valuebutton.Text = optionapi.Value..(optionsettings.Suffix and ' '..(type(optionsettings.Suffix) == 'function' and optionsettings.Suffix(optionapi.Value) or optionsettings.Suffix) or '')
+		valuebutton.TextXAlignment = Enum.TextXAlignment.Right
+		valuebutton.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		valuebutton.TextSize = 11
+		valuebutton.FontFace = uipallet.Font
+		valuebutton.Parent = slider
+		local valuebox = Instance.new('TextBox')
+		valuebox.Name = 'Box'
+		valuebox.Size = valuebutton.Size
+		valuebox.Position = valuebutton.Position
+		valuebox.BackgroundTransparency = 1
+		valuebox.Visible = false
+		valuebox.Text = optionapi.Value
+		valuebox.TextXAlignment = Enum.TextXAlignment.Right
+		valuebox.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		valuebox.TextSize = 11
+		valuebox.FontFace = uipallet.Font
+		valuebox.ClearTextOnFocus = false
+		valuebox.Parent = slider
+		local bkg = Instance.new('Frame')
+		bkg.Name = 'Slider'
+		bkg.Size = UDim2.new(1, -20, 0, 2)
+		bkg.Position = UDim2.fromOffset(10, 37)
+		bkg.BackgroundColor3 = color.Light(uipallet.Main, 0.034)
+		bkg.BorderSizePixel = 0
+		bkg.Parent = slider
+		local fill = bkg:Clone()
+		fill.Name = 'Fill'
+		fill.Size = UDim2.fromScale(math.clamp((optionapi.Value - optionsettings.Min) / optionsettings.Max, 0.04, 0.96), 1)
+		fill.Position = UDim2.new()
+		fill.BackgroundColor3 = Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value)
+		fill.Parent = bkg
+		local knobholder = Instance.new('Frame')
+		knobholder.Name = 'Knob'
+		knobholder.Size = UDim2.fromOffset(24, 4)
+		knobholder.Position = UDim2.fromScale(1, 0.5)
+		knobholder.AnchorPoint = Vector2.new(0.5, 0.5)
+		knobholder.BackgroundColor3 = slider.BackgroundColor3
+		knobholder.BorderSizePixel = 0
+		knobholder.Parent = fill
+		local knob = Instance.new('Frame')
+		knob.Name = 'Knob'
+		knob.Size = UDim2.fromOffset(14, 14)
+		knob.Position = UDim2.fromScale(0.5, 0.5)
+		knob.AnchorPoint = Vector2.new(0.5, 0.5)
+		knob.BackgroundColor3 = Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value)
+		knob.Parent = knobholder
+		addCorner(knob, UDim.new(1, 0))
+		optionsettings.Function = optionsettings.Function or function() end
+		optionsettings.Decimal = optionsettings.Decimal or 1
+		
+		function optionapi:Save(tab)
+			tab[optionsettings.Name] = {
+				Value = self.Value,
+				Max = self.Max
+			}
+		end
+		
+		function optionapi:Load(tab)
+			local newval = tab.Value == tab.Max and tab.Max ~= self.Max and self.Max or tab.Value
+			if self.Value ~= newval then
+				self:SetValue(newval, nil, true)
+			end
+		end
+		
+		function optionapi:Color(hue, sat, val, rainbowcheck)
+			fill.BackgroundColor3 = rainbowcheck and Color3.fromHSV(mainapi:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+			knob.BackgroundColor3 = fill.BackgroundColor3
+		end
+		
+		function optionapi:SetValue(value, pos, final)
+			if tonumber(value) == math.huge or value ~= value then return end
+			local check = self.Value ~= value
+			self.Value = value
+			tween:Tween(fill, uipallet.Tween, {
+				Size = UDim2.fromScale(math.clamp(pos or math.clamp(value / optionsettings.Max, 0, 1), 0.04, 0.96), 1)
+			})
+			valuebutton.Text = self.Value..(optionsettings.Suffix and ' '..(type(optionsettings.Suffix) == 'function' and optionsettings.Suffix(self.Value) or optionsettings.Suffix) or '')
+			if check or final then
+				optionsettings.Function(value, final)
+			end
+		end
+		
+		slider.InputBegan:Connect(function(inputObj)
+			if
+				(inputObj.UserInputType == Enum.UserInputType.MouseButton1 or inputObj.UserInputType == Enum.UserInputType.Touch)
+				and (inputObj.Position.Y - slider.AbsolutePosition.Y) > (20 * scale.Scale)
+			then
+				local newPosition = math.clamp((inputObj.Position.X - bkg.AbsolutePosition.X) / bkg.AbsoluteSize.X, 0, 1)
+				optionapi:SetValue(math.floor((optionsettings.Min + (optionsettings.Max - optionsettings.Min) * newPosition) * optionsettings.Decimal) / optionsettings.Decimal, newPosition)
+				local lastValue = optionapi.Value
+				local lastPosition = newPosition
+		
+				local changed = inputService.InputChanged:Connect(function(input)
+					if input.UserInputType == (inputObj.UserInputType == Enum.UserInputType.MouseButton1 and Enum.UserInputType.MouseMovement or Enum.UserInputType.Touch) then
+						local newPosition = math.clamp((input.Position.X - bkg.AbsolutePosition.X) / bkg.AbsoluteSize.X, 0, 1)
+						optionapi:SetValue(math.floor((optionsettings.Min + (optionsettings.Max - optionsettings.Min) * newPosition) * optionsettings.Decimal) / optionsettings.Decimal, newPosition)
+						lastValue = optionapi.Value
+						lastPosition = newPosition
+					end
+				end)
+		
+				local ended
+				ended = inputObj.Changed:Connect(function()
+					if inputObj.UserInputState == Enum.UserInputState.End then
+						if changed then
+							changed:Disconnect()
+						end
+						if ended then
+							ended:Disconnect()
+						end
+						optionapi:SetValue(lastValue, lastPosition, true)
+					end
+				end)
+		
+			end
+		end)
+		slider.MouseEnter:Connect(function()
+			tween:Tween(knob, uipallet.Tween, {
+				Size = UDim2.fromOffset(16, 16)
+			})
+		end)
+		slider.MouseLeave:Connect(function()
+			tween:Tween(knob, uipallet.Tween, {
+				Size = UDim2.fromOffset(14, 14)
+			})
+		end)
+		valuebutton.MouseButton1Click:Connect(function()
+			valuebutton.Visible = false
+			valuebox.Visible = true
+			valuebox.Text = optionapi.Value
+			valuebox:CaptureFocus()
+		end)
+		valuebox.FocusLost:Connect(function(enter)
+			valuebutton.Visible = true
+			valuebox.Visible = false
+			if enter and tonumber(valuebox.Text) then
+				optionapi:SetValue(tonumber(valuebox.Text), nil, true)
+			end
+		end)
+		
+		optionapi.Object = slider
+		api.Options[optionsettings.Name] = optionapi
+		
+		return optionapi
+	end,
+	Targets = function(optionsettings, children, api)
+		local optionapi = {
+			Type = 'Targets',
+			Index = getTableSize(api.Options)
+		}
+		
+		local textlist = Instance.new('TextButton')
+		textlist.Name = 'Targets'
+		textlist.Size = UDim2.new(1, 0, 0, 50)
+		textlist.BackgroundColor3 = color.Dark(children.BackgroundColor3, optionsettings.Darker and 0.02 or 0)
+		textlist.BorderSizePixel = 0
+		textlist.AutoButtonColor = false
+		textlist.Visible = optionsettings.Visible == nil or optionsettings.Visible
+		textlist.Text = ''
+		textlist.Parent = children
+		addTooltip(textlist, optionsettings.Tooltip)
+		local bkg = Instance.new('Frame')
+		bkg.Name = 'BKG'
+		bkg.Size = UDim2.new(1, -20, 1, -9)
+		bkg.Position = UDim2.fromOffset(10, 4)
+		bkg.BackgroundColor3 = color.Light(uipallet.Main, 0.034)
+		bkg.Parent = textlist
+		addCorner(bkg, UDim.new(0, 4))
+		local button = Instance.new('TextButton')
+		button.Name = 'TextList'
+		button.Size = UDim2.new(1, -2, 1, -2)
+		button.Position = UDim2.fromOffset(1, 1)
+		button.BackgroundColor3 = uipallet.Main
+		button.AutoButtonColor = false
+		button.Text = ''
+		button.Parent = bkg
+		local buttontitle = Instance.new('TextLabel')
+		buttontitle.Name = 'Title'
+		buttontitle.Size = UDim2.new(1, -5, 0, 15)
+		buttontitle.Position = UDim2.fromOffset(5, 6)
+		buttontitle.BackgroundTransparency = 1
+		buttontitle.Text = 'Target:'
+		buttontitle.TextXAlignment = Enum.TextXAlignment.Left
+		buttontitle.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		buttontitle.TextSize = 15
+		buttontitle.TextTruncate = Enum.TextTruncate.AtEnd
+		buttontitle.FontFace = uipallet.Font
+		buttontitle.Parent = button
+		local items = buttontitle:Clone()
+		items.Name = 'Items'
+		items.Position = UDim2.fromOffset(5, 21)
+		items.Text = 'Ignore none'
+		items.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		items.TextSize = 11
+		items.Parent = button
+		addCorner(button, UDim.new(0, 4))
+		local tool = Instance.new('Frame')
+		tool.Size = UDim2.fromOffset(65, 12)
+		tool.Position = UDim2.fromOffset(52, 8)
+		tool.BackgroundTransparency = 1
+		tool.Parent = button
+		local toollist = Instance.new('UIListLayout')
+		toollist.FillDirection = Enum.FillDirection.Horizontal
+		toollist.Padding = UDim.new(0, 6)
+		toollist.Parent = tool
+		local window = Instance.new('TextButton')
+		window.Name = 'TargetsTextWindow'
+		window.Size = UDim2.fromOffset(220, 145)
+		window.BackgroundColor3 = uipallet.Main
+		window.BorderSizePixel = 0
+		window.AutoButtonColor = false
+		window.Visible = false
+		window.Text = ''
+		window.Parent = clickgui
+		optionapi.Window = window
+		addBlur(window)
+		addCorner(window)
+		local icon = Instance.new('ImageLabel')
+		icon.Name = 'Icon'
+		icon.Size = UDim2.fromOffset(18, 12)
+		icon.Position = UDim2.fromOffset(10, 15)
+		icon.BackgroundTransparency = 1
+		icon.Image = getcustomasset('newvape/assets/new/targetstab.png')
+		icon.Parent = window
+		local title = Instance.new('TextLabel')
+		title.Name = 'Title'
+		title.Size = UDim2.new(1, -36, 0, 20)
+		title.Position = UDim2.fromOffset(math.abs(title.Size.X.Offset), 11)
+		title.BackgroundTransparency = 1
+		title.Text = 'Target settings'
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.TextColor3 = uipallet.Text
+		title.TextSize = 13
+		title.FontFace = uipallet.Font
+		title.Parent = window
+		local close = addCloseButton(window)
+		optionsettings.Function = optionsettings.Function or function() end
+		
+		function optionapi:Save(tab)
+			tab.Targets = {
+				Players = self.Players.Enabled,
+				NPCs = self.NPCs.Enabled,
+				Invisible = self.Invisible.Enabled,
+				Walls = self.Walls.Enabled
+			}
+		end
+		
+		function optionapi:Load(tab)
+			if self.Players.Enabled ~= tab.Players then
+				self.Players:Toggle()
+			end
+			if self.NPCs.Enabled ~= tab.NPCs then
+				self.NPCs:Toggle()
+			end
+			if self.Invisible.Enabled ~= tab.Invisible then
+				self.Invisible:Toggle()
+			end
+			if self.Walls.Enabled ~= tab.Walls then
+				self.Walls:Toggle()
+			end
+		end
+		
+		function optionapi:Color(hue, sat, val, rainbowcheck)
+			bkg.BackgroundColor3 = rainbowcheck and Color3.fromHSV(mainapi:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+			if self.Players.Enabled then
+				tween:Cancel(self.Players.Object.Frame)
+				self.Players.Object.Frame.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+			end
+			if self.NPCs.Enabled then
+				tween:Cancel(self.NPCs.Object.Frame)
+				self.NPCs.Object.Frame.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+			end
+			if self.Invisible.Enabled then
+				tween:Cancel(self.Invisible.Object.Knob)
+				self.Invisible.Object.Knob.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+			end
+			if self.Walls.Enabled then
+				tween:Cancel(self.Walls.Object.Knob)
+				self.Walls.Object.Knob.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+			end
+		end
+		
+		optionapi.Players = components.TargetsButton({
+			Position = UDim2.fromOffset(11, 45),
+			Icon = getcustomasset('newvape/assets/new/targetplayers1.png'),
+			IconSize = UDim2.fromOffset(15, 16),
+			IconParent = tool,
+			ToolIcon = getcustomasset('newvape/assets/new/targetplayers2.png'),
+			ToolSize = UDim2.fromOffset(11, 12),
+			Tooltip = 'Players',
+			Function = optionsettings.Function
+		}, window, tool)
+		optionapi.NPCs = components.TargetsButton({
+			Position = UDim2.fromOffset(112, 45),
+			Icon = getcustomasset('newvape/assets/new/targetnpc1.png'),
+			IconSize = UDim2.fromOffset(12, 16),
+			IconParent = tool,
+			ToolIcon = getcustomasset('newvape/assets/new/targetnpc2.png'),
+			ToolSize = UDim2.fromOffset(9, 12),
+			Tooltip = 'NPCs',
+			Function = optionsettings.Function
+		}, window, tool)
+		optionapi.Invisible = components.Toggle({
+			Name = 'Ignore invisible',
+			Function = function()
+				local text = 'none'
+				if optionapi.Invisible.Enabled then
+					text = 'invisible'
+				end
+				if optionapi.Walls.Enabled then
+					text = text == 'none' and 'behind walls' or text..', behind walls'
+				end
+				items.Text = 'Ignore '..text
+				optionsettings.Function()
+			end
+		}, window, {Options = {}})
+		optionapi.Invisible.Object.Position = UDim2.fromOffset(0, 81)
+		optionapi.Walls = components.Toggle({
+			Name = 'Ignore behind walls',
+			Function = function()
+				local text = 'none'
+				if optionapi.Invisible.Enabled then
+					text = 'invisible'
+				end
+				if optionapi.Walls.Enabled then
+					text = text == 'none' and 'behind walls' or text..', behind walls'
+				end
+				items.Text = 'Ignore '..text
+				optionsettings.Function()
+			end
+		}, window, {Options = {}})
+		optionapi.Walls.Object.Position = UDim2.fromOffset(0, 111)
+		if optionsettings.Players then
+			optionapi.Players:Toggle()
+		end
+		if optionsettings.NPCs then
+			optionapi.NPCs:Toggle()
+		end
+		if optionsettings.Invisible then
+			optionapi.Invisible:Toggle()
+		end
+		if optionsettings.Walls then
+			optionapi.Walls:Toggle()
+		end
+		
+		close.MouseButton1Click:Connect(function()
+			window.Visible = false
+		end)
+		button.MouseButton1Click:Connect(function()
+			window.Visible = not window.Visible
+			tween:Cancel(bkg)
+			bkg.BackgroundColor3 = window.Visible and Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value) or color.Light(uipallet.Main, 0.37)
+		end)
+		textlist.MouseEnter:Connect(function()
+			if not optionapi.Window.Visible then
+				tween:Tween(bkg, uipallet.Tween, {
+					BackgroundColor3 = color.Light(uipallet.Main, 0.37)
+				})
+			end
+		end)
+		textlist.MouseLeave:Connect(function()
+			if not optionapi.Window.Visible then
+				tween:Tween(bkg, uipallet.Tween, {
+					BackgroundColor3 = color.Light(uipallet.Main, 0.034)
+				})
+			end
+		end)
+		textlist:GetPropertyChangedSignal('AbsolutePosition'):Connect(function()
+			if mainapi.ThreadFix then
+				setthreadidentity(8)
+			end
+			local actualPosition = (textlist.AbsolutePosition + Vector2.new(0, 60)) / scale.Scale
+			window.Position = UDim2.fromOffset(actualPosition.X + 220, actualPosition.Y)
+		end)
+		
+		optionapi.Object = textlist
+		api.Options.Targets = optionapi
+		
+		return optionapi
+	end,
+	TargetsButton = function(optionsettings, children, api)
+		local optionapi = {Enabled = false}
+		
+		local targetbutton = Instance.new('TextButton')
+		targetbutton.Size = UDim2.fromOffset(98, 31)
+		targetbutton.Position = optionsettings.Position
+		targetbutton.BackgroundColor3 = color.Light(uipallet.Main, 0.05)
+		targetbutton.AutoButtonColor = false
+		targetbutton.Visible = optionsettings.Visible == nil or optionsettings.Visible
+		targetbutton.Text = ''
+		targetbutton.Parent = children
+		addCorner(targetbutton)
+		addTooltip(targetbutton, optionsettings.Tooltip)
+		local bkg = Instance.new('Frame')
+		bkg.Size = UDim2.new(1, -2, 1, -2)
+		bkg.Position = UDim2.fromOffset(1, 1)
+		bkg.BackgroundColor3 = uipallet.Main
+		bkg.Parent = targetbutton
+		addCorner(bkg)
+		local icon = Instance.new('ImageLabel')
+		icon.Size = optionsettings.IconSize
+		icon.Position = UDim2.fromScale(0.5, 0.5)
+		icon.AnchorPoint = Vector2.new(0.5, 0.5)
+		icon.BackgroundTransparency = 1
+		icon.Image = optionsettings.Icon
+		icon.ImageColor3 = color.Light(uipallet.Main, 0.37)
+		icon.Parent = bkg
+		optionsettings.Function = optionsettings.Function or function() end
+		local tooltipicon
+		
+		function optionapi:Toggle()
+			self.Enabled = not self.Enabled
+			tween:Tween(bkg, uipallet.Tween, {
+				BackgroundColor3 = self.Enabled and Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value) or uipallet.Main
+			})
+			tween:Tween(icon, uipallet.Tween, {
+				ImageColor3 = self.Enabled and Color3.new(1, 1, 1) or color.Light(uipallet.Main, 0.37)
+			})
+			if tooltipicon then
+				tooltipicon:Destroy()
+			end
+			if self.Enabled then
+				tooltipicon = Instance.new('ImageLabel')
+				tooltipicon.Size = optionsettings.ToolSize
+				tooltipicon.BackgroundTransparency = 1
+				tooltipicon.Image = optionsettings.ToolIcon
+				tooltipicon.ImageColor3 = uipallet.Text
+				tooltipicon.Parent = optionsettings.IconParent
+			end
+			optionsettings.Function(self.Enabled)
+		end
+		
+		targetbutton.MouseEnter:Connect(function()
+			if not optionapi.Enabled then
+				tween:Tween(bkg, uipallet.Tween, {
+					BackgroundColor3 = Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value - 0.25)
+				})
+				tween:Tween(icon, uipallet.Tween, {
+					ImageColor3 = Color3.new(1, 1, 1)
+				})
+			end
+		end)
+		targetbutton.MouseLeave:Connect(function()
+			if not optionapi.Enabled then
+				tween:Tween(bkg, uipallet.Tween, {
+					BackgroundColor3 = uipallet.Main
+				})
+				tween:Tween(icon, uipallet.Tween, {
+					ImageColor3 = color.Light(uipallet.Main, 0.37)
+				})
+			end
+		end)
+		targetbutton.MouseButton1Click:Connect(function()
+			optionapi:Toggle()
+		end)
+		
+		optionapi.Object = targetbutton
+		
+		return optionapi
+	end,
+	TextBox = function(optionsettings, children, api)
+		local optionapi = {
+			Type = 'TextBox',
+			Value = optionsettings.Default or '',
+			Index = 0
+		}
+		
+		local textbox = Instance.new('TextButton')
+		textbox.Name = optionsettings.Name..'TextBox'
+		textbox.Size = UDim2.new(1, 0, 0, 58)
+		textbox.BackgroundColor3 = color.Dark(children.BackgroundColor3, optionsettings.Darker and 0.02 or 0)
+		textbox.BorderSizePixel = 0
+		textbox.AutoButtonColor = false
+		textbox.Visible = optionsettings.Visible == nil or optionsettings.Visible
+		textbox.Text = ''
+		textbox.Parent = children
+		addTooltip(textbox, optionsettings.Tooltip)
+		local title = Instance.new('TextLabel')
+		title.Size = UDim2.new(1, -10, 0, 20)
+		title.Position = UDim2.fromOffset(10, 3)
+		title.BackgroundTransparency = 1
+		title.Text = optionsettings.Name
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.TextColor3 = uipallet.Text
+		title.TextSize = 12
+		title.FontFace = uipallet.Font
+		title.Parent = textbox
+		local bkg = Instance.new('Frame')
+		bkg.Name = 'BKG'
+		bkg.Size = UDim2.new(1, -20, 0, 29)
+		bkg.Position = UDim2.fromOffset(10, 23)
+		bkg.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+		bkg.Parent = textbox
+		addCorner(bkg, UDim.new(0, 4))
+		local box = Instance.new('TextBox')
+		box.Size = UDim2.new(1, -8, 1, 0)
+		box.Position = UDim2.fromOffset(8, 0)
+		box.BackgroundTransparency = 1
+		box.Text = optionsettings.Default or ''
+		box.PlaceholderText = optionsettings.Placeholder or 'Click to set'
+		box.TextXAlignment = Enum.TextXAlignment.Left
+		box.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		box.PlaceholderColor3 = color.Dark(uipallet.Text, 0.31)
+		box.TextSize = 12
+		box.FontFace = uipallet.Font
+		box.ClearTextOnFocus = false
+		box.Parent = bkg
+		optionsettings.Function = optionsettings.Function or function() end
+		
+		function optionapi:Save(tab)
+			tab[optionsettings.Name] = {Value = self.Value}
+		end
+		
+		function optionapi:Load(tab)
+			if self.Value ~= tab.Value then
+				self:SetValue(tab.Value)
+			end
+		end
+		
+		function optionapi:SetValue(val, enter)
+			self.Value = val
+			box.Text = val
+			optionsettings.Function(enter)
+		end
+		
+		textbox.MouseButton1Click:Connect(function()
+			box:CaptureFocus()
+		end)
+		box.FocusLost:Connect(function(enter)
+			optionapi:SetValue(box.Text, enter)
+		end)
+		box:GetPropertyChangedSignal('Text'):Connect(function()
+			optionapi:SetValue(box.Text)
+		end)
+		
+		optionapi.Object = textbox
+		api.Options[optionsettings.Name] = optionapi
+		
+		return optionapi
+	end,
+	TextList = function(optionsettings, children, api)
+		local optionapi = {
+			Type = 'TextList',
+			List = optionsettings.Default or {},
+			ListEnabled = optionsettings.Default or {},
+			Objects = {},
+			Window = {Visible = false},
+			Index = getTableSize(api.Options)
+		}
+		optionsettings.Color = optionsettings.Color or Color3.fromRGB(5, 134, 105)
+		
+		local textlist = Instance.new('TextButton')
+		textlist.Name = optionsettings.Name..'TextList'
+		textlist.Size = UDim2.new(1, 0, 0, 50)
+		textlist.BackgroundColor3 = color.Dark(children.BackgroundColor3, optionsettings.Darker and 0.02 or 0)
+		textlist.BorderSizePixel = 0
+		textlist.AutoButtonColor = false
+		textlist.Visible = optionsettings.Visible == nil or optionsettings.Visible
+		textlist.Text = ''
+		textlist.Parent = children
+		addTooltip(textlist, optionsettings.Tooltip)
+		local bkg = Instance.new('Frame')
+		bkg.Name = 'BKG'
+		bkg.Size = UDim2.new(1, -20, 1, -9)
+		bkg.Position = UDim2.fromOffset(10, 4)
+		bkg.BackgroundColor3 = color.Light(uipallet.Main, 0.034)
+		bkg.Parent = textlist
+		addCorner(bkg, UDim.new(0, 4))
+		local button = Instance.new('TextButton')
+		button.Name = 'TextList'
+		button.Size = UDim2.new(1, -2, 1, -2)
+		button.Position = UDim2.fromOffset(1, 1)
+		button.BackgroundColor3 = uipallet.Main
+		button.AutoButtonColor = false
+		button.Text = ''
+		button.Parent = bkg
+		local buttonicon = Instance.new('ImageLabel')
+		buttonicon.Name = 'Icon'
+		buttonicon.Size = UDim2.fromOffset(14, 12)
+		buttonicon.Position = UDim2.fromOffset(10, 14)
+		buttonicon.BackgroundTransparency = 1
+		buttonicon.Image = optionsettings.Icon or getcustomasset('newvape/assets/new/allowedicon.png')
+		buttonicon.Parent = button
+		local buttontitle = Instance.new('TextLabel')
+		buttontitle.Name = 'Title'
+		buttontitle.Size = UDim2.new(1, -35, 0, 15)
+		buttontitle.Position = UDim2.fromOffset(35, 6)
+		buttontitle.BackgroundTransparency = 1
+		buttontitle.Text = optionsettings.Name
+		buttontitle.TextXAlignment = Enum.TextXAlignment.Left
+		buttontitle.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		buttontitle.TextSize = 15
+		buttontitle.TextTruncate = Enum.TextTruncate.AtEnd
+		buttontitle.FontFace = uipallet.Font
+		buttontitle.Parent = button
+		local amount = buttontitle:Clone()
+		amount.Name = 'Amount'
+		amount.Size = UDim2.new(1, -13, 0, 15)
+		amount.Position = UDim2.fromOffset(0, 6)
+		amount.Text = '0'
+		amount.TextXAlignment = Enum.TextXAlignment.Right
+		amount.Parent = button
+		local items = buttontitle:Clone()
+		items.Name = 'Items'
+		items.Position = UDim2.fromOffset(35, 21)
+		items.Text = 'None'
+		items.TextColor3 = color.Dark(uipallet.Text, 0.43)
+		items.TextSize = 11
+		items.Parent = button
+		addCorner(button, UDim.new(0, 4))
+		local window = Instance.new('TextButton')
+		window.Name = optionsettings.Name..'TextWindow'
+		window.Size = UDim2.fromOffset(220, 85)
+		window.BackgroundColor3 = uipallet.Main
+		window.BorderSizePixel = 0
+		window.AutoButtonColor = false
+		window.Visible = false
+		window.Text = ''
+		window.Parent = api.Legit and mainapi.Legit.Window or clickgui
+		optionapi.Window = window
+		addBlur(window)
+		addCorner(window)
+		local icon = Instance.new('ImageLabel')
+		icon.Name = 'Icon'
+		icon.Size = optionsettings.TabSize or UDim2.fromOffset(19, 16)
+		icon.Position = UDim2.fromOffset(10, 13)
+		icon.BackgroundTransparency = 1
+		icon.Image = optionsettings.Tab or getcustomasset('newvape/assets/new/allowedtab.png')
+		icon.Parent = window
+		local title = Instance.new('TextLabel')
+		title.Name = 'Title'
+		title.Size = UDim2.new(1, -36, 0, 20)
+		title.Position = UDim2.fromOffset(math.abs(title.Size.X.Offset), 11)
+		title.BackgroundTransparency = 1
+		title.Text = optionsettings.Name
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.TextColor3 = uipallet.Text
+		title.TextSize = 13
+		title.FontFace = uipallet.Font
+		title.Parent = window
+		local close = addCloseButton(window)
+		local addbkg = Instance.new('Frame')
+		addbkg.Name = 'Add'
+		addbkg.Size = UDim2.fromOffset(200, 31)
+		addbkg.Position = UDim2.fromOffset(10, 45)
+		addbkg.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+		addbkg.Parent = window
+		addCorner(addbkg)
+		local addbox = addbkg:Clone()
+		addbox.Size = UDim2.new(1, -2, 1, -2)
+		addbox.Position = UDim2.fromOffset(1, 1)
+		addbox.BackgroundColor3 = color.Dark(uipallet.Main, 0.02)
+		addbox.Parent = addbkg
+		local addvalue = Instance.new('TextBox')
+		addvalue.Size = UDim2.new(1, -35, 1, 0)
+		addvalue.Position = UDim2.fromOffset(10, 0)
+		addvalue.BackgroundTransparency = 1
+		addvalue.Text = ''
+		addvalue.PlaceholderText = optionsettings.Placeholder or 'Add entry...'
+		addvalue.TextXAlignment = Enum.TextXAlignment.Left
+		addvalue.TextColor3 = Color3.new(1, 1, 1)
+		addvalue.TextSize = 15
+		addvalue.FontFace = uipallet.Font
+		addvalue.ClearTextOnFocus = false
+		addvalue.Parent = addbkg
+		local addbutton = Instance.new('ImageButton')
+		addbutton.Name = 'AddButton'
+		addbutton.Size = UDim2.fromOffset(16, 16)
+		addbutton.Position = UDim2.new(1, -26, 0, 8)
+		addbutton.BackgroundTransparency = 1
+		addbutton.Image = getcustomasset('newvape/assets/new/add.png')
+		addbutton.ImageColor3 = optionsettings.Color
+		addbutton.ImageTransparency = 0.3
+		addbutton.Parent = addbkg
+		optionsettings.Function = optionsettings.Function or function() end
+		
+		function optionapi:Save(tab)
+			tab[optionsettings.Name] = {
+				List = self.List,
+				ListEnabled = self.ListEnabled
+			}
+		end
+		
+		function optionapi:Load(tab)
+			self.List = tab.List or {}
+			self.ListEnabled = tab.ListEnabled or {}
+			self:ChangeValue()
+		end
+		
+		function optionapi:Color(hue, sat, val, rainbowcheck)
+			if window.Visible then
+				bkg.BackgroundColor3 = rainbowcheck and Color3.fromHSV(mainapi:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+			end
+		end
+		
+		function optionapi:ChangeValue(val)
+			if val then
+				local ind = table.find(self.List, val)
+				if ind then
+					table.remove(self.List, ind)
+					ind = table.find(self.ListEnabled, val)
+					if ind then
+						table.remove(self.ListEnabled, ind)
+					end
+				else
+					table.insert(self.List, val)
+					table.insert(self.ListEnabled, val)
+				end
+			end
+		
+			optionsettings.Function(self.List)
+			for _, v in self.Objects do
+				v:Destroy()
+			end
+			table.clear(self.Objects)
+			window.Size = UDim2.fromOffset(220, 85 + (#self.List * 35))
+			amount.Text = #self.List
+		
+			local enabledtext = 'None'
+			for i, v in self.ListEnabled do
+				if i == 1 then enabledtext = '' end
+				enabledtext = enabledtext..(i == 1 and v or ', '..v)
+			end
+			items.Text = enabledtext
+		
+			for i, v in self.List do
+				local enabled = table.find(self.ListEnabled, v)
+				local object = Instance.new('TextButton')
+				object.Name = v
+				object.Size = UDim2.fromOffset(200, 32)
+				object.Position = UDim2.fromOffset(10, 47 + (i * 35))
+				object.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+				object.AutoButtonColor = false
+				object.Text = ''
+				object.Parent = window
+				addCorner(object)
+				local objectbkg = Instance.new('Frame')
+				objectbkg.Name = 'BKG'
+				objectbkg.Size = UDim2.new(1, -2, 1, -2)
+				objectbkg.Position = UDim2.fromOffset(1, 1)
+				objectbkg.BackgroundColor3 = uipallet.Main
+				objectbkg.Visible = false
+				objectbkg.Parent = object
+				addCorner(objectbkg)
+				local objectdot = Instance.new('Frame')
+				objectdot.Name = 'Dot'
+				objectdot.Size = UDim2.fromOffset(10, 11)
+				objectdot.Position = UDim2.fromOffset(10, 12)
+				objectdot.BackgroundColor3 = enabled and optionsettings.Color or color.Light(uipallet.Main, 0.37)
+				objectdot.Parent = object
+				addCorner(objectdot, UDim.new(1, 0))
+				local objectdotin = objectdot:Clone()
+				objectdotin.Size = UDim2.fromOffset(8, 9)
+				objectdotin.Position = UDim2.fromOffset(1, 1)
+				objectdotin.BackgroundColor3 = enabled and optionsettings.Color or color.Light(uipallet.Main, 0.02)
+				objectdotin.Parent = objectdot
+				local objecttitle = Instance.new('TextLabel')
+				objecttitle.Name = 'Title'
+				objecttitle.Size = UDim2.new(1, -30, 1, 0)
+				objecttitle.Position = UDim2.fromOffset(30, 0)
+				objecttitle.BackgroundTransparency = 1
+				objecttitle.Text = v
+				objecttitle.TextXAlignment = Enum.TextXAlignment.Left
+				objecttitle.TextColor3 = color.Dark(uipallet.Text, 0.16)
+				objecttitle.TextSize = 15
+				objecttitle.FontFace = uipallet.Font
+				objecttitle.Parent = object
+				local close = Instance.new('ImageButton')
+				close.Name = 'Close'
+				close.Size = UDim2.fromOffset(16, 16)
+				close.Position = UDim2.new(1, -26, 0, 8)
+				close.BackgroundColor3 = Color3.new(1, 1, 1)
+				close.BackgroundTransparency = 1
+				close.AutoButtonColor = false
+				close.Image = getcustomasset('newvape/assets/new/closemini.png')
+				close.ImageColor3 = color.Light(uipallet.Text, 0.2)
+				close.ImageTransparency = 0.5
+				close.Parent = object
+				addCorner(close, UDim.new(1, 0))
+		
+				close.MouseEnter:Connect(function()
+					close.ImageTransparency = 0.3
+					tween:Tween(close, uipallet.Tween, {
+						BackgroundTransparency = 0.6
+					})
+				end)
+				close.MouseLeave:Connect(function()
+					close.ImageTransparency = 0.5
+					tween:Tween(close, uipallet.Tween, {
+						BackgroundTransparency = 1
+					})
+				end)
+				close.MouseButton1Click:Connect(function()
+					self:ChangeValue(v)
+				end)
+				object.MouseEnter:Connect(function()
+					objectbkg.Visible = true
+				end)
+				object.MouseLeave:Connect(function()
+					objectbkg.Visible = false
+				end)
+				object.MouseButton1Click:Connect(function()
+					local ind = table.find(self.ListEnabled, v)
+					if ind then
+						table.remove(self.ListEnabled, ind)
+						objectdot.BackgroundColor3 = color.Light(uipallet.Main, 0.37)
+						objectdotin.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+					else
+						table.insert(self.ListEnabled, v)
+						objectdot.BackgroundColor3 = optionsettings.Color
+						objectdotin.BackgroundColor3 = optionsettings.Color
+					end
+		
+					local enabledtext = 'None'
+					for i, v in self.ListEnabled do
+						if i == 1 then enabledtext = '' end
+						enabledtext = enabledtext..(i == 1 and v or ', '..v)
+					end
+		
+					items.Text = enabledtext
+					optionsettings.Function()
+				end)
+		
+				table.insert(self.Objects, object)
+			end
+		end
+		
+		addbutton.MouseEnter:Connect(function()
+			addbutton.ImageTransparency = 0
+		end)
+		addbutton.MouseLeave:Connect(function()
+			addbutton.ImageTransparency = 0.3
+		end)
+		addbutton.MouseButton1Click:Connect(function()
+			if not table.find(optionapi.List, addvalue.Text) then
+				optionapi:ChangeValue(addvalue.Text)
+				addvalue.Text = ''
+			end
+		end)
+		addvalue.FocusLost:Connect(function(enter)
+			if enter and not table.find(optionapi.List, addvalue.Text) then
+				optionapi:ChangeValue(addvalue.Text)
+				addvalue.Text = ''
+			end
+		end)
+		addvalue.MouseEnter:Connect(function()
+			tween:Tween(addbkg, uipallet.Tween, {
+				BackgroundColor3 = color.Light(uipallet.Main, 0.14)
+			})
+		end)
+		addvalue.MouseLeave:Connect(function()
+			tween:Tween(addbkg, uipallet.Tween, {
+				BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+			})
+		end)
+		close.MouseButton1Click:Connect(function()
+			window.Visible = false
+		end)
+		button.MouseButton1Click:Connect(function()
+			window.Visible = not window.Visible
+			tween:Cancel(bkg)
+			bkg.BackgroundColor3 = window.Visible and Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value) or color.Light(uipallet.Main, 0.37)
+		end)
+		textlist.MouseEnter:Connect(function()
+			if not optionapi.Window.Visible then
+				tween:Tween(bkg, uipallet.Tween, {
+					BackgroundColor3 = color.Light(uipallet.Main, 0.37)
+				})
+			end
+		end)
+		textlist.MouseLeave:Connect(function()
+			if not optionapi.Window.Visible then
+				tween:Tween(bkg, uipallet.Tween, {
+					BackgroundColor3 = color.Light(uipallet.Main, 0.034)
+				})
+			end
+		end)
+		textlist:GetPropertyChangedSignal('AbsolutePosition'):Connect(function()
+			if mainapi.ThreadFix then
+				setthreadidentity(8)
+			end
+			local actualPosition = (textlist.AbsolutePosition - (api.Legit and mainapi.Legit.Window.AbsolutePosition or -guiService:GetGuiInset())) / scale.Scale
+			window.Position = UDim2.fromOffset(actualPosition.X + 220, actualPosition.Y)
+		end)
+		
+		if optionsettings.Default then
+			optionapi:ChangeValue()
+		end
+		optionapi.Object = textlist
+		api.Options[optionsettings.Name] = optionapi
+		
+		return optionapi
+	end,
+	Toggle = function(optionsettings, children, api)
+		local optionapi = {
+			Type = 'Toggle',
+			Enabled = false,
+			Index = getTableSize(api.Options)
+		}
+		local hovered = false
+		local toggle = Instance.new('TextButton')
+		toggle.Name = optionsettings.Name..'Toggle'
+		toggle.Size = UDim2.new(1, 0, 0, 30)
+		toggle.BackgroundColor3 = color.Dark(children.BackgroundColor3, optionsettings.Darker and 0.02 or 0)
+		toggle.BorderSizePixel = 0
+		toggle.AutoButtonColor = false
+		toggle.Visible = optionsettings.Visible == nil or optionsettings.Visible
+		toggle.Text = '          '..optionsettings.Name
+		toggle.TextXAlignment = Enum.TextXAlignment.Left
+		toggle.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		toggle.TextSize = 14
+		toggle.FontFace = uipallet.Font
+		toggle.Parent = children
+		addTooltip(toggle, optionsettings.Tooltip)
+		local knobholder = Instance.new('Frame')
+		knobholder.Name = 'Knob'
+		knobholder.Size = UDim2.fromOffset(22, 12)
+		knobholder.Position = UDim2.new(1, -30, 0, 9)
+		knobholder.BackgroundColor3 = color.Light(uipallet.Main, 0.14)
+		knobholder.Parent = toggle
+		addCorner(knobholder, UDim.new(1, 0))
+		local knob = knobholder:Clone()
+		knob.Size = UDim2.fromOffset(8, 8)
+		knob.Position = UDim2.fromOffset(2, 2)
+		knob.BackgroundColor3 = uipallet.Main
+		knob.Parent = knobholder
+		optionsettings.Function = optionsettings.Function or function() end
+		
+		function optionapi:Save(tab)
+			tab[optionsettings.Name] = {Enabled = self.Enabled}
+		end
+		
+		function optionapi:Load(tab)
+			if self.Enabled ~= tab.Enabled then
+				self:Toggle()
+			end
+		end
+		
+		function optionapi:Color(hue, sat, val, rainbowcheck)
+			if self.Enabled then
+				tween:Cancel(knobholder)
+				knobholder.BackgroundColor3 = rainbowcheck and Color3.fromHSV(mainapi:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+			end
+		end
+		
+		function optionapi:Toggle()
+			self.Enabled = not self.Enabled
+			local rainbowcheck = mainapi.GUIColor.Rainbow and mainapi.RainbowMode.Value ~= 'Retro'
+			tween:Tween(knobholder, uipallet.Tween, {
+				BackgroundColor3 = self.Enabled and (rainbowcheck and Color3.fromHSV(mainapi:Color((mainapi.GUIColor.Hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value)) or (hovered and color.Light(uipallet.Main, 0.37) or color.Light(uipallet.Main, 0.14))
+			})
+			tween:Tween(knob, uipallet.Tween, {
+				Position = UDim2.fromOffset(self.Enabled and 12 or 2, 2)
+			})
+			optionsettings.Function(self.Enabled)
+		end
+		
+		toggle.MouseEnter:Connect(function()
+			hovered = true
+			if not optionapi.Enabled then
+				tween:Tween(knobholder, uipallet.Tween, {
+					BackgroundColor3 = color.Light(uipallet.Main, 0.37)
+				})
+			end
+		end)
+		toggle.MouseLeave:Connect(function()
+			hovered = false
+			if not optionapi.Enabled then
+				tween:Tween(knobholder, uipallet.Tween, {
+					BackgroundColor3 = color.Light(uipallet.Main, 0.14)
+				})
+			end
+		end)
+		toggle.MouseButton1Click:Connect(function()
+			optionapi:Toggle()
+		end)
+		
+		if optionsettings.Default then
+			optionapi:Toggle()
+		end
+		optionapi.Object = toggle
+		api.Options[optionsettings.Name] = optionapi
+		
+		return optionapi
+	end,
+	TwoSlider = function(optionsettings, children, api)
+		local optionapi = {
+			Type = 'TwoSlider',
+			ValueMin = optionsettings.DefaultMin or optionsettings.Min,
+			ValueMax = optionsettings.DefaultMax or 10,
+			Max = optionsettings.Max,
+			Index = getTableSize(api.Options)
+		}
+		
+		local slider = Instance.new('TextButton')
+		slider.Name = optionsettings.Name..'Slider'
+		slider.Size = UDim2.new(1, 0, 0, 50)
+		slider.BackgroundColor3 = color.Dark(children.BackgroundColor3, optionsettings.Darker and 0.02 or 0)
+		slider.BorderSizePixel = 0
+		slider.AutoButtonColor = false
+		slider.Visible = optionsettings.Visible == nil or optionsettings.Visible
+		slider.Text = ''
+		slider.Parent = children
+		addTooltip(slider, optionsettings.Tooltip)
+		local title = Instance.new('TextLabel')
+		title.Name = 'Title'
+		title.Size = UDim2.fromOffset(60, 30)
+		title.Position = UDim2.fromOffset(10, 2)
+		title.BackgroundTransparency = 1
+		title.Text = optionsettings.Name
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		title.TextSize = 11
+		title.FontFace = uipallet.Font
+		title.Parent = slider
+		local valuebutton = Instance.new('TextButton')
+		valuebutton.Name = 'Value'
+		valuebutton.Size = UDim2.fromOffset(60, 15)
+		valuebutton.Position = UDim2.new(1, -69, 0, 9)
+		valuebutton.BackgroundTransparency = 1
+		valuebutton.Text = optionapi.ValueMax
+		valuebutton.TextXAlignment = Enum.TextXAlignment.Right
+		valuebutton.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		valuebutton.TextSize = 11
+		valuebutton.FontFace = uipallet.Font
+		valuebutton.Parent = slider
+		local valuebutton2 = valuebutton:Clone()
+		valuebutton2.Position = UDim2.new(1, -125, 0, 9)
+		valuebutton2.Text = optionapi.ValueMin
+		valuebutton2.Parent = slider
+		local valuebox = Instance.new('TextBox')
+		valuebox.Name = 'Box'
+		valuebox.Size = valuebutton.Size
+		valuebox.Position = valuebutton.Position
+		valuebox.BackgroundTransparency = 1
+		valuebox.Visible = false
+		valuebox.Text = optionapi.ValueMin
+		valuebox.TextXAlignment = Enum.TextXAlignment.Right
+		valuebox.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		valuebox.TextSize = 11
+		valuebox.FontFace = uipallet.Font
+		valuebox.ClearTextOnFocus = false
+		valuebox.Parent = slider
+		local valuebox2 = valuebox:Clone()
+		valuebox2.Position = valuebutton2.Position
+		valuebox2.Parent = slider
+		local bkg = Instance.new('Frame')
+		bkg.Name = 'Slider'
+		bkg.Size = UDim2.new(1, -20, 0, 2)
+		bkg.Position = UDim2.fromOffset(10, 37)
+		bkg.BackgroundColor3 = color.Light(uipallet.Main, 0.034)
+		bkg.BorderSizePixel = 0
+		bkg.Parent = slider
+		local fill = bkg:Clone()
+		fill.Name = 'Fill'
+		fill.Position = UDim2.fromScale(math.clamp(optionapi.ValueMin / optionsettings.Max, 0.04, 0.96), 0)
+		fill.Size = UDim2.fromScale(math.clamp(math.clamp(optionapi.ValueMax / optionsettings.Max, 0, 1), 0.04, 0.96) - fill.Position.X.Scale, 1)
+		fill.BackgroundColor3 = Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value)
+		fill.Parent = bkg
+		local knobholder = Instance.new('Frame')
+		knobholder.Name = 'Knob'
+		knobholder.Size = UDim2.fromOffset(16, 4)
+		knobholder.Position = UDim2.fromScale(0, 0.5)
+		knobholder.AnchorPoint = Vector2.new(0.5, 0.5)
+		knobholder.BackgroundColor3 = slider.BackgroundColor3
+		knobholder.BorderSizePixel = 0
+		knobholder.Parent = fill
+		local knob = Instance.new('ImageLabel')
+		knob.Name = 'Knob'
+		knob.Size = UDim2.fromOffset(9, 16)
+		knob.Position = UDim2.fromScale(0.5, 0.5)
+		knob.AnchorPoint = Vector2.new(0.5, 0.5)
+		knob.BackgroundTransparency = 1
+		knob.Image = getcustomasset('newvape/assets/new/range.png')
+		knob.ImageColor3 = Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value)
+		knob.Parent = knobholder
+		local knobholdermax = knobholder:Clone()
+		knobholdermax.Name = 'KnobMax'
+		knobholdermax.Position = UDim2.fromScale(1, 0.5)
+		knobholdermax.Parent = fill
+		knobholdermax.Knob.Rotation = 180
+		local arrow = Instance.new('ImageLabel')
+		arrow.Name = 'Arrow'
+		arrow.Size = UDim2.fromOffset(12, 6)
+		arrow.Position = UDim2.new(1, -56, 0, 10)
+		arrow.BackgroundTransparency = 1
+		arrow.Image = getcustomasset('newvape/assets/new/rangearrow.png')
+		arrow.ImageColor3 = color.Light(uipallet.Main, 0.14)
+		arrow.Parent = slider
+		optionsettings.Function = optionsettings.Function or function() end
+		optionsettings.Decimal = optionsettings.Decimal or 1
+		local random = Random.new()
+		
+		function optionapi:Save(tab)
+			tab[optionsettings.Name] = {ValueMin = self.ValueMin, ValueMax = self.ValueMax}
+		end
+		
+		function optionapi:Load(tab)
+			if self.ValueMin ~= tab.ValueMin then
+				self:SetValue(false, tab.ValueMin)
+			end
+			if self.ValueMax ~= tab.ValueMax then
+				self:SetValue(true, tab.ValueMax)
+			end
+		end
+		
+		function optionapi:Color(hue, sat, val, rainbowcheck)
+			fill.BackgroundColor3 = rainbowcheck and Color3.fromHSV(mainapi:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+			knob.ImageColor3 = fill.BackgroundColor3
+			knobholdermax.Knob.ImageColor3 = fill.BackgroundColor3
+		end
+		
+		function optionapi:GetRandomValue()
+			return random:NextNumber(optionapi.ValueMin, optionapi.ValueMax)
+		end
+		
+		function optionapi:SetValue(max, value)
+			if tonumber(value) == math.huge or value ~= value then return end
+			self[max and 'ValueMax' or 'ValueMin'] = value
+			valuebutton.Text = self.ValueMax
+			valuebutton2.Text = self.ValueMin
+			local size = math.clamp(math.clamp(self.ValueMin / optionsettings.Max, 0, 1), 0.04, 0.96)
+			tween:Tween(fill, TweenInfo.new(0.1), {
+				Position = UDim2.fromScale(size, 0),
+				Size = UDim2.fromScale(math.clamp(math.clamp(math.clamp(self.ValueMax / optionsettings.Max, 0.04, 0.96), 0.04, 0.96) - size, 0, 1), 1)
+			})
+		end
+		
+		knobholder.MouseEnter:Connect(function()
+			tween:Tween(knob, uipallet.Tween, {
+				Size = UDim2.fromOffset(11, 18)
+			})
+		end)
+		knobholder.MouseLeave:Connect(function()
+			tween:Tween(knob, uipallet.Tween, {
+				Size = UDim2.fromOffset(9, 16)
+			})
+		end)
+		knobholdermax.MouseEnter:Connect(function()
+			tween:Tween(knobholdermax.Knob, uipallet.Tween, {
+				Size = UDim2.fromOffset(11, 18)
+			})
+		end)
+		knobholdermax.MouseLeave:Connect(function()
+			tween:Tween(knobholdermax.Knob, uipallet.Tween, {
+				Size = UDim2.fromOffset(9, 16)
+			})
+		end)
+		slider.InputBegan:Connect(function(inputObj)
+			if
+				(inputObj.UserInputType == Enum.UserInputType.MouseButton1 or inputObj.UserInputType == Enum.UserInputType.Touch)
+				and (inputObj.Position.Y - slider.AbsolutePosition.Y) > (20 * scale.Scale)
+			then
+				local maxCheck = (inputObj.Position.X - knobholdermax.AbsolutePosition.X) > -10
+				local newPosition = math.clamp((inputObj.Position.X - bkg.AbsolutePosition.X) / bkg.AbsoluteSize.X, 0, 1)
+				optionapi:SetValue(maxCheck, math.floor((optionsettings.Min + (optionsettings.Max - optionsettings.Min) * newPosition) * optionsettings.Decimal) / optionsettings.Decimal, newPosition)
+		
+				local changed = inputService.InputChanged:Connect(function(input)
+					if input.UserInputType == (inputObj.UserInputType == Enum.UserInputType.MouseButton1 and Enum.UserInputType.MouseMovement or Enum.UserInputType.Touch) then
+						local newPosition = math.clamp((input.Position.X - bkg.AbsolutePosition.X) / bkg.AbsoluteSize.X, 0, 1)
+						optionapi:SetValue(maxCheck, math.floor((optionsettings.Min + (optionsettings.Max - optionsettings.Min) * newPosition) * optionsettings.Decimal) / optionsettings.Decimal, newPosition)
+					end
+				end)
+		
+				local ended
+				ended = inputObj.Changed:Connect(function()
+					if inputObj.UserInputState == Enum.UserInputState.End then
+						if changed then
+							changed:Disconnect()
+						end
+						if ended then
+							ended:Disconnect()
+						end
+					end
+				end)
+			end
+		end)
+		valuebutton.MouseButton1Click:Connect(function()
+			valuebutton.Visible = false
+			valuebox.Visible = true
+			valuebox.Text = optionapi.ValueMax
+			valuebox:CaptureFocus()
+		end)
+		valuebutton2.MouseButton1Click:Connect(function()
+			valuebutton2.Visible = false
+			valuebox2.Visible = true
+			valuebox2.Text = optionapi.ValueMin
+			valuebox2:CaptureFocus()
+		end)
+		valuebox.FocusLost:Connect(function(enter)
+			valuebutton.Visible = true
+			valuebox.Visible = false
+			if enter and tonumber(valuebox.Text) then
+				optionapi:SetValue(true, tonumber(valuebox.Text))
+			end
+		end)
+		valuebox2.FocusLost:Connect(function(enter)
+			valuebutton2.Visible = true
+			valuebox2.Visible = false
+			if enter and tonumber(valuebox2.Text) then
+				optionapi:SetValue(false, tonumber(valuebox2.Text))
+			end
+		end)
+		
+		optionapi.Object = slider
+		api.Options[optionsettings.Name] = optionapi
+		
+		return optionapi
+	end,
+	Divider = function(children, text)
+		local divider = Instance.new('Frame')
+		divider.Name = 'Divider'
+		divider.Size = UDim2.new(1, 0, 0, 1)
+		divider.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+		divider.BorderSizePixel = 0
+		divider.Parent = children
+		if text then
+			local label = Instance.new('TextLabel')
+			label.Name = 'DividerLabel'
+			label.Size = UDim2.fromOffset(218, 27)
+			label.BackgroundTransparency = 1
+			label.Text = '          '..text:upper()
+			label.TextXAlignment = Enum.TextXAlignment.Left
+			label.TextColor3 = color.Dark(uipallet.Text, 0.43)
+			label.TextSize = 9
+			label.FontFace = uipallet.Font
+			label.Parent = children
+			divider.Position = UDim2.fromOffset(0, 26)
+			divider.Parent = label
+		end
+	end
+}
+
+mainapi.Components = setmetatable(components, {
+	__newindex = function(self, ind, func)
+		for _, v in mainapi.Modules do
+			rawset(v, 'Create'..ind, function(_, settings)
+				return func(settings, v.Children, v)
+			end)
+		end
+
+		if mainapi.Legit then
+			for _, v in mainapi.Legit.Modules do
+				rawset(v, 'Create'..ind, function(_, settings)
+					return func(settings, v.Children, v)
+				end)
+			end
+		end
+
+		rawset(self, ind, func)
+	end
+})
+
+task.spawn(function()
+	repeat
+		local hue = tick() * (0.2 * mainapi.RainbowSpeed.Value) % 1
+		for _, v in mainapi.RainbowTable do
+			if v.Type == 'GUISlider' then
+				v:SetValue(mainapi:Color(hue))
+			else
+				v:SetValue(hue)
+			end
+		end
+		task.wait(1 / mainapi.RainbowUpdateSpeed.Value)
+	until mainapi.Loaded == nil
+end)
+
+function mainapi:BlurCheck()
+	if self.ThreadFix then
+		setthreadidentity(8)
+		runService:SetRobloxGuiFocused((clickgui.Visible or guiService:GetErrorType() ~= Enum.ConnectionError.OK) and self.Blur.Enabled)
+	end
+end
+
+addMaid(mainapi)
+
+function mainapi:CreateGUI()
+	local categoryapi = {
+		Type = 'MainWindow',
+		Buttons = {},
+		Options = {}
+	}
+
+	local window = Instance.new('TextButton')
+	window.Name = 'GUICategory'
+	window.Position = UDim2.fromOffset(6, 60)
+	window.BackgroundColor3 = color.Dark(uipallet.Main, 0.02)
+	window.AutoButtonColor = false
+	window.Text = ''
+	window.Parent = clickgui
+	addBlur(window)
+	addCorner(window)
+	makeDraggable(window)
+	local logo = Instance.new('ImageLabel')
+	logo.Name = 'VapeLogo'
+	logo.Size = UDim2.fromOffset(62, 18)
+	logo.Position = UDim2.fromOffset(11, 10)
+	logo.BackgroundTransparency = 1
+	logo.Image = getcustomasset('newvape/assets/new/guivape.png')
+	logo.ImageColor3 = select(3, uipallet.Main:ToHSV()) > 0.5 and uipallet.Text or Color3.new(1, 1, 1)
+	logo.Parent = window
+	local logov4 = Instance.new('ImageLabel')
+	logov4.Name = 'V4Logo'
+	logov4.Size = UDim2.fromOffset(28, 16)
+	logov4.Position = UDim2.new(1, 1, 0, 1)
+	logov4.BackgroundTransparency = 1
+	logov4.Image = getcustomasset('newvape/assets/new/guiv4.png')
+	logov4.Parent = logo
+	local children = Instance.new('Frame')
+	children.Name = 'Children'
+	children.Size = UDim2.new(1, 0, 1, -33)
+	children.Position = UDim2.fromOffset(0, 37)
+	children.BackgroundTransparency = 1
+	children.Parent = window
+	local windowlist = Instance.new('UIListLayout')
+	windowlist.SortOrder = Enum.SortOrder.LayoutOrder
+	windowlist.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	windowlist.Parent = children
+	local settingsbutton = Instance.new('TextButton')
+	settingsbutton.Name = 'Settings'
+	settingsbutton.Size = UDim2.fromOffset(40, 40)
+	settingsbutton.Position = UDim2.new(1, -40, 0, 0)
+	settingsbutton.BackgroundTransparency = 1
+	settingsbutton.Text = ''
+	settingsbutton.Parent = window
+	addTooltip(settingsbutton, 'Open settings')
+	local settingsicon = Instance.new('ImageLabel')
+	settingsicon.Size = UDim2.fromOffset(14, 14)
+	settingsicon.Position = UDim2.fromOffset(15, 12)
+	settingsicon.BackgroundTransparency = 1
+	settingsicon.Image = getcustomasset('newvape/assets/new/guisettings.png')
+	settingsicon.ImageColor3 = color.Light(uipallet.Main, 0.37)
+	settingsicon.Parent = settingsbutton
+	local settingspane = Instance.new('TextButton')
+	settingspane.Size = UDim2.fromScale(1, 1)
+	settingspane.BackgroundColor3 = color.Dark(uipallet.Main, 0.02)
+	settingspane.AutoButtonColor = false
+	settingspane.Visible = false
+	settingspane.Text = ''
+	settingspane.Parent = window
+	local title = Instance.new('TextLabel')
+	title.Name = 'Title'
+	title.Size = UDim2.new(1, -36, 0, 20)
+	title.Position = UDim2.fromOffset(math.abs(title.Size.X.Offset), 11)
+	title.BackgroundTransparency = 1
+	title.Text = 'Settings'
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.TextColor3 = uipallet.Text
+	title.TextSize = 13
+	title.FontFace = uipallet.Font
+	title.Parent = settingspane
+	local close = addCloseButton(settingspane)
+	local back = Instance.new('ImageButton')
+	back.Name = 'Back'
+	back.Size = UDim2.fromOffset(16, 16)
+	back.Position = UDim2.fromOffset(11, 13)
+	back.BackgroundTransparency = 1
+	back.Image = getcustomasset('newvape/assets/new/back.png')
+	back.ImageColor3 = color.Light(uipallet.Main, 0.37)
+	back.Parent = settingspane
+	local settingsversion = Instance.new('TextLabel')
+	settingsversion.Name = 'Version'
+	settingsversion.Size = UDim2.new(1, 0, 0, 16)
+	settingsversion.Position = UDim2.new(0, 0, 1, -16)
+	settingsversion.BackgroundTransparency = 1
+	settingsversion.Text = 'Vape '..mainapi.Version..' '..(
+		isfile('newvape/profiles/commit.txt') and readfile('newvape/profiles/commit.txt'):sub(1, 6) or ''
+	)..' '
+	settingsversion.TextColor3 = color.Dark(uipallet.Text, 0.43)
+	settingsversion.TextXAlignment = Enum.TextXAlignment.Right
+	settingsversion.TextSize = 10
+	settingsversion.FontFace = uipallet.Font
+	settingsversion.Parent = settingspane
+	addCorner(settingspane)
+	local settingschildren = Instance.new('Frame')
+	settingschildren.Name = 'Children'
+	settingschildren.Size = UDim2.new(1, 0, 1, -57)
+	settingschildren.Position = UDim2.fromOffset(0, 41)
+	settingschildren.BackgroundColor3 = uipallet.Main
+	settingschildren.BorderSizePixel = 0
+	settingschildren.Parent = settingspane
+	local settingswindowlist = Instance.new('UIListLayout')
+	settingswindowlist.SortOrder = Enum.SortOrder.LayoutOrder
+	settingswindowlist.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	settingswindowlist.Parent = settingschildren
+	categoryapi.Object = window
+
+	function categoryapi:CreateBind()
+		local optionapi = {Bind = {'RightShift'}}
+
+		local button = Instance.new('TextButton')
+		button.Size = UDim2.fromOffset(220, 40)
+		button.BackgroundColor3 = uipallet.Main
+		button.BorderSizePixel = 0
+		button.AutoButtonColor = false
+		button.Text = '          Rebind GUI'
+		button.TextXAlignment = Enum.TextXAlignment.Left
+		button.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		button.TextSize = 14
+		button.FontFace = uipallet.Font
+		button.Parent = settingschildren
+		addTooltip(button, 'Change the bind of the GUI')
+		local bind = Instance.new('TextButton')
+		bind.Name = 'Bind'
+		bind.Size = UDim2.fromOffset(20, 21)
+		bind.Position = UDim2.new(1, -10, 0, 9)
+		bind.AnchorPoint = Vector2.new(1, 0)
+		bind.BackgroundColor3 = Color3.new(1, 1, 1)
+		bind.BackgroundTransparency = 0.92
+		bind.BorderSizePixel = 0
+		bind.AutoButtonColor = false
+		bind.Text = ''
+		bind.Parent = button
+		addTooltip(bind, 'Click to bind')
+		addCorner(bind, UDim.new(0, 4))
+		local icon = Instance.new('ImageLabel')
+		icon.Name = 'Icon'
+		icon.Size = UDim2.fromOffset(12, 12)
+		icon.Position = UDim2.new(0.5, -6, 0, 5)
+		icon.BackgroundTransparency = 1
+		icon.Image = getcustomasset('newvape/assets/new/bind.png')
+		icon.ImageColor3 = color.Dark(uipallet.Text, 0.43)
+		icon.Parent = bind
+		local label = Instance.new('TextLabel')
+		label.Name = 'Text'
+		label.Size = UDim2.fromScale(1, 1)
+		label.Position = UDim2.fromOffset(0, 1)
+		label.BackgroundTransparency = 1
+		label.Visible = false
+		label.Text = ''
+		label.TextColor3 = color.Dark(uipallet.Text, 0.43)
+		label.TextSize = 12
+		label.FontFace = uipallet.Font
+		label.Parent = bind
+
+		function optionapi:SetBind(tab)
+			mainapi.Keybind = #tab <= 0 and mainapi.Keybind or table.clone(tab)
+			self.Bind = mainapi.Keybind
+			if mainapi.VapeButton then
+				mainapi.VapeButton:Destroy()
+				mainapi.VapeButton = nil
+			end
+
+			bind.Visible = true
+			label.Visible = true
+			icon.Visible = false
+			label.Text = table.concat(mainapi.Keybind, ' + '):upper()
+			bind.Size = UDim2.fromOffset(math.max(getfontsize(label.Text, label.TextSize, label.Font).X + 10, 20), 21)
+		end
+
+		bind.MouseEnter:Connect(function()
+			label.Visible = false
+			icon.Visible = not label.Visible
+			icon.Image = getcustomasset('newvape/assets/new/edit.png')
+			icon.ImageColor3 = color.Dark(uipallet.Text, 0.16)
+		end)
+		bind.MouseLeave:Connect(function()
+			label.Visible = true
+			icon.Visible = not label.Visible
+			icon.Image = getcustomasset('newvape/assets/new/bind.png')
+			icon.ImageColor3 = color.Dark(uipallet.Text, 0.43)
+		end)
+		bind.MouseButton1Click:Connect(function()
+			mainapi.Binding = optionapi
+		end)
+
+		categoryapi.Options.Bind = optionapi
+
+		return optionapi
+	end
+
+	function categoryapi:CreateButton(categorysettings)
+		local optionapi = {
+			Enabled = false,
+			Index = getTableSize(categoryapi.Buttons)
+		}
+
+		local button = Instance.new('TextButton')
+		button.Name = categorysettings.Name
+		button.Size = UDim2.fromOffset(220, 40)
+		button.BackgroundColor3 = uipallet.Main
+		button.BorderSizePixel = 0
+		button.AutoButtonColor = false
+		button.Text = (categorysettings.Icon and '                                 ' or '             ')..categorysettings.Name
+		button.TextXAlignment = Enum.TextXAlignment.Left
+		button.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		button.TextSize = 14
+		button.FontFace = uipallet.Font
+		button.Parent = children
+		local icon
+		if categorysettings.Icon then
+			icon = Instance.new('ImageLabel')
+			icon.Name = 'Icon'
+			icon.Size = categorysettings.Size
+			icon.Position = UDim2.fromOffset(13, 13)
+			icon.BackgroundTransparency = 1
+			icon.Image = categorysettings.Icon
+			icon.ImageColor3 = color.Dark(uipallet.Text, 0.16)
+			icon.Parent = button
+		end
+		if categorysettings.Name == 'Profiles' then
+			local label = Instance.new('TextLabel')
+			label.Name = 'ProfileLabel'
+			label.Size = UDim2.fromOffset(53, 24)
+			label.Position = UDim2.new(1, -36, 0, 8)
+			label.AnchorPoint = Vector2.new(1, 0)
+			label.BackgroundColor3 = color.Light(uipallet.Main, 0.04)
+			label.Text = 'default'
+			label.TextColor3 = color.Dark(uipallet.Text, 0.29)
+			label.TextSize = 12
+			label.FontFace = uipallet.Font
+			label.Parent = button
+			addCorner(label)
+			mainapi.ProfileLabel = label
+		end
+		local arrow = Instance.new('ImageLabel')
+		arrow.Name = 'Arrow'
+		arrow.Size = UDim2.fromOffset(4, 8)
+		arrow.Position = UDim2.new(1, -20, 0, 16)
+		arrow.BackgroundTransparency = 1
+		arrow.Image = getcustomasset('newvape/assets/new/expandright.png')
+		arrow.ImageColor3 = color.Light(uipallet.Main, 0.37)
+		arrow.Parent = button
+		optionapi.Name = categorysettings.Name
+		optionapi.Icon = icon
+		optionapi.Object = button
+
+		function optionapi:Toggle()
+			self.Enabled = not self.Enabled
+			tween:Tween(arrow, uipallet.Tween, {
+				Position = UDim2.new(1, self.Enabled and -14 or -20, 0, 16)
+			})
+			button.TextColor3 = self.Enabled and Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value) or uipallet.Text
+			if icon then
+				icon.ImageColor3 = button.TextColor3
+			end
+			button.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+			categorysettings.Window.Visible = self.Enabled
+		end
+
+		button.MouseEnter:Connect(function()
+			if not optionapi.Enabled then
+				button.TextColor3 = uipallet.Text
+				if buttonicon then buttonicon.ImageColor3 = uipallet.Text end
+				button.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+			end
+		end)
+		button.MouseLeave:Connect(function()
+			if not optionapi.Enabled then
+				button.TextColor3 = color.Dark(uipallet.Text, 0.16)
+				if buttonicon then buttonicon.ImageColor3 = color.Dark(uipallet.Text, 0.16) end
+				button.BackgroundColor3 = uipallet.Main
+			end
+		end)
+		button.MouseButton1Click:Connect(function()
+			optionapi:Toggle()
+		end)
+
+		categoryapi.Buttons[categorysettings.Name] = optionapi
+
+		return optionapi
+	end
+
+	function categoryapi:CreateDivider(text)
+		return components.Divider(children, text)
+	end
+
+	function categoryapi:CreateOverlayBar()
+		local optionapi = {Toggles = {}}
+
+		local bar = Instance.new('Frame')
+		bar.Name = 'Overlays'
+		bar.Size = UDim2.fromOffset(220, 36)
+		bar.BackgroundColor3 = uipallet.Main
+		bar.BorderSizePixel = 0
+		bar.Parent = children
+		components.Divider(bar)
+		local button = Instance.new('ImageButton')
+		button.Size = UDim2.fromOffset(24, 24)
+		button.Position = UDim2.new(1, -29, 0, 7)
+		button.BackgroundTransparency = 1
+		button.AutoButtonColor = false
+		button.Image = getcustomasset('newvape/assets/new/overlaysicon.png')
+		button.ImageColor3 = color.Light(uipallet.Main, 0.37)
+		button.Parent = bar
+		addCorner(button, UDim.new(1, 0))
+		addTooltip(button, 'Open overlays menu')
+		local shadow = Instance.new('TextButton')
+		shadow.Name = 'Shadow'
+		shadow.Size = UDim2.new(1, 0, 1, -5)
+		shadow.BackgroundColor3 = Color3.new()
+		shadow.BackgroundTransparency = 1
+		shadow.AutoButtonColor = false
+		shadow.ClipsDescendants = true
+		shadow.Visible = false
+		shadow.Text = ''
+		shadow.Parent = window
+		addCorner(shadow)
+		local window = Instance.new('Frame')
+		window.Size = UDim2.fromOffset(220, 42)
+		window.Position = UDim2.fromScale(0, 1)
+		window.BackgroundColor3 = uipallet.Main
+		window.Parent = shadow
+		addCorner(window)
+		local icon = Instance.new('ImageLabel')
+		icon.Name = 'Icon'
+		icon.Size = UDim2.fromOffset(14, 12)
+		icon.Position = UDim2.fromOffset(10, 13)
+		icon.BackgroundTransparency = 1
+		icon.Image = getcustomasset('newvape/assets/new/overlaystab.png')
+		icon.ImageColor3 = uipallet.Text
+		icon.Parent = window
+		local title = Instance.new('TextLabel')
+		title.Name = 'Title'
+		title.Size = UDim2.new(1, -36, 0, 38)
+		title.Position = UDim2.fromOffset(36, 0)
+		title.BackgroundTransparency = 1
+		title.Text = 'Overlays'
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.TextColor3 = uipallet.Text
+		title.TextSize = 15
+		title.FontFace = uipallet.Font
+		title.Parent = window
+		local close = addCloseButton(window, 7)
+		local divider = Instance.new('Frame')
+		divider.Name = 'Divider'
+		divider.Size = UDim2.new(1, 0, 0, 1)
+		divider.Position = UDim2.fromOffset(0, 37)
+		divider.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+		divider.BorderSizePixel = 0
+		divider.Parent = window
+		local childrentoggle = Instance.new('Frame')
+		childrentoggle.Position = UDim2.fromOffset(0, 38)
+		childrentoggle.BackgroundTransparency = 1
+		childrentoggle.Parent = window
+		local windowlist = Instance.new('UIListLayout')
+		windowlist.SortOrder = Enum.SortOrder.LayoutOrder
+		windowlist.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		windowlist.Parent = childrentoggle
+
+		function optionapi:CreateToggle(togglesettings)
+			local toggleapi = {
+				Enabled = false,
+				Index = getTableSize(optionapi.Toggles)
+			}
+			local hovered = false
+			local toggle = Instance.new('TextButton')
+			toggle.Name = togglesettings.Name..'Toggle'
+			toggle.Size = UDim2.new(1, 0, 0, 40)
+			toggle.BackgroundTransparency = 1
+			toggle.AutoButtonColor = false
+			toggle.Text = string.rep(' ', 33 * scale.Scale)..togglesettings.Name
+			toggle.TextXAlignment = Enum.TextXAlignment.Left
+			toggle.TextColor3 = color.Dark(uipallet.Text, 0.16)
+			toggle.TextSize = 14
+			toggle.FontFace = uipallet.Font
+			toggle.Parent = childrentoggle
+			local icon = Instance.new('ImageLabel')
+			icon.Name = 'Icon'
+			icon.Size = togglesettings.Size
+			icon.Position = togglesettings.Position
+			icon.BackgroundTransparency = 1
+			icon.Image = togglesettings.Icon
+			icon.ImageColor3 = uipallet.Text
+			icon.Parent = toggle
+			local knob = Instance.new('Frame')
+			knob.Name = 'Knob'
+			knob.Size = UDim2.fromOffset(22, 12)
+			knob.Position = UDim2.new(1, -30, 0, 14)
+			knob.BackgroundColor3 = color.Light(uipallet.Main, 0.14)
+			knob.Parent = toggle
+			addCorner(knob, UDim.new(1, 0))
+			local knobmain = knob:Clone()
+			knobmain.Size = UDim2.fromOffset(8, 8)
+			knobmain.Position = UDim2.fromOffset(2, 2)
+			knobmain.BackgroundColor3 = uipallet.Main
+			knobmain.Parent = knob
+			toggleapi.Object = toggle
+
+			function toggleapi:Toggle()
+				self.Enabled = not self.Enabled
+				tween:Tween(knob, uipallet.Tween, {
+					BackgroundColor3 = self.Enabled and Color3.fromHSV(
+						mainapi.GUIColor.Hue,
+						mainapi.GUIColor.Sat,
+						mainapi.GUIColor.Value
+					) or (hovered and color.Light(uipallet.Main, 0.37) or color.Light(uipallet.Main, 0.14))
+				})
+				tween:Tween(knobmain, uipallet.Tween, {
+					Position = UDim2.fromOffset(self.Enabled and 12 or 2, 2)
+				})
+				togglesettings.Function(self.Enabled)
+			end
+
+			scale:GetPropertyChangedSignal('Scale'):Connect(function()
+				toggle.Text = string.rep(' ', 33 * scale.Scale)..togglesettings.Name
+			end)
+			toggle.MouseEnter:Connect(function()
+				hovered = true
+				if not toggleapi.Enabled then
+					tween:Tween(knob, uipallet.Tween, {
+						BackgroundColor3 = color.Light(uipallet.Main, 0.37)
+					})
+				end
+			end)
+			toggle.MouseLeave:Connect(function()
+				hovered = false
+				if not toggleapi.Enabled then
+					tween:Tween(knob, uipallet.Tween, {
+						BackgroundColor3 = color.Light(uipallet.Main, 0.14)
+					})
+				end
+			end)
+			toggle.MouseButton1Click:Connect(function()
+				toggleapi:Toggle()
+			end)
+
+			table.insert(optionapi.Toggles, toggleapi)
+
+			return toggleapi
+		end
+
+		button.MouseEnter:Connect(function()
+			button.ImageColor3 = uipallet.Text
+			tween:Tween(button, uipallet.Tween, {
+				BackgroundTransparency = 0.9
+			})
+		end)
+		button.MouseLeave:Connect(function()
+			button.ImageColor3 = color.Light(uipallet.Main, 0.37)
+			tween:Tween(button, uipallet.Tween, {
+				BackgroundTransparency = 1
+			})
+		end)
+		button.MouseButton1Click:Connect(function()
+			shadow.Visible = true
+			tween:Tween(shadow, uipallet.Tween, {
+				BackgroundTransparency = 0.5
+			})
+			tween:Tween(window, uipallet.Tween, {
+				Position = UDim2.new(0, 0, 1, -(window.Size.Y.Offset))
+			})
+		end)
+		close.MouseButton1Click:Connect(function()
+			tween:Tween(shadow, uipallet.Tween, {
+				BackgroundTransparency = 1
+			})
+			tween:Tween(window, uipallet.Tween, {
+				Position = UDim2.fromScale(0, 1)
+			})
+			task.wait(0.2)
+			shadow.Visible = false
+		end)
+		shadow.MouseButton1Click:Connect(function()
+			tween:Tween(shadow, uipallet.Tween, {
+				BackgroundTransparency = 1
+			})
+			tween:Tween(window, uipallet.Tween, {
+				Position = UDim2.fromScale(0, 1)
+			})
+			task.wait(0.2)
+			shadow.Visible = false
+		end)
+		windowlist:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+			if mainapi.ThreadFix then
+				setthreadidentity(8)
+			end
+			window.Size = UDim2.fromOffset(220, math.min(37 + windowlist.AbsoluteContentSize.Y / scale.Scale, 605))
+			childrentoggle.Size = UDim2.fromOffset(220, window.Size.Y.Offset - 5)
+		end)
+
+		mainapi.Overlays = optionapi
+
+		return optionapi
+	end
+
+	function categoryapi:CreateSettingsDivider()
+		components.Divider(settingschildren)
+	end
+
+	function categoryapi:CreateSettingsPane(categorysettings)
+		local optionapi = {}
+
+		local button = Instance.new('TextButton')
+		button.Name = categorysettings.Name
+		button.Size = UDim2.fromOffset(220, 40)
+		button.BackgroundColor3 = uipallet.Main
+		button.BorderSizePixel = 0
+		button.AutoButtonColor = false
+		button.Text = '          '..categorysettings.Name
+		button.TextXAlignment = Enum.TextXAlignment.Left
+		button.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		button.TextSize = 14
+		button.FontFace = uipallet.Font
+		button.Parent = settingschildren
+		local arrow = Instance.new('ImageLabel')
+		arrow.Name = 'Arrow'
+		arrow.Size = UDim2.fromOffset(4, 8)
+		arrow.Position = UDim2.new(1, -20, 0, 16)
+		arrow.BackgroundTransparency = 1
+		arrow.Image = getcustomasset('newvape/assets/new/expandright.png')
+		arrow.ImageColor3 = color.Light(uipallet.Main, 0.37)
+		arrow.Parent = button
+		local settingspane = Instance.new('TextButton')
+		settingspane.Size = UDim2.fromScale(1, 1)
+		settingspane.BackgroundColor3 = uipallet.Main
+		settingspane.AutoButtonColor = false
+		settingspane.Visible = false
+		settingspane.Text = ''
+		settingspane.Parent = window
+		local title = Instance.new('TextLabel')
+		title.Name = 'Title'
+		title.Size = UDim2.new(1, -36, 0, 20)
+		title.Position = UDim2.fromOffset(math.abs(title.Size.X.Offset), 11)
+		title.BackgroundTransparency = 1
+		title.Text = categorysettings.Name
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.TextColor3 = uipallet.Text
+		title.TextSize = 13
+		title.FontFace = uipallet.Font
+		title.Parent = settingspane
+		local close = addCloseButton(settingspane)
+		local back = Instance.new('ImageButton')
+		back.Name = 'Back'
+		back.Size = UDim2.fromOffset(16, 16)
+		back.Position = UDim2.fromOffset(11, 13)
+		back.BackgroundTransparency = 1
+		back.Image = getcustomasset('newvape/assets/new/back.png')
+		back.ImageColor3 = color.Light(uipallet.Main, 0.37)
+		back.Parent = settingspane
+		addCorner(settingspane)
+		local settingschildren = Instance.new('Frame')
+		settingschildren.Name = 'Children'
+		settingschildren.Size = UDim2.new(1, 0, 1, -57)
+		settingschildren.Position = UDim2.fromOffset(0, 41)
+		settingschildren.BackgroundColor3 = uipallet.Main
+		settingschildren.BorderSizePixel = 0
+		settingschildren.Parent = settingspane
+		local divider = Instance.new('Frame')
+		divider.Name = 'Divider'
+		divider.Size = UDim2.new(1, 0, 0, 1)
+		divider.BackgroundColor3 = Color3.new(1, 1, 1)
+		divider.BackgroundTransparency = 0.928
+		divider.BorderSizePixel = 0
+		divider.Parent = settingschildren
+		local settingswindowlist = Instance.new('UIListLayout')
+		settingswindowlist.SortOrder = Enum.SortOrder.LayoutOrder
+		settingswindowlist.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		settingswindowlist.Parent = settingschildren
+
+		for i, v in components do
+			optionapi['Create'..i] = function(_, settings)
+				return v(settings, settingschildren, categoryapi)
+			end
+		end
+
+		back.MouseEnter:Connect(function()
+			back.ImageColor3 = uipallet.Text
+		end)
+		back.MouseLeave:Connect(function()
+			back.ImageColor3 = color.Light(uipallet.Main, 0.37)
+		end)
+		back.MouseButton1Click:Connect(function()
+			settingspane.Visible = false
+		end)
+		button.MouseEnter:Connect(function()
+			button.TextColor3 = uipallet.Text
+			button.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+		end)
+		button.MouseLeave:Connect(function()
+			button.TextColor3 = color.Dark(uipallet.Text, 0.16)
+			button.BackgroundColor3 = uipallet.Main
+		end)
+		button.MouseButton1Click:Connect(function()
+			settingspane.Visible = true
+		end)
+		close.MouseButton1Click:Connect(function()
+			settingspane.Visible = false
+		end)
+		windowlist:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+			if mainapi.ThreadFix then
+				setthreadidentity(8)
+			end
+			window.Size = UDim2.fromOffset(220, 45 + windowlist.AbsoluteContentSize.Y / scale.Scale)
+			for _, v in categoryapi.Buttons do
+				if v.Icon then
+					v.Object.Text = string.rep(' ', 33 * scale.Scale)..v.Name
+				end
+			end
+		end)
+
+		return optionapi
+	end
+
+	function categoryapi:CreateGUISlider(optionsettings)
+		local optionapi = {
+			Type = 'GUISlider',
+			Notch = 4,
+			Hue = 0.46,
+			Sat = 0.96,
+			Value = 0.52,
+			Rainbow = false,
+			CustomColor = false
+		}
+		local slidercolors = {
+			Color3.fromRGB(250, 50, 56),
+			Color3.fromRGB(242, 99, 33),
+			Color3.fromRGB(252, 179, 22),
+			Color3.fromRGB(5, 133, 104),
+			Color3.fromRGB(47, 122, 229),
+			Color3.fromRGB(126, 84, 217),
+			Color3.fromRGB(232, 96, 152)
+		}
+		local slidercolorpos = {
+			4,
+			33,
+			62,
+			90,
+			119,
+			148,
+			177
+		}
+
+		local function createSlider(name, gradientColor)
+			local slider = Instance.new('TextButton')
+			slider.Name = optionsettings.Name..'Slider'..name
+			slider.Size = UDim2.fromOffset(220, 50)
+			slider.BackgroundColor3 = color.Dark(uipallet.Main, 0.02)
+			slider.BorderSizePixel = 0
+			slider.AutoButtonColor = false
+			slider.Visible = false
+			slider.Text = ''
+			slider.Parent = settingschildren
+			local title = Instance.new('TextLabel')
+			title.Name = 'Title'
+			title.Size = UDim2.fromOffset(60, 30)
+			title.Position = UDim2.fromOffset(10, 2)
+			title.BackgroundTransparency = 1
+			title.Text = name
+			title.TextXAlignment = Enum.TextXAlignment.Left
+			title.TextColor3 = color.Dark(uipallet.Text, 0.16)
+			title.TextSize = 11
+			title.FontFace = uipallet.Font
+			title.Parent = slider
+			local holder = Instance.new('Frame')
+			holder.Name = 'Slider'
+			holder.Size = UDim2.fromOffset(200, 2)
+			holder.Position = UDim2.fromOffset(10, 37)
+			holder.BackgroundColor3 = Color3.new(1, 1, 1)
+			holder.BorderSizePixel = 0
+			holder.Parent = slider
+			local uigradient = Instance.new('UIGradient')
+			uigradient.Color = gradientColor
+			uigradient.Parent = holder
+			local fill = holder:Clone()
+			fill.Name = 'Fill'
+			fill.Size = UDim2.fromScale(math.clamp(1, 0.04, 0.96), 1)
+			fill.Position = UDim2.new()
+			fill.BackgroundTransparency = 1
+			fill.Parent = holder
+			local knobframe = Instance.new('Frame')
+			knobframe.Name = 'Knob'
+			knobframe.Size = UDim2.fromOffset(24, 4)
+			knobframe.Position = UDim2.fromScale(1, 0.5)
+			knobframe.AnchorPoint = Vector2.new(0.5, 0.5)
+			knobframe.BackgroundColor3 = color.Dark(uipallet.Main, 0.02)
+			knobframe.BorderSizePixel = 0
+			knobframe.Parent = fill
+			local knob = Instance.new('Frame')
+			knob.Name = 'Knob'
+			knob.Size = UDim2.fromOffset(14, 14)
+			knob.Position = UDim2.fromScale(0.5, 0.5)
+			knob.AnchorPoint = Vector2.new(0.5, 0.5)
+			knob.BackgroundColor3 = uipallet.Text
+			knob.Parent = knobframe
+			addCorner(knob, UDim.new(1, 0))
+			if name == 'Custom color' then
+				local reset = Instance.new('TextButton')
+				reset.Size = UDim2.fromOffset(45, 20)
+				reset.Position = UDim2.new(1, -52, 0, 5)
+				reset.BackgroundTransparency = 1
+				reset.Text = 'RESET'
+				reset.TextColor3 = color.Dark(uipallet.Text, 0.16)
+				reset.TextSize = 11
+				reset.FontFace = uipallet.Font
+				reset.Parent = slider
+				reset.MouseButton1Click:Connect(function()
+					optionapi:SetValue(nil, nil, nil, 4)
+				end)
+			end
+
+			slider.InputBegan:Connect(function(inputObj)
+				if
+					(inputObj.UserInputType == Enum.UserInputType.MouseButton1 or inputObj.UserInputType == Enum.UserInputType.Touch)
+					and (inputObj.Position.Y - slider.AbsolutePosition.Y) > (20 * scale.Scale)
+				then
+					local changed = inputService.InputChanged:Connect(function(input)
+						if input.UserInputType == (inputObj.UserInputType == Enum.UserInputType.MouseButton1 and Enum.UserInputType.MouseMovement or Enum.UserInputType.Touch) then
+							local value = math.clamp((input.Position.X - holder.AbsolutePosition.X) / holder.AbsoluteSize.X, 0, 1)
+							optionapi:SetValue(
+								name == 'Custom color' and value or nil,
+								name == 'Saturation' and value or nil,
+								name == 'Vibrance' and value or nil,
+								name == 'Opacity' and value or nil
+							)
+						end
+					end)
+
+					local ended
+					ended = inputObj.Changed:Connect(function()
+						if inputObj.UserInputState == Enum.UserInputState.End then
+							if changed then
+								changed:Disconnect()
+							end
+							if ended then
+								ended:Disconnect()
+							end
+						end
+					end)
+				end
+			end)
+			slider.MouseEnter:Connect(function()
+				tween:Tween(knob, uipallet.Tween, {
+					Size = UDim2.fromOffset(16, 16)
+				})
+			end)
+			slider.MouseLeave:Connect(function()
+				tween:Tween(knob, uipallet.Tween, {
+					Size = UDim2.fromOffset(14, 14)
+				})
+			end)
+
+			return slider
+		end
+
+		local slider = Instance.new('TextButton')
+		slider.Name = optionsettings.Name..'Slider'
+		slider.Size = UDim2.fromOffset(220, 50)
+		slider.BackgroundTransparency = 1
+		slider.AutoButtonColor = false
+		slider.Text = ''
+		slider.Parent = settingschildren
+		local title = Instance.new('TextLabel')
+		title.Name = 'Title'
+		title.Size = UDim2.fromOffset(60, 30)
+		title.Position = UDim2.fromOffset(10, 2)
+		title.BackgroundTransparency = 1
+		title.Text = optionsettings.Name
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		title.TextSize = 11
+		title.FontFace = uipallet.Font
+		title.Parent = slider
+		local holder = Instance.new('Frame')
+		holder.Name = 'Slider'
+		holder.Size = UDim2.fromOffset(200, 2)
+		holder.Position = UDim2.fromOffset(10, 37)
+		holder.BackgroundTransparency = 1
+		holder.BorderSizePixel = 0
+		holder.Parent = slider
+		local colornum = 0
+		for i, color in slidercolors do
+			local colorframe = Instance.new('Frame')
+			colorframe.Size = UDim2.fromOffset(27 + (((i + 1) % 2) == 0 and 1 or 0), 2)
+			colorframe.Position = UDim2.fromOffset(colornum, 0)
+			colorframe.BackgroundColor3 = color
+			colorframe.BorderSizePixel = 0
+			colorframe.Parent = holder
+			colornum += (colorframe.Size.X.Offset + 1)
+		end
+		local preview = Instance.new('ImageButton')
+		preview.Name = 'Preview'
+		preview.Size = UDim2.fromOffset(12, 12)
+		preview.Position = UDim2.new(1, -22, 0, 10)
+		preview.BackgroundTransparency = 1
+		preview.Image = getcustomasset('newvape/assets/new/colorpreview.png')
+		preview.ImageColor3 = Color3.fromHSV(optionapi.Hue, 1, 1)
+		preview.Parent = slider
+		local valuebox = Instance.new('TextBox')
+		valuebox.Name = 'Box'
+		valuebox.Size = UDim2.fromOffset(60, 15)
+		valuebox.Position = UDim2.new(1, -69, 0, 9)
+		valuebox.BackgroundTransparency = 1
+		valuebox.Visible = false
+		valuebox.Text = ''
+		valuebox.TextXAlignment = Enum.TextXAlignment.Right
+		valuebox.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		valuebox.TextSize = 11
+		valuebox.FontFace = uipallet.Font
+		valuebox.ClearTextOnFocus = true
+		valuebox.Parent = slider
+		local expandbutton = Instance.new('TextButton')
+		expandbutton.Name = 'Expand'
+		expandbutton.Size = UDim2.fromOffset(17, 13)
+		expandbutton.Position = UDim2.new(0, getfontsize(title.Text, title.TextSize, title.Font).X + 11, 0, 7)
+		expandbutton.BackgroundTransparency = 1
+		expandbutton.Text = ''
+		expandbutton.Parent = slider
+		local expandicon = Instance.new('ImageLabel')
+		expandicon.Name = 'Expand'
+		expandicon.Size = UDim2.fromOffset(9, 5)
+		expandicon.Position = UDim2.fromOffset(4, 4)
+		expandicon.BackgroundTransparency = 1
+		expandicon.Image = getcustomasset('newvape/assets/new/expandicon.png')
+		expandicon.ImageColor3 = color.Dark(uipallet.Text, 0.43)
+		expandicon.Parent = expandbutton
+		local rainbow = Instance.new('TextButton')
+		rainbow.Name = 'Rainbow'
+		rainbow.Size = UDim2.fromOffset(12, 12)
+		rainbow.Position = UDim2.new(1, -42, 0, 10)
+		rainbow.BackgroundTransparency = 1
+		rainbow.Text = ''
+		rainbow.Parent = slider
+		local rainbow1 = Instance.new('ImageLabel')
+		rainbow1.Size = UDim2.fromOffset(12, 12)
+		rainbow1.BackgroundTransparency = 1
+		rainbow1.Image = getcustomasset('newvape/assets/new/rainbow_1.png')
+		rainbow1.ImageColor3 = color.Light(uipallet.Main, 0.37)
+		rainbow1.Parent = rainbow
+		local rainbow2 = rainbow1:Clone()
+		rainbow2.Image = getcustomasset('newvape/assets/new/rainbow_2.png')
+		rainbow2.Parent = rainbow
+		local rainbow3 = rainbow1:Clone()
+		rainbow3.Image = getcustomasset('newvape/assets/new/rainbow_3.png')
+		rainbow3.Parent = rainbow
+		local rainbow4 = rainbow1:Clone()
+		rainbow4.Image = getcustomasset('newvape/assets/new/rainbow_4.png')
+		rainbow4.Parent = rainbow
+		local knob = Instance.new('ImageLabel')
+		knob.Name = 'Knob'
+		knob.Size = UDim2.fromOffset(26, 12)
+		knob.Position = UDim2.fromOffset(slidercolorpos[4] - 3, -5)
+		knob.BackgroundTransparency = 1
+		knob.Image = getcustomasset('newvape/assets/new/guislider.png')
+		knob.ImageColor3 = slidercolors[4]
+		knob.Parent = holder
+		optionsettings.Function = optionsettings.Function or function() end
+		local rainbowTable = {}
+		for i = 0, 1, 0.1 do
+			table.insert(rainbowTable, ColorSequenceKeypoint.new(i, Color3.fromHSV(i, 1, 1)))
+		end
+		local colorSlider = createSlider('Custom color', ColorSequence.new(rainbowTable))
+		local satSlider = createSlider('Saturation', ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, optionapi.Value)),
+			ColorSequenceKeypoint.new(1, Color3.fromHSV(optionapi.Hue, 1, optionapi.Value))
+		}))
+		local vibSlider = createSlider('Vibrance', ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0)),
+			ColorSequenceKeypoint.new(1, Color3.fromHSV(optionapi.Hue, optionapi.Sat, 1))
+		}))
+		local normalknob = getcustomasset('newvape/assets/new/guislider.png')
+		local rainbowknob = getcustomasset('newvape/assets/new/guisliderrain.png')
+		local rainbowthread
+
+		function optionapi:Save(tab)
+			tab[optionsettings.Name] = {
+				Hue = self.Hue,
+				Sat = self.Sat,
+				Value = self.Value,
+				Notch = self.Notch,
+				CustomColor = self.CustomColor,
+				Rainbow = self.Rainbow
+			}
+		end
+
+		function optionapi:Load(tab)
+			if tab.Rainbow then
+				self:Toggle()
+			end
+			if self.Rainbow or tab.CustomColor then
+				self:SetValue(tab.Hue, tab.Sat, tab.Value)
+			else
+				self:SetValue(nil, nil, nil, tab.Notch)
+			end
+		end
+
+		function optionapi:SetValue(h, s, v, n)
+			if n then
+				if self.Rainbow then
+					self:Toggle()
+				end
+				self.CustomColor = false
+				h, s, v = slidercolors[n]:ToHSV()
+			else
+				self.CustomColor = true
+			end
+
+			self.Hue = h or self.Hue
+			self.Sat = s or self.Sat
+			self.Value = v or self.Value
+			self.Notch = n
+			preview.ImageColor3 = Color3.fromHSV(self.Hue, self.Sat, self.Value)
+			satSlider.Slider.UIGradient.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, self.Value)),
+				ColorSequenceKeypoint.new(1, Color3.fromHSV(self.Hue, 1, self.Value))
+			})
+			vibSlider.Slider.UIGradient.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0)),
+				ColorSequenceKeypoint.new(1, Color3.fromHSV(self.Hue, self.Sat, 1))
+			})
+
+			if self.Rainbow or self.CustomColor then
+				knob.Image = rainbowknob
+				knob.ImageColor3 = Color3.new(1, 1, 1)
+				tween:Tween(knob, uipallet.Tween, {
+					Position = UDim2.fromOffset(slidercolorpos[4] - 3, -5)
+				})
+			else
+				knob.Image = normalknob
+				knob.ImageColor3 = Color3.fromHSV(self.Hue, self.Sat, self.Value)
+				tween:Tween(knob, uipallet.Tween, {
+					Position = UDim2.fromOffset(slidercolorpos[n or 4] - 3, -5)
+				})
+			end
+
+			if self.Rainbow then
+				if h then
+					colorSlider.Slider.Fill.Size = UDim2.fromScale(math.clamp(self.Hue, 0.04, 0.96), 1)
+				end
+				if s then
+					satSlider.Slider.Fill.Size = UDim2.fromScale(math.clamp(self.Sat, 0.04, 0.96), 1)
+				end
+				if v then
+					vibSlider.Slider.Fill.Size = UDim2.fromScale(math.clamp(self.Value, 0.04, 0.96), 1)
+				end
+			else
+				if h then
+					tween:Tween(colorSlider.Slider.Fill, uipallet.Tween, {
+						Size = UDim2.fromScale(math.clamp(self.Hue, 0.04, 0.96), 1)
+					})
+				end
+				if s then
+					tween:Tween(satSlider.Slider.Fill, uipallet.Tween, {
+						Size = UDim2.fromScale(math.clamp(self.Sat, 0.04, 0.96), 1)
+					})
+				end
+				if v then
+					tween:Tween(vibSlider.Slider.Fill, uipallet.Tween, {
+						Size = UDim2.fromScale(math.clamp(self.Value, 0.04, 0.96), 1)
+					})
+				end
+			end
+			optionsettings.Function(self.Hue, self.Sat, self.Value)
+		end
+
+		function optionapi:Toggle()
+			self.Rainbow = not self.Rainbow
+			if rainbowthread then
+				task.cancel(rainbowthread)
+			end
+
+			if self.Rainbow then
+				knob.Image = rainbowknob
+				table.insert(mainapi.RainbowTable, self)
+
+				rainbow1.ImageColor3 = Color3.fromRGB(5, 127, 100)
+				rainbowthread = task.delay(0.1, function()
+					rainbow2.ImageColor3 = Color3.fromRGB(228, 125, 43)
+					rainbowthread = task.delay(0.1, function()
+						rainbow3.ImageColor3 = Color3.fromRGB(225, 46, 52)
+						rainbowthread = nil
+					end)
+				end)
+			else
+				self:SetValue(nil, nil, nil, 4)
+				knob.Image = normalknob
+				local ind = table.find(mainapi.RainbowTable, self)
+				if ind then
+					table.remove(mainapi.RainbowTable, ind)
+				end
+
+				rainbow3.ImageColor3 = color.Light(uipallet.Main, 0.37)
+				rainbowthread = task.delay(0.1, function()
+					rainbow2.ImageColor3 = color.Light(uipallet.Main, 0.37)
+					rainbowthread = task.delay(0.1, function()
+						rainbow1.ImageColor3 = color.Light(uipallet.Main, 0.37)
+					end)
+				end)
+			end
+		end
+
+		expandbutton.MouseEnter:Connect(function()
+			expandicon.ImageColor3 = color.Dark(uipallet.Text, 0.16)
+		end)
+		expandbutton.MouseLeave:Connect(function()
+			expandicon.ImageColor3 = color.Dark(uipallet.Text, 0.43)
+		end)
+		expandbutton.MouseButton1Click:Connect(function()
+			colorSlider.Visible = not colorSlider.Visible
+			satSlider.Visible = colorSlider.Visible
+			vibSlider.Visible = satSlider.Visible
+			expandicon.Rotation = satSlider.Visible and 180 or 0
+		end)
+		preview.MouseButton1Click:Connect(function()
+			preview.Visible = false
+			valuebox.Visible = true
+			valuebox:CaptureFocus()
+			local text = Color3.fromHSV(optionapi.Hue, optionapi.Sat, optionapi.Value)
+			valuebox.Text = math.round(text.R * 255)..', '..math.round(text.G * 255)..', '..math.round(text.B * 255)
+		end)
+		slider.InputBegan:Connect(function(inputObj)
+			if
+				(inputObj.UserInputType == Enum.UserInputType.MouseButton1 or inputObj.UserInputType == Enum.UserInputType.Touch)
+				and (inputObj.Position.Y - slider.AbsolutePosition.Y) > (20 * scale.Scale)
+			then
+				local changed = inputService.InputChanged:Connect(function(input)
+					if input.UserInputType == (inputObj.UserInputType == Enum.UserInputType.MouseButton1 and Enum.UserInputType.MouseMovement or Enum.UserInputType.Touch) then
+						optionapi:SetValue(nil, nil, nil, math.clamp(math.round((input.Position.X - holder.AbsolutePosition.X) / scale.Scale / 27), 1, 7))
+					end
+				end)
+
+				local ended
+				ended = inputObj.Changed:Connect(function()
+					if inputObj.UserInputState == Enum.UserInputState.End then
+						if changed then
+							changed:Disconnect()
+						end
+						if ended then
+							ended:Disconnect()
+						end
+					end
+				end)
+				optionapi:SetValue(nil, nil, nil, math.clamp(math.round((inputObj.Position.X - holder.AbsolutePosition.X) / scale.Scale / 27), 1, 7))
+			end
+		end)
+		rainbow.MouseButton1Click:Connect(function()
+			optionapi:Toggle()
+		end)
+		valuebox.FocusLost:Connect(function(enter)
+			preview.Visible = true
+			valuebox.Visible = false
+			if enter then
+				local commas = valuebox.Text:split(',')
+				local suc, res = pcall(function()
+					return tonumber(commas[1]) and Color3.fromRGB(
+						tonumber(commas[1]),
+						tonumber(commas[2]),
+						tonumber(commas[3])
+					) or Color3.fromHex(valuebox.Text)
+				end)
+
+				if suc then
+					if optionapi.Rainbow then
+						optionapi:Toggle()
+					end
+					optionapi:SetValue(res:ToHSV())
+				end
+			end
+		end)
+
+		optionapi.Object = slider
+		categoryapi.Options[optionsettings.Name] = optionapi
+
+		return optionapi
+	end
+
+	back.MouseEnter:Connect(function()
+		back.ImageColor3 = uipallet.Text
+	end)
+	back.MouseLeave:Connect(function()
+		back.ImageColor3 = color.Light(uipallet.Main, 0.37)
+	end)
+	back.MouseButton1Click:Connect(function()
+		settingspane.Visible = false
+	end)
+	close.MouseButton1Click:Connect(function()
+		settingspane.Visible = false
+	end)
+	settingsbutton.MouseEnter:Connect(function()
+		settingsicon.ImageColor3 = uipallet.Text
+	end)
+	settingsbutton.MouseLeave:Connect(function()
+		settingsicon.ImageColor3 = color.Light(uipallet.Main, 0.37)
+	end)
+	settingsbutton.MouseButton1Click:Connect(function()
+		settingspane.Visible = true
+	end)
+	windowlist:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+		if self.ThreadFix then
+			setthreadidentity(8)
+		end
+		window.Size = UDim2.fromOffset(220, 42 + windowlist.AbsoluteContentSize.Y / scale.Scale)
+		for _, v in categoryapi.Buttons do
+			if v.Icon then
+				v.Object.Text = string.rep(' ', 36 * scale.Scale)..v.Name
+			end
+		end
+	end)
+
+	self.Categories.Main = categoryapi
+
+	return categoryapi
+end
+
+function mainapi:CreateCategory(categorysettings)
+	local categoryapi = {
+		Type = 'Category',
+		Expanded = false
+	}
+
+	local window = Instance.new('TextButton')
+	window.Name = categorysettings.Name..'Category'
+	window.Size = UDim2.fromOffset(220, 41)
+	window.Position = UDim2.fromOffset(236, 60)
+	window.BackgroundColor3 = uipallet.Main
+	window.AutoButtonColor = false
+	window.Visible = false
+	window.Text = ''
+	window.Parent = clickgui
+	addBlur(window)
+	addCorner(window)
+	makeDraggable(window)
+	local icon = Instance.new('ImageLabel')
+	icon.Name = 'Icon'
+	icon.Size = categorysettings.Size
+	icon.Position = UDim2.fromOffset(12, (icon.Size.X.Offset > 20 and 14 or 13))
+	icon.BackgroundTransparency = 1
+	icon.Image = categorysettings.Icon
+	icon.ImageColor3 = uipallet.Text
+	icon.Parent = window
+	local title = Instance.new('TextLabel')
+	title.Name = 'Title'
+	title.Size = UDim2.new(1, -(categorysettings.Size.X.Offset > 18 and 40 or 33), 0, 41)
+	title.Position = UDim2.fromOffset(math.abs(title.Size.X.Offset), 0)
+	title.BackgroundTransparency = 1
+	title.Text = categorysettings.Name
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.TextColor3 = uipallet.Text
+	title.TextSize = 13
+	title.FontFace = uipallet.Font
+	title.Parent = window
+	local arrowbutton = Instance.new('TextButton')
+	arrowbutton.Name = 'Arrow'
+	arrowbutton.Size = UDim2.fromOffset(40, 40)
+	arrowbutton.Position = UDim2.new(1, -40, 0, 0)
+	arrowbutton.BackgroundTransparency = 1
+	arrowbutton.Text = ''
+	arrowbutton.Parent = window
+	local arrow = Instance.new('ImageLabel')
+	arrow.Name = 'Arrow'
+	arrow.Size = UDim2.fromOffset(9, 4)
+	arrow.Position = UDim2.fromOffset(20, 18)
+	arrow.BackgroundTransparency = 1
+	arrow.Image = getcustomasset('newvape/assets/new/expandup.png')
+	arrow.ImageColor3 = Color3.fromRGB(140, 140, 140)
+	arrow.Rotation = 180
+	arrow.Parent = arrowbutton
+	local children = Instance.new('ScrollingFrame')
+	children.Name = 'Children'
+	children.Size = UDim2.new(1, 0, 1, -41)
+	children.Position = UDim2.fromOffset(0, 37)
+	children.BackgroundTransparency = 1
+	children.BorderSizePixel = 0
+	children.Visible = false
+	children.ScrollBarThickness = 2
+	children.ScrollBarImageTransparency = 0.75
+	children.CanvasSize = UDim2.new()
+	children.Parent = window
+	local divider = Instance.new('Frame')
+	divider.Name = 'Divider'
+	divider.Size = UDim2.new(1, 0, 0, 1)
+	divider.Position = UDim2.fromOffset(0, 37)
+	divider.BackgroundColor3 = Color3.new(1, 1, 1)
+	divider.BackgroundTransparency = 0.928
+	divider.BorderSizePixel = 0
+	divider.Visible = false
+	divider.Parent = window
+	local windowlist = Instance.new('UIListLayout')
+	windowlist.SortOrder = Enum.SortOrder.LayoutOrder
+	windowlist.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	windowlist.Parent = children
+
+	function categoryapi:CreateModule(modulesettings)
+		local moduleapi = {
+			Enabled = false,
+			Options = {},
+			Bind = {},
+			Index = getTableSize(mainapi.Modules),
+			ExtraText = modulesettings.ExtraText,
+			Name = modulesettings.Name,
+			Category = categorysettings.Name
+		}
+
+		local hovered = false
+		local modulebutton = Instance.new('TextButton')
+		modulebutton.Name = modulesettings.Name
+		modulebutton.Size = UDim2.fromOffset(220, 40)
+		modulebutton.BackgroundColor3 = uipallet.Main
+		modulebutton.BorderSizePixel = 0
+		modulebutton.AutoButtonColor = false
+		modulebutton.Text = '            '..modulesettings.Name
+		modulebutton.TextXAlignment = Enum.TextXAlignment.Left
+		modulebutton.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		modulebutton.TextSize = 14
+		modulebutton.FontFace = uipallet.Font
+		modulebutton.Parent = children
+		local gradient = Instance.new('UIGradient')
+		gradient.Rotation = 90
+		gradient.Enabled = false
+		gradient.Parent = modulebutton
+		local modulechildren =  Instance.new('CanvasGroup')
+		local bind = Instance.new('TextButton')
+		addTooltip(modulebutton, modulesettings.Tooltip)
+		addTooltip(bind, 'Click to bind')
+		bind.Name = 'Bind'
+		bind.Size = UDim2.fromOffset(20, 21)
+		bind.Position = UDim2.new(1, -36, 0, 9)
+		bind.AnchorPoint = Vector2.new(1, 0)
+		bind.BackgroundColor3 = Color3.new(1, 1, 1)
+		bind.BackgroundTransparency = 0.92
+		bind.BorderSizePixel = 0
+		bind.AutoButtonColor = false
+		bind.Visible = false
+		bind.Text = ''
+		addCorner(bind, UDim.new(0, 4))
+		local bindicon = Instance.new('ImageLabel')
+		bindicon.Name = 'Icon'
+		bindicon.Size = UDim2.fromOffset(12, 12)
+		bindicon.Position = UDim2.new(0.5, -6, 0, 5)
+		bindicon.BackgroundTransparency = 1
+		bindicon.Image = getcustomasset('newvape/assets/new/bind.png')
+		bindicon.ImageColor3 = color.Dark(uipallet.Text, 0.43)
+		bindicon.Parent = bind
+		local bindtext = Instance.new('TextLabel')
+		bindtext.Size = UDim2.fromScale(1, 1)
+		bindtext.Position = UDim2.fromOffset(0, 1)
+		bindtext.BackgroundTransparency = 1
+		bindtext.Visible = false
+		bindtext.Text = ''
+		bindtext.TextColor3 = color.Dark(uipallet.Text, 0.43)
+		bindtext.TextSize = 12
+		bindtext.FontFace = uipallet.Font
+		bindtext.Parent = bind
+		local bindcover = Instance.new('ImageLabel')
+		bindcover.Name = 'Cover'
+		bindcover.Size = UDim2.fromOffset(154, 40)
+		bindcover.BackgroundTransparency = 1
+		bindcover.Visible = false
+		bindcover.Image = getcustomasset('newvape/assets/new/bindbkg.png')
+		bindcover.ScaleType = Enum.ScaleType.Slice
+		bindcover.SliceCenter = Rect.new(0, 0, 141, 40)
+		bindcover.Parent = modulebutton
+		local bindcovertext = Instance.new('TextLabel')
+		bindcovertext.Name = 'Text'
+		bindcovertext.Size = UDim2.new(1, -10, 1, -3)
+		bindcovertext.BackgroundTransparency = 1
+		bindcovertext.Text = 'PRESS A KEY TO BIND'
+		bindcovertext.TextColor3 = uipallet.Text
+		bindcovertext.TextSize = 11
+		bindcovertext.FontFace = uipallet.Font
+		bindcovertext.Parent = bindcover
+		bind.Parent = modulebutton
+		local dotsbutton = Instance.new('TextButton')
+		dotsbutton.Name = 'Dots'
+		dotsbutton.Size = UDim2.fromOffset(25, 40)
+		dotsbutton.Position = UDim2.new(1, -25, 0, 0)
+		dotsbutton.BackgroundTransparency = 1
+		dotsbutton.Text = ''
+		dotsbutton.Parent = modulebutton
+		local dots = Instance.new('ImageLabel')
+		dots.Name = 'Dots'
+		dots.Size = UDim2.fromOffset(3, 16)
+		dots.Position = UDim2.fromOffset(4, 12)
+		dots.BackgroundTransparency = 1
+		dots.Image = getcustomasset('newvape/assets/new/dots.png')
+		dots.ImageColor3 = color.Light(uipallet.Main, 0.37)
+		dots.Parent = dotsbutton
+		modulechildren.Name = modulesettings.Name..'Children'
+		modulechildren.Size = UDim2.new(1, 0, 0, 0)
+		modulechildren.BackgroundColor3 = color.Dark(uipallet.Main, 0.02)
+		modulechildren.BorderSizePixel = 0
+		modulechildren.Visible = false
+		modulechildren.Parent = children
+		moduleapi.Children = modulechildren
+		local windowlist = Instance.new('UIListLayout')
+		windowlist.SortOrder = Enum.SortOrder.LayoutOrder
+		windowlist.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		windowlist.Parent = modulechildren
+		local divider = Instance.new('Frame')
+		divider.Name = 'Divider'
+		divider.Size = UDim2.new(1, 0, 0, 1)
+		divider.Position = UDim2.new(0, 0, 1, -1)
+		divider.BackgroundColor3 = Color3.new(0.19, 0.19, 0.19)
+		divider.BackgroundTransparency = 0.52
+		divider.BorderSizePixel = 0
+		divider.Visible = false
+		divider.Parent = modulebutton
+		modulesettings.Function = modulesettings.Function or function() end
+		addMaid(moduleapi)
+
+		function moduleapi:SetBind(tab, mouse)
+			if tab.Mobile then
+				createMobileButton(moduleapi, Vector2.new(tab.X, tab.Y))
+				return
+			end
+
+			self.Bind = table.clone(tab)
+			if mouse then
+				bindcovertext.Text = #tab <= 0 and 'BIND REMOVED' or 'BOUND TO'
+				bindcover.Size = UDim2.fromOffset(getfontsize(bindcovertext.Text, bindcovertext.TextSize).X + 20, 40)
+				task.delay(1, function()
+					bindcover.Visible = false
+				end)
+			end
+
+			if #tab <= 0 then
+				bindtext.Visible = false
+				bindicon.Visible = true
+				bind.Size = UDim2.fromOffset(20, 21)
+			else
+				bind.Visible = true
+				bindtext.Visible = true
+				bindicon.Visible = false
+				bindtext.Text = table.concat(tab, ' + '):upper()
+				bind.Size = UDim2.fromOffset(math.max(getfontsize(bindtext.Text, bindtext.TextSize, bindtext.Font).X + 10, 20), 21)
+			end
+		end
+
+		function moduleapi:Toggle(multiple)
+			if mainapi.ThreadFix then
+				setthreadidentity(8)
+			end
+			self.Enabled = not self.Enabled
+			divider.Visible = self.Enabled
+			gradient.Enabled = self.Enabled
+			modulebutton.TextColor3 = (hovered or modulechildren.Visible) and uipallet.Text or color.Dark(uipallet.Text, 0.16)
+			modulebutton.BackgroundColor3 = (hovered or modulechildren.Visible) and color.Light(uipallet.Main, 0.02) or uipallet.Main
+			dots.ImageColor3 = self.Enabled and Color3.fromRGB(50, 50, 50) or color.Light(uipallet.Main, 0.37)
+			bindicon.ImageColor3 = color.Dark(uipallet.Text, 0.43)
+			bindtext.TextColor3 = color.Dark(uipallet.Text, 0.43)
+			if not self.Enabled then
+				for _, v in self.Connections do
+					v:Disconnect()
+				end
+				table.clear(self.Connections)
+			end
+			if not multiple then
+				mainapi:UpdateTextGUI()
+			end
+			task.spawn(modulesettings.Function, self.Enabled)
+		end
+
+		for i, v in components do
+			moduleapi['Create'..i] = function(_, optionsettings)
+				return v(optionsettings, modulechildren, moduleapi)
+			end
+		end
+
+		bind.MouseEnter:Connect(function()
+			bindtext.Visible = false
+			bindicon.Visible = not bindtext.Visible
+			bindicon.Image = getcustomasset('newvape/assets/new/edit.png')
+			if not moduleapi.Enabled then bindicon.ImageColor3 = color.Dark(uipallet.Text, 0.16) end
+		end)
+		bind.MouseLeave:Connect(function()
+			bindtext.Visible = #moduleapi.Bind > 0
+			bindicon.Visible = not bindtext.Visible
+			bindicon.Image = getcustomasset('newvape/assets/new/bind.png')
+			if not moduleapi.Enabled then
+				bindicon.ImageColor3 = color.Dark(uipallet.Text, 0.43)
+			end
+		end)
+		bind.MouseButton1Click:Connect(function()
+			bindcovertext.Text = 'PRESS A KEY TO BIND'
+			bindcover.Size = UDim2.fromOffset(getfontsize(bindcovertext.Text, bindcovertext.TextSize).X + 20, 40)
+			bindcover.Visible = true
+			mainapi.Binding = moduleapi
+		end)
+		dotsbutton.MouseEnter:Connect(function()
+			if not moduleapi.Enabled then
+				dots.ImageColor3 = uipallet.Text
+			end
+		end)
+		dotsbutton.MouseLeave:Connect(function()
+			if not moduleapi.Enabled then
+				dots.ImageColor3 = color.Light(uipallet.Main, 0.37)
+			end
+		end)
+
+		local moduleexpanded: boolean = false
+		local function moduleexpand()
+			moduleexpanded = not moduleexpanded
+			if moduleexpanded then
+				modulechildren.Visible = moduleexpanded
+				modulechildren.Size = UDim2.new(1, 0, 0, 0)
+				tween:Tween(modulechildren, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {
+					Size = UDim2.new(1, 0, 0, windowlist.AbsoluteContentSize.Y / scale.Scale)
+				})
+			else
+				modulechildrenTween = tween:Tween(modulechildren, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {
+					Size = UDim2.new(1, 0, 0, 0)
+				})
+				task.delay(0.5,function()
+					modulechildren.Visible = moduleexpanded
+				end);
+			end;
+		end;
+
+		dotsbutton.MouseButton1Click:Connect(function()
+			moduleexpand()
+		end)
+
+		dotsbutton.MouseButton2Click:Connect(function()
+			moduleexpand()
+		end)
+		
+		modulebutton.MouseEnter:Connect(function()
+			hovered = true
+			if not moduleapi.Enabled and not modulechildren.Visible then
+				modulebutton.TextColor3 = uipallet.Text
+				modulebutton.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+			end
+			bind.Visible = #moduleapi.Bind > 0 or hovered or modulechildren.Visible
+		end)
+		modulebutton.MouseLeave:Connect(function()
+			hovered = false
+			if not moduleapi.Enabled and not modulechildren.Visible then
+				modulebutton.TextColor3 = color.Dark(uipallet.Text, 0.16)
+				modulebutton.BackgroundColor3 = uipallet.Main
+			end
+			bind.Visible = #moduleapi.Bind > 0 or hovered or modulechildren.Visible
+		end)
+		modulebutton.MouseButton1Click:Connect(function()
+			moduleapi:Toggle()
+		end)
+		modulebutton.MouseButton2Click:Connect(function()
+			moduleexpand()
+		end)
+		if inputService.TouchEnabled then
+			local heldbutton = false
+			modulebutton.MouseButton1Down:Connect(function()
+				heldbutton = true
+				local holdtime, holdpos = tick(), inputService:GetMouseLocation()
+				repeat
+					heldbutton = (inputService:GetMouseLocation() - holdpos).Magnitude < 3
+					task.wait()
+				until (tick() - holdtime) > 1 or not heldbutton or not clickgui.Visible
+				if heldbutton and clickgui.Visible then
+					if mainapi.ThreadFix then
+						setthreadidentity(8)
+					end
+					clickgui.Visible = false
+					tooltip.Visible = false
+					mainapi:BlurCheck()
+					for _, mobileButton in mainapi.Modules do
+						if mobileButton.Bind.Button then
+							mobileButton.Bind.Button.Visible = true
+						end
+					end
+
+					local touchconnection
+					touchconnection = inputService.InputBegan:Connect(function(inputType)
+						if inputType.UserInputType == Enum.UserInputType.Touch then
+							if mainapi.ThreadFix then
+								setthreadidentity(8)
+							end
+							createMobileButton(moduleapi, inputType.Position + Vector3.new(0, guiService:GetGuiInset().Y, 0))
+							clickgui.Visible = true
+							mainapi:BlurCheck()
+							for _, mobileButton in mainapi.Modules do
+								if mobileButton.Bind.Button then
+									mobileButton.Bind.Button.Visible = false
+								end
+							end
+							touchconnection:Disconnect()
+						end
+					end)
+				end
+			end)
+			modulebutton.MouseButton1Up:Connect(function()
+				heldbutton = false
+			end)
+		end
+		windowlist:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+			if mainapi.ThreadFix then
+				setthreadidentity(8)
+			end
+			modulechildren.Size = UDim2.new(1, 0, 0, windowlist.AbsoluteContentSize.Y / scale.Scale)
+		end)
+
+		moduleapi.Object = modulebutton
+		mainapi.Modules[modulesettings.Name] = moduleapi
+
+		local sorting = {}
+		for _, v in mainapi.Modules do
+			sorting[v.Category] = sorting[v.Category] or {}
+			table.insert(sorting[v.Category], v.Name)
+		end
+
+		for _, sort in sorting do
+			table.sort(sort)
+			for i, v in sort do
+				mainapi.Modules[v].Index = i
+				mainapi.Modules[v].Object.LayoutOrder = i
+				mainapi.Modules[v].Children.LayoutOrder = i
+			end
+		end
+
+		return moduleapi
+	end
+
+	local Tweenage
+	function categoryapi:Expand()
+		self.Expanded = not self.Expanded
+		if self.Expanded then
+			children.Visible = self.Expanded
+			children.Size = UDim2.new(1, 0, 0, -41)
+			Tweenage = tween:Tween(children, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {
+				Size = UDim2.new(1, 0, 1, -41)
+			});
+		else
+			Tweenage = tween:Tween(children, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {
+				Size = UDim2.new(1, 0, 0, -41)
+			});
+			divider.Visible = false;
+			task.delay(0.3,function()
+				children.Visible = self.Expanded;
+				divider.Visible = children.CanvasPosition.Y > 10 and children.Visible;
+			end);
+		end;
+		arrow.Rotation = self.Expanded and 0 or 180
+		tween:Tween(window, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {
+			Size = UDim2.fromOffset(220, self.Expanded and math.min(41 + windowlist.AbsoluteContentSize.Y / scale.Scale, 601) or 41)
+		});
+		divider.Visible = children.CanvasPosition.Y > 10 and children.Visible
+	end
+
+	arrowbutton.MouseButton1Click:Connect(function()
+		categoryapi:Expand()
+	end)
+	arrowbutton.MouseButton2Click:Connect(function()
+		categoryapi:Expand()
+	end)
+	arrowbutton.MouseEnter:Connect(function()
+		arrow.ImageColor3 = Color3.fromRGB(220, 220, 220)
+	end)
+	arrowbutton.MouseLeave:Connect(function()
+		arrow.ImageColor3 = Color3.fromRGB(140, 140, 140)
+	end)
+	children:GetPropertyChangedSignal('CanvasPosition'):Connect(function()
+		if self.ThreadFix then
+			setthreadidentity(8)
+		end
+		divider.Visible = children.CanvasPosition.Y > 10 and children.Visible
+	end)
+	window.InputBegan:Connect(function(inputObj)
+		if inputObj.Position.Y < window.AbsolutePosition.Y + 41 and inputObj.UserInputType == Enum.UserInputType.MouseButton2 then
+			categoryapi:Expand()
+		end
+	end)
+	windowlist:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+		if self.ThreadFix then
+			setthreadidentity(8)
+		end
+		children.CanvasSize = UDim2.fromOffset(0, windowlist.AbsoluteContentSize.Y / scale.Scale)
+		if categoryapi.Expanded then
+			window.Size = UDim2.fromOffset(220, math.min(41 + windowlist.AbsoluteContentSize.Y / scale.Scale, 601))
+		end
+	end)
+
+	categoryapi.Button = self.Categories.Main:CreateButton({
+		Name = categorysettings.Name,
+		Icon = categorysettings.Icon,
+		Size = categorysettings.Size,
+		Window = window
+	})
+
+	categoryapi.Object = window
+	self.Categories[categorysettings.Name] = categoryapi
+
+	return categoryapi
+end
+
+function mainapi:CreateOverlay(categorysettings)
+	local window
+	local categoryapi
+	categoryapi = {
+		Type = 'Overlay',
+		Expanded = false,
+		Button = self.Overlays:CreateToggle({
+		Name = categorysettings.Name,
+			Function = function(callback)
+				window.Visible = callback and (clickgui.Visible or categoryapi.Pinned)
+				if not callback then
+					for _, v in categoryapi.Connections do
+						v:Disconnect()
+					end
+					table.clear(categoryapi.Connections)
+				end
+
+				if categorysettings.Function then
+					task.spawn(categorysettings.Function, callback)
+				end
+			end,
+			Icon = categorysettings.Icon,
+			Size = categorysettings.Size,
+			Position = categorysettings.Position
+		}),
+		Pinned = false,
+		Options = {}
+	}
+
+	window = Instance.new('TextButton')
+	window.Name = categorysettings.Name..'Overlay'
+	window.Size = UDim2.fromOffset(categorysettings.CategorySize or 220, 41)
+	window.Position = UDim2.fromOffset(240, 46)
+	window.BackgroundColor3 = uipallet.Main
+	window.AutoButtonColor = false
+	window.Visible = false
+	window.Text = ''
+	window.Parent = scaledgui
+	local blur = addBlur(window)
+	addCorner(window)
+	makeDraggable(window)
+	local icon = Instance.new('ImageLabel')
+	icon.Name = 'Icon'
+	icon.Size = categorysettings.Size
+	icon.Position = UDim2.fromOffset(12, (icon.Size.X.Offset > 14 and 14 or 13))
+	icon.BackgroundTransparency = 1
+	icon.Image = categorysettings.Icon
+	icon.ImageColor3 = uipallet.Text
+	icon.Parent = window
+	local title = Instance.new('TextLabel')
+	title.Name = 'Title'
+	title.Size = UDim2.new(1, -32, 0, 41)
+	title.Position = UDim2.fromOffset(math.abs(title.Size.X.Offset), 0)
+	title.BackgroundTransparency = 1
+	title.Text = categorysettings.Name
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.TextColor3 = uipallet.Text
+	title.TextSize = 13
+	title.FontFace = uipallet.Font
+	title.Parent = window
+	local pin = Instance.new('ImageButton')
+	pin.Name = 'Pin'
+	pin.Size = UDim2.fromOffset(16, 16)
+	pin.Position = UDim2.new(1, -47, 0, 12)
+	pin.BackgroundTransparency = 1
+	pin.AutoButtonColor = false
+	pin.Image = getcustomasset('newvape/assets/new/pin.png')
+	pin.ImageColor3 = color.Dark(uipallet.Text, 0.43)
+	pin.Parent = window
+	local dotsbutton = Instance.new('TextButton')
+	dotsbutton.Name = 'Dots'
+	dotsbutton.Size = UDim2.fromOffset(17, 40)
+	dotsbutton.Position = UDim2.new(1, -17, 0, 0)
+	dotsbutton.BackgroundTransparency = 1
+	dotsbutton.Text = ''
+	dotsbutton.Parent = window
+	local dots = Instance.new('ImageLabel')
+	dots.Name = 'Dots'
+	dots.Size = UDim2.fromOffset(3, 16)
+	dots.Position = UDim2.fromOffset(4, 12)
+	dots.BackgroundTransparency = 1
+	dots.Image = getcustomasset('newvape/assets/new/dots.png')
+	dots.ImageColor3 = color.Light(uipallet.Main, 0.37)
+	dots.Parent = dotsbutton
+	local customchildren = Instance.new('Frame')
+	customchildren.Name = 'CustomChildren'
+	customchildren.Size = UDim2.new(1, 0, 0, 200)
+	customchildren.Position = UDim2.fromScale(0, 1)
+	customchildren.BackgroundTransparency = 1
+	customchildren.Parent = window
+	local children = Instance.new('ScrollingFrame')
+	children.Name = 'Children'
+	children.Size = UDim2.new(1, 0, 1, -41)
+	children.Position = UDim2.fromOffset(0, 37)
+	children.BackgroundColor3 = color.Dark(uipallet.Main, 0.02)
+	children.BorderSizePixel = 0
+	children.Visible = false
+	children.ScrollBarThickness = 2
+	children.ScrollBarImageTransparency = 0.75
+	children.CanvasSize = UDim2.new()
+	children.Parent = window
+	local windowlist = Instance.new('UIListLayout')
+	windowlist.SortOrder = Enum.SortOrder.LayoutOrder
+	windowlist.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	windowlist.Parent = children
+	addMaid(categoryapi)
+
+	function categoryapi:Expand(check)
+		if check and not blur.Visible then return end
+		self.Expanded = not self.Expanded
+		children.Visible = self.Expanded
+		dots.ImageColor3 = self.Expanded and uipallet.Text or color.Light(uipallet.Main, 0.37)
+		if self.Expanded then
+			window.Size = UDim2.fromOffset(window.Size.X.Offset, math.min(41 + windowlist.AbsoluteContentSize.Y / scale.Scale, 601))
+		else
+			window.Size = UDim2.fromOffset(window.Size.X.Offset, 41)
+		end
+	end
+
+	function categoryapi:Pin()
+		self.Pinned = not self.Pinned
+		pin.ImageColor3 = self.Pinned and uipallet.Text or color.Dark(uipallet.Text, 0.43)
+	end
+
+	function categoryapi:Update()
+		window.Visible = self.Button.Enabled and (clickgui.Visible or self.Pinned)
+		if self.Expanded then
+			self:Expand()
+		end
+		if clickgui.Visible then
+			window.Size = UDim2.fromOffset(window.Size.X.Offset, 41)
+			window.BackgroundTransparency = 0
+			blur.Visible = true
+			icon.Visible = true
+			title.Visible = true
+			pin.Visible = true
+			dotsbutton.Visible = true
+		else
+			window.Size = UDim2.fromOffset(window.Size.X.Offset, 0)
+			window.BackgroundTransparency = 1
+			blur.Visible = false
+			icon.Visible = false
+			title.Visible = false
+			pin.Visible = false
+			dotsbutton.Visible = false
+		end
+	end
+
+	for i, v in components do
+		categoryapi['Create'..i] = function(self, optionsettings)
+			return v(optionsettings, children, categoryapi)
+		end
+	end
+
+	dotsbutton.MouseEnter:Connect(function()
+		if not children.Visible then
+			dots.ImageColor3 = uipallet.Text
+		end
+	end)
+	dotsbutton.MouseLeave:Connect(function()
+		if not children.Visible then
+			dots.ImageColor3 = color.Light(uipallet.Main, 0.37)
+		end
+	end)
+	dotsbutton.MouseButton1Click:Connect(function()
+		categoryapi:Expand(true)
+	end)
+	dotsbutton.MouseButton2Click:Connect(function()
+		categoryapi:Expand(true)
+	end)
+	pin.MouseButton1Click:Connect(function()
+		categoryapi:Pin()
+	end)
+	window.MouseButton2Click:Connect(function()
+		categoryapi:Expand(true)
+	end)
+	windowlist:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+		if self.ThreadFix then
+			setthreadidentity(8)
+		end
+		children.CanvasSize = UDim2.fromOffset(0, windowlist.AbsoluteContentSize.Y / scale.Scale)
+		if categoryapi.Expanded then
+			window.Size = UDim2.fromOffset(window.Size.X.Offset, math.min(41 + windowlist.AbsoluteContentSize.Y / scale.Scale, 601))
+		end
+	end)
+	self:Clean(clickgui:GetPropertyChangedSignal('Visible'):Connect(function()
+		categoryapi:Update()
+	end))
+
+	categoryapi:Update()
+	categoryapi.Object = window
+	categoryapi.Children = customchildren
+	self.Categories[categorysettings.Name] = categoryapi
+
+	return categoryapi
+end
+
+function mainapi:CreateCategoryList(categorysettings)
+	local categoryapi = {
+		Type = 'CategoryList',
+		Expanded = false,
+		List = {},
+		ListEnabled = {},
+		Objects = {},
+		Options = {}
+	}
+	categorysettings.Color = categorysettings.Color or Color3.fromRGB(5, 134, 105)
+
+	local window = Instance.new('TextButton')
+	window.Name = categorysettings.Name..'CategoryList'
+	window.Size = UDim2.fromOffset(220, 45)
+	window.Position = UDim2.fromOffset(240, 46)
+	window.BackgroundColor3 = uipallet.Main
+	window.AutoButtonColor = false
+	window.Visible = false
+	window.Text = ''
+	window.Parent = clickgui
+	addBlur(window)
+	addCorner(window)
+	makeDraggable(window)
+	local icon = Instance.new('ImageLabel')
+	icon.Name = 'Icon'
+	icon.Size = categorysettings.Size
+	icon.Position = categorysettings.Position or UDim2.fromOffset(12, (categorysettings.Size.X.Offset > 20 and 13 or 12))
+	icon.BackgroundTransparency = 1
+	icon.Image = categorysettings.Icon
+	icon.ImageColor3 = uipallet.Text
+	icon.Parent = window
+	local title = Instance.new('TextLabel')
+	title.Name = 'Title'
+	title.Size = UDim2.new(1, -(categorysettings.Size.X.Offset > 20 and 44 or 36), 0, 20)
+	title.Position = UDim2.fromOffset(math.abs(title.Size.X.Offset), 12)
+	title.BackgroundTransparency = 1
+	title.Text = categorysettings.Name
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.TextColor3 = uipallet.Text
+	title.TextSize = 13
+	title.FontFace = uipallet.Font
+	title.Parent = window
+	local arrowbutton = Instance.new('TextButton')
+	arrowbutton.Name = 'Arrow'
+	arrowbutton.Size = UDim2.fromOffset(40, 40)
+	arrowbutton.Position = UDim2.new(1, -40, 0, 0)
+	arrowbutton.BackgroundTransparency = 1
+	arrowbutton.Text = ''
+	arrowbutton.Parent = window
+	local arrow = Instance.new('ImageLabel')
+	arrow.Name = 'Arrow'
+	arrow.Size = UDim2.fromOffset(9, 4)
+	arrow.Position = UDim2.fromOffset(20, 19)
+	arrow.BackgroundTransparency = 1
+	arrow.Image = getcustomasset('newvape/assets/new/expandup.png')
+	arrow.ImageColor3 = Color3.fromRGB(140, 140, 140)
+	arrow.Rotation = 180
+	arrow.Parent = arrowbutton
+	local children = Instance.new('ScrollingFrame')
+	children.Name = 'Children'
+	children.Size = UDim2.new(1, 0, 1, -45)
+	children.Position = UDim2.fromOffset(0, 45)
+	children.BackgroundTransparency = 1
+	children.BorderSizePixel = 0
+	children.Visible = false
+	children.ScrollBarThickness = 2
+	children.ScrollBarImageTransparency = 0.75
+	children.CanvasSize = UDim2.new()
+	children.Parent = window
+	local childrentwo = Instance.new('Frame')
+	childrentwo.BackgroundTransparency = 1
+	childrentwo.BackgroundColor3 = color.Dark(uipallet.Main, 0.02)
+	childrentwo.Visible = false
+	childrentwo.Parent = children
+	local settings = Instance.new('ImageButton')
+	settings.Name = 'Settings'
+	settings.Size = UDim2.fromOffset(16, 16)
+	settings.Position = UDim2.new(1, -52, 0, 13)
+	settings.BackgroundTransparency = 1
+	settings.AutoButtonColor = false
+	settings.Image = getcustomasset('newvape/assets/new/customsettings.png')
+	settings.ImageColor3 = color.Dark(uipallet.Text, 0.43)
+	settings.Parent = window
+	local divider = Instance.new('Frame')
+	divider.Name = 'Divider'
+	divider.Size = UDim2.new(1, 0, 0, 1)
+	divider.Position = UDim2.fromOffset(0, 41)
+	divider.BorderSizePixel = 0
+	divider.Visible = false
+	divider.BackgroundColor3 = Color3.new(1, 1, 1)
+	divider.BackgroundTransparency = 0.928
+	divider.Parent = window
+	local windowlist = Instance.new('UIListLayout')
+	windowlist.SortOrder = Enum.SortOrder.LayoutOrder
+	windowlist.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	windowlist.Padding = UDim.new(0, 3)
+	windowlist.Parent = children
+	local windowlisttwo = Instance.new('UIListLayout')
+	windowlisttwo.SortOrder = Enum.SortOrder.LayoutOrder
+	windowlisttwo.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	windowlisttwo.Parent = childrentwo
+	local addbkg = Instance.new('Frame')
+	addbkg.Name = 'Add'
+	addbkg.Size = UDim2.fromOffset(200, 31)
+	addbkg.Position = UDim2.fromOffset(10, 45)
+	addbkg.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+	addbkg.Parent = children
+	addCorner(addbkg)
+	local addbox = addbkg:Clone()
+	addbox.Size = UDim2.new(1, -2, 1, -2)
+	addbox.Position = UDim2.fromOffset(1, 1)
+	addbox.BackgroundColor3 = color.Dark(uipallet.Main, 0.02)
+	addbox.Parent = addbkg
+	local addvalue = Instance.new('TextBox')
+	addvalue.Size = UDim2.new(1, -35, 1, 0)
+	addvalue.Position = UDim2.fromOffset(10, 0)
+	addvalue.BackgroundTransparency = 1
+	addvalue.Text = ''
+	addvalue.PlaceholderText = categorysettings.Placeholder or 'Add entry...'
+	addvalue.TextXAlignment = Enum.TextXAlignment.Left
+	addvalue.TextColor3 = Color3.new(1, 1, 1)
+	addvalue.TextSize = 15
+	addvalue.FontFace = uipallet.Font
+	addvalue.ClearTextOnFocus = false
+	addvalue.Parent = addbkg
+	local addbutton = Instance.new('ImageButton')
+	addbutton.Name = 'AddButton'
+	addbutton.Size = UDim2.fromOffset(16, 16)
+	addbutton.Position = UDim2.new(1, -26, 0, 8)
+	addbutton.BackgroundTransparency = 1
+	addbutton.Image = getcustomasset('newvape/assets/new/add.png')
+	addbutton.ImageColor3 = categorysettings.Color
+	addbutton.ImageTransparency = 0.3
+	addbutton.Parent = addbkg
+	local cursedpadding = Instance.new('Frame')
+	cursedpadding.Size = UDim2.fromOffset()
+	cursedpadding.BackgroundTransparency = 1
+	cursedpadding.Parent = children
+	categorysettings.Function = categorysettings.Function or function() end
+
+	function categoryapi:ChangeValue(val)
+		if val then
+			if categorysettings.Profiles then
+				local ind = self:GetValue(val)
+				if ind then
+					if val ~= 'default' then
+						table.remove(mainapi.Profiles, ind)
+						if isfile('newvape/profiles/'..val..mainapi.Place..'.txt') and delfile then
+							delfile('newvape/profiles/'..val..mainapi.Place..'.txt')
+						end
+					end
+				else
+					table.insert(mainapi.Profiles, {Name = val, Bind = {}})
+				end
+			else
+				local ind = table.find(self.List, val)
+				if ind then
+					table.remove(self.List, ind)
+					ind = table.find(self.ListEnabled, val)
+					if ind then
+						table.remove(self.ListEnabled, ind)
+					end
+				else
+					table.insert(self.List, val)
+					table.insert(self.ListEnabled, val)
+				end
+			end
+		end
+
+		categorysettings.Function()
+		for _, v in self.Objects do
+			v:Destroy()
+		end
+		table.clear(self.Objects)
+		self.Selected = nil
+
+		for i, v in (categorysettings.Profiles and mainapi.Profiles or self.List) do
+			if categorysettings.Profiles then
+				local object = Instance.new('TextButton')
+				object.Name = v.Name
+				object.Size = UDim2.fromOffset(200, 33)
+				object.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+				object.AutoButtonColor = false
+				object.Text = ''
+				object.Parent = children
+				addCorner(object)
+				local objectstroke = Instance.new('UIStroke')
+				objectstroke.Color = color.Light(uipallet.Main, 0.1)
+				objectstroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+				objectstroke.Enabled = false
+				objectstroke.Parent = object
+				local objecttitle = Instance.new('TextLabel')
+				objecttitle.Name = 'Title'
+				objecttitle.Size = UDim2.new(1, -10, 1, 0)
+				objecttitle.Position = UDim2.fromOffset(10, 0)
+				objecttitle.BackgroundTransparency = 1
+				objecttitle.Text = v.Name
+				objecttitle.TextXAlignment = Enum.TextXAlignment.Left
+				objecttitle.TextColor3 = color.Dark(uipallet.Text, 0.4)
+				objecttitle.TextSize = 15
+				objecttitle.FontFace = uipallet.Font
+				objecttitle.Parent = object
+				local dotsbutton = Instance.new('TextButton')
+				dotsbutton.Name = 'Dots'
+				dotsbutton.Size = UDim2.fromOffset(25, 33)
+				dotsbutton.Position = UDim2.new(1, -25, 0, 0)
+				dotsbutton.BackgroundTransparency = 1
+				dotsbutton.Text = ''
+				dotsbutton.Parent = object
+				local dots = Instance.new('ImageLabel')
+				dots.Name = 'Dots'
+				dots.Size = UDim2.fromOffset(3, 16)
+				dots.Position = UDim2.fromOffset(10, 9)
+				dots.BackgroundTransparency = 1
+				dots.Image = getcustomasset('newvape/assets/new/dots.png')
+				dots.ImageColor3 = color.Light(uipallet.Main, 0.37)
+				dots.Parent = dotsbutton
+				local bind = Instance.new('TextButton')
+				addTooltip(bind, 'Click to bind')
+				bind.Name = 'Bind'
+				bind.Size = UDim2.fromOffset(20, 21)
+				bind.Position = UDim2.new(1, -30, 0, 6)
+				bind.AnchorPoint = Vector2.new(1, 0)
+				bind.BackgroundColor3 = Color3.new(1, 1, 1)
+				bind.BackgroundTransparency = 0.92
+				bind.BorderSizePixel = 0
+				bind.AutoButtonColor = false
+				bind.Visible = false
+				bind.Text = ''
+				addCorner(bind, UDim.new(0, 4))
+				local bindicon = Instance.new('ImageLabel')
+				bindicon.Name = 'Icon'
+				bindicon.Size = UDim2.fromOffset(12, 12)
+				bindicon.Position = UDim2.new(0.5, -6, 0, 5)
+				bindicon.BackgroundTransparency = 1
+				bindicon.Image = getcustomasset('newvape/assets/new/bind.png')
+				bindicon.ImageColor3 = color.Dark(uipallet.Text, 0.43)
+				bindicon.Parent = bind
+				local bindtext = Instance.new('TextLabel')
+				bindtext.Size = UDim2.fromScale(1, 1)
+				bindtext.Position = UDim2.fromOffset(0, 1)
+				bindtext.BackgroundTransparency = 1
+				bindtext.Visible = false
+				bindtext.Text = ''
+				bindtext.TextColor3 = color.Dark(uipallet.Text, 0.43)
+				bindtext.TextSize = 12
+				bindtext.FontFace = uipallet.Font
+				bindtext.Parent = bind
+				bind.MouseEnter:Connect(function()
+					bindtext.Visible = false
+					bindicon.Visible = not bindtext.Visible
+					bindicon.Image = getcustomasset('newvape/assets/new/edit.png')
+					if v.Name ~= mainapi.Profile then
+						bindicon.ImageColor3 = color.Dark(uipallet.Text, 0.16)
+					end
+				end)
+				bind.MouseLeave:Connect(function()
+					bindtext.Visible = #v.Bind > 0
+					bindicon.Visible = not bindtext.Visible
+					bindicon.Image = getcustomasset('newvape/assets/new/bind.png')
+					if v.Name ~= mainapi.Profile then
+						bindicon.ImageColor3 = color.Dark(uipallet.Text, 0.43)
+					end
+				end)
+				local bindcover = Instance.new('ImageLabel')
+				bindcover.Name = 'Cover'
+				bindcover.Size = UDim2.fromOffset(154, 33)
+				bindcover.BackgroundTransparency = 1
+				bindcover.Visible = false
+				bindcover.Image = getcustomasset('newvape/assets/new/bindbkg.png')
+				bindcover.ScaleType = Enum.ScaleType.Slice
+				bindcover.SliceCenter = Rect.new(0, 0, 141, 40)
+				bindcover.Parent = object
+				local bindcovertext = Instance.new('TextLabel')
+				bindcovertext.Name = 'Text'
+				bindcovertext.Size = UDim2.new(1, -10, 1, -3)
+				bindcovertext.BackgroundTransparency = 1
+				bindcovertext.Text = 'PRESS A KEY TO BIND'
+				bindcovertext.TextColor3 = uipallet.Text
+				bindcovertext.TextSize = 11
+				bindcovertext.FontFace = uipallet.Font
+				bindcovertext.Parent = bindcover
+				bind.Parent = object
+				dotsbutton.MouseEnter:Connect(function()
+					if v.Name ~= mainapi.Profile then
+						dots.ImageColor3 = uipallet.Text
+					end
+				end)
+				dotsbutton.MouseLeave:Connect(function()
+					if v.Name ~= mainapi.Profile then
+						dots.ImageColor3 = color.Light(uipallet.Main, 0.37)
+					end
+				end)
+				dotsbutton.MouseButton1Click:Connect(function()
+					if v.Name ~= mainapi.Profile then
+						categoryapi:ChangeValue(v.Name)
+					end
+				end)
+				object.MouseButton1Click:Connect(function()
+					mainapi:Save(v.Name)
+					mainapi:Load(true)
+				end)
+				object.MouseEnter:Connect(function()
+					bind.Visible = true
+					if v.Name ~= mainapi.Profile then
+						objectstroke.Enabled = true
+						objecttitle.TextColor3 = color.Dark(uipallet.Text, 0.16)
+					end
+				end)
+				object.MouseLeave:Connect(function()
+					bind.Visible = #v.Bind > 0
+					if v.Name ~= mainapi.Profile then
+						objectstroke.Enabled = false
+						objecttitle.TextColor3 = color.Dark(uipallet.Text, 0.4)
+					end
+				end)
+
+				local function bindFunction(self, tab, mouse)
+					v.Bind = table.clone(tab)
+					if mouse then
+						bindcovertext.Text = #tab <= 0 and 'BIND REMOVED' or 'BOUND TO '..table.concat(tab, ' + '):upper()
+						bindcover.Size = UDim2.fromOffset(getfontsize(bindcovertext.Text, bindcovertext.TextSize).X + 20, 40)
+						task.delay(1, function()
+							bindcover.Visible = false
+						end)
+					end
+
+					if #tab <= 0 then
+						bindtext.Visible = false
+						bindicon.Visible = true
+						bind.Size = UDim2.fromOffset(20, 21)
+					else
+						bind.Visible = true
+						bindtext.Visible = true
+						bindicon.Visible = false
+						bindtext.Text = table.concat(tab, ' + '):upper()
+						bind.Size = UDim2.fromOffset(math.max(getfontsize(bindtext.Text, bindtext.TextSize, bindtext.Font).X + 10, 20), 21)
+					end
+				end
+
+				bindFunction({}, v.Bind)
+				bind.MouseButton1Click:Connect(function()
+					bindcovertext.Text = 'PRESS A KEY TO BIND'
+					bindcover.Size = UDim2.fromOffset(getfontsize(bindcovertext.Text, bindcovertext.TextSize).X + 20, 40)
+					bindcover.Visible = true
+					mainapi.Binding = {SetBind = bindFunction, Bind = v.Bind}
+				end)
+				if v.Name == mainapi.Profile then
+					self.Selected = object
+				end
+				table.insert(self.Objects, object)
+			else
+				local enabled = table.find(self.ListEnabled, v)
+				local object = Instance.new('TextButton')
+				object.Name = v
+				object.Size = UDim2.fromOffset(200, 32)
+				object.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+				object.AutoButtonColor = false
+				object.Text = ''
+				object.Parent = children
+				addCorner(object)
+				local objectbkg = Instance.new('Frame')
+				objectbkg.Name = 'BKG'
+				objectbkg.Size = UDim2.new(1, -2, 1, -2)
+				objectbkg.Position = UDim2.fromOffset(1, 1)
+				objectbkg.BackgroundColor3 = uipallet.Main
+				objectbkg.Visible = false
+				objectbkg.Parent = object
+				addCorner(objectbkg)
+				local objectdot = Instance.new('Frame')
+				objectdot.Name = 'Dot'
+				objectdot.Size = UDim2.fromOffset(10, 11)
+				objectdot.Position = UDim2.fromOffset(10, 12)
+				objectdot.BackgroundColor3 = enabled and categorysettings.Color or color.Light(uipallet.Main, 0.37)
+				objectdot.Parent = object
+				addCorner(objectdot, UDim.new(1, 0))
+				local objectdotin = objectdot:Clone()
+				objectdotin.Size = UDim2.fromOffset(8, 9)
+				objectdotin.Position = UDim2.fromOffset(1, 1)
+				objectdotin.BackgroundColor3 = enabled and categorysettings.Color or color.Light(uipallet.Main, 0.02)
+				objectdotin.Parent = objectdot
+				local objecttitle = Instance.new('TextLabel')
+				objecttitle.Name = 'Title'
+				objecttitle.Size = UDim2.new(1, -30, 1, 0)
+				objecttitle.Position = UDim2.fromOffset(30, 0)
+				objecttitle.BackgroundTransparency = 1
+				objecttitle.Text = v
+				objecttitle.TextXAlignment = Enum.TextXAlignment.Left
+				objecttitle.TextColor3 = color.Dark(uipallet.Text, 0.16)
+				objecttitle.TextSize = 15
+				objecttitle.FontFace = uipallet.Font
+				objecttitle.Parent = object
+				if mainapi.ThreadFix then
+					setthreadidentity(8)
+				end
+				local close = Instance.new('ImageButton')
+				close.Name = 'Close'
+				close.Size = UDim2.fromOffset(16, 16)
+				close.Position = UDim2.new(1, -23, 0, 8)
+				close.BackgroundColor3 = Color3.new(1, 1, 1)
+				close.BackgroundTransparency = 1
+				close.AutoButtonColor = false
+				close.Image = getcustomasset('newvape/assets/new/closemini.png')
+				close.ImageColor3 = color.Light(uipallet.Text, 0.2)
+				close.ImageTransparency = 0.5
+				close.Parent = object
+				addCorner(close, UDim.new(1, 0))
+				close.MouseEnter:Connect(function()
+					close.ImageTransparency = 0.3
+					tween:Tween(close, uipallet.Tween, {
+						BackgroundTransparency = 0.6
+					})
+				end)
+				close.MouseLeave:Connect(function()
+					close.ImageTransparency = 0.5
+					tween:Tween(close, uipallet.Tween, {
+						BackgroundTransparency = 1
+					})
+				end)
+				close.MouseButton1Click:Connect(function()
+					categoryapi:ChangeValue(v)
+				end)
+				object.MouseEnter:Connect(function()
+					objectbkg.Visible = true
+				end)
+				object.MouseLeave:Connect(function()
+					objectbkg.Visible = false
+				end)
+				object.MouseButton1Click:Connect(function()
+					local ind = table.find(self.ListEnabled, v)
+					if ind then
+						table.remove(self.ListEnabled, ind)
+						objectdot.BackgroundColor3 = color.Light(uipallet.Main, 0.37)
+						objectdotin.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+					else
+						table.insert(self.ListEnabled, v)
+						objectdot.BackgroundColor3 = categorysettings.Color
+						objectdotin.BackgroundColor3 = categorysettings.Color
+					end
+					categorysettings.Function()
+				end)
+				table.insert(self.Objects, object)
+			end
+		end
+		mainapi:UpdateGUI(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value)
+	end
+
+	function categoryapi:Expand()
+		self.Expanded = not self.Expanded
+		children.Visible = self.Expanded
+		arrow.Rotation = self.Expanded and 0 or 180
+		window.Size = UDim2.fromOffset(220, self.Expanded and math.min(51 + windowlist.AbsoluteContentSize.Y / scale.Scale, 611) or 45)
+		divider.Visible = children.CanvasPosition.Y > 10 and children.Visible
+	end
+
+	function categoryapi:GetValue(name)
+		for i, v in mainapi.Profiles do
+			if v.Name == name then
+				return i
+			end
+		end
+	end
+
+	for i, v in components do
+		categoryapi['Create'..i] = function(self, optionsettings)
+			return v(optionsettings, childrentwo, categoryapi)
+		end
+	end
+
+	addbutton.MouseEnter:Connect(function()
+		addbutton.ImageTransparency = 0
+	end)
+	addbutton.MouseLeave:Connect(function()
+		addbutton.ImageTransparency = 0.3
+	end)
+	addbutton.MouseButton1Click:Connect(function()
+		if not table.find(categoryapi.List, addvalue.Text) then
+			categoryapi:ChangeValue(addvalue.Text)
+			addvalue.Text = ''
+		end
+	end)
+	arrowbutton.MouseEnter:Connect(function()
+		arrow.ImageColor3 = Color3.fromRGB(220, 220, 220)
+	end)
+	arrowbutton.MouseLeave:Connect(function()
+		arrow.ImageColor3 = Color3.fromRGB(140, 140, 140)
+	end)
+	arrowbutton.MouseButton1Click:Connect(function()
+		categoryapi:Expand()
+	end)
+	arrowbutton.MouseButton2Click:Connect(function()
+		categoryapi:Expand()
+	end)
+	addvalue.FocusLost:Connect(function(enter)
+		if enter and not table.find(categoryapi.List, addvalue.Text) then
+			categoryapi:ChangeValue(addvalue.Text)
+			addvalue.Text = ''
+		end
+	end)
+	addvalue.MouseEnter:Connect(function()
+		tween:Tween(addbkg, uipallet.Tween, {
+			BackgroundColor3 = color.Light(uipallet.Main, 0.14)
+		})
+	end)
+	addvalue.MouseLeave:Connect(function()
+		tween:Tween(addbkg, uipallet.Tween, {
+			BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+		})
+	end)
+	children:GetPropertyChangedSignal('CanvasPosition'):Connect(function()
+		divider.Visible = children.CanvasPosition.Y > 10 and children.Visible
+	end)
+	settings.MouseEnter:Connect(function()
+		settings.ImageColor3 = uipallet.Text
+	end)
+	settings.MouseLeave:Connect(function()
+		settings.ImageColor3 = color.Light(uipallet.Main, 0.37)
+	end)
+	settings.MouseButton1Click:Connect(function()
+		childrentwo.Visible = not childrentwo.Visible
+	end)
+	window.InputBegan:Connect(function(inputObj)
+		if inputObj.Position.Y < window.AbsolutePosition.Y + 41 and inputObj.UserInputType == Enum.UserInputType.MouseButton2 then
+			categoryapi:Expand()
+		end
+	end)
+	windowlist:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+		if self.ThreadFix then
+			setthreadidentity(8)
+		end
+		children.CanvasSize = UDim2.fromOffset(0, windowlist.AbsoluteContentSize.Y / scale.Scale)
+		if categoryapi.Expanded then
+			window.Size = UDim2.fromOffset(220, math.min(51 + windowlist.AbsoluteContentSize.Y / scale.Scale, 611))
+		end
+	end)
+	windowlisttwo:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+		if self.ThreadFix then
+			setthreadidentity(8)
+		end
+		childrentwo.Size = UDim2.fromOffset(220, windowlisttwo.AbsoluteContentSize.Y)
+	end)
+
+	categoryapi.Button = self.Categories.Main:CreateButton({
+		Name = categorysettings.Name,
+		Icon = categorysettings.CategoryIcon,
+		Size = categorysettings.CategorySize,
+		Window = window
+	})
+
+	categoryapi.Object = window
+	self.Categories[categorysettings.Name] = categoryapi
+
+	return categoryapi
+end
+
+function mainapi:CreateSearch()
+	local searchbkg = Instance.new('Frame')
+	searchbkg.Name = 'Search'
+	searchbkg.Size = UDim2.fromOffset(220, 37)
+	searchbkg.Position = UDim2.new(0.5, 0, 0, 13)
+	searchbkg.AnchorPoint = Vector2.new(0.5, 0)
+	searchbkg.BackgroundColor3 = color.Dark(uipallet.Main, 0.02)
+	searchbkg.Parent = clickgui
+	local searchicon = Instance.new('ImageLabel')
+	searchicon.Name = 'Icon'
+	searchicon.Size = UDim2.fromOffset(14, 14)
+	searchicon.Position = UDim2.new(1, -23, 0, 11)
+	searchicon.BackgroundTransparency = 1
+	searchicon.Image = getcustomasset('newvape/assets/new/search.png')
+	searchicon.ImageColor3 = color.Light(uipallet.Main, 0.37)
+	searchicon.Parent = searchbkg
+	local legiticon = Instance.new('ImageButton')
+	legiticon.Name = 'Legit'
+	legiticon.Size = UDim2.fromOffset(29, 16)
+	legiticon.Position = UDim2.fromOffset(8, 11)
+	legiticon.BackgroundTransparency = 1
+	legiticon.Image = getcustomasset('newvape/assets/new/legit.png')
+	legiticon.Parent = searchbkg
+	local legitdivider = Instance.new('Frame')
+	legitdivider.Name = 'LegitDivider'
+	legitdivider.Size = UDim2.fromOffset(2, 12)
+	legitdivider.Position = UDim2.fromOffset(43, 13)
+	legitdivider.BackgroundColor3 = color.Light(uipallet.Main, 0.14)
+	legitdivider.BorderSizePixel = 0
+	legitdivider.Parent = searchbkg
+	addBlur(searchbkg)
+	addCorner(searchbkg)
+	local search = Instance.new('TextBox')
+	search.Size = UDim2.new(1, -50, 0, 37)
+	search.Position = UDim2.fromOffset(50, 0)
+	search.BackgroundTransparency = 1
+	search.Text = ''
+	search.PlaceholderText = ''
+	search.TextXAlignment = Enum.TextXAlignment.Left
+	search.TextColor3 = uipallet.Text
+	search.TextSize = 12
+	search.FontFace = uipallet.Font
+	search.ClearTextOnFocus = false
+	search.Parent = searchbkg
+	local children = Instance.new('ScrollingFrame')
+	children.Name = 'Children'
+	children.Size = UDim2.new(1, 0, 1, -37)
+	children.Position = UDim2.fromOffset(0, 34)
+	children.BackgroundTransparency = 1
+	children.BorderSizePixel = 0
+	children.ScrollBarThickness = 2
+	children.ScrollBarImageTransparency = 0.75
+	children.CanvasSize = UDim2.new()
+	children.Parent = searchbkg
+	local divider = Instance.new('Frame')
+	divider.Name = 'Divider'
+	divider.Size = UDim2.new(1, 0, 0, 1)
+	divider.Position = UDim2.fromOffset(0, 33)
+	divider.BackgroundColor3 = Color3.new(1, 1, 1)
+	divider.BackgroundTransparency = 0.928
+	divider.BorderSizePixel = 0
+	divider.Visible = false
+	divider.Parent = searchbkg
+	local windowlist = Instance.new('UIListLayout')
+	windowlist.SortOrder = Enum.SortOrder.LayoutOrder
+	windowlist.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	windowlist.Parent = children
+
+	children:GetPropertyChangedSignal('CanvasPosition'):Connect(function()
+		divider.Visible = children.CanvasPosition.Y > 10 and children.Visible
+	end)
+	legiticon.MouseButton1Click:Connect(function()
+		clickgui.Visible = false
+		self.Legit.Window.Visible = true
+		self.Legit.Window.Position = UDim2.new(0.5, -350, 0.5, -194)
+	end)
+	search:GetPropertyChangedSignal('Text'):Connect(function()
+		for _, v in children:GetChildren() do
+			if v:IsA('TextButton') then
+				v:Destroy()
+			end
+		end
+		if search.Text == '' then return end
+
+		for i, v in self.Modules do
+			if i:lower():find(search.Text:lower()) then
+				local button = v.Object:Clone()
+				button.Bind:Destroy()
+				button.MouseButton1Click:Connect(function()
+					v:Toggle()
+				end)
+
+				button.MouseButton2Click:Connect(function()
+					v.Object.Parent.Parent.Visible = true
+					local v: any = v.Object.Parent
+					local light: Frame = Instance.new('Frame')
+					light.Size = UDim2.fromScale(1, 1)
+					light.BackgroundColor3 = Color3.new(1, 1, 1)
+					light.BackgroundTransparency = 0.6
+					light.BorderSizePixel = 0
+					light.Parent = v.Object
+					tween:Tween(light, TweenInfo.new(0.5), {
+						BackgroundTransparency = 1
+					})
+					task.delay(0.5, light.Destroy, light)
+					v.CanvasPosition = Vector2.new(0, (v.Object.LayoutOrder * 40) - (math.min(v.CanvasSize.Y.Offset, 600) / 2))
+				end)
+				button.Parent = children
+				task.spawn(function()
+					repeat
+						for _, v2 in {'Text', 'TextColor3', 'BackgroundColor3'} do
+							button[v2] = v.Object[v2]
+						end
+						button.UIGradient.Color = v.Object.UIGradient.Color
+						button.UIGradient.Enabled = v.Object.UIGradient.Enabled
+						button.Dots.Dots.ImageColor3 = v.Object.Dots.Dots.ImageColor3
+						task.wait()
+					until not button.Parent
+				end)
+			end
+		end
+	end)
+	windowlist:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+		if self.ThreadFix then
+			setthreadidentity(8)
+		end
+		children.CanvasSize = UDim2.fromOffset(0, windowlist.AbsoluteContentSize.Y / scale.Scale)
+		searchbkg.Size = UDim2.fromOffset(220, math.min(37 + windowlist.AbsoluteContentSize.Y / scale.Scale, 437))
+	end)
+
+	self.Legit.Icon = legiticon
+end
+
+function mainapi:CreateLegit()
+	local legitapi = {Modules = {}}
+
+	local window = Instance.new('Frame')
+	window.Name = 'LegitGUI'
+	window.Size = UDim2.fromOffset(700, 389)
+	window.Position = UDim2.new(0.5, -350, 0.5, -194)
+	window.BackgroundColor3 = uipallet.Main
+	window.Visible = false
+	window.Parent = scaledgui
+	addBlur(window)
+	addCorner(window)
+	makeDraggable(window)
+	local modal = Instance.new('TextButton')
+	modal.BackgroundTransparency = 1
+	modal.Text = ''
+	modal.Modal = true
+	modal.Parent = window
+	local icon = Instance.new('ImageLabel')
+	icon.Name = 'Icon'
+	icon.Size = UDim2.fromOffset(16, 16)
+	icon.Position = UDim2.fromOffset(18, 13)
+	icon.BackgroundTransparency = 1
+	icon.Image = getcustomasset('newvape/assets/new/legittab.png')
+	icon.ImageColor3 = uipallet.Text
+	icon.Parent = window
+	local close = addCloseButton(window)
+	local children = Instance.new('ScrollingFrame')
+	children.Name = 'Children'
+	children.Size = UDim2.fromOffset(684, 340)
+	children.Position = UDim2.fromOffset(14, 41)
+	children.BackgroundTransparency = 1
+	children.BorderSizePixel = 0
+	children.ScrollBarThickness = 2
+	children.ScrollBarImageTransparency = 0.75
+	children.CanvasSize = UDim2.new()
+	children.Parent = window
+	local windowlist = Instance.new('UIGridLayout')
+	windowlist.SortOrder = Enum.SortOrder.LayoutOrder
+	windowlist.FillDirectionMaxCells = 4
+	windowlist.CellSize = UDim2.fromOffset(163, 114)
+	windowlist.CellPadding = UDim2.fromOffset(6, 5)
+	windowlist.Parent = children
+	legitapi.Window = window
+	table.insert(mainapi.Windows, window)
+
+	function legitapi:CreateModule(modulesettings)
+		mainapi:Remove(modulesettings.Name)
+		local moduleapi = {
+			Enabled = false,
+			Options = {},
+			Name = modulesettings.Name,
+			Legit = true
+		}
+
+		local module = Instance.new('TextButton')
+		module.Name = modulesettings.Name
+		module.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+		module.Text = ''
+		module.AutoButtonColor = false
+		module.Parent = children
+		addTooltip(module, modulesettings.Tooltip)
+		addCorner(module)
+		local title = Instance.new('TextLabel')
+		title.Name = 'Title'
+		title.Size = UDim2.new(1, -16, 0, 20)
+		title.Position = UDim2.fromOffset(16, 81)
+		title.BackgroundTransparency = 1
+		title.Text = modulesettings.Name
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.TextColor3 = color.Dark(uipallet.Text, 0.31)
+		title.TextSize = 13
+		title.FontFace = uipallet.Font
+		title.Parent = module
+		local knob = Instance.new('Frame')
+		knob.Name = 'Knob'
+		knob.Size = UDim2.fromOffset(22, 12)
+		knob.Position = UDim2.new(1, -57, 0, 14)
+		knob.BackgroundColor3 = color.Light(uipallet.Main, 0.14)
+		knob.Parent = module
+		addCorner(knob, UDim.new(1, 0))
+		local knobmain = knob:Clone()
+		knobmain.Size = UDim2.fromOffset(8, 8)
+		knobmain.Position = UDim2.fromOffset(2, 2)
+		knobmain.BackgroundColor3 = uipallet.Main
+		knobmain.Parent = knob
+		local dotsbutton = Instance.new('TextButton')
+		dotsbutton.Name = 'Dots'
+		dotsbutton.Size = UDim2.fromOffset(14, 24)
+		dotsbutton.Position = UDim2.new(1, -27, 0, 8)
+		dotsbutton.BackgroundTransparency = 1
+		dotsbutton.Text = ''
+		dotsbutton.Parent = module
+		local dots = Instance.new('ImageLabel')
+		dots.Name = 'Dots'
+		dots.Size = UDim2.fromOffset(2, 12)
+		dots.Position = UDim2.fromOffset(6, 6)
+		dots.BackgroundTransparency = 1
+		dots.Image = getcustomasset('newvape/assets/new/dots.png')
+		dots.ImageColor3 = color.Light(uipallet.Main, 0.37)
+		dots.Parent = dotsbutton
+		local shadow = Instance.new('TextButton')
+		shadow.Name = 'Shadow'
+		shadow.Size = UDim2.new(1, 0, 1, -5)
+		shadow.BackgroundColor3 = Color3.new()
+		shadow.BackgroundTransparency = 1
+		shadow.AutoButtonColor = false
+		shadow.ClipsDescendants = true
+		shadow.Visible = false
+		shadow.Text = ''
+		shadow.Parent = window
+		addCorner(shadow)
+		local settingspane = Instance.new('TextButton')
+		settingspane.Size = UDim2.new(0, 220, 1, 0)
+		settingspane.Position = UDim2.fromScale(1, 0)
+		settingspane.BackgroundColor3 = uipallet.Main
+		settingspane.AutoButtonColor = false
+		settingspane.Text = ''
+		settingspane.Parent = shadow
+		local settingstitle = Instance.new('TextLabel')
+		settingstitle.Name = 'Title'
+		settingstitle.Size = UDim2.new(1, -36, 0, 20)
+		settingstitle.Position = UDim2.fromOffset(36, 12)
+		settingstitle.BackgroundTransparency = 1
+		settingstitle.Text = modulesettings.Name
+		settingstitle.TextXAlignment = Enum.TextXAlignment.Left
+		settingstitle.TextColor3 = color.Dark(uipallet.Text, 0.16)
+		settingstitle.TextSize = 13
+		settingstitle.FontFace = uipallet.Font
+		settingstitle.Parent = settingspane
+		local back = Instance.new('ImageButton')
+		back.Name = 'Back'
+		back.Size = UDim2.fromOffset(16, 16)
+		back.Position = UDim2.fromOffset(11, 13)
+		back.BackgroundTransparency = 1
+		back.Image = getcustomasset('newvape/assets/new/back.png')
+		back.ImageColor3 = color.Light(uipallet.Main, 0.37)
+		back.Parent = settingspane
+		addCorner(settingspane)
+		local settingschildren = Instance.new('ScrollingFrame')
+		settingschildren.Name = 'Children'
+		settingschildren.Size = UDim2.new(1, 0, 1, -45)
+		settingschildren.Position = UDim2.fromOffset(0, 41)
+		settingschildren.BackgroundColor3 = uipallet.Main
+		settingschildren.BorderSizePixel = 0
+		settingschildren.ScrollBarThickness = 2
+		settingschildren.ScrollBarImageTransparency = 0.75
+		settingschildren.CanvasSize = UDim2.new()
+		settingschildren.Parent = settingspane
+		local settingswindowlist = Instance.new('UIListLayout')
+		settingswindowlist.SortOrder = Enum.SortOrder.LayoutOrder
+		settingswindowlist.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		settingswindowlist.Parent = settingschildren
+		if modulesettings.Size then
+			local modulechildren = Instance.new('Frame')
+			modulechildren.Size = modulesettings.Size
+			modulechildren.BackgroundTransparency = 1
+			modulechildren.Visible = false
+			modulechildren.Parent = scaledgui
+			makeDraggable(modulechildren, window)
+			local objectstroke = Instance.new('UIStroke')
+			objectstroke.Color = Color3.fromRGB(5, 134, 105)
+			objectstroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+			objectstroke.Thickness = 0
+			objectstroke.Parent = modulechildren
+			moduleapi.Children = modulechildren
+		end
+		modulesettings.Function = modulesettings.Function or function() end
+		addMaid(moduleapi)
+
+		function moduleapi:Toggle()
+			moduleapi.Enabled = not moduleapi.Enabled
+			if moduleapi.Children then
+				moduleapi.Children.Visible = moduleapi.Enabled
+			end
+			title.TextColor3 = moduleapi.Enabled and color.Light(uipallet.Text, 0.2) or color.Dark(uipallet.Text, 0.31)
+			module.BackgroundColor3 = moduleapi.Enabled and color.Light(uipallet.Main, 0.05) or module.BackgroundColor3
+			tween:Tween(knob, uipallet.Tween, {
+				BackgroundColor3 = moduleapi.Enabled and Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value) or color.Light(uipallet.Main, 0.14)
+			})
+			tween:Tween(knobmain, uipallet.Tween, {
+				Position = UDim2.fromOffset(moduleapi.Enabled and 12 or 2, 2)
+			})
+			if not moduleapi.Enabled then
+				for _, v in moduleapi.Connections do
+					v:Disconnect()
+				end
+				table.clear(moduleapi.Connections)
+			end
+			task.spawn(modulesettings.Function, moduleapi.Enabled)
+		end
+
+		back.MouseEnter:Connect(function()
+			back.ImageColor3 = uipallet.Text
+		end)
+		back.MouseLeave:Connect(function()
+			back.ImageColor3 = color.Light(uipallet.Main, 0.37)
+		end)
+		back.MouseButton1Click:Connect(function()
+			tween:Tween(shadow, uipallet.Tween, {
+				BackgroundTransparency = 1
+			})
+			tween:Tween(settingspane, uipallet.Tween, {
+				Position = UDim2.fromScale(1, 0)
+			})
+			task.wait(0.2)
+			shadow.Visible = false
+		end)
+		dotsbutton.MouseButton1Click:Connect(function()
+			shadow.Visible = true
+			tween:Tween(shadow, uipallet.Tween, {
+				BackgroundTransparency = 0.5
+			})
+			tween:Tween(settingspane, uipallet.Tween, {
+				Position = UDim2.new(1, -220, 0, 0)
+			})
+		end)
+		dotsbutton.MouseEnter:Connect(function()
+			dots.ImageColor3 = uipallet.Text
+		end)
+		dotsbutton.MouseLeave:Connect(function()
+			dots.ImageColor3 = color.Light(uipallet.Main, 0.37)
+		end)
+		module.MouseEnter:Connect(function()
+			if not moduleapi.Enabled then
+				module.BackgroundColor3 = color.Light(uipallet.Main, 0.05)
+			end
+		end)
+		module.MouseLeave:Connect(function()
+			if not moduleapi.Enabled then
+				module.BackgroundColor3 = color.Light(uipallet.Main, 0.02)
+			end
+		end)
+		module.MouseButton1Click:Connect(function()
+			moduleapi:Toggle()
+		end)
+		module.MouseButton2Click:Connect(function()
+			shadow.Visible = true
+			tween:Tween(shadow, uipallet.Tween, {
+				BackgroundTransparency = 0.5
+			})
+			tween:Tween(settingspane, uipallet.Tween, {
+				Position = UDim2.new(1, -220, 0, 0)
+			})
+		end)
+		shadow.MouseButton1Click:Connect(function()
+			tween:Tween(shadow, uipallet.Tween, {
+				BackgroundTransparency = 1
+			})
+			tween:Tween(settingspane, uipallet.Tween, {
+				Position = UDim2.fromScale(1, 0)
+			})
+			task.wait(0.2)
+			shadow.Visible = false
+		end)
+		settingswindowlist:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+			if mainapi.ThreadFix then
+				setthreadidentity(8)
+			end
+			settingschildren.CanvasSize = UDim2.fromOffset(0, settingswindowlist.AbsoluteContentSize.Y / scale.Scale)
+		end)
+
+		for i, v in components do
+			moduleapi['Create'..i] = function(_, optionsettings)
+				return v(optionsettings, settingschildren, moduleapi)
+			end
+		end
+
+		moduleapi.Object = module
+		legitapi.Modules[modulesettings.Name] = moduleapi
+
+		local sorting = {}
+		for _, v in legitapi.Modules do
+			table.insert(sorting, v.Name)
+		end
+		table.sort(sorting)
+
+		for i, v in sorting do
+			legitapi.Modules[v].Object.LayoutOrder = i
+		end
+
+		return moduleapi
+	end
+
+	local function visibleCheck()
+		for _, v in legitapi.Modules do
+			if v.Children then
+				local visible = clickgui.Visible
+				for _, v2 in self.Windows do
+					visible = visible or v2.Visible
+				end
+				v.Children.Visible = (not visible or window.Visible) and v.Enabled
+			end
+		end
+	end
+
+	close.MouseButton1Click:Connect(function()
+		window.Visible = false
+		clickgui.Visible = true
+	end)
+	self:Clean(clickgui:GetPropertyChangedSignal('Visible'):Connect(visibleCheck))
+	window:GetPropertyChangedSignal('Visible'):Connect(function()
+		self:UpdateGUI(self.GUIColor.Hue, self.GUIColor.Sat, self.GUIColor.Value)
+		visibleCheck()
+	end)
+	windowlist:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+		if self.ThreadFix then
+			setthreadidentity(8)
+		end
+		children.CanvasSize = UDim2.fromOffset(0, windowlist.AbsoluteContentSize.Y / scale.Scale)
+	end)
+
+	self.Legit = legitapi
+
+	return legitapi
+end
+
+function mainapi:CreateNotification(title, text, duration, type)
+	if not self.Notifications.Enabled then return end
+	task.delay(0, function()
+		if self.ThreadFix then
+			setthreadidentity(8)
+		end
+		local i = #notifications:GetChildren() + 1
+		local notification = Instance.new('ImageLabel')
+		notification.Name = 'Notification'
+		notification.Size = UDim2.fromOffset(math.max(getfontsize(removeTags(text), 14, uipallet.Font).X + 80, 266), 75)
+		notification.Position = UDim2.new(1, 0, 1, -(29 + (78 * i)))
+		notification.ZIndex = 5
+		notification.BackgroundTransparency = 1
+		notification.Image = getcustomasset('newvape/assets/new/notification.png')
+		notification.ScaleType = Enum.ScaleType.Slice
+		notification.SliceCenter = Rect.new(7, 7, 9, 9)
+		notification.Parent = notifications
+		addBlur(notification, true)
+		local iconshadow = Instance.new('ImageLabel')
+		iconshadow.Name = 'Icon'
+		iconshadow.Size = UDim2.fromOffset(60, 60)
+		iconshadow.Position = UDim2.fromOffset(-5, -8)
+		iconshadow.ZIndex = 5
+		iconshadow.BackgroundTransparency = 1
+		iconshadow.Image = getcustomasset('newvape/assets/new/'..(type or 'info')..'.png')
+		iconshadow.ImageColor3 = Color3.new()
+		iconshadow.ImageTransparency = 0.5
+		iconshadow.Parent = notification
+		local icon = iconshadow:Clone()
+		icon.Position = UDim2.fromOffset(-1, -1)
+		icon.ImageColor3 = Color3.new(1, 1, 1)
+		icon.ImageTransparency = 0
+		icon.Parent = iconshadow
+		local titlelabel = Instance.new('TextLabel')
+		titlelabel.Name = 'Title'
+		titlelabel.Size = UDim2.new(1, -56, 0, 20)
+		titlelabel.Position = UDim2.fromOffset(46, 16)
+		titlelabel.ZIndex = 5
+		titlelabel.BackgroundTransparency = 1
+		titlelabel.Text = "<stroke color='#FFFFFF' joins='round' thickness='0.3' transparency='0.5'>"..title..'</stroke>'
+		titlelabel.TextXAlignment = Enum.TextXAlignment.Left
+		titlelabel.TextYAlignment = Enum.TextYAlignment.Top
+		titlelabel.TextColor3 = Color3.fromRGB(209, 209, 209)
+		titlelabel.TextSize = 14
+		titlelabel.RichText = true
+		titlelabel.FontFace = uipallet.FontSemiBold
+		titlelabel.Parent = notification
+		local textshadow = titlelabel:Clone()
+		textshadow.Name = 'Text'
+		textshadow.Position = UDim2.fromOffset(47, 44)
+		textshadow.Text = removeTags(text)
+		textshadow.TextColor3 = Color3.new()
+		textshadow.TextTransparency = 0.5
+		textshadow.RichText = false
+		textshadow.FontFace = uipallet.Font
+		textshadow.Parent = notification
+		local textlabel = textshadow:Clone()
+		textlabel.Position = UDim2.fromOffset(-1, -1)
+		textlabel.Text = text
+		textlabel.TextColor3 = Color3.fromRGB(170, 170, 170)
+		textlabel.TextTransparency = 0
+		textlabel.RichText = true
+		textlabel.Parent = textshadow
+		local progress = Instance.new('Frame')
+		progress.Name = 'Progress'
+		progress.Size = UDim2.new(1, -13, 0, 2)
+		progress.Position = UDim2.new(0, 3, 1, -4)
+		progress.ZIndex = 5
+		progress.BackgroundColor3 =
+			type == 'alert' and Color3.fromRGB(250, 50, 56)
+			or type == 'warning' and Color3.fromRGB(91, 63, 211)  -- (91, 63, 211)
+			or Color3.fromRGB(220, 220, 220)
+		progress.BorderSizePixel = 0
+		progress.Parent = notification
+		if tween.Tween then
+			tween:Tween(notification, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {
+				AnchorPoint = Vector2.new(1, 0)
+			}, tween.tweenstwo)
+			tween:Tween(progress, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
+				Size = UDim2.fromOffset(0, 2)
+			})
+		end
+		task.delay(duration, function()
+			if tween.Tween then
+				tween:Tween(notification, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {
+					AnchorPoint = Vector2.new(0, 0)
+				}, tween.tweenstwo)
+			end
+			task.wait(0.2)
+			notification:ClearAllChildren()
+			notification:Destroy()
+		end)
+	end)
+end
+
+function mainapi:Load(skipgui, profile)
+	if not skipgui then
+		self.GUIColor:SetValue(nil, nil, nil, 4)
+	end
+	local guidata = {}
+	local savecheck = true
+
+	if isfile('newvape/profiles/'..game.GameId..'.gui.txt') then
+		guidata = loadJson('newvape/profiles/'..game.GameId..'.gui.txt')
+		if not guidata then
+			guidata = {Categories = {}}
+			self:CreateNotification('Vape', 'Failed to load GUI settings.', 10, 'alert')
+			savecheck = false
+		end
+
+		if not skipgui then
+			self.Keybind = guidata.Keybind
+			for i, v in guidata.Categories do
+				local object = self.Categories[i]
+				if not object then continue end
+				if object.Options and v.Options then
+					self:LoadOptions(object, v.Options)
+				end
+				if v.Enabled then
+					object.Button:Toggle()
+				end
+				if v.Pinned then
+					object:Pin()
+				end
+				if v.Expanded and object.Expand then
+					object:Expand()
+				end
+				if v.List and (#object.List > 0 or #v.List > 0) then
+					object.List = v.List or {}
+					object.ListEnabled = v.ListEnabled or {}
+					object:ChangeValue()
+				end
+				if v.Position then
+					object.Object.Position = UDim2.fromOffset(v.Position.X, v.Position.Y)
+				end
+			end
+		end
+	end
+
+	self.Profile = profile or guidata.Profile or 'default'
+	self.Profiles = guidata.Profiles or {{
+		Name = 'default', Bind = {}
+	}}
+	self.Categories.Profiles:ChangeValue()
+	if self.ProfileLabel then
+		self.ProfileLabel.Text = #self.Profile > 10 and self.Profile:sub(1, 10)..'...' or self.Profile
+		self.ProfileLabel.Size = UDim2.fromOffset(getfontsize(self.ProfileLabel.Text, self.ProfileLabel.TextSize, self.ProfileLabel.Font).X + 16, 24)
+	end
+
+	if isfile('newvape/profiles/'..self.Profile..self.Place..'.txt') then
+		local savedata = loadJson('newvape/profiles/'..self.Profile..self.Place..'.txt')
+		if not savedata then
+			savedata = {Categories = {}, Modules = {}, Legit = {}}
+			self:CreateNotification('Vape', 'Failed to load '..self.Profile..' profile.', 10, 'alert')
+			savecheck = false
+		end
+
+		for i, v in savedata.Categories do
+			local object = self.Categories[i]
+			if not object then continue end
+			if object.Options and v.Options then
+				self:LoadOptions(object, v.Options)
+			end
+			if v.Pinned ~= object.Pinned then
+				object:Pin()
+			end
+			if v.Expanded ~= nil and v.Expanded ~= object.Expanded then
+				object:Expand()
+			end
+			if object.Button and (v.Enabled or false) ~= object.Button.Enabled then
+				object.Button:Toggle()
+			end
+			if v.List and (#object.List > 0 or #v.List > 0) then
+				object.List = v.List or {}
+				object.ListEnabled = v.ListEnabled or {}
+				object:ChangeValue()
+			end
+			object.Object.Position = UDim2.fromOffset(v.Position.X, v.Position.Y)
+		end
+
+		for i, v in savedata.Modules do
+			local object = self.Modules[i]
+			if not object then continue end
+			if object.Options and v.Options then
+				self:LoadOptions(object, v.Options)
+			end
+			if v.Enabled ~= object.Enabled then
+				if skipgui then
+					if self.ToggleNotifications.Enabled then self:CreateNotification('Module Toggled', i.."<font color='#FFFFFF'> has been </font>"..(v.Enabled and "<font color='#5AFF5A'>Enabled</font>" or "<font color='#FF5A5A'>Disabled</font>").."<font color='#FFFFFF'>!</font>", 0.75) end
+				end
+				object:Toggle(true)
+			end
+			object:SetBind(v.Bind)
+			object.Object.Bind.Visible = #v.Bind > 0
+		end
+
+		for i, v in savedata.Legit do
+			local object = self.Legit.Modules[i]
+			if not object then continue end
+			if object.Options and v.Options then
+				self:LoadOptions(object, v.Options)
+			end
+			if object.Enabled ~= v.Enabled then
+				object:Toggle()
+			end
+			if v.Position and object.Children then
+				object.Children.Position = UDim2.fromOffset(v.Position.X, v.Position.Y)
+			end
+		end
+
+		self:UpdateTextGUI(true)
+	else
+		self:Save()
+	end
+
+	if self.Downloader then
+		self.Downloader:Destroy()
+		self.Downloader = nil
+	end
+	self.Loaded = savecheck
+	self.Categories.Main.Options.Bind:SetBind(self.Keybind)
+
+	if inputService.TouchEnabled or #self.Keybind == 1 or self.Keybind[1] == 'RightShift' then
+		mainapi:createVapeButton();
+	end
+end
+
+function mainapi:createVapeButton() 
+	if inputService.TouchEnabled or #self.Keybind == 1 or self.Keybind[1] == 'RightShift' then
+		local button = Instance.new('TextButton')
+		button.Size = UDim2.fromOffset(32, 32)
+		button.Position = UDim2.new(1, -90, 0, 4)
+		button.BackgroundColor3 = Color3.new()
+		button.BackgroundTransparency = 0.5
+		button.Text = ''
+		button.Parent = gui
+		local image = Instance.new('ImageLabel')
+		image.Size = UDim2.fromOffset(26, 26)
+		image.Position = UDim2.fromOffset(3, 3)
+		image.BackgroundTransparency = 1
+		image.Image = 'rbxassetid://14338041181'
+		image.Parent = button
+		local buttoncorner = Instance.new('UICorner')
+		buttoncorner.Parent = button
+		self.VapeButton = button
+		button.MouseButton1Click:Connect(function()
+			if self.ThreadFix then
+				setthreadidentity(8);
+			end;
+			for _, v in self.Windows do
+				v.Visible = false;
+			end;
+			for _, mobileButton in self.Modules do
+				if mobileButton.Bind.Button then
+					mobileButton.Bind.Button.Visible = clickgui.Visible;
+				end;
+			end;
+			clickgui.Visible = not clickgui.Visible;
+			tooltip.Visible = false;
+			self:BlurCheck();
+		end);
+	end;
+end;
+
+function mainapi:LoadOptions(object, savedoptions)
+	for i, v in savedoptions do
+		local option = object.Options[i]
+		if not option then continue end
+		option:Load(v)
+	end
+end
+
+function mainapi:Remove(obj)
+	local tab = (self.Modules[obj] and self.Modules or self.Legit.Modules[obj] and self.Legit.Modules or self.Categories)
+	if tab and tab[obj] then
+		local newobj = tab[obj]
+		if self.ThreadFix then
+			setthreadidentity(8)
+		end
+
+		for _, v in {'Object', 'Children', 'Toggle', 'Button'} do
+			local childobj = typeof(newobj[v]) == 'table' and newobj[v].Object or newobj[v]
+			if typeof(childobj) == 'Instance' then
+				childobj:Destroy()
+				childobj:ClearAllChildren()
+			end
+		end
+
+		loopClean(newobj)
+		tab[obj] = nil
+	end
+end
+
+function mainapi:Save(newprofile)
+	if not self.Loaded then return end
+	local guidata = {
+		Categories = {},
+		Profile = newprofile or self.Profile,
+		Profiles = self.Profiles,
+		Keybind = self.Keybind
+	}
+	local savedata = {
+		Modules = {},
+		Categories = {},
+		Legit = {}
+	}
+
+	for i, v in self.Categories do
+		(v.Type ~= 'Category' and i ~= 'Main' and savedata or guidata).Categories[i] = {
+			Enabled = i ~= 'Main' and v.Button.Enabled or nil,
+			Expanded = v.Type ~= 'Overlay' and v.Expanded or nil,
+			Pinned = v.Pinned,
+			Position = {X = v.Object.Position.X.Offset, Y = v.Object.Position.Y.Offset},
+			Options = mainapi:SaveOptions(v, v.Options),
+			List = v.List,
+			ListEnabled = v.ListEnabled
+		}
+	end
+
+	for i, v in self.Modules do
+		savedata.Modules[i] = {
+			Enabled = v.Enabled,
+			Bind = v.Bind.Button and {Mobile = true, X = v.Bind.Button.Position.X.Offset, Y = v.Bind.Button.Position.Y.Offset} or v.Bind,
+			Options = mainapi:SaveOptions(v, true)
+		}
+	end
+
+	for i, v in self.Legit.Modules do
+		savedata.Legit[i] = {
+			Enabled = v.Enabled,
+			Position = v.Children and {X = v.Children.Position.X.Offset, Y = v.Children.Position.Y.Offset} or nil,
+			Options = mainapi:SaveOptions(v, v.Options)
+		}
+	end
+
+	writefile('newvape/profiles/'..game.GameId..'.gui.txt', httpService:JSONEncode(guidata))
+	writefile('newvape/profiles/'..self.Profile..self.Place..'.txt', httpService:JSONEncode(savedata))
+end
+
+function mainapi:SaveOptions(object, savedoptions)
+	if not savedoptions then return end
+	savedoptions = {}
+	for _, v in object.Options do
+		if not v.Save then continue end
+		v:Save(savedoptions)
+	end
+	return savedoptions
+end
+
+function mainapi:Uninject()
+	mainapi:Save()
+	mainapi.Loaded = nil
+	for _, v in self.Modules do
+		if v.Enabled then
+			v:Toggle()
+		end
+	end
+	for _, v in self.Legit.Modules do
+		if v.Enabled then
+			v:Toggle()
+		end
+	end
+	for _, v in self.Categories do
+		if v.Type == 'Overlay' and v.Button.Enabled then
+			v.Button:Toggle()
+		end
+	end
+	for _, v in mainapi.Connections do
+		pcall(function()
+			v:Disconnect()
+		end)
+	end
+	if mainapi.ThreadFix then
+		setthreadidentity(8)
+		clickgui.Visible = false
+		mainapi:BlurCheck()
+	end
+	mainapi.gui:ClearAllChildren()
+	mainapi.gui:Destroy()
+	table.clear(mainapi.Libraries)
+	loopClean(mainapi)
+	shared.vape = nil
+	shared.vapereload = nil
+	shared.VapeIndependent = nil
+end
+
+gui = Instance.new('ScreenGui')
+gui.Name = randomString()
+gui.DisplayOrder = 9999999
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+gui.IgnoreGuiInset = true
+gui.OnTopOfCoreBlur = true
+if mainapi.ThreadFix then
+	gui.Parent = cloneref(game:GetService('CoreGui'))--(gethui and gethui()) or cloneref(game:GetService('CoreGui'))
+else
+	gui.Parent = cloneref(game:GetService('Players')).LocalPlayer.PlayerGui
+	gui.ResetOnSpawn = false
+end
+mainapi.gui = gui
+scaledgui = Instance.new('Frame')
+scaledgui.Name = 'ScaledGui'
+scaledgui.Size = UDim2.fromScale(1, 1)
+scaledgui.BackgroundTransparency = 1
+scaledgui.Parent = gui
+clickgui = Instance.new('Frame')
+clickgui.Name = 'ClickGui'
+clickgui.Size = UDim2.fromScale(1, 1)
+clickgui.BackgroundTransparency = 1
+clickgui.Visible = false
+clickgui.Parent = scaledgui
+local modal = Instance.new('TextButton')
+modal.BackgroundTransparency = 1
+modal.Modal = true
+modal.Text = ''
+modal.Parent = clickgui
+local cursor = Instance.new('ImageLabel')
+cursor.Size = UDim2.fromOffset(64, 64)
+cursor.BackgroundTransparency = 1
+cursor.Visible = false
+cursor.Image = 'rbxasset://textures/Cursors/KeyboardMouse/ArrowFarCursor.png'
+cursor.Parent = gui
+notifications = Instance.new('Folder')
+notifications.Name = 'Notifications'
+notifications.Parent = scaledgui
+tooltip = Instance.new('TextLabel')
+tooltip.Name = 'Tooltip'
+tooltip.Position = UDim2.fromScale(-1, -1)
+tooltip.ZIndex = 5
+tooltip.BackgroundColor3 = color.Dark(uipallet.Main, 0.02)
+tooltip.Visible = false
+tooltip.Text = ''
+tooltip.TextColor3 = color.Dark(uipallet.Text, 0.16)
+tooltip.TextSize = 12
+tooltip.FontFace = uipallet.Font
+tooltip.Parent = scaledgui
+toolblur = addBlur(tooltip)
+addCorner(tooltip)
+local toolstrokebkg = Instance.new('Frame')
+toolstrokebkg.Size = UDim2.new(1, -2, 1, -2)
+toolstrokebkg.Position = UDim2.fromOffset(1, 1)
+toolstrokebkg.ZIndex = 6
+toolstrokebkg.BackgroundTransparency = 1
+toolstrokebkg.Parent = tooltip
+local toolstroke = Instance.new('UIStroke')
+toolstroke.Color = color.Light(uipallet.Main, 0.02)
+toolstroke.Parent = toolstrokebkg
+addCorner(toolstrokebkg, UDim.new(0, 4))
+scale = Instance.new('UIScale')
+scale.Scale = math.max(gui.AbsoluteSize.X / 1920, 0.6)
+scale.Parent = scaledgui
+mainapi.guiscale = scale
+scaledgui.Size = UDim2.fromScale(1 / scale.Scale, 1 / scale.Scale)
+
+mainapi:Clean(gui:GetPropertyChangedSignal('AbsoluteSize'):Connect(function()
+	if mainapi.Scale.Enabled then
+		scale.Scale = math.max(gui.AbsoluteSize.X / 1920, 0.6)
+	end
+end))
+
+mainapi:Clean(scale:GetPropertyChangedSignal('Scale'):Connect(function()
+	scaledgui.Size = UDim2.fromScale(1 / scale.Scale, 1 / scale.Scale)
+	for _, v in scaledgui:GetDescendants() do
+		if v:IsA('GuiObject') and v.Visible then
+			v.Visible = false
+			v.Visible = true
+		end
+	end
+end))
+
+mainapi:Clean(clickgui:GetPropertyChangedSignal('Visible'):Connect(function()
+	mainapi:UpdateGUI(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value, true)
+	if clickgui.Visible and inputService.MouseEnabled then
+		repeat
+			local visibleCheck = clickgui.Visible
+			for _, v in mainapi.Windows do
+				visibleCheck = visibleCheck or v.Visible
+			end
+			if not visibleCheck then break end
+
+			cursor.Visible = not inputService.MouseIconEnabled
+			if cursor.Visible then
+				local mouseLocation = inputService:GetMouseLocation()
+				cursor.Position = UDim2.fromOffset(mouseLocation.X - 31, mouseLocation.Y - 32)
+			end
+
+			task.wait()
+		until mainapi.Loaded == nil
+		cursor.Visible = false
+	end
+end))
+
+mainapi:CreateGUI()
+mainapi.Categories.Main:CreateDivider()
+mainapi:CreateCategory({
+	Name = 'Combat',
+	Icon = getcustomasset('newvape/assets/new/combaticon.png'),
+	Size = UDim2.fromOffset(13, 14)
+})
+mainapi:CreateCategory({
+	Name = 'Blatant',
+	Icon = getcustomasset('newvape/assets/new/blatanticon.png'),
+	Size = UDim2.fromOffset(14, 14)
+})
+mainapi:CreateCategory({
+	Name = 'Render',
+	Icon = getcustomasset('newvape/assets/new/rendericon.png'),
+	Size = UDim2.fromOffset(15, 14)
+})
+mainapi:CreateCategory({
+	Name = 'Utility',
+	Icon = getcustomasset('newvape/assets/new/utilityicon.png'),
+	Size = UDim2.fromOffset(15, 14)
+})
+mainapi:CreateCategory({
+	Name = 'World',
+	Icon = getcustomasset('newvape/assets/new/worldicon.png'),
+	Size = UDim2.fromOffset(14, 14)
+})
+mainapi:CreateCategory({
+	Name = 'Inventory',
+	Icon = getcustomasset('newvape/assets/new/inventoryicon.png'),
+	Size = UDim2.fromOffset(15, 14)
+})
+mainapi:CreateCategory({
+	Name = 'Minigames',
+	Icon = getcustomasset('newvape/assets/new/miniicon.png'),
+	Size = UDim2.fromOffset(19, 12)
+})
+
+mainapi:CreateCategory({
+	Name = 'Velocity',
+	Icon = getcustomasset('newvape/assets/new/radaricon.png'),
+	Size = UDim2.fromOffset(14, 14)
+})	
+--[[
+	Friends
+]]
+local friends
+local friendscolor = {
+	Hue = 1,
+	Sat = 1,
+	Value = 1
+}
+local friendssettings = {
+	Name = 'Friends',
+	Icon = getcustomasset('newvape/assets/new/friendstab.png'),
+	Size = UDim2.fromOffset(17, 16),
+	Placeholder = 'Roblox username',
+	Color = Color3.fromRGB(5, 134, 105),
+	Function = function()
+		friends.Update:Fire()
+		friends.ColorUpdate:Fire(friendscolor.Hue, friendscolor.Sat, friendscolor.Value)
+	end
+}
+friends = mainapi:CreateCategoryList(friendssettings)
+friends.Update = Instance.new('BindableEvent')
+friends.ColorUpdate = Instance.new('BindableEvent')
+friends:CreateToggle({
+	Name = 'Recolor visuals',
+	Darker = true,
+	Default = true,
+	Function = function()
+		friends.Update:Fire()
+		friends.ColorUpdate:Fire(friendscolor.Hue, friendscolor.Sat, friendscolor.Value)
+	end
+})
+friendscolor = friends:CreateColorSlider({
+	Name = 'Friends color',
+	Darker = true,
+	Function = function(hue, sat, val)
+		for _, v in friends.Object.Children:GetChildren() do
+			local dot = v:FindFirstChild('Dot')
+			if dot and dot.BackgroundColor3 ~= color.Light(uipallet.Main, 0.37) then
+				dot.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+				dot.Dot.BackgroundColor3 = dot.BackgroundColor3
+			end
+		end
+		friendssettings.Color = Color3.fromHSV(hue, sat, val)
+		friends.ColorUpdate:Fire(hue, sat, val)
+	end
+})
+friends:CreateToggle({
+	Name = 'Use friends',
+	Darker = true,
+	Default = true,
+	Function = function()
+		friends.Update:Fire()
+		friends.ColorUpdate:Fire(friendscolor.Hue, friendscolor.Sat, friendscolor.Value)
+	end
+})
+mainapi:Clean(friends.Update)
+mainapi:Clean(friends.ColorUpdate)
+
+--[[
+	Profiles
+]]
+mainapi:CreateCategoryList({
+	Name = 'Profiles',
+	Icon = getcustomasset('newvape/assets/new/profilesicon.png'),
+	Size = UDim2.fromOffset(17, 10),
+	Position = UDim2.fromOffset(12, 16),
+	Placeholder = 'Type name',
+	Profiles = true
+})
+
+--[[
+	Targets
+]]
+local targets
+targets = mainapi:CreateCategoryList({
+	Name = 'Targets',
+	Icon = getcustomasset('newvape/assets/new/friendstab.png'),
+	Size = UDim2.fromOffset(17, 16),
+	Placeholder = 'Roblox username',
+	Function = function()
+		targets.Update:Fire()
+	end
+})
+targets.Update = Instance.new('BindableEvent')
+mainapi:Clean(targets.Update)
+
+mainapi:CreateLegit()
+mainapi:CreateSearch()
+mainapi.Categories.Main:CreateOverlayBar()
+mainapi.Categories.Main:CreateSettingsDivider()
+
+--[[
+	General Settings
+]]
+
+local general = mainapi.Categories.Main:CreateSettingsPane({Name = 'General'})
+mainapi.MultiKeybind = general:CreateToggle({
+	Name = 'Enable Multi-Keybinding',
+	Tooltip = 'Allows multiple keys to be bound to a module (eg. G + H)'
+})
+general:CreateButton({
+	Name = 'Reset current profile',
+	Function = function()
+	mainapi.Save = function() end
+		if isfile('newvape/profiles/'..mainapi.Profile..mainapi.Place..'.txt') and delfile then
+			delfile('newvape/profiles/'..mainapi.Profile..mainapi.Place..'.txt')
+		end
+		shared.vapereload = true
+		if shared.VapeDeveloper then
+			loadstring(readfile('newvape/loader.lua'), 'loader')()
+		else
+			loadstring(game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/loader.lua', true))()
+		end
+	end,
+	Tooltip = 'This will set your profile to the default settings of Vape'
+})
+general:CreateButton({
+	Name = 'Self destruct',
+	Function = function()
+		mainapi:Uninject()
+	end,
+	Tooltip = 'Removes vape from the current game'
+})
+general:CreateButton({
+	Name = 'Reinject',
+	Function = function()
+		shared.vapereload = true
+		if shared.VapeDeveloper then
+			loadstring(readfile('newvape/loader.lua'), 'loader')()
+		else
+			loadstring(game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/loader.lua', true))()
+		end
+	end,
+	Tooltip = 'Reloads vape for debugging purposes'
+})
+
+--[[
+	Module Settings
+]]
+
+local modules = mainapi.Categories.Main:CreateSettingsPane({Name = 'Modules'})
+modules:CreateToggle({
+	Name = 'Teams by server',
+	Tooltip = 'Ignore players on your team designated by the server',
+	Default = true,
+	Function = function()
+		if mainapi.Libraries.entity and mainapi.Libraries.entity.Running then
+			mainapi.Libraries.entity.refresh()
+		end
+	end
+})
+modules:CreateToggle({
+	Name = 'Use team color',
+	Tooltip = 'Uses the TeamColor property on players for render modules',
+	Default = true,
+	Function = function()
+		if mainapi.Libraries.entity and mainapi.Libraries.entity.Running then
+			mainapi.Libraries.entity.refresh()
+		end
+	end
+})
+
+--[[
+	GUI Settings
+]]
+
+local guipane = mainapi.Categories.Main:CreateSettingsPane({Name = 'GUI'})
+mainapi.Blur = guipane:CreateToggle({
+	Name = 'Blur background',
+	Function = function()
+		mainapi:BlurCheck()
+	end,
+	Default = true,
+	Tooltip = 'Blur the background of the GUI'
+})
+guipane:CreateToggle({
+	Name = 'GUI bind indicator',
+	Default = true,
+	Tooltip = "Displays a message indicating your GUI upon injecting.\nI.E. 'Press RSHIFT to open GUI'"
+})
+guipane:CreateToggle({
+	Name = 'Show tooltips',
+	Function = function(enabled)
+		tooltip.Visible = false
+		toolblur.Visible = enabled
+	end,
+	Default = true,
+	Tooltip = 'Toggles visibility of these'
+})
+guipane:CreateToggle({
+	Name = 'Show legit mode',
+	Function = function(enabled)
+		clickgui.Search.Legit.Visible = enabled
+		clickgui.Search.LegitDivider.Visible = enabled
+		clickgui.Search.TextBox.Size = UDim2.new(1, enabled and -50 or -10, 0, 37)
+		clickgui.Search.TextBox.Position = UDim2.fromOffset(enabled and 50 or 10, 0)
+	end,
+	Default = true,
+	Tooltip = 'Shows the button to change to Legit Mode'
+})
+local scaleslider = {Object = {}, Value = 1}
+mainapi.Scale = guipane:CreateToggle({
+	Name = 'Auto rescale',
+	Default = true,
+	Function = function(callback)
+		scaleslider.Object.Visible = not callback
+		if callback then
+			scale.Scale = math.max(gui.AbsoluteSize.X / 1920, 0.6)
+		else
+			scale.Scale = scaleslider.Value
+		end
+	end,
+	Tooltip = 'Automatically rescales the gui using the screens resolution'
+})
+scaleslider = guipane:CreateSlider({
+	Name = 'Scale',
+	Min = 0.1,
+	Max = 2,
+	Decimal = 10,
+	Function = function(val, final)
+		if final and not mainapi.Scale.Enabled then
+			scale.Scale = val
+		end
+	end,
+	Default = 1,
+	Darker = true,
+	Visible = false
+})
+guipane:CreateDropdown({
+	Name = 'GUI Theme',
+	List = inputService.TouchEnabled and {'new', 'old'} or {'new', 'old', 'rise'},
+	Function = function(val, mouse)
+		if mouse then
+			writefile('newvape/profiles/gui.txt', val)
+			shared.vapereload = true
+			if shared.VapeDeveloper then
+				loadstring(readfile('newvape/loader.lua'), 'loader')()
+			else
+				loadstring(game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/loader.lua', true))()
+			end
+		end
+	end,
+	Tooltip = 'new - The newest vape theme to since v4.05\nold - The vape theme pre v4.05\nrise - Rise 6.0'
+})
+mainapi.RainbowMode = guipane:CreateDropdown({
+	Name = 'Rainbow Mode',
+	List = {'Normal', 'Gradient', 'Retro'},
+	Tooltip = 'Normal - Smooth color fade\nGradient - Gradient color fade\nRetro - Static color'
+})
+mainapi.RainbowSpeed = guipane:CreateSlider({
+	Name = 'Rainbow speed',
+	Min = 0.1,
+	Max = 10,
+	Decimal = 10,
+	Default = 1,
+	Tooltip = 'Adjusts the speed of rainbow values'
+})
+mainapi.RainbowUpdateSpeed = guipane:CreateSlider({
+	Name = 'Rainbow update rate',
+	Min = 1,
+	Max = 144,
+	Default = 60,
+	Tooltip = 'Adjusts the update rate of rainbow values',
+	Suffix = 'hz'
+})
+guipane:CreateButton({
+	Name = 'Reset GUI positions',
+	Function = function()
+		for _, v in mainapi.Categories do
+			v.Object.Position = UDim2.fromOffset(6, 42)
+		end
+	end,
+	Tooltip = 'This will reset your GUI back to default'
+})
+guipane:CreateButton({
+	Name = 'Sort GUI',
+	Function = function()
+		local priority = {
+			GUICategory = 1,
+			CombatCategory = 2,
+			BlatantCategory = 3,
+			RenderCategory = 4,
+			UtilityCategory = 5,
+			WorldCategory = 6,
+			InventoryCategory = 7,
+			MinigamesCategory = 8,
+			FriendsCategory = 9,
+			ProfilesCategory = 10
+		}
+		local categories = {}
+		for _, v in mainapi.Categories do
+			if v.Type ~= 'Overlay' then
+				table.insert(categories, v)
+			end
+		end
+		table.sort(categories, function(a, b)
+			return (priority[a.Object.Name] or 99) < (priority[b.Object.Name] or 99)
+		end)
+
+		local ind = 0
+		for _, v in categories do
+			if v.Object.Visible then
+				v.Object.Position = UDim2.fromOffset(6 + (ind % 8 * 230), 60 + (ind > 7 and 360 or 0))
+				ind += 1
+			end
+		end
+	end,
+	Tooltip = 'Sorts GUI'
+})
+
+--[[
+	Notification Settings
+]]
+
+local notifpane = mainapi.Categories.Main:CreateSettingsPane({Name = 'Notifications'})
+mainapi.Notifications = notifpane:CreateToggle({
+	Name = 'Notifications',
+	Function = function(enabled)
+		if mainapi.ToggleNotifications.Object then
+			mainapi.ToggleNotifications.Object.Visible = enabled
+		end
+	end,
+	Tooltip = 'Shows notifications',
+	Default = true
+})
+mainapi.ToggleNotifications = notifpane:CreateToggle({
+	Name = 'Toggle alert',
+	Tooltip = 'Notifies you if a module is enabled/disabled.',
+	Default = true,
+	Darker = true
+})
+
+mainapi.GUIColor = mainapi.Categories.Main:CreateGUISlider({
+	Name = 'GUI Theme',
+	Function = function(h, s, v)
+		mainapi:UpdateGUI(h, s, v, true)
+	end
+})
+mainapi.Categories.Main:CreateBind()
+
+--[[
+	Text GUI
+]]
+
+local textgui = mainapi:CreateOverlay({
+	Name = 'Text GUI',
+	Icon = getcustomasset('newvape/assets/new/textguiicon.png'),
+	Size = UDim2.fromOffset(16, 12),
+	Position = UDim2.fromOffset(12, 14),
+	Function = function()
+		mainapi:UpdateTextGUI()
+	end
+})
+local textguisort = textgui:CreateDropdown({
+	Name = 'Sort',
+	List = {'Alphabetical', 'Length'},
+	Function = function()
+		mainapi:UpdateTextGUI()
+	end
+})
+local textguifont = textgui:CreateFont({
+	Name = 'Font',
+	Blacklist = 'Arial',
+	Function = function()
+		mainapi:UpdateTextGUI()
+	end
+})
+local textguicolor
+local textguicolordrop = textgui:CreateDropdown({
+	Name = 'Color Mode',
+	List = {'Match GUI color', 'Custom color'},
+	Function = function(val)
+		textguicolor.Object.Visible = val == 'Custom color'
+		mainapi:UpdateTextGUI()
+	end
+})
+textguicolor = textgui:CreateColorSlider({
+	Name = 'Text GUI color',
+	Function = function()
+		mainapi:UpdateGUI(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value)
+	end,
+	Darker = true,
+	Visible = false
+})
+local VapeTextScale = Instance.new('UIScale')
+VapeTextScale.Parent = textgui.Children
+local textguiscale = textgui:CreateSlider({
+	Name = 'Scale',
+	Min = 0,
+	Max = 2,
+	Decimal = 10,
+	Default = 1,
+	Function = function(val)
+		VapeTextScale.Scale = val
+		mainapi:UpdateTextGUI()
+	end
+})
+local textguishadow = textgui:CreateToggle({
+	Name = 'Shadow',
+	Tooltip = 'Renders shadowed text.',
+	Function = function()
+		mainapi:UpdateTextGUI()
+	end
+})
+local textguigradientv4
+local textguigradient = textgui:CreateToggle({
+	Name = 'Gradient',
+	Tooltip = 'Renders a gradient',
+	Function = function(callback)
+		textguigradientv4.Object.Visible = callback
+		mainapi:UpdateTextGUI()
+	end
+})
+textguigradientv4 = textgui:CreateToggle({
+	Name = 'V4 Gradient',
+	Function = function()
+		mainapi:UpdateTextGUI()
+	end,
+	Darker = true,
+	Visible = false
+})
+local textguianimations = textgui:CreateToggle({
+	Name = 'Animations',
+	Tooltip = 'Use animations on text gui',
+	Function = function()
+		mainapi:UpdateTextGUI()
+	end
+})
+local textguiwatermark = textgui:CreateToggle({
+	Name = 'Watermark',
+	Tooltip = 'Renders a vape watermark',
+	Function = function()
+		mainapi:UpdateTextGUI()
+	end
+})
+local textguibackgroundtransparency = {
+	Value = 0.5,
+	Object = {Visible = {}}
+}
+local textguibackgroundtint = {Enabled = false}
+local textguibackground = textgui:CreateToggle({
+	Name = 'Render background',
+	Function = function(callback)
+		textguibackgroundtransparency.Object.Visible = callback
+		textguibackgroundtint.Object.Visible = callback
+		mainapi:UpdateTextGUI()
+	end
+})
+textguibackgroundtransparency = textgui:CreateSlider({
+	Name = 'Transparency',
+	Min = 0,
+	Max = 1,
+	Default = 0.5,
+	Decimal = 10,
+	Function = function()
+		mainapi:UpdateTextGUI()
+	end,
+	Darker = true,
+	Visible = false
+})
+textguibackgroundtint = textgui:CreateToggle({
+	Name = 'Tint',
+	Function = function()
+		mainapi:UpdateTextGUI()
+	end,
+	Darker = true,
+	Visible = false
+})
+local textguimoduleslist
+local textguimodules = textgui:CreateToggle({
+	Name = 'Hide modules',
+	Tooltip = 'Allows you to blacklist certain modules from being shown.',
+	Function = function(enabled)
+		textguimoduleslist.Object.Visible = enabled
+		mainapi:UpdateTextGUI()
+	end
+})
+textguimoduleslist = textgui:CreateTextList({
+	Name = 'Blacklist',
+	Tooltip = 'Name of module to hide.',
+	Icon = getcustomasset('newvape/assets/new/blockedicon.png'),
+	Tab = getcustomasset('newvape/assets/new/blockedtab.png'),
+	TabSize = UDim2.fromOffset(21, 16),
+	Color = Color3.fromRGB(250, 50, 56),
+	Function = function()
+		mainapi:UpdateTextGUI()
+	end,
+	Visible = false,
+	Darker = true
+})
+local textguirender = textgui:CreateToggle({
+	Name = 'Hide render',
+	Function = function()
+		mainapi:UpdateTextGUI()
+	end
+})
+local textguibox
+local textguifontcustom
+local textguicolorcustomtoggle
+local textguicolorcustom
+local textguitext = textgui:CreateToggle({
+	Name = 'Add custom text',
+	Function = function(enabled)
+		textguibox.Object.Visible = enabled
+		textguifontcustom.Object.Visible = enabled
+		textguicolorcustomtoggle.Object.Visible = enabled
+		textguicolorcustom.Object.Visible = textguicolorcustomtoggle.Enabled and enabled
+		mainapi:UpdateTextGUI()
+	end
+})
+textguibox = textgui:CreateTextBox({
+	Name = 'Custom text',
+	Function = function()
+		mainapi:UpdateTextGUI()
+	end,
+	Darker = true,
+	Visible = false
+})
+textguifontcustom = textgui:CreateFont({
+	Name = 'Custom Font',
+	Blacklist = 'Arial',
+	Function = function()
+		mainapi:UpdateTextGUI()
+	end,
+	Darker = true,
+	Visible = false
+})
+textguicolorcustomtoggle = textgui:CreateToggle({
+	Name = 'Set custom text color',
+	Function = function(enabled)
+		textguicolorcustom.Object.Visible = enabled
+		mainapi:UpdateGUI(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value)
+	end,
+	Darker = true,
+	Visible = false
+})
+textguicolorcustom = textgui:CreateColorSlider({
+	Name = 'Color of custom text',
+	Function = function()
+		mainapi:UpdateGUI(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value)
+	end,
+	Darker = true,
+	Visible = false
+})
+
+--[[
+	Text GUI Objects
+]]
+
+local VapeLabels = {}
+local VapeLogo = Instance.new('ImageLabel')
+VapeLogo.Name = 'Logo'
+VapeLogo.Size = UDim2.fromOffset(80, 21)
+VapeLogo.Position = UDim2.new(1, -142, 0, 3)
+VapeLogo.BackgroundTransparency = 1
+VapeLogo.BorderSizePixel = 0
+VapeLogo.Visible = false
+VapeLogo.BackgroundColor3 = Color3.new()
+VapeLogo.Image = getcustomasset('newvape/assets/new/textvape.png')
+VapeLogo.Parent = textgui.Children
+
+local lastside = textgui.Children.AbsolutePosition.X > (gui.AbsoluteSize.X / 2)
+mainapi:Clean(textgui.Children:GetPropertyChangedSignal('AbsolutePosition'):Connect(function()
+	if mainapi.ThreadFix then
+		setthreadidentity(8)
+	end
+	local newside = textgui.Children.AbsolutePosition.X > (gui.AbsoluteSize.X / 2)
+	if lastside ~= newside then
+		lastside = newside
+		mainapi:UpdateTextGUI()
+	end
+end))
+
+local VapeLogoV4 = Instance.new('ImageLabel')
+VapeLogoV4.Name = 'Logo2'
+VapeLogoV4.Size = UDim2.fromOffset(33, 18)
+VapeLogoV4.Position = UDim2.new(1, 1, 0, 1)
+VapeLogoV4.BackgroundColor3 = Color3.new()
+VapeLogoV4.BackgroundTransparency = 1
+VapeLogoV4.BorderSizePixel = 0
+VapeLogoV4.Image = getcustomasset('newvape/assets/new/textv4.png')
+VapeLogoV4.Parent = VapeLogo
+local VapeLogoShadow = VapeLogo:Clone()
+VapeLogoShadow.Position = UDim2.fromOffset(1, 1)
+VapeLogoShadow.ZIndex = 0
+VapeLogoShadow.Visible = true
+VapeLogoShadow.ImageColor3 = Color3.new()
+VapeLogoShadow.ImageTransparency = 0.65
+VapeLogoShadow.Parent = VapeLogo
+VapeLogoShadow.Logo2.ZIndex = 0
+VapeLogoShadow.Logo2.ImageColor3 = Color3.new()
+VapeLogoShadow.Logo2.ImageTransparency = 0.65
+local VapeLogoGradient = Instance.new('UIGradient')
+VapeLogoGradient.Rotation = 90
+VapeLogoGradient.Parent = VapeLogo
+local VapeLogoGradient2 = Instance.new('UIGradient')
+VapeLogoGradient2.Rotation = 90
+VapeLogoGradient2.Parent = VapeLogoV4
+local VapeLabelCustom = Instance.new('TextLabel')
+VapeLabelCustom.Position = UDim2.fromOffset(5, 2)
+VapeLabelCustom.BackgroundTransparency = 1
+VapeLabelCustom.BorderSizePixel = 0
+VapeLabelCustom.Visible = false
+VapeLabelCustom.Text = ''
+VapeLabelCustom.TextSize = 25
+VapeLabelCustom.FontFace = textguifontcustom.Value
+VapeLabelCustom.RichText = true
+local VapeLabelCustomShadow = VapeLabelCustom:Clone()
+VapeLabelCustom:GetPropertyChangedSignal('Position'):Connect(function()
+	VapeLabelCustomShadow.Position = UDim2.new(
+		VapeLabelCustom.Position.X.Scale,
+		VapeLabelCustom.Position.X.Offset + 1,
+		0,
+		VapeLabelCustom.Position.Y.Offset + 1
+	)
+end)
+VapeLabelCustom:GetPropertyChangedSignal('FontFace'):Connect(function()
+	VapeLabelCustomShadow.FontFace = VapeLabelCustom.FontFace
+end)
+VapeLabelCustom:GetPropertyChangedSignal('Text'):Connect(function()
+	VapeLabelCustomShadow.Text = removeTags(VapeLabelCustom.Text)
+end)
+VapeLabelCustom:GetPropertyChangedSignal('Size'):Connect(function()
+	VapeLabelCustomShadow.Size = VapeLabelCustom.Size
+end)
+VapeLabelCustomShadow.TextColor3 = Color3.new()
+VapeLabelCustomShadow.TextTransparency = 0.65
+VapeLabelCustomShadow.Parent = textgui.Children
+VapeLabelCustom.Parent = textgui.Children
+local VapeLabelHolder = Instance.new('Frame')
+VapeLabelHolder.Name = 'Holder'
+VapeLabelHolder.Size = UDim2.fromScale(1, 1)
+VapeLabelHolder.Position = UDim2.fromOffset(5, 37)
+VapeLabelHolder.BackgroundTransparency = 1
+VapeLabelHolder.Parent = textgui.Children
+local VapeLabelSorter = Instance.new('UIListLayout')
+VapeLabelSorter.HorizontalAlignment = Enum.HorizontalAlignment.Right
+VapeLabelSorter.VerticalAlignment = Enum.VerticalAlignment.Top
+VapeLabelSorter.SortOrder = Enum.SortOrder.LayoutOrder
+VapeLabelSorter.Parent = VapeLabelHolder
+
+--[[
+	Target Info
+]]
+
+local targetinfo
+local targetinfoobj
+local targetinfobcolor
+targetinfoobj = mainapi:CreateOverlay({
+	Name = 'Target Info',
+	Icon = getcustomasset('newvape/assets/new/targetinfoicon.png'),
+	Size = UDim2.fromOffset(14, 14),
+	Position = UDim2.fromOffset(12, 14),
+	CategorySize = 240,
+	Function = function(callback)
+		if callback then
+			task.spawn(function()
+				repeat
+					targetinfo:UpdateInfo()
+					task.wait()
+				until not targetinfoobj.Button or not targetinfoobj.Button.Enabled
+			end)
+		end
+	end
+})
+
+local targetinfobkg = Instance.new('Frame')
+targetinfobkg.Size = UDim2.fromOffset(240, 89)
+targetinfobkg.BackgroundColor3 = color.Dark(uipallet.Main, 0.1)
+targetinfobkg.BackgroundTransparency = 0.5
+targetinfobkg.Parent = targetinfoobj.Children
+local targetinfoblurobj = addBlur(targetinfobkg)
+targetinfoblurobj.Visible = false
+addCorner(targetinfobkg)
+local targetinfoshot = Instance.new('ImageLabel')
+targetinfoshot.Size = UDim2.fromOffset(26, 27)
+targetinfoshot.Position = UDim2.fromOffset(19, 17)
+targetinfoshot.BackgroundColor3 = uipallet.Main
+targetinfoshot.Image = 'rbxthumb://type=AvatarHeadShot&id=1&w=420&h=420'
+targetinfoshot.Parent = targetinfobkg
+local targetinfoshotflash = Instance.new('Frame')
+targetinfoshotflash.Size = UDim2.fromScale(1, 1)
+targetinfoshotflash.BackgroundTransparency = 1
+targetinfoshotflash.BackgroundColor3 = Color3.new(1, 0, 0)
+targetinfoshotflash.Parent = targetinfoshot
+addCorner(targetinfoshotflash)
+local targetinfoshotblur = addBlur(targetinfoshot)
+targetinfoshotblur.Visible = false
+addCorner(targetinfoshot)
+local targetinfoname = Instance.new('TextLabel')
+targetinfoname.Size = UDim2.fromOffset(145, 20)
+targetinfoname.Position = UDim2.fromOffset(54, 20)
+targetinfoname.BackgroundTransparency = 1
+targetinfoname.Text = 'Target name'
+targetinfoname.TextXAlignment = Enum.TextXAlignment.Left
+targetinfoname.TextYAlignment = Enum.TextYAlignment.Top
+targetinfoname.TextScaled = true
+targetinfoname.TextColor3 = color.Light(uipallet.Text, 0.4)
+targetinfoname.TextStrokeTransparency = 1
+targetinfoname.FontFace = uipallet.Font
+local targetinfoshadow = targetinfoname:Clone()
+targetinfoshadow.Position = UDim2.fromOffset(55, 21)
+targetinfoshadow.TextColor3 = Color3.new()
+targetinfoshadow.TextTransparency = 0.65
+targetinfoshadow.Visible = false
+targetinfoshadow.Parent = targetinfobkg
+targetinfoname:GetPropertyChangedSignal('Size'):Connect(function()
+	targetinfoshadow.Size = targetinfoname.Size
+end)
+targetinfoname:GetPropertyChangedSignal('Text'):Connect(function()
+	targetinfoshadow.Text = targetinfoname.Text
+end)
+targetinfoname:GetPropertyChangedSignal('FontFace'):Connect(function()
+	targetinfoshadow.FontFace = targetinfoname.FontFace
+end)
+targetinfoname.Parent = targetinfobkg
+local targetinfohealthbkg = Instance.new('Frame')
+targetinfohealthbkg.Name = 'HealthBKG'
+targetinfohealthbkg.Size = UDim2.fromOffset(200, 9)
+targetinfohealthbkg.Position = UDim2.fromOffset(20, 56)
+targetinfohealthbkg.BackgroundColor3 = uipallet.Main
+targetinfohealthbkg.BorderSizePixel = 0
+targetinfohealthbkg.Parent = targetinfobkg
+addCorner(targetinfohealthbkg, UDim.new(1, 0))
+local targetinfohealth = targetinfohealthbkg:Clone()
+targetinfohealth.Size = UDim2.fromScale(0.8, 1)
+targetinfohealth.Position = UDim2.new()
+targetinfohealth.BackgroundColor3 = Color3.fromHSV(1 / 2.5, 0.89, 0.75)
+targetinfohealth.Parent = targetinfohealthbkg
+targetinfohealth:GetPropertyChangedSignal('Size'):Connect(function()
+	targetinfohealth.Visible = targetinfohealth.Size.X.Scale > 0.01
+end)
+local targetinfohealthextra = targetinfohealth:Clone()
+targetinfohealthextra.Size = UDim2.new()
+targetinfohealthextra.Position = UDim2.fromScale(1, 0)
+targetinfohealthextra.AnchorPoint = Vector2.new(1, 0)
+targetinfohealthextra.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
+targetinfohealthextra.Visible = false
+targetinfohealthextra.Parent = targetinfohealthbkg
+targetinfohealthextra:GetPropertyChangedSignal('Size'):Connect(function()
+	targetinfohealthextra.Visible = targetinfohealthextra.Size.X.Scale > 0.01
+end)
+local targetinfohealthblur = addBlur(targetinfohealthbkg)
+targetinfohealthblur.SliceCenter = Rect.new(52, 31, 261, 510)
+targetinfohealthblur.ImageColor3 = Color3.new()
+targetinfohealthblur.Visible = false
+local targetinfob = Instance.new('UIStroke')
+targetinfob.Enabled = false
+targetinfob.Color = Color3.fromHSV(0.44, 1, 1)
+targetinfob.Parent = targetinfobkg
+
+targetinfoobj:CreateFont({
+	Name = 'Font',
+	Blacklist = 'Arial',
+	Function = function(val)
+		targetinfoname.FontFace = val
+	end
+})
+local targetinfobackgroundtransparency = {
+	Value = 0.5,
+	Object = {Visible = {}}
+}
+local targetinfodisplay = targetinfoobj:CreateToggle({
+	Name = 'Use Displayname',
+	Default = true
+})
+targetinfoobj:CreateToggle({
+	Name = 'Render Background',
+	Function = function(callback)
+		targetinfobkg.BackgroundTransparency = callback and targetinfobackgroundtransparency.Value or 1
+		targetinfoshadow.Visible = not callback
+		targetinfoblurobj.Visible = callback
+		targetinfohealthblur.Visible = not callback
+		targetinfoshotblur.Visible = not callback
+		targetinfobackgroundtransparency.Object.Visible = callback
+	end,
+	Default = true
+})
+targetinfobackgroundtransparency = targetinfoobj:CreateSlider({
+	Name = 'Transparency',
+	Min = 0,
+	Max = 1,
+	Default = 0.5,
+	Decimal = 10,
+	Function = function(val)
+		targetinfobkg.BackgroundTransparency = val
+	end,
+	Darker = true
+})
+local targetinfocolor
+local targetinfocolortoggle = targetinfoobj:CreateToggle({
+	Name = 'Custom Color',
+	Function = function(callback)
+		targetinfocolor.Object.Visible = callback
+		if callback then
+			targetinfobkg.BackgroundColor3 = Color3.fromHSV(targetinfocolor.Hue, targetinfocolor.Sat, targetinfocolor.Value)
+			targetinfoshot.BackgroundColor3 = Color3.fromHSV(targetinfocolor.Hue, targetinfocolor.Sat, math.max(targetinfocolor.Value - 0.1, 0.075))
+			targetinfohealthbkg.BackgroundColor3 = targetinfoshot.BackgroundColor3
+		else
+			targetinfobkg.BackgroundColor3 = color.Dark(uipallet.Main, 0.1)
+			targetinfoshot.BackgroundColor3 = uipallet.Main
+			targetinfohealthbkg.BackgroundColor3 = uipallet.Main
+		end
+	end
+})
+targetinfocolor = targetinfoobj:CreateColorSlider({
+	Name = 'Color',
+	Function = function(hue, sat, val)
+		if targetinfocolortoggle.Enabled then
+			targetinfobkg.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+			targetinfoshot.BackgroundColor3 = Color3.fromHSV(hue, sat, math.max(val - 0.1, 0))
+			targetinfohealthbkg.BackgroundColor3 = targetinfoshot.BackgroundColor3
+		end
+	end,
+	Darker = true,
+	Visible = false
+})
+targetinfoobj:CreateToggle({
+	Name = 'Border',
+	Function = function(callback)
+		targetinfob.Enabled = callback
+		targetinfobcolor.Object.Visible = callback
+	end
+})
+targetinfobcolor = targetinfoobj:CreateColorSlider({
+	Name = 'Border Color',
+	Function = function(hue, sat, val, opacity)
+		targetinfob.Color = Color3.fromHSV(hue, sat, val)
+		targetinfob.Transparency = 1 - opacity
+	end,
+	Darker = true,
+	Visible = false
+})
+
+local lasthealth = 0
+local lastmaxhealth = 0
+targetinfo = {
+	Targets = {},
+	Object = targetinfobkg,
+	UpdateInfo = function(self)
+		local entitylib = mainapi.Libraries
+		if not entitylib then return end
+
+		for i, v in self.Targets do
+			if v < tick() then
+				self.Targets[i] = nil
+			end
+		end
+
+		local v, highest = nil, tick()
+		for i, check in self.Targets do
+			if check > highest then
+				v = i
+				highest = check
+			end
+		end
+
+		targetinfobkg.Visible = v ~= nil or mainapi.gui.ScaledGui.ClickGui.Visible
+		if v then
+			targetinfoname.Text = v.Player and (targetinfodisplay.Enabled and v.Player.DisplayName or v.Player.Name) or v.Character and v.Character.Name or targetinfoname.Text
+			targetinfoshot.Image = 'rbxthumb://type=AvatarHeadShot&id='..(v.Player and v.Player.UserId or 1)..'&w=420&h=420'
+
+			if not v.Character then
+				v.Health = v.Health or 0
+				v.MaxHealth = v.MaxHealth or 100
+			end
+
+			if v.Health ~= lasthealth or v.MaxHealth ~= lastmaxhealth then
+				local percent = math.max(v.Health / v.MaxHealth, 0)
+				tween:Tween(targetinfohealth, TweenInfo.new(0.3), {
+					Size = UDim2.fromScale(math.min(percent, 1), 1), BackgroundColor3 = Color3.fromHSV(math.clamp(percent / 2.5, 0, 1), 0.89, 0.75)
+				})
+				tween:Tween(targetinfohealthextra, TweenInfo.new(0.3), {
+					Size = UDim2.fromScale(math.clamp(percent - 1, 0, 0.8), 1)
+				})
+				if lasthealth > v.Health and self.LastTarget == v then
+					tween:Cancel(targetinfoshotflash)
+					targetinfoshotflash.BackgroundTransparency = 0.3
+					tween:Tween(targetinfoshotflash, TweenInfo.new(0.5), {
+						BackgroundTransparency = 1
+					})
+				end
+				lasthealth = v.Health
+				lastmaxhealth = v.MaxHealth
+			end
+
+			if not v.Character then table.clear(v) end
+			self.LastTarget = v
+		end
+		return v
+	end
+}
+mainapi.Libraries.targetinfo = targetinfo
+
+function mainapi:UpdateTextGUI(afterload)
+	if not afterload and not mainapi.Loaded then return end
+	if textgui.Button.Enabled then
+		local right = textgui.Children.AbsolutePosition.X > (gui.AbsoluteSize.X / 2)
+		VapeLogo.Visible = textguiwatermark.Enabled
+		VapeLogo.Position = right and UDim2.new(1 / VapeTextScale.Scale, -113, 0, 6) or UDim2.fromOffset(0, 6)
+		VapeLogoShadow.Visible = textguishadow.Enabled
+		VapeLabelCustom.Text = textguibox.Value
+		VapeLabelCustom.FontFace = textguifontcustom.Value
+		VapeLabelCustom.Visible = VapeLabelCustom.Text ~= '' and textguitext.Enabled
+		VapeLabelCustomShadow.Visible = VapeLabelCustom.Visible and textguishadow.Enabled
+		VapeLabelSorter.HorizontalAlignment = right and Enum.HorizontalAlignment.Right or Enum.HorizontalAlignment.Left
+		VapeLabelHolder.Size = UDim2.fromScale(1 / VapeTextScale.Scale, 1)
+		VapeLabelHolder.Position = UDim2.fromOffset(right and 3 or 0, 11 + (VapeLogo.Visible and VapeLogo.Size.Y.Offset or 0) + (VapeLabelCustom.Visible and 28 or 0) + (textguibackground.Enabled and 3 or 0))
+		if VapeLabelCustom.Visible then
+			local size = getfontsize(removeTags(VapeLabelCustom.Text), VapeLabelCustom.TextSize, VapeLabelCustom.FontFace)
+			VapeLabelCustom.Size = UDim2.fromOffset(size.X, size.Y)
+			VapeLabelCustom.Position = UDim2.new(right and 1 / VapeTextScale.Scale or 0, right and -size.X or 0, 0, (VapeLogo.Visible and 32 or 8))
+		end
+
+		local found = {}
+		for _, v in VapeLabels do
+			if v.Enabled then
+				table.insert(found, v.Object.Name)
+			end
+			v.Object:Destroy()
+		end
+		table.clear(VapeLabels)
+
+		local info = TweenInfo.new(0.3, Enum.EasingStyle.Exponential)
+		for i, v in mainapi.Modules do
+			if textguimodules.Enabled and table.find(textguimoduleslist.ListEnabled, i) then continue end
+			if textguirender.Enabled and v.Category == 'Render' then continue end
+			if v.Enabled or table.find(found, i) then
+				local holder = Instance.new('Frame')
+				holder.Name = i
+				holder.Size = UDim2.fromOffset()
+				holder.BackgroundTransparency = 1
+				holder.ClipsDescendants = true
+				holder.Parent = VapeLabelHolder
+				local holderbackground
+				local holdercolorline
+				if textguibackground.Enabled then
+					holderbackground = Instance.new('Frame')
+					holderbackground.Size = UDim2.new(1, 3, 1, 0)
+					holderbackground.BackgroundColor3 = color.Dark(uipallet.Main, 0.15)
+					holderbackground.BackgroundTransparency = textguibackgroundtransparency.Value
+					holderbackground.BorderSizePixel = 0
+					holderbackground.Parent = holder
+					local holderline = Instance.new('Frame')
+					holderline.Size = UDim2.new(1, 0, 0, 1)
+					holderline.Position = UDim2.new(0, 0, 1, -1)
+					holderline.BackgroundColor3 = Color3.new()
+					holderline.BackgroundTransparency = 0.928 + (0.072 * math.clamp((textguibackgroundtransparency.Value - 0.5) / 0.5, 0, 1))
+					holderline.BorderSizePixel = 0
+					holderline.Parent = holderbackground
+					local holderline2 = holderline:Clone()
+					holderline2.Name = 'Line'
+					holderline2.Position = UDim2.new()
+					holderline2.Parent = holderbackground
+					holdercolorline = Instance.new('Frame')
+					holdercolorline.Size = UDim2.new(0, 2, 1, 0)
+					holdercolorline.Position = right and UDim2.new(1, -5, 0, 0) or UDim2.new()
+					holdercolorline.BorderSizePixel = 0
+					holdercolorline.Parent = holderbackground
+				end
+				local holdertext = Instance.new('TextLabel')
+				holdertext.Position = UDim2.fromOffset(right and 3 or 6, 2)
+				holdertext.BackgroundTransparency = 1
+				holdertext.BorderSizePixel = 0
+				holdertext.Text = i..(v.ExtraText and " <font color='#A8A8A8'>"..v.ExtraText()..'</font>' or '')
+				holdertext.TextSize = 15
+				holdertext.FontFace = textguifont.Value
+				holdertext.RichText = true
+				local size = getfontsize(removeTags(holdertext.Text), holdertext.TextSize, holdertext.FontFace)
+				holdertext.Size = UDim2.fromOffset(size.X, size.Y)
+				if textguishadow.Enabled then
+					local holderdrop = holdertext:Clone()
+					holderdrop.Position = UDim2.fromOffset(holdertext.Position.X.Offset + 1, holdertext.Position.Y.Offset + 1)
+					holderdrop.Text = removeTags(holdertext.Text)
+					holderdrop.TextColor3 = Color3.new()
+					holderdrop.Parent = holder
+				end
+				holdertext.Parent = holder
+				local holdersize = UDim2.fromOffset(size.X + 10, size.Y + (textguibackground.Enabled and 5 or 3))
+				if textguianimations.Enabled then
+					if not table.find(found, i) then
+						tween:Tween(holder, info, {
+							Size = holdersize
+						})
+					else
+						holder.Size = holdersize
+						if not v.Enabled then
+							tween:Tween(holder, info, {
+								Size = UDim2.fromOffset()
+							})
+						end
+					end
+				else
+					holder.Size = v.Enabled and holdersize or UDim2.fromOffset()
+				end
+				table.insert(VapeLabels, {
+					Object = holder,
+					Text = holdertext,
+					Background = holderbackground,
+					Color = holdercolorline,
+					Enabled = v.Enabled
+				})
+			end
+		end
+
+		if textguisort.Value == 'Alphabetical' then
+			table.sort(VapeLabels, function(a, b)
+				return a.Text.Text < b.Text.Text
+			end)
+		else
+			table.sort(VapeLabels, function(a, b)
+				return a.Text.Size.X.Offset > b.Text.Size.X.Offset
+			end)
+		end
+
+		for i, v in VapeLabels do
+			if v.Color then
+				v.Color.Parent.Line.Visible = i ~= 1
+			end
+			v.Object.LayoutOrder = i
+		end
+	end
+
+	mainapi:UpdateGUI(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value, true)
+end
+
+function mainapi:UpdateGUI(hue, sat, val, default)
+	if mainapi.Loaded == nil then return end
+	if not default and mainapi.GUIColor.Rainbow then return end
+	if textgui.Button.Enabled then
+		VapeLogoGradient.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)),
+			ColorSequenceKeypoint.new(1, textguigradient.Enabled and Color3.fromHSV(mainapi:Color((hue - 0.075) % 1)) or Color3.fromHSV(hue, sat, val))
+		})
+		VapeLogoGradient2.Color = textguigradient.Enabled and textguigradientv4.Enabled and VapeLogoGradient.Color or ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+			ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))
+		})
+		VapeLabelCustom.TextColor3 = textguicolorcustomtoggle.Enabled and Color3.fromHSV(textguicolorcustom.Hue, textguicolorcustom.Sat, textguicolorcustom.Value) or VapeLogoGradient.Color.Keypoints[2].Value
+
+		local customcolor = textguicolordrop.Value == 'Custom color' and Color3.fromHSV(textguicolor.Hue, textguicolor.Sat, textguicolor.Value) or nil
+		for i, v in VapeLabels do
+			v.Text.TextColor3 = customcolor or (mainapi.GUIColor.Rainbow and Color3.fromHSV(mainapi:Color((hue - ((textguigradient and i + 2 or i) * 0.025)) % 1)) or VapeLogoGradient.Color.Keypoints[2].Value)
+			if v.Color then
+				v.Color.BackgroundColor3 = v.Text.TextColor3
+			end
+			if textguibackgroundtint.Enabled and v.Background then
+				v.Background.BackgroundColor3 = color.Dark(v.Text.TextColor3, 0.75)
+			end
+		end
+	end
+
+	if not clickgui.Visible and not mainapi.Legit.Window.Visible then return end
+	local rainbow = mainapi.GUIColor.Rainbow and mainapi.RainbowMode.Value ~= 'Retro'
+
+	for i, v in mainapi.Categories do
+		if i == 'Main' then
+			v.Object.VapeLogo.V4Logo.ImageColor3 = Color3.fromHSV(hue, sat, val)
+			for _, button in v.Buttons do
+				if button.Enabled then
+					button.Object.TextColor3 = rainbow and Color3.fromHSV(mainapi:Color((hue - (button.Index * 0.025)) % 1)) or Color3.fromHSV(hue, sat, val)
+					if button.Icon then
+						button.Icon.ImageColor3 = button.Object.TextColor3
+					end
+				end
+			end
+		end
+
+		if v.Options then
+			for _, option in v.Options do
+				if option.Color then
+					option:Color(hue, sat, val, rainbow)
+				end
+			end
+		end
+
+		if v.Type == 'CategoryList' then
+			v.Object.Children.Add.AddButton.ImageColor3 = rainbow and Color3.fromHSV(mainapi:Color(hue % 1)) or Color3.fromHSV(hue, sat, val)
+			if v.Selected then
+				v.Selected.BackgroundColor3 = rainbow and Color3.fromHSV(mainapi:Color(hue % 1)) or Color3.fromHSV(hue, sat, val)
+				v.Selected.Title.TextColor3 = mainapi.GUIColor.Rainbow and Color3.new(0.19, 0.19, 0.19) or mainapi:TextColor(hue, sat, val)
+				v.Selected.Dots.Dots.ImageColor3 = v.Selected.Title.TextColor3
+				v.Selected.Bind.Icon.ImageColor3 = v.Selected.Title.TextColor3
+				v.Selected.Bind.TextLabel.TextColor3 = v.Selected.Title.TextColor3
+			end
+		end
+	end
+
+	for _, button in mainapi.Modules do
+		if button.Enabled then
+			button.Object.BackgroundColor3 = rainbow and Color3.fromHSV(mainapi:Color((hue - (button.Index * 0.025)) % 1)) or Color3.fromHSV(hue, sat, val)
+			button.Object.TextColor3 = mainapi.GUIColor.Rainbow and Color3.new(0.19, 0.19, 0.19) or mainapi:TextColor(hue, sat, val)
+			button.Object.UIGradient.Enabled = rainbow and mainapi.RainbowMode.Value == 'Gradient'
+			if button.Object.UIGradient.Enabled then
+				button.Object.BackgroundColor3 = Color3.new(1, 1, 1)
+				button.Object.UIGradient.Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(mainapi:Color((hue - (button.Index * 0.025)) % 1))),
+					ColorSequenceKeypoint.new(1, Color3.fromHSV(mainapi:Color((hue - ((button.Index + 1) * 0.025)) % 1)))
+				})
+			end
+			button.Object.Bind.Icon.ImageColor3 = button.Object.TextColor3
+			button.Object.Bind.TextLabel.TextColor3 = button.Object.TextColor3
+			button.Object.Dots.Dots.ImageColor3 = button.Object.TextColor3
+		end
+
+		for _, option in button.Options do
+			if option.Color then
+				option:Color(hue, sat, val, rainbow)
+			end
+		end
+	end
+
+	for i, v in mainapi.Overlays.Toggles do
+		if v.Enabled then
+			tween:Cancel(v.Object.Knob)
+			v.Object.Knob.BackgroundColor3 = rainbow and Color3.fromHSV(mainapi:Color((hue - (i * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+		end
+	end
+
+	if mainapi.Legit.Icon then
+		mainapi.Legit.Icon.ImageColor3 = Color3.fromHSV(hue, sat, val)
+	end
+
+	if mainapi.Legit.Window.Visible then
+		for _, v in mainapi.Legit.Modules do
+			if v.Enabled then
+				tween:Cancel(v.Object.Knob)
+				v.Object.Knob.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+			end
+
+			for _, option in v.Options do
+				if option.Color then
+					option:Color(hue, sat, val, rainbow)
+				end
+			end
+		end
+	end
+end
+
+mainapi:Clean(notifications.ChildRemoved:Connect(function()
+	for i, v in notifications:GetChildren() do
+		if tween.Tween then
+			tween:Tween(v, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {
+				Position = UDim2.new(1, 0, 1, -(29 + (78 * i)))
+			})
+		end
+	end
+end))
+
+mainapi:Clean(inputService.InputBegan:Connect(function(inputObj)
+	if not inputService:GetFocusedTextBox() and inputObj.KeyCode ~= Enum.KeyCode.Unknown then
+		table.insert(mainapi.HeldKeybinds, inputObj.KeyCode.Name)
+		if mainapi.Binding then return end
+
+		if checkKeybinds(mainapi.HeldKeybinds, mainapi.Keybind, inputObj.KeyCode.Name) then
+			if mainapi.ThreadFix then
+				setthreadidentity(8)
+			end
+			for _, v in mainapi.Windows do
+				v.Visible = false
+			end
+			clickgui.Visible = not clickgui.Visible
+			tooltip.Visible = false
+			mainapi:BlurCheck()
+		end
+
+		local toggled = false
+		for i, v in mainapi.Modules do
+			if checkKeybinds(mainapi.HeldKeybinds, v.Bind, inputObj.KeyCode.Name) then
+				toggled = true
+				if mainapi.ToggleNotifications.Enabled then
+					mainapi:CreateNotification('Module Toggled', i.."<font color='#FFFFFF'> has been </font>"..(not v.Enabled and "<font color='#5AFF5A'>Enabled</font>" or "<font color='#FF5A5A'>Disabled</font>").."<font color='#FFFFFF'>!</font>", 0.75)
+				end
+				v:Toggle(true)
+			end
+		end
+		if toggled then
+			mainapi:UpdateTextGUI()
+		end
+
+		for _, v in mainapi.Profiles do
+			if checkKeybinds(mainapi.HeldKeybinds, v.Bind, inputObj.KeyCode.Name) and v.Name ~= mainapi.Profile then
+				mainapi:Save(v.Name)
+				mainapi:Load(true)
+				break
+			end
+		end
+	end
+end))
+
+mainapi:Clean(inputService.InputEnded:Connect(function(inputObj)
+	if not inputService:GetFocusedTextBox() and inputObj.KeyCode ~= Enum.KeyCode.Unknown then
+		if mainapi.Binding then
+			if not mainapi.MultiKeybind.Enabled then
+				mainapi.HeldKeybinds = {inputObj.KeyCode.Name}
+			end
+			mainapi.Binding:SetBind(checkKeybinds(mainapi.HeldKeybinds, mainapi.Binding.Bind, inputObj.KeyCode.Name) and {} or mainapi.HeldKeybinds, true)
+			mainapi.Binding = nil
+		end
+	end
+
+	local ind = table.find(mainapi.HeldKeybinds, inputObj.KeyCode.Name)
+	if ind then
+		table.remove(mainapi.HeldKeybinds, ind)
+	end
+end))
+
+return mainapi
