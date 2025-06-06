@@ -8294,8 +8294,8 @@ velo.run(function()
 	local Toggles: table = {}
 	local themeName: any;
 	local newobjects: table, oldobjects: table = {}, {}
-	local function BeforeShaders()
-        local lightingState: table? = {
+    local function BeforeShaders()
+        return {
             Brightness = lightingService.Brightness,
             ColorShift_Bottom = lightingService.ColorShift_Bottom,
             ColorShift_Top = lightingService.ColorShift_Top,
@@ -8309,7 +8309,6 @@ velo.run(function()
             Ambient = lightingService.Ambient,
             children = lightingService:GetChildren()
         }
-        return lightingState
     end
     local function restoreDefault(lightingState)
         lightingService:ClearAllChildren()
@@ -8675,44 +8674,56 @@ velo.run(function()
 		["Name"] = 'Atmosphere',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				local d = 0
-				local r = workspace.Terrain
 				for _, v in lightingService:GetChildren() do
-                    if v:IsA('PostEffect') or v:IsA('Sky') or v:IsA('Atmosphere') or v:IsA('Clouds') then -- Added Clouds
+                    if v:IsA('PostEffect') or v:IsA('Sky') or v:IsA('Atmosphere') or v:IsA('Clouds') then
                         v:Destroy()
                     end
                 end
-				lightingService.Brightness = d + 1
-                lightingService.EnvironmentDiffuseScale = d + 0.2
-                lightingService.EnvironmentSpecularScale = d + 0.82
 
-                local sunRays: SunRaysEffect = Instance.new('SunRaysEffect')
-                sunRays.Parent = lightingService
+                for _, v in workspace:GetDescendants() do
+                    if v:IsA("Clouds") then
+                        v:Destroy()
+                    end;
+                end;
+				local d: number = 0
+				local r: any = workspace.Terrain
+				for _, v in lightingService:GetChildren() do
+                    if v:IsA('PostEffect') or v:IsA('Sky') or v:IsA('Atmosphere') or v:IsA('Clouds') then -- Added Clouds
+                        v:Destroy();
+                    end;
+                end;
+				lightingService.Brightness = d + 1;
+                lightingService.EnvironmentDiffuseScale = d + 0.2;
+                lightingService.EnvironmentSpecularScale = d + 0.82;
+
+                local sunRays = Instance.new('SunRaysEffect')
                 table.insert(newobjects, sunRays)
+                pcall(function() sunRays.Parent = lightingService end)
 
-                local atmosphere: Atmosphere = Instance.new('Atmosphere')
-                atmosphere.Parent = lightingService
+                local atmosphere = Instance.new('Atmosphere')
                 table.insert(newobjects, atmosphere)
+                pcall(function() atmosphere.Parent = lightingService end)
 
-                local sky: Sky = Instance.new('Sky')
-                sky.Parent = lightingService
+                local sky = Instance.new('Sky')
                 table.insert(newobjects, sky)
+                pcall(function() sky.Parent = lightingService end)
 
-                local blur: BlurEffect = Instance.new('BlurEffect')
+                local blur = Instance.new('BlurEffect')
                 blur.Size = d + 3.921
-                blur.Parent = lightingService
                 table.insert(newobjects, blur)
+                pcall(function() blur.Parent = lightingService end)
 
-                local color_correction: ColorCorrectionEffect = Instance.new('ColorCorrectionEffect')
-                color_correction.Parent = lightingService
+                local color_correction = Instance.new('ColorCorrectionEffect')
                 color_correction.Saturation = d + 0.092
                 table.insert(newobjects, color_correction)
-                
-                local clouds: Clouds = Instance.new('Clouds')
+                pcall(function() color_correction.Parent = lightingService end)
+
+                local clouds = Instance.new('Clouds')
                 clouds.Cover = d + 0.4
-                clouds.Parent = r 
                 table.insert(newobjects, clouds)
-				r.WaterTransparency = d + 1
+                pcall(function() clouds.Parent = r end)
+
+                r.WaterTransparency = d + 1
                 r.WaterReflectance = d + 1
 
 				themes()
@@ -8723,29 +8734,38 @@ velo.run(function()
 					task.defer(removeObject, v)
 				end))
 	
-				for i, v in Toggles do
-					if v.Toggle["Enabled"] then
-						local obj = Instance.new(i)
-						for i2, v2 in v.Objects do
-							if v2.Type == 'ColorSlider' then
-								obj[i2] = Color3.fromHSV(v2.Hue, v2.Sat, v2.Value)
+				for className, classData in Toggles do
+					if classData.Toggle["Enabled"] then
+						local obj: any = Instance.new(className)
+						for propName, propData in classData.Objects do
+							if propData.Type == 'ColorSlider' then
+								obj[propName] = Color3.fromHSV(propData.Hue, propData.Sat, propData.Value)
 							else
-								obj[i2] = apidump[i][i2] ~= 'Number' and v2.Value or tonumber(v2.Value) or 0
+								if apidump[className][propName] == 'Number' then
+									obj[propName] = tonumber(propData.Value) or 0
+								else
+									obj[propName] = propData.Value
+								end
 							end
 						end
-						obj.Parent = lightingService
+						obj.Name = "Custom" .. className
 						table.insert(newobjects, obj)
+						task.defer(function()
+							pcall(function() obj.Parent = lightingService end)
+						end)
 					end
 				end
 			else
-				for _, v in newobjects do
-					v:Destroy()
-				end
-				for _, v in oldobjects do
-					v.Parent = lightingService
-				end
-				table.clear(newobjects)
-				table.clear(oldobjects)
+                for _, v in newobjects do
+                    if v and v.Destroy then
+                        v:Destroy()
+                    end
+                end
+                for _, v in oldobjects do
+                    pcall(function() v.Parent = lightingService end)
+                end
+                table.clear(newobjects)
+                table.clear(oldobjects)
 				for _, v in lightingService:GetChildren() do
                     if v:IsA("ColorCorrectionEffect") then
                         v:Destroy()
