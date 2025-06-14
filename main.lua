@@ -59,7 +59,7 @@ if identifyexecutor then
 end;
 
 local vape: any;
-local loadstring: (string?) -> (function?, string?) = function(...)
+local loadstring: any = function(...)
 	local res: any, err: string? = loadstring(...);
 	if err and vape then
 		vape:CreateNotification('Vape', 'Failed to load : '..err, 30, 'alert');
