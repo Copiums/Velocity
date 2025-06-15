@@ -2393,7 +2393,7 @@ run(function()
 							}
 						}
 					};
-					debug.setupvalue(bedwars.SwordController.playSwordEffect, 6, fake);
+					--debug.setupvalue(bedwars.SwordController.playSwordEffect, 6, fake);
 					debug.setupvalue(bedwars.ScytheController.playLocalAnimation, 3, fake);
 
 					task.spawn(function()
@@ -2502,7 +2502,7 @@ run(function()
 									AttackRemote:FireServer({
 										weapon = sword.tool,
 										chargedAttack = {chargeRatio = 0},
-										lastSwingServerTimeDelta = 0.5,
+										lastSwingServerTimeDelta = 0.1,
 										entityInstance = v.Character,
 										validate = {
 											raycast = {
