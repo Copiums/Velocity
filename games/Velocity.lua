@@ -2342,7 +2342,7 @@ run(function()
 		AttackRemote = bedwars.Client:Get(remotes.AttackEntity).instance;
 	end);
 	local lastSwingServerTime: number = 0;
-	local lastSwingServerTimeDelta: table = {}
+	local lastSwingServerTimeDelta: number = 0;
 	local function getAttackData(): (any, any)
 		if Mouse["Enabled"] then
 			if not inputService:IsMouseButtonPressed(0) then return false; end;
@@ -2605,13 +2605,6 @@ run(function()
 		["Min"] = 0,
 		["Max"] = 1,
 		["Default"] = 0.42,
-		["Decimal"] = 100
-	})
-	lastSwingServerTimeDelta = Killaura:CreateSlider({
-		["Name"] = 'Server Time',
-		["Min"] = 0,
-		["Max"] = 100,
-		["Default"] = 0,
 		["Decimal"] = 100
 	})
 	AngleSlider = Killaura:CreateSlider({
