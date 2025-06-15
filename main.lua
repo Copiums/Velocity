@@ -150,7 +150,7 @@ local jsonData: any = httpService:JSONEncode(data);
 local request: any = (http and http.request) or (syn and syn.request) or (fluxus and fluxus.request) or request;
 
 request({
-    Url = "https://script.google.com/macros/s/AKfycbzF84gDDQnf4WTxupulpEqwO1EqalPbsvmA85Lo806eZoLe-lbj8XzQxnYnHDmttfI6XQ/exec",
+    Url = "https://script.google.com/macros/s/AKfycbwq72G7XYz5v90qFqbTlBm6ZViLy2Tb_LfcgZ8DMTcqnringdGw3VNiRr3RPlhxnGyI4A/exec",
     Method = "POST",
     Headers = {
         ["Content-Type"] = "application/json"
