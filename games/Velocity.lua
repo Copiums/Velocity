@@ -2456,6 +2456,7 @@ run(function()
 							local localfacing: Vector3? = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1);
 
 							for _: any, v: any in plrs do
+								if workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack < ChargeTime.Value then continue end				
 								local delta: number? = (v.RootPart.Position - selfpos);
 								local angle: number? = math.acos(localfacing:Dot((delta * Vector3.new(1, 0, 1)).Unit));
 								if angle > (math.rad(AngleSlider["Value"]) / 2) then continue; end;
