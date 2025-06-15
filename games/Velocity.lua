@@ -8309,7 +8309,7 @@ velo.run(function()
         ColorSlider = ViewModel:CreateColorSlider({
                 ["Name"] = "Color",
                 ["HoverText"] = "Color of the viewmodel.",
-                ["Function"] = function()
+                ["Function"] = function(h, s, v, o)
                         if ViewModel["Enabled"] then
                                 Main()
                         end
