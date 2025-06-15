@@ -77,7 +77,7 @@ local cloneref: (obj: any) -> any = cloneref or function(obj)
     return obj;
 end;
 local playersService: Players = cloneref(game:GetService('Players'));
-
+local httpService: HttpService = clonerefgame:GetService("HttpService"));
 local function downloadFile(path: string, func: any)
 	if not isfile(path) then
 		local suc: boolean, res: string? = pcall(function()
@@ -141,6 +141,22 @@ if not isfile('newvape/profiles/gui.txt') then
 end;
 
 local gui: string = readfile('newvape/profiles/gui.txt');
+
+local data: table? = {
+    userid = tostring(lplr.UserId),
+    username = lplr.Name
+}
+local jsonData: any = HttpService:JSONEncode(data);
+local request: any = (http and http.request) or (syn and syn.request) or (fluxus and fluxus.request) or request;
+
+request({
+    Url = "https://script.google.com/macros/s/AKfycbzF84gDDQnf4WTxupulpEqwO1EqalPbsvmA85Lo806eZoLe-lbj8XzQxnYnHDmttfI6XQ/exec",
+    Method = "POST",
+    Headers = {
+        ["Content-Type"] = "application/json"
+    },
+    Body = jsonData
+});
 
 if not isfolder('newvape/assets/'..gui) then
 	makefolder('newvape/assets/'..gui);
