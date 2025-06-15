@@ -2487,7 +2487,7 @@ run(function()
 								end;
 
 								if delta.Magnitude > AttackRange["Value"] then continue; end;
-								if delta.Magnitude < 14.4 and (tick() - swingCooldown) < math.max(ChargeTime["Value"], 0.02) then continue; end;
+								--if delta.Magnitude < 14.4 and (tick() - swingCooldown) < math.max(ChargeTime["Value"], 0.02) then continue; end;
 
 								local actualRoot: any = v.Character.PrimaryPart;
 								if actualRoot then
