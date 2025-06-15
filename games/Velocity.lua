@@ -2341,7 +2341,8 @@ run(function()
 	task.spawn(function()
 		AttackRemote = bedwars.Client:Get(remotes.AttackEntity).instance;
 	end);
-
+	local lastSwingServerTime: number = 0;
+	local lastSwingServerTimeDelta: table = {}
 	local function getAttackData(): (any, any)
 		if Mouse["Enabled"] then
 			if not inputService:IsMouseButtonPressed(0) then return false; end;
@@ -2435,6 +2436,8 @@ run(function()
 				end;
 
 				local swingCooldown: number = 0;
+				lastSwingServerTime = workspace:GetServerTimeNow();
+                		lastSwingServerTimeDelta = 0;				
 				repeat
 					local attacked: any, sword: any, meta: any = {}, getAttackData();
 					Attacking = false;
@@ -2491,7 +2494,10 @@ run(function()
 									local dir: any = CFrame.lookAt(selfpos, actualRoot.Position).LookVector;
 									local pos: any = selfpos + dir * math.max(delta.Magnitude - 14.399, 0);
 									swingCooldown = tick();
-									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow();
+									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow()
+                                    bedwars.SwordController.lastSwingServerTime = workspace:GetServerTimeNow()
+									lastSwingServerTimeDelta = workspace:GetServerTimeNow() - lastSwingServerTime
+                                    lastSwingServerTime = workspace:GetServerTimeNow()
 									store.attackReach = (delta.Magnitude * 100) // 1 / 100;
 									store.attackReachUpdate = tick() + 1;
 
@@ -2502,7 +2508,7 @@ run(function()
 									AttackRemote:FireServer({
 										weapon = sword.tool,
 										chargedAttack = {chargeRatio = 0},
-										lastSwingServerTimeDelta = 0.1,
+										lastSwingServerTimeDelta = lastSwingServerTimeDelta,
 										entityInstance = v.Character,
 										validate = {
 											raycast = {
@@ -2599,6 +2605,13 @@ run(function()
 		["Min"] = 0,
 		["Max"] = 1,
 		["Default"] = 0.42,
+		["Decimal"] = 100
+	})
+	lastSwingServerTimeDelta = Killaura:CreateSlider({
+		["Name"] = 'Server Time',
+		["Min"] = 0,
+		["Max"] = 100,
+		["Default"] = 0,
 		["Decimal"] = 100
 	})
 	AngleSlider = Killaura:CreateSlider({
