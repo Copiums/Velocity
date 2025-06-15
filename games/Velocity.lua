@@ -8040,108 +8040,234 @@ velo.run(function()
 end)
 
 velo.run(function()
-	local Viewmodel: table = {["Enabled"] = false}
-	local Depth: table = {["Value"] = 0.8}
-	local Horizontal: table = {["Value"] = 0.8}
-	local Vertical: table = {["Value"] = -0.2}
-	local NoBob: table = {["Enabled"] = false}
-	local Rots: table = {}
-	local old: any, oldc1: any
-	Viewmodel = vape.Legit:CreateModule({
-		["Name"] = 'Viewmodel',
-		["Function"] = function(callback: boolean): void
-			local viewmodel: Viewmodel = gameCamera:FindFirstChild('Viewmodel');
-			if callback then
-				old = bedwars.ViewmodelController.playAnimation;
-				oldc1 = viewmodel and viewmodel.RightHand.RightWrist.C1 or CFrame.identity;
-				if NoBob["Enabled"] then
-					bedwars.ViewmodelController.playAnimation = function(self, animtype, ...)
-						if bedwars.AnimationType and animtype == bedwars.AnimationType.FP_WALK then return; end;
-						return old(self, animtype, ...);
-					end;
-				end;
-	
-				bedwars.InventoryViewmodelController:handleStore(bedwars.Store:getState())
-				if viewmodel then 
-					gameCamera.Viewmodel.RightHand.RightWrist.C1 = oldc1 * CFrame.Angles(math.rad(Rots[1].Value), math.rad(Rots[2].Value), math.rad(Rots[3].Value)); 
-				end;
-				lplr.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_DEPTH_OFFSET', -Depth.Value);
-				lplr.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_HORIZONTAL_OFFSET', Horizontal.Value);
-				lplr.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_VERTICAL_OFFSET', Vertical.Value);
-			else
-				bedwars.ViewmodelController.playAnimation = old;
-				if viewmodel then 
-					viewmodel.RightHand.RightWrist.C1 = oldc1;
-				end;
-	
-				bedwars.InventoryViewmodelController:handleStore(bedwars.Store:getState());
-				lplr.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_DEPTH_OFFSET', 0);
-				lplr.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_HORIZONTAL_OFFSET', 0);
-				lplr.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_VERTICAL_OFFSET', 0);
-				old = nil;
-			end;
-		end,
-		["Tooltip"] = 'Changes the viewmodel animations'
-	})
-	NoBob = Viewmodel:CreateToggle({
-		["Name"] = 'No Bobbing',
-		["Default"] = true,
-		["Function"] = function()
-			if Viewmodel["Enabled"] then
-				Viewmodel:Toggle();
-				Viewmodel:Toggle();
-			end;
-		end;
-	})
-	Depth = Viewmodel:CreateSlider({
-		["Name"] = 'Depth',
-		["Min"] = 0,
-		["Max"] = 2,
-		["Default"] = 0.8,
-		["Decimal"] = 10,
-		["Function"] = function(val)
-			if Viewmodel["Enabled"] then
-				lplr.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_DEPTH_OFFSET', -val);
-			end;
+    local Viewmodel: table = {["Enabled"] = false}
+    local Depth: table = {["Value"] = 0.8}
+    local Horizontal: table = {["Value"] = 0.8}
+    local Vertical: table = {["Value"] = -0.2}
+    local NoBob: table = {["Enabled"] = false}
+    local Rots: table = {}
+    local oldAnim: any, oldC1: any
+    local ColorHSV: table = {["Hue"] = 0, ["Sat"] = 0, ["Val"] = 0}
+    local MaterialDropdown: table = {["Value"] = "Neon"}
+    local Mode: table = {["Value"] = "Normal"}
+    local Old: table = {["Custom"] = {}, ["Cam"] = nil, ["Anim"] = nil, ["C1"] = nil}
+
+    local function applyHighlight(part: BasePart, original: Highlight?)
+        local highlight: Highlight = original or Instance.new("Highlight")
+        highlight["FillColor"] = Color3.fromHSV(ColorHSV["Hue"], ColorHSV["Sat"], ColorHSV["Val"])
+        highlight["FillTransparency"] = 0.5
+        highlight["OutlineColor"] = Color3.fromHSV(ColorHSV["Hue"], ColorHSV["Sat"], ColorHSV["Val"])
+        highlight["OutlineTransparency"] = 0.5
+        highlight["DepthMode"] = Enum.HighlightDepthMode.AlwaysOnTop
+        highlight["Parent"] = part
+        table.insert(Old["Custom"], highlight)
+    end
+
+    local function applyClassic(part: BasePart)
+        part["TextureID"] = ""
+        part["Material"] = Enum.Material[MaterialDropdown["Value"] or "Neon"]
+        part["Color"] = Color3.fromHSV(ColorHSV["Hue"], ColorHSV["Sat"], ColorHSV["Val"])
+    end
+
+    local function Main()
+        local viewmodel = gameCamera:FindFirstChild("Viewmodel")
+        if not viewmodel then return end
+
+        for _, hl in next, Old["Custom"] do
+            pcall(function() hl:Destroy() end)
+        end
+        table.clear(Old["Custom"])
+
+		for _, part in next, viewmodel:GetDescendants() do
+			if part:IsA("BasePart") then
+				if Mode["Value"] == "Normal" then
+					applyHighlight(part)
+					if ColorHSV["Val"] > 0 then
+						if part:IsA("MeshPart") then
+							part["TextureID"] = ""
+							part["Material"] = Enum.Material[MaterialDropdown["Value"] or "Neon"]
+						elseif part:IsA("Part") then
+							local mesh = part:FindFirstChildOfClass("SpecialMesh")
+							if mesh then mesh["TextureId"] = "" end
+							part["Material"] = Enum.Material[MaterialDropdown["Value"] or "Neon"]
+						end
+					end
+				else
+					applyClassic(part)
+				end
+			end
 		end
-	})
-	Horizontal = Viewmodel:CreateSlider({
-		["Name"] = 'Horizontal',
-		["Min"] = 0,
-		["Max"] = 2,
-		["Default"] = 0.8,
-		["Decimal"] = 10,
-		["Function"] = function(val)
-			if Viewmodel["Enabled"] then
-				lplr.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_HORIZONTAL_OFFSET', val);
-			end;
-		end;
-	})
-	Vertical = Viewmodel:CreateSlider({
-		["Name"] = 'Vertical',
-		["Min"] = -0.2,
-		["Max"] = 2,
-		["Default"] = -0.2,
-		["Decimal"] = 10,
-		["Function"] = function(val)
-			if Viewmodel["Enabled"] then
-				lplr.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_VERTICAL_OFFSET', val);
-			end;
-		end;
-	})
-	for _, name in {'Rotation X', 'Rotation Y', 'Rotation Z'} do 
-		table.insert(Rots, Viewmodel:CreateSlider({
-			["Name"] = name,
-			["Min"] = 0,
-			["Max"] = 360,
-			["Function"] = function(val)
-				if Viewmodel["Enabled"] then
-					gameCamera.Viewmodel.RightHand.RightWrist.C1 = oldc1 * CFrame.Angles(math.rad(Rots[1].Value), math.rad(Rots[2].Value), math.rad(Rots[3].Value));
-				end;
-			end;
-		}))
-	end
+    end
+
+    Viewmodel = vape.Legit:CreateModule({
+        ["Name"] = "Viewmodel",
+        ["Function"] = function(callback: boolean)
+            local viewmodel = gameCamera:FindFirstChild("Viewmodel")
+            if callback then
+                Old["Cam"] = viewmodel
+                oldAnim = bedwars["ViewmodelController"]["playAnimation"]
+                oldC1 = viewmodel and viewmodel["RightHand"]["RightWrist"]["C1"] or CFrame.identity
+
+                if NoBob["Enabled"] then
+                    bedwars["ViewmodelController"]["playAnimation"] = function(self, animtype, ...)
+                        if bedwars["AnimationType"] and animtype == bedwars["AnimationType"]["FP_WALK"] then return end
+                        return oldAnim(self, animtype, ...)
+                    end
+                end
+
+                bedwars["InventoryViewmodelController"]:handleStore(bedwars["Store"]:getState())
+
+                if viewmodel then
+                    viewmodel["RightHand"]["RightWrist"]["C1"] = oldC1 * CFrame.Angles(
+                        math.rad(Rots[1]["Value"]),
+                        math.rad(Rots[2]["Value"]),
+                        math.rad(Rots[3]["Value"])
+                    )
+                end
+
+                local vmCtrl = lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]
+                vmCtrl:SetAttribute("ConstantManager_DEPTH_OFFSET", -Depth["Value"])
+                vmCtrl:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", Horizontal["Value"])
+                vmCtrl:SetAttribute("ConstantManager_VERTICAL_OFFSET", Vertical["Value"])
+
+                Main()
+            else
+                if oldAnim then
+                    bedwars["ViewmodelController"]["playAnimation"] = oldAnim
+                    oldAnim = nil
+                end
+
+                if viewmodel then
+                    viewmodel["RightHand"]["RightWrist"]["C1"] = oldC1
+                end
+
+                bedwars["InventoryViewmodelController"]:handleStore(bedwars["Store"]:getState())
+
+                local vmCtrl = lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]
+                vmCtrl:SetAttribute("ConstantManager_DEPTH_OFFSET", 0)
+                vmCtrl:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", 0)
+                vmCtrl:SetAttribute("ConstantManager_VERTICAL_OFFSET", 0)
+
+                for _, hl in next, Old["Custom"] do
+                    pcall(function() hl:Destroy() end)
+                end
+                table.clear(Old["Custom"])
+                Old["Cam"] = nil
+            end
+        end,
+        ["Tooltip"] = "Changes the viewmodel animations and color"
+    })
+
+    NoBob = Viewmodel:CreateToggle({
+        ["Name"] = "No Bobbing",
+        ["Default"] = true,
+        ["Function"] = function()
+            if Viewmodel["Enabled"] then
+                Viewmodel["ToggleButton"]()
+                Viewmodel["ToggleButton"]()
+            end
+        end
+    })
+
+    Depth = Viewmodel:CreateSlider({
+        ["Name"] = "Depth",
+        ["Min"] = 0,
+        ["Max"] = 2,
+        ["Default"] = 0.8,
+        ["Decimal"] = 10,
+        ["Function"] = function(val)
+            if Viewmodel["Enabled"] then
+                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", -val)
+            end
+        end
+    })
+
+    Horizontal = Viewmodel:CreateSlider({
+        ["Name"] = "Horizontal",
+        ["Min"] = 0,
+        ["Max"] = 2,
+        ["Default"] = 0.8,
+        ["Decimal"] = 10,
+        ["Function"] = function(val)
+            if Viewmodel["Enabled"] then
+                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", val)
+            end
+        end
+    })
+
+    Vertical = Viewmodel:CreateSlider({
+        ["Name"] = "Vertical",
+        ["Min"] = -0.2,
+        ["Max"] = 2,
+        ["Default"] = -0.2,
+        ["Decimal"] = 10,
+        ["Function"] = function(val)
+            if Viewmodel["Enabled"] then
+                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_VERTICAL_OFFSET", val)
+            end
+        end
+    })
+
+    ColorHSV = Viewmodel:CreateColorSlider({
+        ["Name"] = "Color",
+        ["Darker"] = true,
+        ["DefaultOpacity"] = 0.5,
+        ["Function"] = function(h, s, v, o)
+            ColorHSV["Hue"] = h
+            ColorHSV["Sat"] = s
+            ColorHSV["Val"] = v
+            if Viewmodel["Enabled"] then
+                Main()
+            end
+        end
+    })
+
+    MaterialDropdown = Viewmodel:CreateDropdown({
+        ["Name"] = "Material",
+        ["List"] = GetItems("Material"),
+        ["Default"] = "Neon",
+        ["HoverText"] = "Material to add to the viewmodel.",
+        ["Function"] = function()
+            if Viewmodel["Enabled"] then
+                Main()
+            end
+        end
+    })
+
+    Mode = Viewmodel:CreateDropdown({
+        ["Name"] = "Color Mode",
+        ["List"] = {"Normal", "Classic"},
+        ["Default"] = "Normal",
+        ["HoverText"] = "Choose how color is applied to the viewmodel",
+        ["Function"] = function()
+            if Viewmodel["Enabled"] then
+                Main()
+            end
+        end
+    })
+
+    for _, name in ipairs({"Rotation X", "Rotation Y", "Rotation Z"}) do
+        table.insert(Rots, Viewmodel:CreateSlider({
+            ["Name"] = name,
+            ["Min"] = 0,
+            ["Max"] = 360,
+            ["Function"] = function(val)
+                if Viewmodel["Enabled"] then
+                    local vm = gameCamera:FindFirstChild("Viewmodel")
+                    if vm then
+                        vm["RightHand"]["RightWrist"]["C1"] = oldC1 * CFrame.Angles(
+                            math.rad(Rots[1]["Value"]),
+                            math.rad(Rots[2]["Value"]),
+                            math.rad(Rots[3]["Value"])
+                        )
+                    end
+                end
+            end
+        }))
+    end
 end)
+
+
 
 --[[
 
@@ -8156,314 +8282,6 @@ end)
 	- The Velocity Custom Modules starts here.
 	- reformatted and fixed by: Copium
 ]]
-
-velo.run(function()
-        local ViewModel: table = {["Enabled"] = false}
-        local Mode: table = {["Value"] = "Classic"}
-        local Material: table = {["Value"] = "Neon"}
-        local ColorSlider: table = {
-                ["Hue"] = 0,
-                ["Sat"] = 0,
-                ["Value"] = 0
-        }
-        local Trans: table = {["Value"] = 0}
-        local Trans1: table = {["Value"] = 15}
-        local Depth: table = {["Value"] = 8}
-        local Horizontal: table = {["Value"] = 8}
-        local Vertical: table = {["Value"] = 8}
-        local RotX: table = {["Value"] = 0}
-        local RotY: table = {["Value"] = 0}
-        local RotZ: table = {["Value"] = 0}
-        local Color: table = {["Enabled"] = true}
-        local MaterialToggle: table = {["Enabled"] = true}
-        local Third: table = {["Enabled"] = true}
-        local Attributes: table = {["Enabled"] = true}
-        local Anim: table = {["Enabled"] = false}
-        local Old: table = {
-                ["Custom"] = {},
-                ["Anim"] = nil,
-                ["C1"] = nil,
-                ["Cam"] = nil
-        }
-        local Modes: table = {
-                ["Normal"] = function(part: object, original: highlight): void
-                        local highlight: instance = original or Instance.new("Highlight")
-                        highlight["FillColor"] = Color3.fromHSV(ColorSlider["Hue"], ColorSlider["Sat"], ColorSlider["Value"])
-                        highlight["FillTransparency"] = Trans["Value"] / 100
-                        highlight["OutlineColor"] = Color3.fromHSV(ColorSlider["Hue"], ColorSlider["Sat"], ColorSlider["Value"])
-                        highlight["OutlineTransparency"] = Trans1["Value"] / 100
-                        highlight["DepthMode"] = Enum["HighlightDepthMode"]["AlwaysOnTop"]
-                        highlight["Parent"] = part
-                        table.insert(Old["Custom"], highlight)
-                        if Color["Enabled"] then
-                                part["TextureID"] = ""
-                                if MaterialToggle["Enabled"] then
-                                        part["Material"] = Enum["Material"][Material["Value"]]
-                                end
-                        end
-                end,
-                ["Classic"] = function(part: object): void
-                        if Color["Enabled"] then
-                                part["TextureID"] = ""
-                                if MaterialToggle["Enabled"] then
-                                        part["Material"] = Enum["Material"][Material["Value"]]
-                                end
-                                part["Color"] = Color3.fromHSV(ColorSlider["Hue"], ColorSlider["Sat"], ColorSlider["Value"])
-                        end
-                end
-        }
-        local function Main()
-                local exist: boolean, handle: camera = pcall(function()
-                        return handle and handle:IsA("Part") and handle or gameCamera["Viewmodel"]:FindFirstChildWhichIsA("Accessory")["Handle"]
-                end)
-                if exist then
-                        Modes[Mode["Value"]](handle)
-                end
-                local exist2: boolean, handle2: object = pcall(function()
-                        for _, v in next, lplr["Character"]:GetChildren() do
-                                if v:IsA("Accessory") and v["Name"] == handle["Parent"]["Name"] and v:GetAttribute("InvItem") then
-                                        return v["Handle"]
-                                end
-                        end
-                end)
-                if exist2 and handle2 and Third["Enabled"] and Mode["Value"] == "Classic"  then
-                        Modes[Mode["Value"]](handle2)
-                end
-        end
-        local oldviewmodelC1 = gameCamera["Viewmodel"]["RightHand"]["RightWrist"]["C1"]
-        ViewModel = vape.Categories.Velocity:CreateModule({
-                ["Name"] = "ViewModel",
-                ["HoverText"] = "Customizes the viewmodel.",
-                ["Function"] = function(callback: boolean): void
-                        if callback then
-                                Old["Cam"] = gameCamera:WaitForChild("Viewmodel")
-                                task.spawn(function()
-                                        Main()
-                                end)
-                                table.insert(ViewModel["Connections"], Old["Cam"]["ChildAdded"]:Connect(Main))
-                                Old["Anim"] = store["ViewmodelController"]["playAnimation"]
-                                store["ViewmodelController"]["playAnimation"] = function(self, animid, details)
-                                        if animid == store["AnimationType"]["FP_WALK"] and Attributes["Enabled"] and Anim["Enabled"] then
-                                                return
-                                        end
-                                        return Old["Anim"](self, animid, details)
-                                end
-                                if Attributes["Enabled"] then
-                                        lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", -Depth["Value"] / 10)
-                                        lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", Horizontal["Value"] / 10)
-                                        lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_VERTICAL_OFFSET", Vertical["Value"] / 10)
-                                        pcall(function()
-                                                Old["C1"] = Old["Cam"]["RightHand"]["RightWrist"]["C1"]
-                                        end)
-                                end
-                        else
-                                if Old["Anim"] then
-                                        store["ViewmodelController"]["playAnimation"] = Old["Anim"]
-                                        Old["Anim"] = nil
-                                end
-                                if Old["C1"] then
-                                        pcall(function()
-                                                gameCamera["Viewmodel"]["RightHand"]["RightWrist"]["C1"] = Old["C1"]
-                                        end)
-                                        Old["C1"] = nil
-                                end
-                                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", 0)
-                                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", 0)
-                                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_VERTICAL_OFFSET", 0)
-                                for _, v in next, Old["Custom"] do
-                                        pcall(function()
-                                                v:Destroy()
-                                        end)
-                                end
-                                table.clear(Old["Custom"])
-                                Old["Cam"] = nil
-                        end
-                end
-        })
-        Mode = ViewModel:CreateDropdown({
-                ["Name"] = "Mode",
-                ["List"] = {
-                        "Normal",
-                        "Classic"
-                },
-                ["Default"] = "Classic",
-                ["HoverText"] = "Mode to customize the viewmodel.",
-                ["Function"] = function(value)
-                        if ViewModel["Enabled"] then
-                                ViewModel["ToggleButton"]()
-                                ViewModel["ToggleButton"]()
-                        end
-                end
-        })
-        Material = ViewModel:CreateDropdown({
-                ["Name"] = "Material",
-                ["List"] = GetItems("Material"),
-                ["Default"] = "Neon",
-                ["HoverText"] = "Material to add to the viewmodel.",
-                ["Function"] = function()
-                        if ViewModel["Enabled"] then
-                                Main()
-                        end
-                end
-        })
-        ColorSlider = ViewModel:CreateColorSlider({
-                ["Name"] = "Color",
-                ["HoverText"] = "Color of the viewmodel.",
-                ["Function"] = function(h, s, v, o)
-                        if ViewModel["Enabled"] then
-                                Main()
-                        end
-                end
-        })
-        Trans = ViewModel:CreateSlider({
-                ["Name"] = "Fill Transparency",
-                ["Min"] = 0,
-                ["Max"] = 100,
-                ["HoverText"] = "Transparency of the fill color.",
-                ["Function"] = function()
-                        if ViewModel["Enabled"] then
-                                Main()
-                        end
-                end,
-                ["Default"] = 15
-        })
-        Trans1 = ViewModel:CreateSlider({
-                ["Name"] = "Outline Transparency",
-                ["Min"] = 0,
-                ["Max"] = 100,
-                ["HoverText"] = "Transparency of the outline color.",
-                ["Function"] = function()
-                        if ViewModel["Enabled"] then
-                                Main()
-                        end
-                end,
-                ["Default"] = 0
-        })
-        Depth = ViewModel:CreateSlider({
-                ["Name"] = "Depth",
-                ["Min"] = 0,
-                ["Max"] = 24,
-                ["HoverText"] = "Depth value of the viewmodel.",
-                ["Function"] = function(val)
-                        if ViewModel["Enabled"] and Attributes["Enabled"] then
-                                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", -(val / 10))
-                        end
-                end,
-                ["Default"] = 8
-        })
-        Horizontal = ViewModel:CreateSlider({
-                ["Name"] = "Horizontal",
-                ["Min"] = 0,
-                ["Max"] = 24,
-                ["HoverText"] = "Horizontal value of the viewmodel.",
-                ["Function"] = function(val)
-                        if ViewModel["Enabled"] and Attributes["Enabled"] then
-                                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", (val / 10))
-                        end
-                end,
-                ["Default"] = 8
-        })
-        Vertical = ViewModel:CreateSlider({
-                ["Name"] = "Vertical",
-                ["Min"] = 0,
-                ["Max"] = 24,
-                ["HoverText"] = "Vertical value of the viewmodel.",
-                ["Function"] = function(val)
-                        if ViewModel["Enabled"] and Attributes["Enabled"] then
-                                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_VERTICAL_OFFSET", (val / 10))
-                        end
-                end,
-                ["Default"] = 8
-        })
-        RotX = ViewModel:CreateSlider({
-                ["Name"] = "Rotation X",
-                ["Min"] = 0,
-                ["Max"] = 360,
-                ["HoverText"] = "Rotation (X) of the viewmodel.",
-                ["Function"] = function(val)
-                        if ViewModel["Enabled"] and Attributes["Enabled"] then
-                                gameCamera["Viewmodel"]["RightHand"]["RightWrist"]["C1"] = oldviewmodelC1 * CFrame.Angles(math.rad(RotX["Value"]), math.rad(RotY["Value"]), math.rad(RotZ["Value"]))
-                        end
-                end,
-                ["Default"] = 0
-        })
-        RotY = ViewModel:CreateSlider({
-                ["Name"] = "Rotation Y",
-                ["Min"] = 0,
-                ["Max"] = 360,
-                ["HoverText"] = "Rotation (Y) of the viewmodel.",
-                ["Function"] = function(val)
-                        if ViewModel["Enabled"] and Attributes["Enabled"] then
-                                gameCamera["Viewmodel"]["RightHand"]["RightWrist"]["C1"] = oldviewmodelC1 * CFrame.Angles(math.rad(RotX["Value"]), math.rad(RotY["Value"]), math.rad(RotZ["Value"]))
-                        end
-                end,
-                ["Default"] = 0
-        })
-        RotZ = ViewModel:CreateSlider({
-                ["Name"] = "Rotation Z",
-                ["Min"] = 0,
-                ["Max"] = 360,
-                ["HoverText"] = "Rotation (Z) of the viewmodel.",
-                ["Function"] = function(val)
-                        if ViewModel["Enabled"] and Attributes["Enabled"] then
-                                gameCamera["Viewmodel"]["RightHand"]["RightWrist"]["C1"] = oldviewmodelC1 * CFrame.Angles(math.rad(RotX["Value"]), math.rad(RotY["Value"]), math.rad(RotZ["Value"]))
-                        end
-                end,
-                ["Default"] = 0
-        })
-        Color = ViewModel:CreateToggle({
-                ["Name"] = "Color",
-                ["HoverText"] = "Colors the viewmodel.",
-                ["Function"] = function()
-                        if ViewModel["Enabled"] then
-                                Main()
-                        end
-                end,
-                ["Default"] = true
-        })
-        MaterialToggle = ViewModel:CreateToggle({
-                ["Name"] = "Material",
-                ["HoverText"] = "Customizes the material.",
-                ["Function"] = function()
-                        if ViewModel["Enabled"] then
-                                Main()
-                        end
-                end,
-                ["Default"] = true
-        })
-        Third = ViewModel:CreateToggle({
-                ["Name"] = "Third Person",
-                ["HoverText"] = "Customizes the viewmodel in third person.",
-                ["Function"] = function()
-                        if ViewModel["Enabled"] then
-                                Main()
-                        end
-                end,
-                ["Default"] = true
-        })
-        Attributes = ViewModel:CreateToggle({
-                ["Name"] = "Attributes",
-                ["HoverText"] = "Customizes the size and rotation of the viewmodel.",
-                ["Function"] = function()
-                        if ViewModel["Enabled"] then
-                                ViewModel["ToggleButton"]()
-                                ViewModel["ToggleButton"]()
-                        end
-                end,
-                ["Default"] = true
-        })
-        Anim = ViewModel:CreateToggle({
-                ["Name"] = "No Animation",
-                ["HoverText"] = "Removes the bobbing animation.",
-                ["Function"] = function()
-                        if ViewModel["Enabled"] and Attributes["Enabled"] then
-                                ViewModel["ToggleButton"]()
-                                ViewModel["ToggleButton"]()
-                        end
-                end,
-                ["Default"] = false
-        })
-end)
 
 velo.run(function()
         local custom_armour: table = {};
