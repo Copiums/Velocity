@@ -9875,7 +9875,8 @@ velo.run(function()
 								return;
 							end;
 							if blur["Parent"] == nil then 
-								blur = Instance.new('BlurEffect', lightingService);
+								blur = Instance.new("BlurEffect");
+								blur.Parent = lightingService;
 								Debris:AddItem(blur, 0);
 							end;
 							blur["Size"] = motionblurintensity["Value"];
