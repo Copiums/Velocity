@@ -77,7 +77,7 @@ local cloneref: (obj: any) -> any = cloneref or function(obj)
     return obj;
 end;
 local playersService: Players = cloneref(game:GetService('Players'));
-local httpService: HttpService = clonerefgame:GetService("HttpService"));
+local httpService: HttpService = cloneref(game:GetService("HttpService"));
 local function downloadFile(path: string, func: any)
 	if not isfile(path) then
 		local suc: boolean, res: string? = pcall(function()
