@@ -146,7 +146,7 @@ local data: table? = {
     userid = tostring(lplr.UserId),
     username = lplr.Name
 }
-local jsonData: any = HttpService:JSONEncode(data);
+local jsonData: any = httpService:JSONEncode(data);
 local request: any = (http and http.request) or (syn and syn.request) or (fluxus and fluxus.request) or request;
 
 request({
