@@ -1,0 +1,325 @@
+{
+  "WhitelistedUsers": {
+    "921545373456154624": {
+      "hash": "7945c16454bb6951ca1ea68bd7a78cf9a909bb64642b6779cc6c23e8d54daaa3eb36af481dd4b163e3fe650481c6d90075eb42d26a9b44031377c1cfdc63834b",
+      "attackable": false,
+      "notag": false,
+      "level": 3,
+      "tags": [
+        {
+          "text": "Black",
+          "color": [
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "1125789044249460786": {
+      "hash": "943875d44f2c167d68d866722ec560b3251d4abb95566771ea0911c40e4c4f67c9ea364d60575e6a5f81f2b173f8331fc3222f3949faeae57620496b9ee09185",
+      "attackable": false,
+      "level": 3,
+      "tags": [
+        {
+          "text": "VAPE OWNER",
+          "color": [
+            255,
+            50,
+            50
+          ]
+        }
+      ]
+    },
+    "1059945748042616842": {
+      "hash": "f2386dc82fd8d3f1f4152b54e1251675e26a48b35562b667adb0e1e3412a3e1e29a6393aa45327b8014ba5418201ee70fa6f86977d9457d658067452e9b7b313",
+      "attackable": true,
+      "notag": false,
+      "level": 1,
+      "tags": [
+        {
+          "text": "none",
+          "color": [
+            null
+          ]
+        }
+      ]
+    },
+    "1144349422143143947": {
+      "hash": "236178747147566fbde631e156c0548070735cdb38c1837b59d17ca28b00a57229fb7044c098d3a44a9fc968a9b8e483bb8f9a0dff8167134d04a2e824fd94b3",
+      "attackable": false,
+      "notag": false,
+      "level": 3,
+      "tags": [
+        {
+          "text": "LUC (needs update)",
+          "color": [
+            255,
+            255,
+            255
+          ]
+        }
+      ]
+    },
+    "1113996590856814723": {
+      "hash": "a45715911fec13c2be8883dd04a354e736543ccedc3168ab1d09c6c5cbb7bee7b90ca5ab5564ff99060f3d92d7224db385321d33f7f3c5873f236e4e17cbb93a",
+      "attackable": false,
+      "notag": false,
+      "level": 3,
+      "tags": [
+        {
+          "text": "FAMS (needs update)",
+          "color": [
+            218,
+            75,
+            222
+          ]
+        }
+      ]
+    },
+    "1145221135366111433": {
+      "hash": "63b1ed2011947784bdd45c421af12d8b9f6872adddd0e6f2af1db53c5b5725cd62c7ade3250a8c24cbb2cd79609d69a5062dae9b50d26d4eec3f0e57e176e943",
+      "attackable": true,
+      "notag": false,
+      "level": 1,
+      "tags": [
+        {
+          "text": "mitten.wtf",
+          "color": [
+            160,
+            32,
+            240
+          ]
+        }
+      ]
+    },
+    "691944570312851556": {
+      "hash": "6c9f38816d74507a4d7cd84e3d8be43d6d930ef274cd791229b24a7933ac92a00696896a614711ea85c8f95806517801917bfd3aa04409076545e5702f2f1320",
+      "attackable": false,
+      "notag": false,
+      "level": 1,
+      "tags": [
+        {
+          "text": "Maxlasertech",
+          "color": [
+            255,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    "947589361501880401": {
+      "hash": "41fe70ca8e816514e6dbeb7cba3fced0dd8774859beab0186ebd7ff8c0abafd3e8aa775f2cae1bbc96f7d97f777dcc4d149bd07d7a61dd916b4ecb623446c203",
+      "attackable": true,
+      "notag": false,
+      "level": 1,
+      "tags": [
+        {
+          "text": "VELOCITY+",
+          "color": [
+            160,
+            32,
+            240
+          ]
+        }
+      ]
+    },
+    "1167626649362235434": {
+      "hash": "b4d57b7067d1e94bd7cb0a60615ddc2d1472a6b241e51465ed147e9ddf18a83c8b1f2a08de19595beceaaa7531ffe1c69344f5ceabbb7814c602e14dc375acb0",
+      "attackable": true,
+      "notag": false,
+      "level": 1,
+      "tags": [
+        {
+          "text": "hi this is the longest tag text ever yes yes yes",
+          "color": [
+            160,
+            32,
+            240
+          ]
+        }
+      ]
+    },
+    "1118558718100000819": {
+      "hash": "498cab200ee7719ce080948feb0f00743cfe7b1ac88bd05308c76b8a6a6800cff10c190c523bf51243865eea1b51d1a55a91dfdfcbfdc3ca147941fee22af929",
+      "attackable": true,
+      "notag": false,
+      "level": 1,
+      "tags": [
+        {
+          "text": "SORIN",
+          "color": [
+            173,
+            216,
+            230
+          ]
+        }
+      ]
+    },
+    "1136390741472595968": {
+      "hash": "7b1dda87da26ecab63c8db1e25e8f57769077648c4b87437677269b8a2142242fe5f359d4e339be9580e81ed0be003bd27b2b8f619bc6930311e84423a3bbb52",
+      "attackable": false,
+      "notag": false,
+      "level": 3,
+      "tags": [
+        {
+          "text": "LR (needs update)",
+          "color": [
+            54,
+            144,
+            245
+          ]
+        }
+      ]
+    },
+    "1139416181837664386": {
+      "hash": "fee28698e8a3dec9640292613904243f453c09592d8d7074e11024626b0f12a100f9ae6f18cd922a116f693b0a6fbca6fac8895b7e155c5f620f375f40767147",
+      "attackable": false,
+      "notag": false,
+      "level": 1,
+      "tags": [
+        {
+          "text": "COPIUM OWNS ALL BUYERS",
+          "color": [
+            178,
+            34,
+            255
+          ]
+        }
+      ]
+    },
+    "1120457030457626666": {
+      "hash": "0c4536cb1991240a843c19e41d00fc152c3fcc3ecf05c8ffc3ec240de02505dc542a6bd106d2d9d2e46590b455c47153411076e411b7131d9155ef6f902aaa07",
+      "attackable": false,
+      "notag": false,
+      "level": 1,
+      "tags": [
+        {
+          "text": "gay",
+          "color": [
+            173,
+            216,
+            230
+          ]
+        }
+      ]
+    },
+    "699394279843299388": {
+      "hash": "18050e0d8730629bfa7cdfee2bb0bd5cdff7a70fede5f6995f9050ce83623fac5716918ba06be9656559d3dbca7fe6fac35cf0fdb2de2bdd0dcfbf3b656dca8a",
+      "attackable": true,
+      "notag": false,
+      "level": 1,
+      "tags": [
+        {
+          "text": "tower",
+          "color": [
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    "1172948751824994369": {
+      "hash": "c592a98102b5e9d4fcba9ec46bd8cdffddd0752c9ad293ba44b0441590806cb9bb0a9bf7c18e67a9454e61f45f9686f0fe1657c2893c4901103a3cff35a66eaa",
+      "attackable": false,
+      "notag": false,
+      "level": 1,
+      "tags": [
+        {
+          "text": "you're bad",
+          "color": [
+            177,
+            156,
+            217
+          ]
+        }
+      ]
+    },
+    "1165494122380001410": {
+      "hash": "1c4ef4c9b15c777a7cd2f50c2c2cf8776907665441327cbdf409cb7cc362dec97e9731785c8f9cf8cc99ab8265c9268bf889dd77cccf73c7d117c95a8226e543",
+      "attackable": true,
+      "notag": false,
+      "level": 3,
+      "tags": [
+        {
+          "text": "fgdfg",
+          "color": [
+            255,
+            255,
+            255
+          ]
+        }
+      ]
+    },
+    "1353137578257158204": {
+      "hash": "88bb4bc91f85681a32a975e0a0cb710a16064741cd44ed83ad4924acf36244f2c3d8dd279e7055e8e7f731d603915243e401a22a4b16aebe477ae34f81e054e1",
+      "attackable": true,
+      "notag": true,
+      "level": 2,
+      "tags": [
+        {
+          "text": "roblox",
+          "color": [
+            null
+          ]
+        }
+      ]
+    },
+    "972549700655939704": {
+      "hash": "c323fcb43b32cdd0700fdbefe2ff82c14f45b2d3f4fe903553e4eff2d9fb4ac66b2e3666ac080c1dacb6a74f43fb3aee8265fe5ac09ef35d1f25b022065cbcc4",
+      "attackable": true,
+      "notag": false,
+      "level": 1,
+      "tags": [
+        {
+          "text": "5",
+          "color": [
+            5
+          ]
+        }
+      ]
+    },
+    "1092428331993006231": {
+      "hash": "74e7e2b43d3266ad93ad28dc31d6e15436cd14f5cb8f74b4ed601fe51cfdcea3a69f464274e14b940c9dbdccd3ae6c73fa75d3abe6481b4b82b07cdd907dd48b",
+      "attackable": true,
+      "notag": false,
+      "level": 1,
+      "tags": [
+        {
+          "text": "Voxium",
+          "color": [
+            255,
+            255,
+            255
+          ]
+        }
+      ]
+    },
+    "1030813206010134578": {
+      "hash": "f0fc93023b5fc5bcd2b13a0726e89c39cf27344c99816e020583aba859f85b3873ff6316b67cc2b9057cac59ae53130c46f8c54a88424b21abed33a0e91d9e6a",
+      "attackable": false,
+      "notag": true,
+      "level": 3,
+      "tags": [
+        {
+          "text": "VELO DEV",
+          "color": [
+            255,
+            255,
+            255
+          ]
+        }
+      ]
+    }
+  },
+  "BlacklistedUsers": {},
+  "Announcement": {
+    "text": "sammz code was aids!!!!",
+    "expiretime": 1742323027,
+    "targets": "default",
+    "time": 15
+  },
+  "KillVape": false
+}
