@@ -167,6 +167,14 @@ if not isfolder('newvape/sounds') then
 	makefolder('newvape/sounds');
 end;
 
+if not isfolder("newvape/profiles") then
+	makefolder("newvape/profiles");
+end;
+
+if not isfile("newvape/profiles/commit_velocity.txt") then
+	writefile("newvape/profiles/commit_velocity.txt", "");
+end;
+
 vape = loadstring(downloadFile('newvape/guis/'..gui..'.lua'), 'gui')();
 shared.vape = vape;
 
