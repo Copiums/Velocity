@@ -170,6 +170,45 @@ end;
 vape = loadstring(downloadFile('newvape/guis/'..gui..'.lua'), 'gui')();
 shared.vape = vape;
 
+local repoOwner, repoName, branch = "Copiums", "Velocity", "main"
+local baseApiUrl = ("https://api.github.com/repos/%s/%s/contents"):format(repoOwner, repoName)
+local baseRawUrl = ("https://raw.githubusercontent.com/%s/%s/refs/heads/%s"):format(repoOwner, repoName, branch)
+
+local function isfolder(p) local s,r=pcall(listfiles,p) return s and type(r)=="table" end
+local function isfile(p) local s,r=pcall(readfile,p) return s and r~=nil and r~="" end
+local function createfolders(p) if not isfolder(p) then makefolder(p) end end
+local function writefileSafe(p,c) if not isfile(p) then createfolders(p:match("(.+)/[^/]+$") or "") end pcall(writefile,p,c) end
+
+local function downloadFile(remotePath, localPath)
+    local url = baseRawUrl.."/"..remotePath
+    local suc, content = pcall(function() return game:HttpGet(url, true) end)
+    if suc and content then writefileSafe(localPath, content) else warn("Failed to download: "..url) end
+end
+
+local function syncFolder(remoteFolder, localFolder)
+    local url = baseApiUrl.."/"..remoteFolder.."?ref="..branch
+    local suc, res = pcall(function() return game:HttpGet(url, true) end)
+    if not suc then warn("Failed to get folder: "..remoteFolder) return end
+    local decodeSuc, files = pcall(function() return httpService:JSONDecode(res) end)
+    if not decodeSuc then warn("Failed to decode JSON for: "..remoteFolder) return end
+    createfolders(localFolder)
+    for _, file in next, files do
+        if file.type == "file" then
+            downloadFile(remoteFolder.."/"..file.name, localFolder.."/"..file.name)
+        elseif file.type == "dir" then
+            syncFolder(remoteFolder.."/"..file.name, localFolder.."/"..file.name)
+        end
+    end
+end
+
+createfolders("newvape")
+createfolders("newvape/games")
+createfolders("newvape/assets")
+syncFolder("games", "newvape/games")
+syncFolder("libraries", "newvape/libraries")
+syncFolder("assets", "newvape/assets")
+print("Update complete!")
+
 if not shared.VapeIndependent then
 	loadstring(downloadFile('newvape/games/universal.lua'), 'universal')();
 	if isfile('newvape/games/'..game.PlaceId..'.lua') then
