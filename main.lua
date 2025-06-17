@@ -82,7 +82,7 @@ local httpService: HttpService = cloneref(game:GetService("HttpService"));
 local function downloadFile(path: string, func: any)
 	if not isfile(path) then
 		local suc: boolean, res: string? = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true);
+			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true);
 		end);
 		if not suc or res == '404: Not Found' then
 			error(res);
@@ -178,63 +178,65 @@ end;
 vape = loadstring(downloadFile('newvape/guis/'..gui..'.lua'), 'gui')();
 shared.vape = vape;
 
-local repoOwner, repoName, branch = "Copiums", "Velocity", "main"
-local baseApiUrl = ("https://api.github.com/repos/%s/%s/contents"):format(repoOwner, repoName)
-local baseRawUrl = ("https://raw.githubusercontent.com/%s/%s/refs/heads/%s"):format(repoOwner, repoName, branch)
+local repoOwner, repoName, branch = "Copiums", "Velocity", "main";
+local baseApiUrl = ("https://api.github.com/repos/%s/%s/contents"):format(repoOwner, repoName);
+local baseRawUrl = ("https://raw.githubusercontent.com/%s/%s/refs/heads/%s"):format(repoOwner, repoName, branch);
 
-local function isfile(p) local s, r = pcall(readfile, p) return s and r ~= nil and r ~= "" end
-local function isfolder(p) local s, r = pcall(listfiles, p) return s and type(r) == "table" end
-local function createfolders(p) if not isfolder(p) then makefolder(p) end end
-local function writefileSafe(p, c) if not isfile(p) then createfolders(p:match("(.+)/[^/]+$") or "") end pcall(writefile, p, c) end
+local function isfile(p) local s, r = pcall(readfile, p) return s and r ~= nil and r ~= "" end;
+local function isfolder(p) local s, r = pcall(listfiles, p) return s and type(r) == "table" end;
+local function createfolders(p) if not isfolder(p) then makefolder(p) end end;
+local function writefileSafe(p, c) if not isfile(p) then createfolders(p:match("(.+)/[^/]+$") or "") end pcall(writefile, p, c) end;
 
 local repoOwner, repoName, branch = "Copiums", "Velocity", "main"
-local baseApiUrl = ("https://api.github.com/repos/%s/%s/contents"):format(repoOwner, repoName)
-local baseRawUrl = ("https://raw.githubusercontent.com/%s/%s/%s"):format(repoOwner, repoName, branch)
-local commitsApiUrl = ("https://api.github.com/repos/%s/%s/commits/%s"):format(repoOwner, repoName, branch)
+local baseApiUrl = ("https://api.github.com/repos/%s/%s/contents"):format(repoOwner, repoName);
+local baseRawUrl = ("https://raw.githubusercontent.com/%s/%s/%s"):format(repoOwner, repoName, branch);
+local commitsApiUrl = ("https://api.github.com/repos/%s/%s/commits/%s"):format(repoOwner, repoName, branch);
 
 local function downloadFiles(remotePath, localPath)
-	local url = baseRawUrl .. "/" .. remotePath
-	local suc, content = pcall(function() return game:HttpGet(url, true) end)
+	local url = baseRawUrl .. "/" .. remotePath;
+	local suc, content = pcall(function() return game:HttpGet(url, true) end);
 	if suc and content then
-		writefileSafe(localPath, content)
+		writefileSafe(localPath, content);
 	else
-		warn("Failed to download: " .. url)
-	end
-end
+		warn("Failed to download: " .. url);
+	end;
+end;
 
 local function syncFolder(remoteFolder, localFolder)
-	local url = baseApiUrl .. "/" .. remoteFolder .. "?ref=" .. branch
-	local suc, res = pcall(function() return game:HttpGet(url, true) end)
-	if not suc then warn("Failed to get folder: " .. remoteFolder) return end
-	local decodeSuc, files = pcall(function() return httpService:JSONDecode(res) end)
-	if not decodeSuc then warn("Failed to decode JSON: " .. remoteFolder) return end
-	createfolders(localFolder)
+	local url = baseApiUrl .. "/" .. remoteFolder .. "?ref=" .. branch;
+	local suc, res = pcall(function() return game:HttpGet(url, true) end);
+	if not suc then warn("Failed to get folder: " .. remoteFolder) return; end;
+	local decodeSuc, files = pcall(function() return httpService:JSONDecode(res) end);
+	if not decodeSuc then warn("Failed to decode JSON: " .. remoteFolder) return; end;
+	createfolders(localFolder);
 	for _, file in next, files do
 		if file.type == "file" then
-			downloadFiles(remoteFolder .. "/" .. file.name, localFolder .. "/" .. file.name)
+			downloadFiles(remoteFolder .. "/" .. file.name, localFolder .. "/" .. file.name);
 		elseif file.type == "dir" then
-			syncFolder(remoteFolder .. "/" .. file.name, localFolder .. "/" .. file.name)
-		end
-	end
-end
+			syncFolder(remoteFolder .. "/" .. file.name, localFolder .. "/" .. file.name);
+		end;
+	end;
+end;
 
-local filepath = "newvape/profiles/commit_velocity.txt"
+local filepath = "newvape/profiles/commit_velocity.txt";
 local function getLatestSHA()
-	local suc, res = pcall(function() return game:HttpGet(commitsApiUrl, true) end)
-	if not suc then return nil end
-	local data = httpService:JSONDecode(res)
-	return data.sha or (data[1] and data[1].sha)
-end
-
-local latestSHA = getLatestSHA()
-local storedSHA = isfile(filepath) and readfile(filepath) or ""
+	local suc, res = pcall(function() return game:HttpGet(commitsApiUrl, true) end);
+	if not suc then return nil; end;
+	local data = httpService:JSONDecode(res);
+	return data.sha or (data[1] and data[1].sha);
+end;
+local function trim(s)
+    return (s:gsub("^%s*(.-)%s*$", "%1"));
+end;
+local latestSHA = getLatestSHA();
+local storedSHA = isfile(filepath) and readfile(filepath) or "";
 if latestSHA and latestSHA ~= storedSHA then
-	syncFolder("games", "newvape/games")
-	syncFolder("assets", "newvape/assets")
-	syncFolder("libraries", "newvape/libraries")
-	writefile(filepath, latestSHA)
-	print("Update complete!")
-end
+	syncFolder("games", "newvape/games");
+	syncFolder("assets", "newvape/assets");
+	syncFolder("libraries", "newvape/libraries");
+	writefile(filepath, latestSHA);
+	print("Update complete!");
+end;
 
 if not shared.VapeIndependent then
 	loadstring(downloadFile('newvape/games/universal.lua'), 'universal')();
