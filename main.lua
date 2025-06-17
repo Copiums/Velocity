@@ -82,7 +82,7 @@ local httpService: HttpService = cloneref(game:GetService("HttpService"));
 local function downloadFile(path: string, func: any)
 	if not isfile(path) then
 		local suc: boolean, res: string? = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/Copiums/Velocity/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true);
+			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true);
 		end);
 		if not suc or res == '404: Not Found' then
 			error(res);
@@ -172,15 +172,12 @@ shared.vape = vape;
 
 if not shared.VapeIndependent then
 	loadstring(downloadFile('newvape/games/universal.lua'), 'universal')();
-	loadstring(downloadFile('newvape/games/VelocityUniversal.lua'), 'VelocityUniversal')();
-	loadstring(downloadFile('newvape/games/Velocity.lua'), 'Velocity')();	
-	loadstring(downloadFile('newvape/games/lobby.lua'), 'lobby')();
 	if isfile('newvape/games/'..game.PlaceId..'.lua') then
 		loadstring(readfile('newvape/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...);
 	else
 		if not shared.VapeDeveloper then
 			local suc: boolean, res: string? = pcall(function()
-				return game:HttpGet('https://raw.githubusercontent.com/Copiums/Velocity/'..readfile('newvape/profiles/commit.txt')..'/games/'..game.PlaceId..'.lua', true);
+				return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/games/'..game.PlaceId..'.lua', true);
 			end);
 			if suc and res ~= '404: Not Found' then
 				loadstring(downloadFile('newvape/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...);
