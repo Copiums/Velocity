@@ -29,7 +29,6 @@
                                        <___'<___'                                                       
 
 ]]--
-print("dsfsdf");
 local velo: table = {};
 shared.nuker_range = 30;
 shared.velocity_client = true;
