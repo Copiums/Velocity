@@ -201,14 +201,31 @@ local function syncFolder(remoteFolder, localFolder)
     end
 end
 
-createfolders("newvape")
-createfolders("newvape/assets")
-createfolders("newvape/libraries")
-createfolders("newvape/games")
-syncFolder("games", "newvape/games")
-syncFolder("assets", "newvape/assets")
-syncFolder("libraries", "newvape/libraries")
-print("Update complete!")
+local filepath = "newvape/profiles/commit_velocity.txt"
+local function getLatestSHA()
+    local suc, res = pcall(function()
+        return game:HttpGet(commitsApiUrl, true);
+    end);
+    if not suc then
+        return nil;
+    end;
+    return httpService:JSONDecode(res).sha;
+end;
+local latestSHA = getLatestSHA()
+if not latestSHA then return end
+local storedSHA = isfile(filepath) and readfile(filepath) or ""
+if latestSHA ~= storedSHA then
+    createfolders("newvape/assets")
+    createfolders("newvape/libraries")
+    createfolders("newvape/games")
+    syncFolder("games", "newvape/games")
+    syncFolder("assets", "newvape/assets")
+    syncFolder("libraries", "newvape/libraries")
+    if isfile(filepath) then
+        writefile(filepath, latestSHA)
+    end
+    print("Update complete!")
+end
 
 if not shared.VapeIndependent then
 	loadstring(downloadFile('newvape/games/universal.lua'), 'universal')();
