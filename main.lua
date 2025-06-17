@@ -172,6 +172,8 @@ shared.vape = vape;
 
 if not shared.VapeIndependent then
 	loadstring(downloadFile('newvape/games/universal.lua'), 'universal')();
+	loadstring(downloadFile('newvape/games/VelocityUniversal.lua'), 'VelocityUniversal')();
+	loadstring(downloadFile('newvape/games/Velocity.lua'), 'Velocity')();	
 	if isfile('newvape/games/'..game.PlaceId..'.lua') then
 		loadstring(readfile('newvape/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...);
 	else
