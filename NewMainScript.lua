@@ -25,7 +25,7 @@
         - Xylex/7GrandDad - developer / organizer
 ]]--
 
-local isfile: (string) -> boolean = isfile or function(file: string): booleanAdd commentMore actions
+local isfile: (string) -> boolean = isfile or function(file: string): boolean
     local suc: boolean, res: string? = pcall(function(): string? return readfile(file) end);
     return suc and res ~= nil;
 end;
