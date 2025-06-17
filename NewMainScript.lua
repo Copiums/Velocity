@@ -47,14 +47,10 @@ local function downloadFile(path: string, func: ((string) -> any)?): string
 	return (func or readfile)(path);
 end;
 
-local function wipeFolder(path: string)
-	if not isfolder(path) then 
-        	return; 
-    	end;
-	for _, file: string in listfiles(path) do
-		if file:find('loader') then 
-           		 continue;
-        	end;
+local function wipeFolder(path)
+	if not isfolder(path) then return end
+	for _, file in listfiles(path) do
+		if file:find('loader') then continue end
 		if isfile(file) and select(1, readfile(file):find('--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.')) == 1 then
 			delfile(file);
 		end;
