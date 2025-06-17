@@ -179,7 +179,7 @@ local function isfile(p) local s,r=pcall(readfile,p) return s and r~=nil and r~=
 local function createfolders(p) if not isfolder(p) then makefolder(p) end end
 local function writefileSafe(p,c) if not isfile(p) then createfolders(p:match("(.+)/[^/]+$") or "") end pcall(writefile,p,c) end
 
-local function downloadFile(remotePath, localPath)
+local function downloadFiles(remotePath, localPath)
     local url = baseRawUrl.."/"..remotePath
     local suc, content = pcall(function() return game:HttpGet(url, true) end)
     if suc and content then writefileSafe(localPath, content) else warn("Failed to download: "..url) end
@@ -194,7 +194,7 @@ local function syncFolder(remoteFolder, localFolder)
     createfolders(localFolder)
     for _, file in next, files do
         if file.type == "file" then
-            downloadFile(remoteFolder.."/"..file.name, localFolder.."/"..file.name)
+            downloadFiles(remoteFolder.."/"..file.name, localFolder.."/"..file.name)
         elseif file.type == "dir" then
             syncFolder(remoteFolder.."/"..file.name, localFolder.."/"..file.name)
         end
@@ -202,11 +202,12 @@ local function syncFolder(remoteFolder, localFolder)
 end
 
 createfolders("newvape")
-createfolders("newvape/games")
 createfolders("newvape/assets")
+createfolders("newvape/libraries")
+createfolders("newvape/games")
 syncFolder("games", "newvape/games")
-syncFolder("libraries", "newvape/libraries")
 syncFolder("assets", "newvape/assets")
+syncFolder("libraries", "newvape/libraries")
 print("Update complete!")
 
 if not shared.VapeIndependent then
