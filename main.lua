@@ -231,6 +231,7 @@ end;
 local latestSHA = getLatestSHA();
 local storedSHA = isfile(filepath) and readfile(filepath) or "";
 if latestSHA and latestSHA ~= storedSHA then
+	vape:CreateNotification('Finished Loading', 'Press the button in the top right or shift to update', 5);
 	syncFolder("games", "newvape/games");
 	syncFolder("assets", "newvape/assets");
 	syncFolder("libraries", "newvape/libraries");
