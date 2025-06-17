@@ -198,7 +198,119 @@ velo.run(function()
 		["Tooltip"] = 'Automatically opens lucky crates, piston inspired!'
 	})
 end)
-	
+
+velo.run(function()
+	local Card: table = {["Enabled"] = false};
+	local CardGradient: table = {["Enabled"] = false};
+	local Highlight: table = {};
+	local HighlightColor: table = {};
+	local CardColor: table = {};
+	local CardColor2: table = {};
+	local Object: table = {};
+	local Round: table = {};
+	local CardFunc: () -> () = function()
+		if not lplr.PlayerGui:FindFirstChild('QueueApp') and Card["Enabled"] then 
+			return;
+		end;
+		local card: Frame = lplr.PlayerGui.QueueApp:WaitForChild('1', math.huge);
+		local corners: UICorner = card:FindFirstChildOfClass('UICorner') or Instance.new('UICorner', card);
+		corners.CornerRadius = UDim.new(0, Round["Value"]);
+		card.BackgroundColor3 = Color3.fromHSV(CardColor["Hue"], CardColor["Sat"], CardColor["Value"]);
+        if not table.find(Object, corners) then
+            table.insert(Object, corners);
+        end;
+		if Highlight["Enabled"] then 
+			local stroke: UIStroke? = card:FindFirstChildOfClass('UIStroke') or Instance.new('UIStroke', card);
+			stroke.Thickness = 1.7;
+			stroke.Color = Color3.fromHSV(HighlightColor["Hue"], HighlightColor["Sat"], HighlightColor["Value"]);
+			if not table.find(Object, stroke) then
+				table.insert(Object, stroke);
+			end;
+		else
+			local stroke: UIStroke? = card:FindFirstChildOfClass("UIStroke") or Instance.new('UIStroke', card);
+            if stroke then
+                stroke:Destroy();
+            end;
+		end;
+		if CardGradient["Enabled"] then
+			card.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+			local gradient: UIGradient = card:FindFirstChildWhichIsA('UIGradient') or Instance.new('UIGradient', card);
+			gradient.Color = ColorSequence.new({
+				[1] = ColorSequenceKeypoint.new(0, Color3.fromHSV(CardColor["Hue"], CardColor["Sat"], CardColor["Value"])), 
+				[2] = ColorSequenceKeypoint.new(1, Color3.fromHSV(CardColor2["Hue"], CardColor2["Sat"], CardColor2["Value"]))
+			});
+			if not table.find(Object, gradient) then
+				table.insert(Object, gradient);
+			end;
+		end;
+	end;
+	Card = vape.Legit:CreateModule({
+		["Name"] = 'QueueCardVisuals',
+		["Function"] = function(callback: boolean): void
+			if callback then 
+				pcall(CardFunc);
+				table.insert(Card.Connections, lplr.PlayerGui.ChildAdded:Connect(CardFunc));
+			else
+                for _, x in next, Object do
+                    if x and x.Destroy then
+                        x:Destroy();
+                    end;
+                end;
+                Object = {}
+                for _, v in next, Card.Connections do
+                    if v.Disconnect then
+                        v:Disconnect();
+                    end;
+                end;
+                Card.Connections = {};
+            end;
+		end;
+	});
+	CardGradient = Card:CreateToggle({
+		["Name"] = 'Gradient',
+		["Function"] = function(callback: boolean): void
+			pcall(function() CardColor2.Object.Visible = callback end) 
+		end
+	});
+	Round = Card:CreateSlider({
+		["Name"] = 'Rounding',
+		["Min"] = 0,
+		["Max"] = 20,
+		["Default"] = 4,
+		["Function"] = function(value: number): ()
+			for i: number, v: UICorner? in Object do 
+				if v.ClassName == 'UICorner' then 
+					v.CornerRadius = value;
+				end;
+			end;
+		end;
+	})
+	CardColor = Card:CreateColorSlider({
+		["Name"] = 'Color',
+		["Function"] = function()
+			task.spawn(pcall, CardFunc)
+		end
+	});
+	CardColor2 = Card:CreateColorSlider({
+		["Name"] = 'Color 2',
+		["Function"] = function()
+			task.spawn(pcall, CardFunc)
+		end
+	});
+	Highlight = Card:CreateToggle({
+		["Name"] = 'Highlight',
+		["Function"] = function()
+			task.spawn(pcall, CardFunc)
+		end
+	});
+	HighlightColor = Card:CreateColorSlider({
+		["Name"] = 'Highlight Color',
+		["Function"] = function()
+			task.spawn(pcall, CardFunc)
+		end;
+	});
+end);
+
 velo.run(function()
 	local HotbarVisuals: table = {}
 	local HotbarRounding: table  = {}
@@ -389,114 +501,4 @@ velo.run(function()
 	HotbarHighlightColor.Object.Visible = false
 end);
 
-velo.run(function()
-	local Card: table = {["Enabled"] = false};
-	local CardGradient: table = {["Enabled"] = false};
-	local Highlight: table = {};
-	local HighlightColor: table = {};
-	local CardColor: table = {};
-	local CardColor2: table = {};
-	local Object: table = {};
-	local Round: table = {};
-	local CardFunc: () -> () = function()
-		if not lplr.PlayerGui:FindFirstChild('QueueApp') and Card["Enabled"] then 
-			return;
-		end;
-		local card: Frame = lplr.PlayerGui.QueueApp:WaitForChild('1', math.huge);
-		local corners: UICorner = card:FindFirstChildOfClass('UICorner') or Instance.new('UICorner', card);
-		corners.CornerRadius = UDim.new(0, Round["Value"]);
-		card.BackgroundColor3 = Color3.fromHSV(CardColor["Hue"], CardColor["Sat"], CardColor["Value"]);
-        if not table.find(Object, corners) then
-            table.insert(Object, corners);
-        end;
-		if Highlight["Enabled"] then 
-			local stroke: UIStroke? = card:FindFirstChildOfClass('UIStroke') or Instance.new('UIStroke', card);
-			stroke.Thickness = 1.7;
-			stroke.Color = Color3.fromHSV(HighlightColor["Hue"], HighlightColor["Sat"], HighlightColor["Value"]);
-			if not table.find(Object, stroke) then
-				table.insert(Object, stroke);
-			end;
-		else
-			local stroke: UIStroke? = card:FindFirstChildOfClass("UIStroke") or Instance.new('UIStroke', card);
-            if stroke then
-                stroke:Destroy();
-            end;
-		end;
-		if CardGradient["Enabled"] then
-			card.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
-			local gradient: UIGradient = card:FindFirstChildWhichIsA('UIGradient') or Instance.new('UIGradient', card);
-			gradient.Color = ColorSequence.new({
-				[1] = ColorSequenceKeypoint.new(0, Color3.fromHSV(CardColor["Hue"], CardColor["Sat"], CardColor["Value"])), 
-				[2] = ColorSequenceKeypoint.new(1, Color3.fromHSV(CardColor2["Hue"], CardColor2["Sat"], CardColor2["Value"]))
-			});
-			if not table.find(Object, gradient) then
-				table.insert(Object, gradient);
-			end;
-		end;
-	end;
-	Card = vape.Legit:CreateModule({
-		["Name"] = 'QueueCardVisuals',
-		["Function"] = function(callback: boolean): void
-			if callback then 
-				pcall(CardFunc);
-				table.insert(Card.Connections, lplr.PlayerGui.ChildAdded:Connect(CardFunc));
-			else
-                for _, x in next, Object do
-                    if x and x.Destroy then
-                        x:Destroy();
-                    end;
-                end;
-                Object = {}
-                for _, v in next, Card.Connections do
-                    if v.Disconnect then
-                        v:Disconnect();
-                    end;
-                end;
-                Card.Connections = {};
-            end;
-		end;
-	});
-	CardGradient = Card:CreateToggle({
-		["Name"] = 'Gradient',
-		["Function"] = function(callback: boolean): void
-			pcall(function() CardColor2.Object.Visible = callback end) 
-		end
-	});
-	Round = Card:CreateSlider({
-		["Name"] = 'Rounding',
-		["Min"] = 0,
-		["Max"] = 20,
-		["Default"] = 4,
-		["Function"] = function(value: number): ()
-			for i: number, v: UICorner? in Object do 
-				if v.ClassName == 'UICorner' then 
-					v.CornerRadius = value;
-				end;
-			end;
-		end;
-	})
-	CardColor = Card:CreateColorSlider({
-		["Name"] = 'Color',
-		["Function"] = function()
-			task.spawn(pcall, CardFunc)
-		end
-	});
-	CardColor2 = Card:CreateColorSlider({
-		["Name"] = 'Color 2',
-		["Function"] = function()
-			task.spawn(pcall, CardFunc)
-		end
-	});
-	Highlight = Card:CreateToggle({
-		["Name"] = 'Highlight',
-		["Function"] = function()
-			task.spawn(pcall, CardFunc)
-		end
-	});
-	HighlightColor = Card:CreateColorSlider({
-		["Name"] = 'Highlight Color',
-		["Function"] = function()
-			task.spawn(pcall, CardFunc)
-		end;
-	});
-end);
+
