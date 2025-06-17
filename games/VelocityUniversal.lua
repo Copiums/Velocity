@@ -6132,10 +6132,6 @@ velo.run(function()
 							oldflying = flying
 						end
 					else
-						if GamingChair["Enabled"] then
-							GamingChair:ToggleButton();
-							GamingChair:ToggleButton();
-						end;
 						chair.Anchored = true
 						chairlegs.Anchored = true
 						chairfan.Anchored = true
