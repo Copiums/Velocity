@@ -74,7 +74,7 @@ if not shared.VapeDeveloper then
 	local commit: string? = subbed:find('currentOid');
 	commit = commit and subbed:sub(commit + 13, commit + 52) or nil;
 	commit = commit and #commit == 40 and commit or 'main';
-	if commit == 'main' or (isfile('newvape/profiles/commit.txt') and readfile('newvape/profiles/commit.txt') or '') ~= commit thenAdd commentMore actions
+	if commit == 'main' or (isfile('newvape/profiles/commit.txt') and readfile('newvape/profiles/commit.txt') or '') ~= commit then
 		wipeFolder('newvape');
 		wipeFolder('newvape/games');
 		wipeFolder('newvape/guis');
