@@ -10028,7 +10028,7 @@ velo.run(function()
 	custom_char = vape.Categories.Velocity:CreateModule({
 		Name = 'CustomCharacter',
 		HoverText = 'Customizes your character.',
-		Function = function(callback)
+		Function = function(callback: boolean): void
 			if callback then
 				if custom_char_headless["Enabled"] then
 					task.spawn(function()
