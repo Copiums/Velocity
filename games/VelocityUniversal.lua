@@ -10010,6 +10010,236 @@ velo.run(function()
 end)
 
 velo.run(function()
+	local custom_char: table = {["Enabled"] = false};
+	local custom_char_headless: table = {["Enabled"] = false};
+	local custom_char_fc: table = {};
+	local custom_char_oc: table = {};
+	local custom_char_ft: table = {};
+	local custom_char_ot: table = {};
+	local y, z, z1 = nil, nil, nil;
+	local function isAlive(v: Player): Boolean
+		if v.Character and v.Character:FindFirstChild("Humanoid") then
+			if v.Character.Humanoid.Health > 0 and v.Character:FindFirstChild("HumanoidRootPart") then
+				return true;
+			end;
+		end;
+		return false;
+	end;
+	custom_char = vape.Categories.Velocity:CreateModule({
+		Name = 'CustomCharacter',
+		HoverText = 'Customizes your character.',
+		Function = function(callback)
+			if callback then
+				if custom_char_headless["Enabled"] then
+					task.spawn(function()
+						repeat task.wait()
+							local old: any, yz: any = nil, nil;
+							local x: any = old;
+							if isAlive(lplr) and lplr.Character and lplr.Character:FindFirstChild("Head") then
+								lplr["Character"]["Head"]["Transparency"] = 1
+								y = lplr["Character"]["Head"]:FindFirstChild('face');
+								if yz then
+									old = yz;
+									y1["Parent"] = workspace;
+								end;
+								for _, v in next, lplr.Character:GetChildren() do
+									if v:IsA'Accessory' then
+										v["Handle"]["Transparency"] = 0;
+									end;
+								end;
+							end;
+						until not custom_char_headless["Enabled"];
+					end);
+				else
+					lplr["Character"]["Head"]["Transparency"] = 0;
+					for _, v in pairs(lplr.Character:GetChildren()) do
+						if v:IsA'Accessory' then
+							v["Handle"]["Transparency"] = 0;
+						end;
+					end;
+					if old then
+						old["Parent"] = entitylib["character"]["Head"];
+						old = x;
+					end;
+				end;
+				pcall(function()
+					local cc = {};
+					cc.__index = cc;
+					function cc.n(a, b, c, d, e, f, g, h)
+						local self = setmetatable({}, cc);
+						self.a = a;
+						self.b = b;
+						self.c = c;
+						self.d = d;
+						self.e = e;
+						self.f = f;
+						self.g = g;
+						self.h = h;
+						return self;
+					end
+					function cc:s()
+						local a = self.a;
+						local b = self.b;
+						local c = self.c;
+						local d = self.d;
+						local e = self.e;
+						local f = self.f;
+						local g = self.g;
+						local h1 = self.h;
+						local cc_meta = {
+							__index = function(self, x)
+								if x == 'on' then
+									return function()
+										local h = Instance.new('Highlight');
+										h.Parent = lplr.Character;
+										h.DepthMode = 'Occluded';
+										h.Enabled = callback;
+										h.FillColor = Color3.fromHSV(a, b, c);
+										h.FillTransparency = g / 100;
+										h.Name = 'velo_cc';
+										h.OutlineColor = Color3.fromHSV(d, e, f);
+										h.OutlineTransparency = h1 / 100;
+										h.Adornee = lplr.Character;
+										z = lplr.CharacterAdded:Connect(function()
+											z1 = lplr.Character.ChildAdded:Connect(function(x)
+												local h = Instance.new('Highlight');
+												h.Parent = x;
+												h.DepthMode = 'Occluded';
+												h["Enabled"] = callback;
+												h.FillColor = Color3.fromHSV(a, b, c);
+												h.FillTransparency = g / 100;
+												h.Name = 'velo_cc';
+												h.OutlineColor = Color3.fromHSV(d, e, f);
+												h.OutlineTransparency = h1 / 100;
+												h.Adornee = x;
+											end);
+										end);
+									end;
+								end;
+							end;
+						};
+						local cc_val = setmetatable({}, cc_meta);
+						cc_val:on();
+					end;
+					local cc_vd = cc.n(
+						custom_char_fc.Hue,
+						custom_char_fc.Sat,
+						custom_char_fc.Val,
+						custom_char_oc.Hue,
+						custom_char_oc.Sat,
+						custom_char_oc.Val,
+						custom_char_ft.Value,
+						custom_char_ot.Value
+					)
+					cc_vd:s();
+				end)
+			else
+				local cc = {};
+				cc.__index = cc;
+				function cc.n()
+					local self = setmetatable({}, cc);
+					return self;
+				end;
+				function cc:s()
+					local cc_meta = {
+						__index = function(self, x)
+							if x == 'on' then
+								return function()
+									if z then
+										z:Disconnect();
+									end;
+									if z1 then
+										z1:Disconnect();
+									end;
+									for _, v in next, lplr.Character:GetDescendants() do
+										if v:IsA('Highlight') then
+											v:Destroy();
+										end;
+									end;
+								end;
+							end;
+						end;
+					};
+					local cc_val = setmetatable({}, cc_meta);
+					cc_val:on();
+				end;
+				local cc_vd = cc.n();
+				cc_vd:s();
+			end;
+		end;
+	});
+	custom_char_fc = custom_char:CreateColorSlider({
+		["Name"] = 'Fill Color',
+		["HoverText"] = 'Color to fill your character.',
+		["Function"] = function(h, s, v) 
+			custom_char_fc.Hue = h;
+			custom_char_fc.Sat = s;
+			custom_char_fc.Val = v;
+			if custom_char["Enabled"] then
+				for _, v in next, lplr.Character:GetDescendants() do
+					if v:IsA('Highlight') then
+						v.FillColor = Color3.fromHSV(custom_char_fc.Hue, custom_char_fc.Sat, custom_char_fc.Val);
+					end;
+				end;
+			end;
+		end;
+	});
+	custom_char_oc = custom_char:CreateColorSlider({
+		["Name"] = 'Outline Color',
+		["HoverText"] = 'Color to outline your character.',
+		["Function"] = function(h, s, v) 
+			custom_char_oc.Hue = h;
+			custom_char_oc.Sat = s;
+			custom_char_oc.Val = v;
+			if custom_char["Enabled"] then
+				for _, v in next, lplr.Character:GetDescendants() do
+					if v:IsA('Highlight') then
+						v.OutlineColor = Color3.fromHSV(custom_char_oc.Hue, custom_char_oc.Sat, custom_char_oc.Val);
+					end;
+				end;
+			end;
+		end;
+	});
+	custom_char_ft = custom_char:CreateSlider({
+		["Name"] = 'Fill Transparency',
+		["Min"] = 0,
+		["Max"] = 100,
+		["HoverText"] = 'Transparency of the character color fill.',
+		["Function"] = function(val)
+			if custom_char["Enabled"] then
+				for _, v in next, lplr.Character:GetDescendants() do
+					if v:IsA('Highlight') then
+						v.FillTransparency = val / 100;
+					end;
+				end;
+			end;
+		end,
+		["Default"] = 50
+	});
+	custom_char_ot = custom_char:CreateSlider({
+		["Name"] = 'Outline Transparency',
+		["Min"] = 0,
+		["Max"] = 100,
+		["HoverText"] = 'Transparency of the character outline fill.',
+		["Function"] = function(val)
+			if custom_char["Enabled"] then
+				for _, v in next, lplr.Character:GetDescendants() do
+					if v:IsA('Highlight') then
+						v.OutlineTransparency = val / 100;
+					end;
+				end;
+			end;
+		end,
+		["Default"] = 0
+	});
+	custom_char_headless = custom_char:CreateToggle({
+		["Name"] = "Headless",
+		["HoverText"] = "Gives you headless",
+		["Function"] = function() end
+	});
+end)
+
+velo.run(function()
 	local Cape: table = {["Enabled"] = false};
 	local Texture: any;
 	local part: any, motor: any
