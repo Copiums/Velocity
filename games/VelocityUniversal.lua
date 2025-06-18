@@ -10605,7 +10605,7 @@ velo.run(function()
     })
 end)
 
-velo.run(function()
+--[[velo.run(function()
     local ServerHop: table = {["Enabled"] = false};
     local PlaceId: number? = game.PlaceId;
     local SortOption: table = {["Value"] = 'Descending'};
@@ -10658,7 +10658,7 @@ velo.run(function()
         end;
     })
 end)
-
+]]--
 velo.run(function()
     	local AirJump: table = {["Enabled"] = false}
 	local Mode: table = {["Value"] = "State"}
