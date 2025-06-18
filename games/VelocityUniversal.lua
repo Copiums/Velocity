@@ -10657,41 +10657,6 @@ velo.run(function()
             end;
         end;
     })
-    ServerHop:CreateButton({
-        ["Name"] = 'Join Lowest Ping Server',
-        ["Function"] = function()
-            notif('Vape', 'Finding lowest ping server...', 5)
-            task.spawn(function()
-                local cursor: string?, servers: table? = '', {}
-                repeat
-                    local url: string? = ("https://games.roblox.com/v1/games/%d/servers/Public?limit=100&cursor=%s"):format(PlaceId, cursor);
-                    local data: any = httpService:JSONDecode(game:HttpGet(url));
-                    cursor = data.nextPageCursor or '';
-                    for _, s in next, data.data do
-                        if s.id ~= game.JobId then table.insert(servers, s); end;
-                    end;
-                until cursor == '' or #servers >= 200;
-                if #servers == 0 then
-                    notif('Vape', 'No other servers found.', 5);
-                    return;
-                end;
-                local lowestPing, bestServer = math.huge, nil
-                for _, s in next, servers do
-                    local success: boolean, ping: any = pcall(teleportService.GetPlayerPing, teleportService, PlaceId, s.id);
-                    if success and ping and ping < lowestPing then
-                        lowestPing, bestServer = ping, s;
-                    end;
-                end;
-                if bestServer then
-                    PreviousServerId, PreviousServerPlaceId = game.JobId, PlaceId;
-                    notif('Vape', 'Teleporting to lowest ping server...', 5);
-                    teleportService:TeleportToPlaceInstance(PlaceId, bestServer.id);
-                else
-                    notif('Vape', 'Failed to find lowest ping server.', 5);
-                end;
-            end);
-        end;
-    })
 end)
 
 velo.run(function()
