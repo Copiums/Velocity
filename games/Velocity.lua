@@ -10660,7 +10660,7 @@ velo.run(function()
 				end;
 			end
 		end,
-        ["Default"] =false
+        	["Default"] =false
 	})
 	RemotesConnectDelay = RemotesConnect:CreateSlider({
 		["Name"] ='Delay',
