@@ -1401,6 +1401,81 @@ end;
 
 
 --need to add aimassist, fly, inffly, killaura, hitbox later
+
+velo.run(function()
+    local old: any;
+
+    -- Damage estimation from 0 (charge 0) to 26 (charge 0.5)
+    local function getEstimatedDamage(chargeTime)
+        local minDamage = 10
+        local maxDamage = 26
+        local maxCharge = 0.5
+        local ratio = math.min(chargeTime / maxCharge, 1)
+        -- Using quadratic growth for smoother scaling
+        local damage = minDamage + (maxDamage - minDamage) * (ratio ^ 2)
+        return math.floor(damage)
+    end
+
+    AutoCharge = vape.Categories.Combat:CreateModule({
+        ["Name"] = 'AutoCharger',
+        ["Function"] = function(callback: boolean): void
+            debug.setconstant(bedwars.SwordController.attackEntity, 58, callback and 'damage' or 'multiHitCheckDurationSec')
+
+            if callback then
+                local chargeSwingTime: number = 0
+                local canSwing: boolean?
+
+                old = bedwars.SwordController.sendServerRequest
+                bedwars.SwordController.sendServerRequest = function(self, ...)
+                    if (os.clock() - chargeSwingTime) < AutoChargeTime["Value"] then
+                        return
+                    end
+                    self.lastSwingServerTimeDelta = 0.5
+                    chargeSwingTime = os.clock()
+                    canSwing = true
+
+                    local item: any = self:getHandItem()
+                    if item and item.tool then
+                        local chargeDuration = AutoChargeTime["Value"]
+                        local estimatedDamage = getEstimatedDamage(chargeDuration)
+                        print(string.format("Estimated Damage for charge %.2f: %d", chargeDuration, estimatedDamage))
+
+                        self:playSwordEffect(bedwars.ItemMeta[item.tool.Name], false)
+                    end
+
+                    return old(self, ...)
+                end
+
+                oldSwing = bedwars.SwordController.playSwordEffect
+                bedwars.SwordController.playSwordEffect = function(...)
+                    if not canSwing then return end
+                    canSwing = false
+                    return oldSwing(...)
+                end
+            else
+                if old then
+                    bedwars.SwordController.sendServerRequest = old
+                    old = nil
+                end
+                if oldSwing then
+                    bedwars.SwordController.playSwordEffect = oldSwing
+                    oldSwing = nil
+                end
+            end
+        end,
+        ["Tooltip"] = 'Allows you to get charged hits while spam clicking.'
+    })
+
+    AutoChargeTime = AutoCharge:CreateSlider({
+        ["Name"] = 'Charge Time',
+        ["Min"] = 0,
+        ["Max"] = 0.5,
+        ["Default"] = 0.4,
+        ["Decimal"] = 100
+    })
+end)
+
+
 velo.run(function()
         local old: any;
         AutoCharge = vape.Categories.Combat:CreateModule({
