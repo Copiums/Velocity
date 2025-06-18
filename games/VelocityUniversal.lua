@@ -10587,6 +10587,114 @@ velo.run(function()
 end)
 
 velo.run(function()
+    local Rejoin: table = {["Enabled"] = false};
+    Rejoin = vape.Categories.Velocity:CreateModule({
+        ["Name"] = 'Rejoin',
+        ["Function"] = function(callback: boolean): void
+            if callback then
+                notif('Vape', 'Rejoining...', 5);
+                Rejoin:Toggle();
+                if #playersService:GetPlayers() > 1 then
+                    teleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId);
+                else
+                    teleportService:Teleport(game.PlaceId);
+                end;
+            end;
+        end,
+        ["Tooltip"] = 'Rejoins the server'
+    })
+end)
+
+velo.run(function()
+    local ServerHop: table = {["Enabled"] = false};
+    local PlaceId: number? = game.PlaceId;
+    local SortOption: table = {["Value"] = 'Descending'};
+    local PreviousServerId: any, PreviousServerPlaceId: any = nil, nil;
+    ServerHop = vape.Categories.Velocity:CreateModule({
+        ["Name"] = 'ServerHop',
+        ["Function"] = function(callback: boolean): void
+            if callback then
+                notif('Vape', 'Searching for server...', 5);
+                ServerHop:Toggle();
+                task.spawn(function()
+                    local cursor: string = ''
+                    repeat
+                        local url: any = ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=%s&limit=100&cursor=%s"):format(
+                            PlaceId, SortOption["Value"]:lower(), cursor);
+                        local data: any = httpService:JSONDecode(game:HttpGet(url));
+                        cursor = data.nextPageCursor or '';
+
+                        for _, server in next, data.data do
+                            if server.id ~= game.JobId then
+                                PreviousServerId, PreviousServerPlaceId = game.JobId, PlaceId;
+                                teleportService:TeleportToPlaceInstance(PlaceId, server.id);
+                                return;
+                            end;
+                        end;
+                    until cursor == '' ;
+                    notif('Vape', 'No other servers found.', 5);
+                end);
+            end;
+        end,
+        ["Tooltip"] = 'Hops to another server'
+    })
+    SortOption = ServerHop:CreateDropdown({
+        ["Name"] = 'Sort',
+        ["List"] = {'Descending', 'Ascending'},
+        ["Tooltip"] = 'Descending - Prefers full servers\nAscending - Prefers empty servers',
+        ["Function"] = function(choice)
+            SortOption = choice;
+        end;
+    })
+    ServerHop:CreateButton({
+        ["Name"] = 'Rejoin Previous Server',
+        ["Function"] = function()
+            if PreviousServerId and PreviousServerPlaceId then
+                notif('Vape', 'Rejoining previous server...', 5);
+                teleportService:TeleportToPlaceInstance(PreviousServerPlaceId, PreviousServerId);
+            else
+                notif('Vape', 'No previous server recorded.', 5);
+            end;
+        end;
+    })
+    ServerHop:CreateButton({
+        ["Name"] = 'Join Lowest Ping Server',
+        ["Function"] = function()
+            notif('Vape', 'Finding lowest ping server...', 5)
+            task.spawn(function()
+                local cursor: string?, servers: table? = '', {}
+                repeat
+                    local url: string? = ("https://games.roblox.com/v1/games/%d/servers/Public?limit=100&cursor=%s"):format(PlaceId, cursor);
+                    local data: any = httpService:JSONDecode(game:HttpGet(url));
+                    cursor = data.nextPageCursor or '';
+                    for _, s in next, data.data do
+                        if s.id ~= game.JobId then table.insert(servers, s); end;
+                    end;
+                until cursor == '' or #servers >= 200;
+                if #servers == 0 then
+                    notif('Vape', 'No other servers found.', 5);
+                    return;
+                end;
+                local lowestPing, bestServer = math.huge, nil
+                for _, s in next, servers do
+                    local success: boolean, ping: any = pcall(teleportService.GetPlayerPing, teleportService, PlaceId, s.id);
+                    if success and ping and ping < lowestPing then
+                        lowestPing, bestServer = ping, s;
+                    end;
+                end;
+                if bestServer then
+                    PreviousServerId, PreviousServerPlaceId = game.JobId, PlaceId;
+                    notif('Vape', 'Teleporting to lowest ping server...', 5);
+                    teleportService:TeleportToPlaceInstance(PlaceId, bestServer.id);
+                else
+                    notif('Vape', 'Failed to find lowest ping server.', 5);
+                end;
+            end);
+        end;
+    })
+end)
+
+velo.run(function()
     	local AirJump: table = {["Enabled"] = false}
 	local Mode: table = {["Value"] = "State"}
 	local Power: table = {["Value"] = 50}
