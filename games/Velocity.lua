@@ -1416,7 +1416,7 @@ velo.run(function()
         return math.floor(damage)
     end
 
-    AutoCharge = vape.Categories.Combat:CreateModule({
+    AutoCharge = vape.Categories.Blatant:CreateModule({
         ["Name"] = 'AutoCharger',
         ["Function"] = function(callback: boolean): void
             debug.setconstant(bedwars.SwordController.attackEntity, 58, callback and 'damage' or 'multiHitCheckDurationSec')
