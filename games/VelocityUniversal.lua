@@ -11297,7 +11297,24 @@ velo.run(function()
 		["Default"] =10
 	})
 end)
-	
+
+velo.run(function()
+	local instaprompt: table = {
+		Enabled = false,
+		Connections = {}
+	};
+	instaprompt = vape.Categories.Velocity:CreateModule({
+		Name = 'InstantInteract',
+		Function = function(callback: boolean): void
+			if callback then
+				table.insert(instaprompt.Connections, getservice('ProximityPromptService').PromptButtonHoldBegan:Connect(function(prompt)
+					fireproximityprompt(prompt);
+				end));
+			end;
+		end;
+	});
+end)
+
 velo.run(function()
     local og: table = {}                                                        
     local function default()
