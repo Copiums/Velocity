@@ -7800,7 +7800,7 @@ velo.run(function()
 				serverHop(nil, Sort.Value)
 			end;
 		end,
-		["Tooltip = 'Teleports into a unique server'
+		["Tooltip"] = 'Teleports into a unique server'
 	})
 	Sort = ServerHop:CreateDropdown({
 		["Name"] = 'Sort',
