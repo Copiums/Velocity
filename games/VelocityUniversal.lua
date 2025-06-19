@@ -11302,8 +11302,8 @@ velo.run(function()
 		Connections = {}
 	};
 	instaprompt = vape.Categories.Velocity:CreateModule({
-		Name = 'InstantInteract',
-		Function = function(callback: boolean): void
+		["Name"] = 'InstantInteract',
+		["Function"] = function(callback: boolean): void
 			if callback then
 				table.insert(instaprompt.Connections, getservice('ProximityPromptService').PromptButtonHoldBegan:Connect(function(prompt)
 					fireproximityprompt(prompt);
