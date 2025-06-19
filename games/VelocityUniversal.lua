@@ -7772,19 +7772,18 @@ end)
 	
 velo.run(function()
 	local Rejoin: table = {["Enabled"] = false}
-	
 	Rejoin = vape.Categories.Utility:CreateModule({
 		["Name"] = 'Rejoin',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				notif('Rejoin', 'Rejoining...', 5)
-				Rejoin:Toggle()
+				notif('Rejoin', 'Rejoining...', 5);
+				Rejoin:Toggle();
 				if playersService.NumPlayers > 1 then
-					teleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId)
+					teleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId);
 				else
-					teleportService:Teleport(game.PlaceId)
-				end
-			end
+					teleportService:Teleport(game.PlaceId);
+				end;
+			end;
 		end,
 		Tooltip = 'Rejoins the server'
 	})
@@ -7792,22 +7791,21 @@ end)
 	
 velo.run(function()
 	local ServerHop: table = {["Enabled"] = false}
-	local Sort
-	
+	local Sort: any;
 	ServerHop = vape.Categories.Utility:CreateModule({
 		["Name"] = 'ServerHop',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				ServerHop:Toggle()
 				serverHop(nil, Sort.Value)
-			end
+			end;
 		end,
-		Tooltip = 'Teleports into a unique server'
+		["Tooltip = 'Teleports into a unique server'
 	})
 	Sort = ServerHop:CreateDropdown({
 		["Name"] = 'Sort',
-		List = {'Descending', 'Ascending'},
-		Tooltip = 'Descending - Prefers full servers\nAscending - Prefers empty servers'
+		["List"] = {'Full', 'Small'},
+		["Tooltip"] = 'Descending - Prefers full servers\nAscending - Prefers empty servers'
 	})
 	ServerHop:CreateButton({
 		["Name"] = 'Rejoin Previous Server',
