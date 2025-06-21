@@ -89,6 +89,7 @@ local groupService: GroupService = cloneref(game:GetService('GroupService'));
 local textChatService: TextChatService = cloneref(game:GetService('TextChatService'));
 local contextService: ContextActionService = cloneref(game:GetService('ContextActionService'));
 local Debris: Debris = cloneref(game:GetService('Debris')); 
+local proximitypromptService: ProximityPromptService = cloneref(game:GetService('ProximityPromptService'));
 local coreGui: CoreGui = cloneref(game:GetService('CoreGui'));
 local gameCamera: Camera = workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera')
 local lplr: Player = playersService.LocalPlayer
@@ -11303,7 +11304,7 @@ velo.run(function()
 		["Name"] = 'InstantInteract',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				table.insert(instaprompt.Connections, getservice('ProximityPromptService').PromptButtonHoldBegan:Connect(function(prompt)
+				table.insert(instaprompt.Connections, proximitypromptService.PromptButtonHoldBegan:Connect(function(prompt)
 					fireproximityprompt(prompt);
 				end));
 			end;
