@@ -10432,7 +10432,7 @@ end)
 velo.run(function()
 	local ChatMimic: table = {["Enabled"] = true}
 	local ChatShowSender: table = {["Enabled"] = true}
-	local customblocklist: any = {ObjectList = {}}
+	local customblocklist: table = {}
 	local blacklisted: table = {
 		'niga', 
 		'niger', 
@@ -10491,7 +10491,7 @@ velo.run(function()
 							return;
 						end;
 					end;
-					for i: any, v: any in next, customblocklist.ObjectList or {} do
+					for i: any, v: any in next, customblocklist.ListEnabled or {} do
 						if text:lower():find(v) and v ~= '' then 
 							return; 
 						end;
@@ -10510,9 +10510,7 @@ velo.run(function()
 	})
 	customblocklist = ChatMimic:CreateTextList({
 		["Name"] = 'Blacklisted',
-		["TempText"] = 'Blacklisted Characters',
-		["AddFunction"] = function() end,
-		["RemoveFunction"] = function() end
+		["TempText"] = 'Blacklisted Characters'
 	})
 end)
 
@@ -10700,8 +10698,8 @@ velo.run(function()
         	["HoverText"] = HoverText("Size of the text."),
         	["Function"] = function(callback: boolean): void 
            	 	if callback and Loader["Enabled"] then 
-				Loader["ToggleButton"]()
-				Loader["ToggleButton"]()
+				Loader:Toggle()
+				Loader:Toggle()
             		end
         	end
     	})
@@ -11424,8 +11422,8 @@ velo.run(function()
 		for w, r in next, reporttableexact do
 			if str == w then return r, w end;
 		end;
-		if AutoReportList and AutoReportList.ObjectList then
-			for _, w in next, AutoReportList.ObjectList do
+		if AutoReportList.ListEnabled then
+			for _, w in next, AutoReportList.ListEnabled do
 				if str:find(w) then return "Bullying", w; end;
 			end;
 		end;
