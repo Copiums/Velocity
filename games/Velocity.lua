@@ -8433,7 +8433,7 @@ velo.run(function()
                         custom_armour_c["Hue"] = h;
                         custom_armour_c["Sat"] = s;
                         custom_armour_c.Val = v;
-                        if custom_armour["Enabled"] then
+                        if custom_armour["Enabled"] and lplr.Character then
                                 for _, v in next, lplr.Character:GetDescendants() do
                                         if v.Name == 'velo_ca_boots' and v:IsA('Highlight') then
                                                 v.FillColor = Color3.fromHSV(custom_armour_c["Hue"], custom_armour_c["Sat"], custom_armour_c.Val);
