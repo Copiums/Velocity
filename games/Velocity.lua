@@ -2069,6 +2069,7 @@ velo.run(function()
 			hitbox.Position = ent.RootPart.Position;
 			hitbox.CanCollide = false;
 			hitbox.Massless = true;
+			hitbox.Color = Color3.fromHSV(Color.Hue or 0, Color.Sat or 0, Color.Val or 1)
 			hitbox.Transparency = 1;
 			hitbox.Parent = ent.Character;
 			local weld: Motor6D = Instance.new('Motor6D');
@@ -2143,6 +2144,21 @@ velo.run(function()
 		["Suffix"] = function(val)
 			return val == 1 and 'stud' or 'studs';
 		end;
+	})
+	Color = HitBoxes:CreateColorSlider({
+		["Name"] = "Hitbox Color",
+		["HoverText"] = "Color of the hitbox parts.",
+		["Function"] = function(h, s, v)
+			Color.Hue = h
+			Color.Sat = s
+			Color.Val = v
+			local col = Color3.fromHSV(h, s, v)
+			for _, part in objects do
+				if part and part:IsA("BasePart") then
+					part.Color = col
+				end
+			end
+		end
 	})
 end)
 
@@ -2634,7 +2650,7 @@ run(function()
 		["Name"] = 'Show target',
 		["Function"] = function(callback: boolean): void
 			BoxSwingColor.Object.Visible = callback
-			--BoxColor.Object.Visible = callback
+			BoxAttackColor.Object.Visible = callback
 			if callback then
 				for i = 1, 10 do
 					local box: BoxHandleAdornment = Instance.new('BoxHandleAdornment');
