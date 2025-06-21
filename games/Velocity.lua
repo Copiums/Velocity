@@ -6904,7 +6904,7 @@ velo.run(function()
 	local colorTog: table = {}; 
 	local color: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 0};
 	local textTog: table = {}; 
-	local text: table? = {["ObjectList"] = {}}; 
+	local text: table = {}; 
 	local fontTog: table = {};
 	local font: table = {["Value"] = "GothamBlack"}; 
 	local mode: table = {["Value"] = "Rainbow"};
@@ -6920,7 +6920,13 @@ velo.run(function()
 		Color3.fromRGB(0,255,0),Color3.fromRGB(0,0,255),Color3.fromRGB(75,0,130),Color3.fromRGB(148,0,211)
 	};
 	local i: number = 1; local mz: number = 5;
-	local rand: (t: table) -> string = function(t) return t[math.random(1, #t)] or ""; end;
+	local rand: (t: table?) -> string = function(t)
+		if typeof(t) ~= "table" or #t == 0 then
+			return "";
+		end
+		local result = t[math.random(1, #t)]
+		return result;
+	end;
 	DamageIndicator = vape.Legit:CreateModule({
 		["Name"] = "DamageIndicator", ["HoverText"] = "Customizes the damage indicators.",
 		["Function"] = function(callback: boolean): void
@@ -6949,7 +6955,7 @@ velo.run(function()
 					end;
 
 					if textTog["Enabled"] then
-						lbl["Text"] = mode1["Value"] == "Custom" and rand(text["ObjectList"])
+						lbl["Text"] = mode1["Value"] == "Custom" and rand(text["ListEnabled"])
 							or mode1["Value"] == "Multiple" and rand(messages)
 							or text["Value"] or "Velocity on top!";
 					end;
@@ -6988,7 +6994,7 @@ velo.run(function()
 		["Name"] = "Custom Text", ["HoverText"] = "Enable random messages.", ["Function"] = function() end
 	});
 	text = DamageIndicator:CreateTextList({
-		["Name"] = "Text", ["TempText"] = "Text of the indicator", ["AddFunction"] = function() end
+		["Name"] = "Text", ["TempText"] = "Text of the indicator"
 	});
 	fontTog = DamageIndicator:CreateToggle({
 		["Name"] = "Custom Font", ["HoverText"] = "Enable custom font.", ["Function"] = function() end
@@ -9319,7 +9325,7 @@ velo.run(function()
 	});
 end);
 
--- credits to catvape + render + snoopy
+-- credits to catvape + render + snoopy + lunar + lunarvape
 -- IF YOU WANT THEM REMOVED, TELL ME AND I WILL REMOVE
 velo.run(function()
     local texture_pack: table = {["Enabled"] = false};
@@ -10271,7 +10277,7 @@ velo.run(function()
 				else
 					local connect: any;
 					local pack: any = game:GetObjects("rbxassetid://14027120450");
-					local txtpack = unpack(pack)
+					local txtpack: any = unpack(pack)
 					txtpack.Parent = game:GetService("ReplicatedStorage")
 					connect = workspace.Camera.Viewmodel.DescendantAdded:Connect(function(d)
 						for i,v in next, txtpack:GetChildren() do
@@ -10292,32 +10298,39 @@ velo.run(function()
 										end;
 									end;
 								end;
-								local vmmodel: any = v:Clone()
-								vmmodel.CFrame = d.Handle.CFrame * CFrame.Angles(math.rad(90),math.rad(-130),math.rad(0))
-								if d.Name == "rageblade" then 
-									vmmodel.CFrame = CFrame.Angles(math.rad(-80),math.rad(230),math.rad(10)) 
+								local handle: Handle? = d:FindFirstChild("Handle");
+								if handle and handle:IsA("BasePart") then
+									local vmmodel: any = v:Clone();
+									vmmodel.CFrame = handle.CFrame * CFrame.Angles(math.rad(90), math.rad(-130), 0);
+									if d.Name == "rageblade" then
+										vmmodel.CFrame = CFrame.Angles(math.rad(-80), math.rad(230), math.rad(10));
+									end;
+									vmmodel.Parent = d;
+									local vmmodelweld: WeldConstraint = Instance.new("WeldConstraint", vmmodel);
+									vmmodelweld.Part0 = vmmodel;
+									vmmodelweld.Part1 = handle;
+									local charPart: any = lplr.Character:FindFirstChild(d.Name);
+									local charHandle: any = charPart and charPart:FindFirstChild("Handle");
+									if charHandle and charHandle:IsA("BasePart") then
+										local charmodel: any = v:Clone();
+										charmodel.CFrame = charHandle.CFrame * CFrame.Angles(math.rad(90), math.rad(-130), 0);
+										if d.Name == "rageblade" then
+											charmodel.CFrame = CFrame.Angles(math.rad(-80), math.rad(230), math.rad(10));
+										end;
+										charmodel.Anchored = false;
+										charmodel.CanCollide = false;
+										charmodel.Parent = charPart;
+										local charmodelweld: WeldConstraint = Instance.new("WeldConstraint", charmodel);
+										charmodelweld.Part0 = charmodel;
+										charmodelweld.Part1 = charHandle;
+									end;
 								end;
-								vmmodel.Parent = d
-								local vmmodelweld: WeldConstraint = Instance.new("WeldConstraint", vmmodel);
-								vmmodelweld.Part0 = vmmodelweld.Parent
-								vmmodelweld.Part1 = d.Handle
-								local charmodel: any = v:Clone();
-								charmodel.CFrame = lplr["Character"][d["Name"]]:FindFirstChild("Handle").CFrame * CFrame.Angles(math.rad(90),math.rad(-130),math.rad(0))
-								if d.Name == "rageblade" then 
-									charmodel.CFrame = CFrame.Angles(math.rad(-80),math.rad(230),math.rad(10)) 
-								end;
-								charmodel.Anchored = false
-								charmodel.CanCollide = false
-								charmodel.Parent = lplr["Character"][d["Name"]]
-								local charmodelweld: WeldConstraint = Instance.new("WeldConstraint", charmodel)
-								charmodelweld.Part0 = charmodelweld.Parent
-								charmodelweld.Part1 = lplr["Character"][d["Name"]].Handle
-							end
-						end
-					end)
-				end
-			end
-		end
+							end;
+						end;
+					end);
+				end;
+			end;
+		end;
     })
     texture_pack_m = texture_pack:CreateDropdown({
         ["Name"] ='Mode',
@@ -10368,3 +10381,4 @@ velo.run(function()
         ["Function"] = function() end
     })
 end)
+
