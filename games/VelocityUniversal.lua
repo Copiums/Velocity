@@ -10194,9 +10194,10 @@ velo.run(function()
 			custom_char_oc.Val = v;
 			if custom_char["Enabled"] then
 				if lplr.Character then
-				for _, v in next, lplr.Character:GetDescendants() do
-					if v:IsA('Highlight') then
-						v.OutlineColor = Color3.fromHSV(custom_char_oc.Hue, custom_char_oc.Sat, custom_char_oc.Val);
+					for _, v in next, lplr.Character:GetDescendants() do
+						if v:IsA('Highlight') then
+							v.OutlineColor = Color3.fromHSV(custom_char_oc.Hue, custom_char_oc.Sat, custom_char_oc.Val);
+						end;
 					end;
 				end;
 			end;
