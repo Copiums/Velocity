@@ -10015,7 +10015,7 @@ velo.run(function()
 	local custom_char_oc: table = {};
 	local custom_char_ft: table = {};
 	local custom_char_ot: table = {};
-	local y, z, z1 = nil, nil, nil;
+	local y: any, z: any, z1: any = nil, nil, nil;
 	local function isAlive(v: Player): Boolean
 		if v.Character and v.Character:FindFirstChild("Humanoid") then
 			if v.Character.Humanoid.Health > 0 and v.Character:FindFirstChild("HumanoidRootPart") then
@@ -10025,9 +10025,9 @@ velo.run(function()
 		return false;
 	end;
 	custom_char = vape.Categories.Velocity:CreateModule({
-		Name = 'CustomCharacter',
-		HoverText = 'Customizes your character.',
-		Function = function(callback: boolean): void
+		["Name"] = 'CustomCharacter',
+		["HoverText"] = 'Customizes your character.',
+		["Function"] = function(callback: boolean): void
 			if callback then
 				if custom_char_headless["Enabled"] then
 					task.spawn(function()
@@ -10062,7 +10062,7 @@ velo.run(function()
 					end;
 				end;
 				pcall(function()
-					local cc = {};
+					local cc: table? = {};
 					cc.__index = cc;
 					function cc.n(a, b, c, d, e, f, g, h)
 						local self = setmetatable({}, cc);
@@ -10075,17 +10075,17 @@ velo.run(function()
 						self.g = g;
 						self.h = h;
 						return self;
-					end
+					end;
 					function cc:s()
-						local a = self.a;
-						local b = self.b;
-						local c = self.c;
-						local d = self.d;
-						local e = self.e;
-						local f = self.f;
-						local g = self.g;
-						local h1 = self.h;
-						local cc_meta = {
+						local a: any = self.a;
+						local b: any = self.b;
+						local c: any = self.c;
+						local d: any = self.d;
+						local e: any = self.e;
+						local f: any = self.f;
+						local g: any = self.g;
+						local h1: any = self.h;
+						local cc_meta: table? = {
 							__index = function(self, x)
 								if x == 'on' then
 									return function()
@@ -10117,10 +10117,10 @@ velo.run(function()
 								end;
 							end;
 						};
-						local cc_val = setmetatable({}, cc_meta);
+						local cc_val: table? = setmetatable({}, cc_meta);
 						cc_val:on();
 					end;
-					local cc_vd = cc.n(
+					local cc_vd: table? = cc.n(
 						custom_char_fc.Hue,
 						custom_char_fc.Sat,
 						custom_char_fc.Val,
@@ -10133,14 +10133,14 @@ velo.run(function()
 					cc_vd:s();
 				end)
 			else
-				local cc = {};
+				local cc: table? = {};
 				cc.__index = cc;
 				function cc.n()
 					local self = setmetatable({}, cc);
 					return self;
 				end;
 				function cc:s()
-					local cc_meta = {
+					local cc_meta: table? = {
 						__index = function(self, x)
 							if x == 'on' then
 								return function()
@@ -10170,14 +10170,16 @@ velo.run(function()
 	custom_char_fc = custom_char:CreateColorSlider({
 		["Name"] = 'Fill Color',
 		["HoverText"] = 'Color to fill your character.',
-		["Function"] = function(h, s, v) 
+		["Function"] = function(h, s, v)
 			custom_char_fc.Hue = h;
 			custom_char_fc.Sat = s;
 			custom_char_fc.Val = v;
 			if custom_char["Enabled"] then
-				for _, v in next, lplr.Character:GetDescendants() do
-					if v:IsA('Highlight') then
-						v.FillColor = Color3.fromHSV(custom_char_fc.Hue, custom_char_fc.Sat, custom_char_fc.Val);
+				if lplr.Character then
+					for _, v in next, lplr.Character:GetDescendants() do
+						if v:IsA('Highlight') then
+							v.FillColor = Color3.fromHSV(custom_char_fc.Hue, custom_char_fc.Sat, custom_char_fc.Val);
+						end;
 					end;
 				end;
 			end;
@@ -10191,6 +10193,7 @@ velo.run(function()
 			custom_char_oc.Sat = s;
 			custom_char_oc.Val = v;
 			if custom_char["Enabled"] then
+				if lplr.Character then
 				for _, v in next, lplr.Character:GetDescendants() do
 					if v:IsA('Highlight') then
 						v.OutlineColor = Color3.fromHSV(custom_char_oc.Hue, custom_char_oc.Sat, custom_char_oc.Val);
@@ -10206,9 +10209,11 @@ velo.run(function()
 		["HoverText"] = 'Transparency of the character color fill.',
 		["Function"] = function(val)
 			if custom_char["Enabled"] then
-				for _, v in next, lplr.Character:GetDescendants() do
-					if v:IsA('Highlight') then
-						v.FillTransparency = val / 100;
+				if lplr.Character then
+					for _, v in next, lplr.Character:GetDescendants() do
+						if v:IsA('Highlight') then
+							v.FillTransparency = val / 100;
+						end;
 					end;
 				end;
 			end;
@@ -10222,9 +10227,11 @@ velo.run(function()
 		["HoverText"] = 'Transparency of the character outline fill.',
 		["Function"] = function(val)
 			if custom_char["Enabled"] then
-				for _, v in next, lplr.Character:GetDescendants() do
-					if v:IsA('Highlight') then
-						v.OutlineTransparency = val / 100;
+				if lplr.Character then
+					for _, v in next, lplr.Character:GetDescendants() do
+						if v:IsA('Highlight') then
+							v.OutlineTransparency = val / 100;
+						end;
 					end;
 				end;
 			end;
