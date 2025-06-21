@@ -6906,20 +6906,32 @@ velo.run(function()
 	local Size: table = {}
 	local Anchor: table = {}
 	local Stroke: table = {["Enabled"] = false}
-	local suc: any, tab: any = pcall(function() 
-		return debug.getupvalue(bedwars.DamageIndicator, 2); 
+	local suc: boolean?, tab: any = pcall(function()
+		return debug.getupvalue(bedwars.DamageIndicator, 2);
 	end);
 	tab = suc and tab or {};
-	local oldvalues: any, oldfont: any = {};
-	
+	local oldvalues: table?, oldfont: any = {};
+	local constants: any = debug.getconstants(bedwars.DamageIndicator);
+	local fontIndex: number?, thicknessIndex1: number?, thicknessIndex2: number?
+	for i: any, v: any in next, constants do
+		if typeof(v) == "EnumItem" and v.EnumType == Enum.Font and not fontIndex then
+			fontIndex = i;
+		elseif v == "Thickness" then
+			if not thicknessIndex1 then
+				thicknessIndex1 = i;
+			else
+				thicknessIndex2 = i;
+			end;
+		end;
+	end;
 	DamageIndicator = vape.Legit:CreateModule({
 		["Name"] = 'Damage Indicator',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				oldvalues = table.clone(tab);
-				oldfont = debug.getconstant(bedwars.DamageIndicator, 85);
-				debug.setconstant(bedwars.DamageIndicator, 85, Enum.Font[FontOption["Value"]])
-				debug.setconstant(bedwars.DamageIndicator, 104, Stroke["Enabled"] and 'Thickness' or 'Enabled');
+				oldvalues = table.clone(tab)
+				oldfont = debug.getconstant(bedwars.DamageIndicator, fontIndex)
+				debug.setconstant(bedwars.DamageIndicator, fontIndex, Enum.Font[FontOption["Value"]])
+				debug.setconstant(bedwars.DamageIndicator, thicknessIndex1, Stroke["Enabled"] and 'Thickness' or 'Enabled')
 				tab.strokeThickness = Stroke["Enabled"] and 1 or false;
 				tab.textSize = Size["Value"];
 				tab.blowUpSize = Size["Value"];
@@ -6928,12 +6940,12 @@ velo.run(function()
 				tab.blowUpCompleteDuration = 0
 				tab.anchoredDuration = Anchor["Value"]
 			else
-				for i, v in oldvalues do 
+				for i: any, v: any in oldvalues do 
 					tab[i] = v;
 				end;
-				debug.setconstant(bedwars.DamageIndicator, 85, oldfont);
-				debug.setconstant(bedwars.DamageIndicator, 104, 'Thickness');
-			end;
+				debug.setconstant(bedwars.DamageIndicator, fontIndex, oldfont)
+				debug.setconstant(bedwars.DamageIndicator, thicknessIndex1, 'Thickness')
+			end
 		end,
 		["Tooltip"] = 'Customize the damage indicator';
 	})
@@ -6943,12 +6955,13 @@ velo.run(function()
 			table.insert(fontitems, v.Name); 
 		end;
 	end;
+
 	FontOption = DamageIndicator:CreateDropdown({
 		["Name"] = 'Font',
 		["List"] = fontitems,
 		["Function"] = function(val)
 			if DamageIndicator["Enabled"] then
-				debug.setconstant(bedwars.DamageIndicator, 86, val);
+				debug.setconstant(bedwars.DamageIndicator, fontIndex, Enum.Font[val])
 			end;
 		end;
 	})
@@ -6988,7 +7001,7 @@ velo.run(function()
 		["Name"] = 'Stroke',
 		["Function"] = function(callback: boolean): void
 			if DamageIndicator["Enabled"] then
-				debug.setconstant(bedwars.DamageIndicator, 119, callback and 'Thickness' or 'Enabled');
+				debug.setconstant(bedwars.DamageIndicator, thicknessIndex2, callback and 'Thickness' or 'Enabled');
 				tab.strokeThickness = callback and 1 or false;
 			end;
 		end;
