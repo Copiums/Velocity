@@ -29,7 +29,7 @@
                                        <___'<___'                                                       
 
 ]]--
-
+repeat task.wait() until game:IsLoaded()
 local velo: table = {};
 local LoadTime: tick = tick()
 local VelocityVersion: string = "V1.0"
