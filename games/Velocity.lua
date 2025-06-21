@@ -6917,9 +6917,9 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				oldvalues = table.clone(tab);
-				oldfont = debug.getconstant(bedwars.DamageIndicator, 86);
-				debug.setconstant(bedwars.DamageIndicator, 86, Enum.Font[FontOption["Value"]])
-				debug.setconstant(bedwars.DamageIndicator, 119, Stroke["Enabled"] and 'Thickness' or 'Enabled');
+				oldfont = debug.getconstant(bedwars.DamageIndicator, 85);
+				debug.setconstant(bedwars.DamageIndicator, 85, Enum.Font[FontOption["Value"]])
+				debug.setconstant(bedwars.DamageIndicator, 104, Stroke["Enabled"] and 'Thickness' or 'Enabled');
 				tab.strokeThickness = Stroke["Enabled"] and 1 or false;
 				tab.textSize = Size["Value"];
 				tab.blowUpSize = Size["Value"];
@@ -6931,8 +6931,8 @@ velo.run(function()
 				for i, v in oldvalues do 
 					tab[i] = v;
 				end;
-				debug.setconstant(bedwars.DamageIndicator, 86, oldfont);
-				debug.setconstant(bedwars.DamageIndicator, 119, 'Thickness');
+				debug.setconstant(bedwars.DamageIndicator, 85, oldfont);
+				debug.setconstant(bedwars.DamageIndicator, 104, 'Thickness');
 			end;
 		end,
 		["Tooltip"] = 'Customize the damage indicator';
@@ -6948,7 +6948,7 @@ velo.run(function()
 		["List"] = fontitems,
 		["Function"] = function(val)
 			if DamageIndicator["Enabled"] then
-				debug.setconstant(bedwars.DamageIndicator, 86, val);
+				debug.setconstant(bedwars.DamageIndicator, 85, val);
 			end;
 		end;
 	})
@@ -6988,7 +6988,7 @@ velo.run(function()
 		["Name"] = 'Stroke',
 		["Function"] = function(callback: boolean): void
 			if DamageIndicator["Enabled"] then
-				debug.setconstant(bedwars.DamageIndicator, 119, callback and 'Thickness' or 'Enabled');
+				debug.setconstant(bedwars.DamageIndicator, 104, callback and 'Thickness' or 'Enabled');
 				tab.strokeThickness = callback and 1 or false;
 			end;
 		end;
