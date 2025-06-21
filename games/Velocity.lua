@@ -6948,7 +6948,7 @@ velo.run(function()
 		["List"] = fontitems,
 		["Function"] = function(val)
 			if DamageIndicator["Enabled"] then
-				debug.setconstant(bedwars.DamageIndicator, 85, val);
+				debug.setconstant(bedwars.DamageIndicator, 86, val);
 			end;
 		end;
 	})
@@ -6988,7 +6988,7 @@ velo.run(function()
 		["Name"] = 'Stroke',
 		["Function"] = function(callback: boolean): void
 			if DamageIndicator["Enabled"] then
-				debug.setconstant(bedwars.DamageIndicator, 104, callback and 'Thickness' or 'Enabled');
+				debug.setconstant(bedwars.DamageIndicator, 119, callback and 'Thickness' or 'Enabled');
 				tab.strokeThickness = callback and 1 or false;
 			end;
 		end;
