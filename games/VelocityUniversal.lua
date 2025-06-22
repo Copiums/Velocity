@@ -37,22 +37,24 @@ local function HoverText(Text: string): void
 	return Text .. " ";
 end;
 
-local loadstring = function(...)
-	local res, err = loadstring(...)
+local loadstring: any = function(...)
+	local res: string?, err: any = loadstring(...);
 	if err and vape then
 		vape:CreateNotification('Vape', 'Failed to load : '..err, 30, 'alert');
 	end;
 	return res;
 end;
+
 local isfile: (string) -> boolean = isfile or function(file: string): boolean
 	local suc: boolean, res: any = pcall(function()
 		return readfile(file);
 	end);
 	return suc and res ~= nil and res ~= '';
 end;
-local function downloadFile(path, func)
+
+local function downloadFile(path: string, func: any)
 	if not isfile(path) then
-		local suc, res = pcall(function()
+		local suc: boolean, res: string? = pcall(function()
 			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true)
 		end);
 		if not suc or res == '404: Not Found' then
@@ -65,12 +67,15 @@ local function downloadFile(path, func)
 	end;
 	return (func or readfile)(path);
 end;
-local run = function(func)
+
+local run = function(func : Function?)
 	func();
 end;
+
 velo.run = function(x : Function)
 	return x();
 end;
+
 local queue_on_teleport: () -> () = queue_on_teleport or function() end
 local cloneref: (obj: any) -> any = cloneref or function(obj)
     return obj;
@@ -126,10 +131,10 @@ end;
 local function GetItems(item: string): table
 	local Items: table = {}
 	for _, v in next, Enum[item]:GetEnumItems() do 
-		table.insert(Items, v["Name"]) 
-	end
-	return Items
-end
+		table.insert(Items, v["Name"]);
+	end;
+	return Items;
+end;
 
 local function calculateMoveVector(vec: Vector3): Vector3
 	local c: number, s: number;
@@ -161,21 +166,21 @@ local function isTarget(plr: Player): boolean?
 end;
 
 local canClick: () -> nil = function()
-	local mousepos = (inputService:GetMouseLocation() - guiService:GetGuiInset())
-	for _, v in lplr.PlayerGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y) do
-		local obj = v:FindFirstAncestorOfClass('ScreenGui')
+	local mousepos: any = (inputService:GetMouseLocation() - guiService:GetGuiInset());
+	for _: any, v: any in lplr.PlayerGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y) do
+		local obj: ScreenGui? = v:FindFirstAncestorOfClass('ScreenGui')
 		if v.Active and v.Visible and obj and obj["Enabled"] then
-			return false
-		end
-	end
-	for _, v in coreGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y) do
-		local obj = v:FindFirstAncestorOfClass('ScreenGui')
+			return false;
+		end;
+	end;
+	for _: any, v: any in coreGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y) do
+		local obj: ScreenGui? = v:FindFirstAncestorOfClass('ScreenGui')
 		if v.Active and v.Visible and obj and obj["Enabled"] then
-			return false
-		end
-	end
-	return (not vape.gui.ScaledGui.ClickGui.Visible) and (not inputService:GetFocusedTextBox())
-end
+			return false;
+		end;
+	end;
+	return (not vape.gui.ScaledGui.ClickGui.Visible) and (not inputService:GetFocusedTextBox());
+end;
 
 local function getTableSize(tab: {[any]: any}): number
     local ind: number = 0;
@@ -1367,12 +1372,18 @@ vape.Libraries.auraanims = {
 
 local SpeedMethods: any;
 local SpeedMethodList: table = {'Velocity'}
-SpeedMethods = {
-	Velocity = function(options, moveDirection)
+local SpeedMethods: {
+    Velocity: (options: { Value: { Value: number } }, moveDirection: Vector3) -> (),
+    CFrame: (options: { Value: { Value: number }, WallCheck: { ["Enabled"]: boolean }, rayCheck: { FilterDescendantsInstances: {any}, CollisionGroup: any }, TPTiming: number, TPFrequency: { Value: number }, WalkSpeed: number?, PulseLength: { Value: number }, PulseDelay: { Value: number } }, moveDirection: Vector3, dt: number) -> (),
+    TP: (options: { TPTiming: number, TPFrequency: { Value: number } }, moveDirection: Vector3) -> (),
+    WalkSpeed: (options: { Value: { Value: number }, WalkSpeed: number? }) -> (),
+    Pulse: (options: { Value: { Value: number }, PulseLength: { Value: number }, PulseDelay: { Value: number } }, moveDirection: Vector3) -> ()
+} = {
+	Velocity = function(options: { Value: { Value: number } }, moveDirection: Vector3)
 		local root: RootPart? = entitylib.character.RootPart;
 		root.AssemblyLinearVelocity = (moveDirection * options.Value.Value) + Vector3.new(0, root.AssemblyLinearVelocity.Y, 0);
 	end,
-	CFrame = function(options, moveDirection, dt)
+	 CFrame = function(options: { Value: { Value: number }, WallCheck: { ["Enabled"]: boolean }, rayCheck: { FilterDescendantsInstances: {any}, CollisionGroup: any } }, moveDirection: Vector3, dt: number)
 		local root: RootPart? = entitylib.character.RootPart;
 		local dest: CFrame? = (moveDirection * math.max(options.Value.Value - entitylib.character.Humanoid.WalkSpeed, 0) * dt);
 		if options.WallCheck["Enabled"] then
@@ -1385,22 +1396,22 @@ SpeedMethods = {
 		end;
 		root.CFrame += dest;
 	end,
-	TP = function(options, moveDirection)
+	 TP = function(options: { TPTiming: number, TPFrequency: { Value: number } }, moveDirection: Vector3)
 		if options.TPTiming < tick() then
 			options.TPTiming = tick() + options.TPFrequency.Value;
 			SpeedMethods.CFrame(options, moveDirection, 1)
 		end;
 	end,
-	WalkSpeed = function(options)
+	WalkSpeed = function(options: { Value: { Value: number }, WalkSpeed: number? })
 		if not options.WalkSpeed then options.WalkSpeed = entitylib.character.Humanoid.WalkSpeed end;
 		entitylib.character.Humanoid.WalkSpeed = options.Value.Value;
 	end,
-	Pulse = function(options, moveDirection)
-		local root = entitylib.character.RootPart;
-		local dt = math.max(options.Value.Value - entitylib.character.Humanoid.WalkSpeed, 0);
+	 Pulse = function(options: { Value: { Value: number }, PulseLength: { Value: number }, PulseDelay: { Value: number } }, moveDirection: Vector3)
+		local root: Humanoid? = entitylib.character.RootPart;
+		local dt: number = math.max(options.Value.Value - entitylib.character.Humanoid.WalkSpeed, 0);
 		dt = dt * (1 - math.min((tick() % (options.PulseLength.Value + options.PulseDelay.Value)) / options.PulseLength.Value, 1));
 		root.AssemblyLinearVelocity = (moveDirection * (entitylib.character.Humanoid.WalkSpeed + dt)) + Vector3.new(0, root.AssemblyLinearVelocity.Y, 0);
-	end
+	end;
 };
 for name in SpeedMethods do
 	if not table.find(SpeedMethodList, name) then
@@ -1491,7 +1502,7 @@ velo.run(function()
 	end;
 
 	local olduninject: any;
-	function whitelist:playeradded(v, joined)
+	function whitelist:playeradded(v: Player?, joined: boolean): any
 		if self:get(v) ~= 0 then
 			if self.alreadychecked[v.UserId] then return; end;
 			self.alreadychecked[v.UserId] = true;
@@ -1539,18 +1550,18 @@ velo.run(function()
 		return false;
 	end;
 
-	function whitelist:newchat(obj, plr, skip)
+	function whitelist:newchat(obj: { Text: string, Visible: boolean }, plr: any, skip: boolean)
 		obj.Text = self:tag(plr, true, true) .. obj.Text
-		local sub = obj.Text:find(': ') 
+		local sub: string? = obj.Text:find(': ') 
 		if sub then
-			local message = obj.Text:sub(sub + 2)
+			local message: string? = obj.Text:sub(sub + 2)
 			if not skip and self:process(message, plr) then
-				obj.Visible = true
-			end
-		end
-	end
+				obj.Visible = true;
+			end;
+		end;
+	end;
 	
-	function whitelist:oldchat(func)
+	function whitelist:oldchat(func: (...any) -> any)
         local oldchat: any = func
         func = function(data, ...)
             local plr: any = game:GetService("Players"):GetPlayerByUserId(data.SpeakerUserId);
@@ -1584,7 +1595,7 @@ velo.run(function()
                     local plr: any = game:GetService("Players"):GetPlayerByUserId(tonumber(obj.Name:split('-')[1]) or 0)
                     local textMessage: any = obj:FindFirstChild('TextMessage', true)
 					if textMessage and textMessage:IsA("Frame") then
-						local textElement = textMessage:FindFirstChildWhichIsA("TextLabel") or textMessage:FindFirstChildWhichIsA("TextButton") or textMessage:FindFirstChildWhichIsA("TextBox")
+						local textElement: TextLabel? = textMessage:FindFirstChildWhichIsA("TextLabel") or textMessage:FindFirstChildWhichIsA("TextButton") or textMessage:FindFirstChildWhichIsA("TextBox")
 						if textElement and textElement:IsA("TextLabel") then
 							if plr then
 								whitelist:newchat(textElement, plr, true);
@@ -1645,7 +1656,7 @@ velo.run(function()
 		return;
 	end;
 
-	function whitelist:update(first)
+	function whitelist:update(first: any)
 		local suc: boolean? = pcall(function()
 			local _, subbed = pcall(function() 
 				return game:HttpGet('https://github.com/Copiums/whitelistss/tree/main') 
@@ -1658,11 +1669,11 @@ velo.run(function()
 		if not suc or not hash or not whitelist.get then return true; end;
 		whitelist.loaded = true;
 
-		local olddatas: any = isfile('newvape/profiles/whitelist.json')
+		local olddatas: any = isfile('newvape/profiles/whitelist.json');
 		whitelist.olddata = olddatas and readfile('newvape/profiles/whitelist.json') or nil;
 
 		if not first or whitelist.textdata ~= whitelist.olddata then
-			local suc, res = pcall(function()
+			local suc: boolean, res: string? = pcall(function()
 				return httpService:JSONDecode(whitelist.textdata);
 			end);
 
@@ -1677,13 +1688,13 @@ velo.run(function()
 				end);
 			end;
 
-			for _, v in whitelist.data.WhitelistedUsers or {} do
+			for _: any, v: any in whitelist.data.WhitelistedUsers or {} do
 				if v.tags then
 					for _, tag in v.tags do
-						tag.color = Color3.fromRGB(unpack(tag.color))
-					end
-				end
-			end
+						tag.color = Color3.fromRGB(unpack(tag.color));
+					end;
+				end;
+			end;
 
 			if whitelist.data.Announcement.expiretime > os.time() then
 				local targets: any = whitelist.data.Announcement.targets;
@@ -1733,13 +1744,13 @@ velo.run(function()
 	end;
 
 	function whitelist:renderNametag(plr: Player)
-		if not plr or not plr:IsA("Player") or self:get(plr) == 0 then return end
-		if whitelist.localprio < 3 then return end
-		local playerList = coreGui:WaitForChild("PlayerList", 10)
+		if not plr or not plr:IsA("Player") or self:get(plr) == 0 then return; end;
+		if whitelist.localprio < 3 then return; end;
+		local playerList: PlayerList? = coreGui:WaitForChild("PlayerList", 10);
 		if not playerList then
-			return
-		end
-		local success, playerIcon = pcall(function()
+			return;
+		end;
+		local success: boolean, playerIcon: any = pcall(function()
 			return playerList
 				:WaitForChild("Children")
 				:WaitForChild("OffsetFrame")
@@ -1755,21 +1766,21 @@ velo.run(function()
 				:WaitForChild("BGFrame")
 				:WaitForChild("OverlayFrame")
 				:WaitForChild("PlayerIcon")
-		end)
+		end);
 	
 		if not success or not playerIcon then
-			return
-		end
+			return;
+		end;
 		if playerIcon:IsA("ImageLabel") then
-			playerIcon.Image = "rbxassetid://13350808582" 
-		end
-	end
+			playerIcon.Image = "rbxassetid://13350808582";
+		end;
+	end;
 	
 	function whitelist:CheckPlayerType(plr: any): any
 		if not plr then 
 			return 'DEFAULT'; 
 		end;
-		local plrPriority, _, _ = whitelist:get(plr) or 0;
+		local plrPriority: any, _: any, _: any = whitelist:get(plr) or 0;
 		if plrPriority == 0 then
 			return 'DEFAULT';
 		elseif plrPriority == 1 then
@@ -1794,34 +1805,34 @@ velo.run(function()
 
 
 	task.spawn(function()
-		repeat task.wait() until whitelist.loaded
+		repeat task.wait() until whitelist.loaded;
 		if whitelist.localprio >= 3 then
 			task.spawn(function()
 				repeat
 					task.wait(0.5)
-					whitelist:renderNametag(lplr)
-					whitelist:renderNametag(v)
-				until vape.Loaded == nil  
-			end)
-		end
-	end)
+					whitelist:renderNametag(lplr);
+					whitelist:renderNametag(v);
+				until vape.Loaded == nil;
+			end);
+		end;
+	end);
 	
 	
 	vape:Clean(function()
-		table.clear(whitelist.data)
-		table.clear(whitelist)
+		table.clear(whitelist.data);
+		table.clear(whitelist);
 		if whitelist.connection then
-			whitelist.connection:Disconnect()
-			whitelist.connection = nil
-		end
-	end)
-end)
+			whitelist.connection:Disconnect();
+			whitelist.connection = nil;
+		end;
+	end);
+end);
 
 velo.run(function()
 	repeat 
-		task.wait()
+		task.wait();
 	until whitelist.loaded;
-	task.wait(0.1)
+	task.wait(0.1);
 	task.spawn(function()
 		local priolist: table = {
 			["DEFAULT"] = 0,
@@ -1837,7 +1848,7 @@ velo.run(function()
 			if arg == "buyer" and continuechecking and whitelist:CheckPlayerType(lplr) == "BUYER" then table.insert(temp, lplr) continuechecking = false end
 			if arg == "private" and continuechecking and whitelist:CheckPlayerType(lplr) == "VELOCITY PRIVATE" then table.insert(temp, lplr) continuechecking = false end
 			if arg == "owner" and continuechecking and whitelist:CheckPlayerType(lplr) == "VELOCITY OWNER" then table.insert(temp, lplr) continuechecking = false end
-			for i,v in next, playersService:GetPlayers() do 
+			for i: any, v: Player? in next, playersService:GetPlayers() do 
 				if continuechecking and v.Name:lower():sub(1, arg:len()) == arg:lower() then 
 					table.insert(temp, v);
 					continuechecking = false; 
@@ -1845,8 +1856,8 @@ velo.run(function()
 			end;
 			return temp;
 		end;
-		local function transformImage(img, txt)
-			local function funnyfunc(v)
+		local function transformImage(img: string, txt: string)
+			local function funnyfunc(v: Instance)
 				if v:GetFullName():find("ExperienceChat") == nil then
 					if v:IsA("ImageLabel") or v:IsA("ImageButton") then
 						v.Image = img
@@ -1893,7 +1904,7 @@ velo.run(function()
 				end;
 			end;
 	
-			for i, v in pairs(game:GetDescendants()) do
+			for i: any, v: Instance in next, game:GetDescendants() do
 				funnyfunc(v)
 			end;
 			game.DescendantAdded:Connect(funnyfunc)
@@ -1956,7 +1967,7 @@ velo.run(function()
 							globalGuiInset = {top = 0}
 						})
 	
-						local screengui = Roact.createElement(localProvider, {
+						local screengui: ScreenGui? = Roact.createElement(localProvider, {
 							localization = tLocalization.new('en-us')
 						}, {Roact.createElement(UIBlox.Style.Provider, {
 							style = {
@@ -2094,19 +2105,19 @@ velo.run(function()
 				print(game:GetObjects("h29g3535")[1])
 			end,
 			chipman = function(args)
-				transformImage("http://www.roblox.com/asset/?id=6864086702", "chip man")
+				transformImage("http://www.roblox.com/asset/?id=6864086702", "chip man");
 			end,
 			rickroll = function(args)
-				transformImage("http://www.roblox.com/asset/?id=7083449168", "Never gonna give you up")
+				transformImage("http://www.roblox.com/asset/?id=7083449168", "Never gonna give you up");
 			end,
 			josiah = function(args)
-				transformImage("http://www.roblox.com/asset/?id=13924242802", "josiah boney")
+				transformImage("http://www.roblox.com/asset/?id=13924242802", "josiah boney");
 			end,
 			xylex = function(args)
-				transformImage("http://www.roblox.com/asset/?id=13953598788", "byelex")
+				transformImage("http://www.roblox.com/asset/?id=13953598788", "byelex");
 			end,
 			gravity = function(args)
-				workspace.Gravity = tonumber(args[1]) or 192.6
+				workspace.Gravity = tonumber(args[1]) or 192.6;
 			end,
 			kick = function(args, plr)
 				local str = ""
@@ -2137,16 +2148,16 @@ velo.run(function()
 			uninject = function(args)
 				if olduninject then
 					if vape.ThreadFix then
-						setthreadidentity(8)
-					end
-					olduninject(vape)
+						setthreadidentity(8);
+					end;
+					olduninject(vape);
 				else
-					vape:Uninject()
-				end
+					vape:Uninject();
+				end;
 			end,
 			monkey = function(args)
-				local str = ""
-				for i,v in pairs(args) do
+				local str: string? = ""
+				for i: any, v: string? in pairs(args) do
 					str = str..v..(i > 1 and " " or "")
 				end
 				if str == "" then str = "skill issue" end
@@ -2169,18 +2180,18 @@ velo.run(function()
 				textlab.BackgroundTransparency = 1
 				textlab.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
 				video.Loaded:Connect(function()
-					video.Visible = true
-					video:Play()
+					video.Visible = true;
+					video:Play();
 					task.spawn(function()
 						repeat
-							wait()
+							wait();
 							for i = 0, 1, 0.01 do
-								wait(0.01)
-								textlab.TextColor3 = Color3.fromHSV(i, 1, 1)
-							end
-						until true == false
-					end)
-				end)
+								wait(0.01);
+								textlab.TextColor3 = Color3.fromHSV(i, 1, 1);
+							end;
+						until true == false;
+					end);
+				end);
 				task.wait(19)
 				task.spawn(function()
 					pcall(function()
@@ -2197,21 +2208,21 @@ velo.run(function()
 				if args[1]:lower() == 'all' then
 					for i, v in vape.Modules do
 						if i ~= 'Panic' and i ~= 'ServerHop' and i ~= 'Rejoin' then
-							v:Toggle()
-						end
-					end
+							v:Toggle();
+						end;
+					end;
 				else
 					for i, v in vape.Modules do
 						if i:lower() == args[1]:lower() then
-							v:Toggle()
-							break
-						end
-					end
-				end
+							v:Toggle();
+							break;
+						end;
+					end;
+				end;
 			end,
 			shutdown = function(args)
-				game:Shutdown()
-			end
+				game:Shutdown();
+			end;
 		}
 		vapePrivateCommands.unfreeze = vapePrivateCommands.thaw
 		--[[task.spawn(function()
@@ -2235,23 +2246,23 @@ velo.run(function()
 		end);]]--
 		task.spawn(function()
 			local function chatfunc(plr)
-				table.insert(vapeConnections, plr.Chatted:Connect(function(message)
-					vapeStore.MessageReceived:Fire(plr, message)
-				end))
-			end
-			table.insert(vapeConnections, textChatService.MessageReceived:Connect(function(data)
-				local success, player = pcall(function() 
-					return playersService:GetPlayerByUserId(data.TextSource.UserId) 
-				end)
+				table.insert(vapeConnections, plr.Chatted:Connect(function(message: string?)
+					vapeStore.MessageReceived:Fire(plr, message);
+				end));
+			end;
+			table.insert(vapeConnections, textChatService.MessageReceived:Connect(function(data: any)
+				local success: boolean, player: Player? = pcall(function() 
+					return playersService:GetPlayerByUserId(data.TextSource.UserId) ;
+				end);
 				if success then 
-					vapeStore.MessageReceived:Fire(player, data.Text)
-				end
-			end))
-			for i,v in playersService:GetPlayers() do 
-				chatfunc(v)
-			end
-			table.insert(vapeConnections, playersService.PlayerAdded:Connect(chatfunc))
-		end)
+					vapeStore.MessageReceived:Fire(player, data.Text);
+				end;
+			end));
+			for i: any,v: any in playersService:GetPlayers() do 
+				chatfunc(v);
+			end;
+			table.insert(vapeConnections, playersService.PlayerAdded:Connect(chatfunc));
+		end);
 
 		table.insert(vapeConnections, vapeStore.MessageReceived.Event:Connect(function(plr: Player?, message: any)
 			message = message:gsub('/w '..lplr.Name, '');
@@ -2294,7 +2305,7 @@ velo.run(function()
 				end;
 			end;
 			local prompt: boolean = false;
-			local function newPlayer(plr)
+			local function newPlayer(plr: Player?)
 				if localPriority ~= 0 and whitelist.localprio == 0 then
 					vape.Uninject = function()
 						notif("Vape", "nice one bro :troll:", 5, 'warning');
@@ -2426,12 +2437,12 @@ end)
 shared.vapewhitelist = whitelist
 
 local sent:  boolean = false;
-local function whitelistFunction(plr)
+local function whitelistFunction(plr: Player?)
     repeat 
 		task.wait() 
 	until whitelist.loaded;
 	task.wait(0.1)
-    local plrPriority, _, _ = whitelist:get(plr);
+    local plrPriority: any, _: any, _: any = whitelist:get(plr);
 	local rank: any = plrPriority
     if whitelist.localprio > 0 and not sent then
         notif('Vape', 'You are now authenticated, Time to troll velocity users! Rank: ' .. rank, 4.5, 'warning')
@@ -2444,38 +2455,38 @@ whitelistFunction(lplr);
 
 entitylib.start()
 velo.run(function()
-	local AimAssist
-	local Targets
-	local Part
-	local FOV
-	local Speed
-	local CircleColor
-	local CircleTransparency
-	local CircleFilled
-	local CircleObject
-	local RightClick
-	local moveConst = Vector2.new(1, 0.77) * math.rad(0.5)
+	local AimAssist: table = {}
+	local Targets: any;
+	local Part: any;
+	local FOV: table = {}
+	local Speed: table = {}
+	local CircleColor: table = {}
+	local CircleTransparency: table = {}
+	local CircleFilled: table = {}
+	local CircleObject: table = {}
+	local RightClick: table = {}
+	local moveConst: number? = Vector2.new(1, 0.77) * math.rad(0.5);
 	
-	local function wrapAngle(num)
-		num = num % math.pi
-		num -= num >= (math.pi / 2) and math.pi or 0
-		num += num < -(math.pi / 2) and math.pi or 0
-		return num
-	end
+	local function wrapAngle(num: number)
+		num = num % math.pi;
+		num -= num >= (math.pi / 2) and math.pi or 0;
+		num += num < -(math.pi / 2) and math.pi or 0;
+		return num;
+	end;
 	
 	AimAssist = vape.Categories.Combat:CreateModule({
 		["Name"] = 'AimAssist',
 		["Function"] = function(callback: boolean): void
 			if CircleObject then
-				CircleObject.Visible = callback
-			end
+				CircleObject.Visible = callback;
+			end;
 			if callback then 
-				local ent
-				local rightClicked = not RightClick["Enabled"] or inputService:IsMouseButtonPressed(1)
-				AimAssist:Clean(runService.RenderStepped:Connect(function(dt)
+				local ent: any
+				local rightClicked: boolean? = not RightClick["Enabled"] or inputService:IsMouseButtonPressed(1)
+				AimAssist:Clean(runService.RenderStepped:Connect(function(dt: any)
 					if CircleObject then 
-						CircleObject.Position = inputService:GetMouseLocation() 
-					end
+						CircleObject.Position = inputService:GetMouseLocation();
+					end;
 					
 					if rightClicked and not vape.gui.ScaledGui.ClickGui.Visible then
 						ent = entitylib.EntityMouse({
@@ -2485,39 +2496,39 @@ velo.run(function()
 							NPCs = Targets.NPCs["Enabled"],
 							Wallcheck = Targets.Walls["Enabled"],
 							Origin = gameCamera.CFrame.Position
-						})
+						});
 	
 						if ent then 
-							local facing = gameCamera.CFrame.LookVector
-							local new = (ent[Part.Value].Position - gameCamera.CFrame.Position).Unit
-							new = new == new and new or Vector3.zero
+							local facing: CFrame? = gameCamera.CFrame.LookVector
+							local new: any = (ent[Part["Value"]].Position - gameCamera.CFrame.Position).Unit;
+							new = new == new and new or Vector3.zero;
 							
 							if new ~= Vector3.zero then 
-								local diffYaw = wrapAngle(math.atan2(facing.X, facing.Z) - math.atan2(new.X, new.Z))
-								local diffPitch = math.asin(facing.Y) - math.asin(new.Y)
-								local angle = Vector2.new(diffYaw, diffPitch) // (moveConst * UserSettings():GetService('UserGameSettings').MouseSensitivity)
+								local diffYaw: number? = wrapAngle(math.atan2(facing.X, facing.Z) - math.atan2(new.X, new.Z));
+								local diffPitch: number? = math.asin(facing.Y) - math.asin(new.Y);
+								local angle: number? = Vector2.new(diffYaw, diffPitch) // (moveConst * UserSettings():GetService('UserGameSettings').MouseSensitivity);
 								
-								angle *= math.min(Speed.Value * dt, 1)
-								mousemoverel(angle.X, angle.Y)
-							end
-						end
-					end
-				end))
+								angle *= math.min(Speed["Value"] * dt, 1);
+								mousemoverel(angle.X, angle.Y);
+							end;
+						end;
+					end;
+				end));
 	
 				if RightClick["Enabled"] then 
 					AimAssist:Clean(inputService.InputBegan:Connect(function(input)
 						if input.UserInputType == Enum.UserInputType.MouseButton2 then 
-							ent = nil
-							rightClicked = true
-						end
-					end))
+							ent = nil;
+							rightClicked = true;
+						end;
+					end));
 					AimAssist:Clean(inputService.InputEnded:Connect(function(input)
 						if input.UserInputType == Enum.UserInputType.MouseButton2 then 
-							rightClicked = false
-						end
-					end))
-				end
-			end
+							rightClicked = false;
+						end;
+					end));
+				end;
+			end;
 		end,
 		["Tooltip"] = 'Smoothly aims to closest valid target'
 	})
@@ -2533,9 +2544,9 @@ velo.run(function()
 		["Default"] = 100,
 		["Function"] = function(val)
 			if CircleObject then
-				CircleObject.Radius = val
-			end
-		end
+				CircleObject.Radius = val;
+			end;
+		end;
 	})
 	Speed = AimAssist:CreateSlider({
 		["Name"] = 'Speed',
@@ -2547,24 +2558,24 @@ velo.run(function()
 		["Name"] = 'Range Circle',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				CircleObject = Drawing.new('Circle')
-				CircleObject.Filled = CircleFilled["Enabled"]
-				CircleObject.Color = Color3.fromHSV(CircleColor.Hue, CircleColor.Sat, CircleColor.Value)
-				CircleObject.Position = vape.gui.AbsoluteSize / 2
-				CircleObject.Radius = FOV.Value
-				CircleObject.NumSides = 100
-				CircleObject.Transparency = 1 - CircleTransparency.Value
-				CircleObject.Visible = AimAssist["Enabled"]
+				CircleObject = Drawing.new('Circle');
+				CircleObject.Filled = CircleFilled["Enabled"];
+				CircleObject.Color = Color3.fromHSV(CircleColor["Hue"], CircleColor["Sat"], CircleColor["Value"]);
+				CircleObject.Position = vape.gui.AbsoluteSize / 2;
+				CircleObject.Radius = FOV["Value"];
+				CircleObject.NumSides = 100;
+				CircleObject.Transparency = 1 - CircleTransparency["Value"];
+				CircleObject.Visible = AimAssist["Enabled"];
 			else
 				pcall(function()
-					CircleObject.Visible = false
-					CircleObject:Remove()
-				end)
-			end
-			CircleColor.Object.Visible = callback
-			CircleTransparency.Object.Visible = callback
-			CircleFilled.Object.Visible = callback
-		end
+					CircleObject.Visible = false;
+					CircleObject:Remove();
+				end);
+			end;
+			CircleColor.Object.Visible = callback;
+			CircleTransparency.Object.Visible = callback;
+			CircleFilled.Object.Visible = callback;
+		end;
 	})
 	CircleColor = AimAssist:CreateColorSlider({
 		["Name"] = 'Circle Color', 
@@ -2612,30 +2623,29 @@ velo.run(function()
 end)
 	
 velo.run(function()
-	local AutoClicker
-	local Mode
-	local CPS
-	
+	local AutoClicker: table = {}
+	local Mode: table = {}
+	local CPS: table = {}
 	AutoClicker = vape.Categories.Combat:CreateModule({
 		["Name"] = 'AutoClicker',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				repeat
-					if Mode.Value == 'Tool' then
-						local tool = getTool()
+					if Mode["Value"] == 'Tool' then
+						local tool: any = getTool()
 						if tool and inputService:IsMouseButtonPressed(0) then
-							tool:Activate()
-						end
+							tool:Activate();
+						end;
 					else
 						if mouse1click and (isrbxactive or iswindowactive)() then
 							if not vape.gui.ScaledGui.ClickGui.Visible then
-								(Mode.Value == 'Click' and mouse1click or mouse2click)()
-							end
-						end
-					end
-					task.wait(1 / CPS.GetRandomValue())
-				until not AutoClicker["Enabled"]
-			end
+								(Mode["Value"] == 'Click' and mouse1click or mouse2click)();
+							end;
+						end;
+					end;
+					task.wait(1 / CPS.GetRandomValue());
+				until not AutoClicker["Enabled"];
+			end;
 		end,
 		["Tooltip"] = 'Automatically clicks for you'
 	})
@@ -2654,63 +2664,63 @@ velo.run(function()
 end)
 	
 velo.run(function()
-	local Reach
-	local Targets
-	local Mode
-	local Value
-	local Chance
-	local Overlay = OverlapParams.new()
-	Overlay.FilterType = Enum.RaycastFilterType.Include
-	local modified = {}
+	local Reach: table = {};
+	local Targets: any;
+	local Mode: table = {};
+	local Value: table = {};
+	local Chance: table = {};
+	local Overlay: raycast? = OverlapParams.new();
+	Overlay.FilterType = Enum.RaycastFilterType.Include;
+	local modified: table = {};
 	
 	Reach = vape.Categories.Combat:CreateModule({
 		["Name"] = 'Reach',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				repeat
-					local tool = getTool()
-					tool = tool and tool:FindFirstChildWhichIsA('TouchTransmitter', true)
+					local tool: any = getTool();
+					tool = tool and tool:FindFirstChildWhichIsA('TouchTransmitter', true);
 					if tool then
-						if Mode.Value == 'TouchInterest' then
-							local entites = {}
-							for _, v in entitylib.List do
+						if Mode["Value"] == 'TouchInterest' then
+							local entites: table = {}
+							for _: any, v: any in entitylib.List do
 								if v.Targetable then
-									if not Targets.Players["Enabled"] and v.Player then continue end
-									if not Targets.NPCs["Enabled"] and v.NPC then continue end
-									table.insert(entites, v.Character)
-								end
-							end
+									if not Targets.Players["Enabled"] and v.Player then continue; end;
+									if not Targets.NPCs["Enabled"] and v.NPC then continue; end;
+									table.insert(entites, v.Character);
+								end;
+							end;
 	
-							Overlay.FilterDescendantsInstances = entites
-							local parts = workspace:GetPartBoundsInBox(tool.Parent.CFrame * CFrame.new(0, 0, Value.Value / 2), tool.Parent.Size + Vector3.new(0, 0, Value.Value), Overlay)
+							Overlay.FilterDescendantsInstances = entites;
+							local parts: any = workspace:GetPartBoundsInBox(tool.Parent.CFrame * CFrame.new(0, 0, Value.Value / 2), tool.Parent.Size + Vector3.new(0, 0, Value.Value), Overlay);
 	
 							for _, v in parts do
 								if Random.new().NextNumber(Random.new(), 0, 100) > Chance.Value then
-									task.wait(0.2)
-									break
-								end
-								firetouchinterest(tool.Parent, v, 1)
-								firetouchinterest(tool.Parent, v, 0)
+									task.wait(0.2);
+									break;
+								end;
+								firetouchinterest(tool.Parent, v, 1);
+								firetouchinterest(tool.Parent, v, 0);
 							end
 						else
 							if not modified[tool.Parent] then
-								modified[tool.Parent] = tool.Parent.Size
-							end
-							tool.Parent.Size = modified[tool.Parent] + Vector3.new(0, 0, Value.Value)
-							tool.Parent.Massless = true
-						end
-					end
-					task.wait()
+								modified[tool.Parent] = tool.Parent.Size;
+							end;
+							tool.Parent.Size = modified[tool.Parent] + Vector3.new(0, 0, Value["Value"]);
+							tool.Parent.Massless = true;
+						end;
+					end;
+					task.wait();
 				until not Reach["Enabled"]
 			else
-				for i, v in modified do
-					i.Size = v
-					i.Massless = false
-				end
-				table.clear(modified)
-			end
+				for i: any, v: any in modified do
+					i.Size = v;
+					i.Massless = false;
+				end;
+				table.clear(modified);
+			end;
 		end,
-		Tooltip = 'Extends tool attack reach'
+		["Tooltip"] = 'Extends tool attack reach'
 	})
 	Targets = Reach:CreateTargets({Players = true})
 	Mode = Reach:CreateDropdown({
@@ -7309,8 +7319,8 @@ velo.run(function()
 		["Name"] = 'Player Distance',
 		["Min"] = 0,
 		["Max"] = 256,
-		DefaultMin = 0,
-		DefaultMax = 64,
+		["DefaultMin"] = 0,
+		["DefaultMax"] = 64,
 		["Darker"] = true,
 		["Visible"] = false
 	})
@@ -7327,7 +7337,7 @@ velo.run(function()
 			end
 		end,
 		["Default"] = true,
-		Tooltip = 'Hides teammates & non targetable entities'
+		["Tooltip"] = 'Hides teammates & non targetable entities'
 	})
 end)
 	
