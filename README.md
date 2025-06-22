@@ -16,8 +16,8 @@
 2. Open the "Tutorial Video" link
 3. And follow the tutorial by opening the Youtube Link and by going to this github.
 
-[Install Velocity](https://github.com/Copiums/Copium) 
-[Tutorial Video](https://www.youtube.com/watch?v=lJ7Odd8cmSQ) 
+- [Install Velocity](https://github.com/Copiums/Copium) 
+- [Tutorial Video](https://www.youtube.com/watch?v=lJ7Odd8cmSQ) 
 
 
 ## Developers & Credits
