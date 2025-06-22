@@ -8084,45 +8084,48 @@ velo.run(function()
     end
 
     local function applyClassic(part: BasePart)
-        part["TextureID"] = ""
-        part["Material"] = Enum.Material[MaterialDropdown["Value"] or "Neon"]
-        part["Color"] = Color3.fromHSV(ColorHSV["Hue"], ColorHSV["Sat"], ColorHSV["Val"])
-    end
+	local mesh:SpecialMesh? = part:FindFirstChildOfClass("SpecialMesh");
+	if mesh then
+	    mesh["TextureId"] = "";
+	end;
+	part["Material"] = Enum.Material[MaterialDropdown["Value"] or "Neon"];
+	part["Color"] = Color3.fromHSV(ColorHSV["Hue"], ColorHSV["Sat"], ColorHSV["Val"]);
+    end;
 
     local function Main()
-        local viewmodel = gameCamera:FindFirstChild("Viewmodel")
-        if not viewmodel then return end
+        local viewmodel: Viewmodel? = gameCamera:FindFirstChild("Viewmodel");
+        if not viewmodel then return; end;
 
         for _, hl in next, Old["Custom"] do
-            pcall(function() hl:Destroy() end)
-        end
+            pcall(function() hl:Destroy() end);
+        end;
         table.clear(Old["Custom"])
 
 		for _, part in next, viewmodel:GetDescendants() do
 			if part:IsA("BasePart") then
 				if Mode["Value"] == "Normal" then
-					applyHighlight(part)
+					applyHighlight(part);
 					if ColorHSV["Val"] > 0 then
 						if part:IsA("MeshPart") then
-							part["TextureID"] = ""
-							part["Material"] = Enum.Material[MaterialDropdown["Value"] or "Neon"]
+							part["TextureID"] = "";
+							part["Material"] = Enum.Material[MaterialDropdown["Value"] or "Neon"];
 						elseif part:IsA("Part") then
-							local mesh = part:FindFirstChildOfClass("SpecialMesh")
-							if mesh then mesh["TextureId"] = "" end
-							part["Material"] = Enum.Material[MaterialDropdown["Value"] or "Neon"]
-						end
-					end
+							local mesh: SpecialMesh? = part:FindFirstChildOfClass("SpecialMesh");
+							if mesh then mesh["TextureId"] = ""; end;
+							part["Material"] = Enum.Material[MaterialDropdown["Value"] or "Neon"];
+						end;
+					end;
 				else
-					applyClassic(part)
-				end
-			end
-		end
-    end
+					applyClassic(part);
+				end;
+			end;
+		end;
+    end;
 
     Viewmodel = vape.Legit:CreateModule({
         ["Name"] = "Viewmodel",
         ["Function"] = function(callback: boolean)
-            local viewmodel = gameCamera:FindFirstChild("Viewmodel")
+            local viewmodel: Viewmodel? = gameCamera:FindFirstChild("Viewmodel");
             if callback then
                 Old["Cam"] = viewmodel
                 oldAnim = bedwars["ViewmodelController"]["playAnimation"]
@@ -8130,65 +8133,60 @@ velo.run(function()
 
                 if NoBob["Enabled"] then
                     bedwars["ViewmodelController"]["playAnimation"] = function(self, animtype, ...)
-                        if bedwars["AnimationType"] and animtype == bedwars["AnimationType"]["FP_WALK"] then return end
-                        return oldAnim(self, animtype, ...)
-                    end
-                end
+                        if bedwars["AnimationType"] and animtype == bedwars["AnimationType"]["FP_WALK"] then return; end;
+                        return oldAnim(self, animtype, ...);
+                    end;
+                end;
 
-                bedwars["InventoryViewmodelController"]:handleStore(bedwars["Store"]:getState())
+                bedwars["InventoryViewmodelController"]:handleStore(bedwars["Store"]:getState());
 
                 if viewmodel then
                     viewmodel["RightHand"]["RightWrist"]["C1"] = oldC1 * CFrame.Angles(
                         math.rad(Rots[1]["Value"]),
                         math.rad(Rots[2]["Value"]),
                         math.rad(Rots[3]["Value"])
-                    )
-                end
+                    );
+                end;
 
-                local vmCtrl = lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]
-                vmCtrl:SetAttribute("ConstantManager_DEPTH_OFFSET", -Depth["Value"])
-                vmCtrl:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", Horizontal["Value"])
-                vmCtrl:SetAttribute("ConstantManager_VERTICAL_OFFSET", Vertical["Value"])
+                local vmCtrl: any = lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"];
+                vmCtrl:SetAttribute("ConstantManager_DEPTH_OFFSET", -Depth["Value"]);
+                vmCtrl:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", Horizontal["Value"]);
+                vmCtrl:SetAttribute("ConstantManager_VERTICAL_OFFSET", Vertical["Value"]);
 
-                Main()
+                Main();
             else
                 if oldAnim then
-                    bedwars["ViewmodelController"]["playAnimation"] = oldAnim
-                    oldAnim = nil
-                end
-
+                    bedwars["ViewmodelController"]["playAnimation"] = oldAnim;
+                    oldAnim = nil;
+                end;
                 if viewmodel then
-                    viewmodel["RightHand"]["RightWrist"]["C1"] = oldC1
-                end
-
-                bedwars["InventoryViewmodelController"]:handleStore(bedwars["Store"]:getState())
-
-                local vmCtrl = lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]
-                vmCtrl:SetAttribute("ConstantManager_DEPTH_OFFSET", 0)
-                vmCtrl:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", 0)
-                vmCtrl:SetAttribute("ConstantManager_VERTICAL_OFFSET", 0)
+                    viewmodel["RightHand"]["RightWrist"]["C1"] = oldC1;
+                end;
+                bedwars["InventoryViewmodelController"]:handleStore(bedwars["Store"]:getState());
+                local vmCtrl: any = lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"];
+                vmCtrl:SetAttribute("ConstantManager_DEPTH_OFFSET", 0);
+                vmCtrl:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", 0);
+                vmCtrl:SetAttribute("ConstantManager_VERTICAL_OFFSET", 0);
 
                 for _, hl in next, Old["Custom"] do
-                    pcall(function() hl:Destroy() end)
-                end
-                table.clear(Old["Custom"])
-                Old["Cam"] = nil
-            end
+                    pcall(function() hl:Destroy() end);
+                end;
+                table.clear(Old["Custom"]);
+                Old["Cam"] = nil;
+            end;
         end,
         ["Tooltip"] = "Changes the viewmodel animations and color"
     })
-
     NoBob = Viewmodel:CreateToggle({
         ["Name"] = "No Bobbing",
         ["Default"] = true,
         ["Function"] = function()
             if Viewmodel["Enabled"] then
-                Viewmodel["ToggleButton"]()
-                Viewmodel["ToggleButton"]()
-            end
-        end
+                Viewmodel["ToggleButton"]();
+                Viewmodel["ToggleButton"]();
+            end;
+        end;
     })
-
     Depth = Viewmodel:CreateSlider({
         ["Name"] = "Depth",
         ["Min"] = 0,
@@ -8197,11 +8195,10 @@ velo.run(function()
         ["Decimal"] = 10,
         ["Function"] = function(val)
             if Viewmodel["Enabled"] then
-                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", -val)
-            end
-        end
+                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", -val);
+            end;
+        end;
     })
-
     Horizontal = Viewmodel:CreateSlider({
         ["Name"] = "Horizontal",
         ["Min"] = 0,
@@ -8210,11 +8207,10 @@ velo.run(function()
         ["Decimal"] = 10,
         ["Function"] = function(val)
             if Viewmodel["Enabled"] then
-                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", val)
-            end
-        end
+                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", val);
+            end;
+        end;
     })
-
     Vertical = Viewmodel:CreateSlider({
         ["Name"] = "Vertical",
         ["Min"] = -0.2,
@@ -8223,11 +8219,10 @@ velo.run(function()
         ["Decimal"] = 10,
         ["Function"] = function(val)
             if Viewmodel["Enabled"] then
-                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_VERTICAL_OFFSET", val)
-            end
-        end
+                lplr["PlayerScripts"]["TS"]["controllers"]["global"]["viewmodel"]["viewmodel-controller"]:SetAttribute("ConstantManager_VERTICAL_OFFSET", val);
+            end;
+        end;
     })
-
     ColorHSV = Viewmodel:CreateColorSlider({
         ["Name"] = "Color",
         ["Darker"] = true,
@@ -8237,11 +8232,10 @@ velo.run(function()
             ColorHSV["Sat"] = s
             ColorHSV["Val"] = v
             if Viewmodel["Enabled"] then
-                Main()
-            end
-        end
+                Main();
+            end;
+        end;
     })
-
     MaterialDropdown = Viewmodel:CreateDropdown({
         ["Name"] = "Material",
         ["List"] = GetItems("Material"),
@@ -8249,11 +8243,10 @@ velo.run(function()
         ["HoverText"] = "Material to add to the viewmodel.",
         ["Function"] = function()
             if Viewmodel["Enabled"] then
-                Main()
-            end
-        end
+                Main();
+            end;
+        end;
     })
-
     Mode = Viewmodel:CreateDropdown({
         ["Name"] = "Color Mode",
         ["List"] = {"Normal", "Classic"},
@@ -8261,30 +8254,29 @@ velo.run(function()
         ["HoverText"] = "Choose how color is applied to the viewmodel",
         ["Function"] = function()
             if Viewmodel["Enabled"] then
-                Main()
-            end
-        end
+                Main();
+            end;
+        end;
     })
-
-    for _, name in ipairs({"Rotation X", "Rotation Y", "Rotation Z"}) do
+    for _, name in next, {"Rotation X", "Rotation Y", "Rotation Z"} do
         table.insert(Rots, Viewmodel:CreateSlider({
             ["Name"] = name,
             ["Min"] = 0,
             ["Max"] = 360,
             ["Function"] = function(val)
                 if Viewmodel["Enabled"] then
-                    local vm = gameCamera:FindFirstChild("Viewmodel")
+                    local vm: Viewmodel? = gameCamera:FindFirstChild("Viewmodel");
                     if vm then
                         vm["RightHand"]["RightWrist"]["C1"] = oldC1 * CFrame.Angles(
                             math.rad(Rots[1]["Value"]),
                             math.rad(Rots[2]["Value"]),
                             math.rad(Rots[3]["Value"])
-                        )
-                    end
-                end
-            end
-        }))
-    end
+                        );
+                    end;
+                end;
+            end;
+        }));
+    end;
 end)
 
 
