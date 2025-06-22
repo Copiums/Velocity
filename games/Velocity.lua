@@ -341,7 +341,7 @@ local damagedata: table = {
 };
 
 local function getSpeed(): number
-	local multi: number, increase: boolean, modifiers: any = 0, true, bedwars.SprintController:getMovementStatusModifier():getModifiers()
+	local multi: number?, increase: boolean?, modifiers: any = 0, true, bedwars.SprintController:getMovementStatusModifier():getModifiers()
 	for v in modifiers do
 		local val: number = v.constantSpeedMultiplier and v.constantSpeedMultiplier or 0
 		if val and val > math.max(multi, 1) then
