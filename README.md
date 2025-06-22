@@ -12,11 +12,13 @@
 [![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@Copiumic)
 
 ## Tutorial
-1. Copy and paste this script
-2. Execute the provided loadstring below.
-```
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Copiums/Velocity/main/NewMainScript.lua", true))()
-```
+1. Cick on "Install Velocity" link
+2. Open the "Tutorial Video" link
+3. And follow the tutorial by opening the Youtube Link and by going to this github.
+
+[Install Velocity](https://github.com/Copiums/Copium) 
+[Tutorial Video](https://www.youtube.com/watch?v=lJ7Odd8cmSQ) 
+
 
 ## Developers & Credits
 
