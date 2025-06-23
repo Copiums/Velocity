@@ -1475,7 +1475,7 @@ velo.run(function()
 end);
 
 velo.run(function()
-	function whitelist:get(plr)
+	function whitelist:get(plr: Player)
 		local plrstr: any = self.hashes[plr.Name..plr.UserId];
 		for _, v in self.data.WhitelistedUsers do
 			if v.hash == plrstr then
@@ -1493,7 +1493,8 @@ velo.run(function()
 	end;
 	
 	function whitelist:tag(plr: Player, text: string?, rich: boolean?): string?
-		local plrtag: any, newtag: any = select(3, self:get(plr)) or self.customtags[plr.Name] or {}, '';
+		local plrtag: any = (select(3, self:get(plr)) or self.customtags[plr.Name]) or {};
+		local newtag: string = '';
 		if not text then return plrtag; end;
 		for _, v in plrtag do
 			newtag = newtag..(rich and '<font color="#'..v.color:ToHex()..'">['..v.text..']</font>' or '['..removeTags(v.text)..']')..' ';
@@ -1502,7 +1503,7 @@ velo.run(function()
 	end;
 
 	local olduninject: any;
-	function whitelist:playeradded(v: Player?, joined: boolean): any
+	function whitelist:playeradded(v: Player?, joined: boolean?)
 		if self:get(v) ~= 0 then
 			if self.alreadychecked[v.UserId] then return; end;
 			self.alreadychecked[v.UserId] = true;
@@ -1550,89 +1551,115 @@ velo.run(function()
 		return false;
 	end;
 
-	function whitelist:newchat(obj: { Text: string, Visible: boolean }, plr: any, skip: boolean)
-		obj.Text = self:tag(plr, true, true) .. obj.Text
-		local sub: string? = obj.Text:find(': ') 
+	function whitelist:newchat(obj: TextLabel, plr: Player?, skip: boolean?)
+		obj.Text = self:tag(plr, true, true) .. obj.Text;
+		local sub:string? = obj.Text:find(':  ');
 		if sub then
-			local message: string? = obj.Text:sub(sub + 2)
+			local message: string? = obj.Text:sub(sub + 4);
 			if not skip and self:process(message, plr) then
 				obj.Visible = true;
 			end;
 		end;
 	end;
-	
-	function whitelist:oldchat(func: (...any) -> any)
-        local oldchat: any = func
-        func = function(data, ...)
-            local plr: any = game:GetService("Players"):GetPlayerByUserId(data.SpeakerUserId);
-            if plr then
-                data.ExtraData.Tags = data.ExtraData.Tags or {};
-                for _, v in next, self:tag(plr) do
-                    table.insert(data.ExtraData.Tags, {TagText = v.text, TagColor = v.color});
-                end;
-                if data.Message and self:checkmessage(data.Message, plr) then 
-                    data.Message = '';
-                end;
-            end;
-            return oldchat(data, ...);
-        end;
-        table.insert(connection, {
-            Disconnect = function()
-                func = oldchat;
-            end;
-        });
-    end
+
+
+	function whitelist:oldchat(func)
+        	local oldchat: (...any) -> any = func
+        	func = function(data: any, ...)
+            		local plr: Player? = game:GetService("Players"):GetPlayerByUserId(data.SpeakerUserId);
+            		if plr then
+                		data.ExtraData.Tags = data.ExtraData.Tags or {};
+                		for _, v in next, self:tag(plr) do
+                    			table.insert(data.ExtraData.Tags, {TagText = v.text, TagColor = v.color});
+               		 	end;
+                		if data.Message and self:checkmessage(data.Message, plr) then 
+                    			data.Message = '';
+               		 	end;
+            		end;
+            		return oldchat(data, ...);
+        	end;
+        	table.insert(connection, {
+            		Disconnect = function()
+                		func = oldchat;
+            		end;
+        	});
+    	end;
 
 	function whitelist:hook()
-		if self.hooked then return; end;
+	        if self.hooked then return; end;
 		self.hooked = true;
-
-		local exp: any = coreGui:FindFirstChild('ExperienceChat')
-
+		local exp: ExperienceChat? = coreGui:FindFirstChild('ExperienceChat');
+		if not exp then
+		        return;
+		end;
 		if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-			if exp and exp:FindFirstChild('appLayout', 5) then
-                table.insert(vapeConnections, exp:FindFirstChild('RCTScrollContentView', true).ChildAdded:Connect(function(obj)
-                    local plr: any = game:GetService("Players"):GetPlayerByUserId(tonumber(obj.Name:split('-')[1]) or 0)
-                    local textMessage: any = obj:FindFirstChild('TextMessage', true)
-					if textMessage and textMessage:IsA("Frame") then
-						local textElement: TextLabel? = textMessage:FindFirstChildWhichIsA("TextLabel") or textMessage:FindFirstChildWhichIsA("TextButton") or textMessage:FindFirstChildWhichIsA("TextBox")
-						if textElement and textElement:IsA("TextLabel") then
-							if plr then
-								whitelist:newchat(textElement, plr, true);
-								textElement:GetPropertyChangedSignal('Text'):Wait()
-								whitelist:newchat(textElement, plr);
-								if textElement.ContentText and textElement.ContentText:sub(1, 35) == 'You are now privately chatting with' then
-									textElement.Visible = false;
-								end;
-							end;
-						end;
+		        if exp:FindFirstChild('appLayout', 5) then
+		        	local scrollView: RCTScrollContentView? = exp:FindFirstChild('RCTScrollContentView', true)
+		            	if not scrollView then
+		                	return;
+		            	end;
+		            	table.insert(vapeConnections, scrollView.ChildAdded:Connect(function(obj)
+		                	local userId: number? = tonumber(obj.Name:split('-')[1]);
+		                	if not userId then 
+						return; 
 					end;
-                end))
-            end;
+		                	local plr: Player? = game:GetService("Players"):GetPlayerByUserId(userId);
+		                	if not plr then 
+						return; 
+					end;
+		                	local textMessage: string? = obj:FindFirstChild('TextMessage', true);
+		                	if not textMessage or not textMessage:IsA("Frame") then 
+						return; 
+					end;
+		                	local prefix: any = textMessage:FindFirstChild("PrefixText")
+		                	local body: any = textMessage:FindFirstChild("BodyText")
+		                	if prefix and prefix:IsA("TextLabel") then
+		                    		local tagText: any = self:tag(plr, true, true)
+		                    		if tagText:sub(-1) ~= " " then
+		                        		tagText = tagText .. " ";
+		                    		end;
+						prefix.Text = prefix.Text:gsub(":?%s*$", " ") .. ": ";
+						if not prefix.Text:match(": $") then
+						        prefix.Text = prefix.Text:gsub(":?$", " ") .. ":  ";
+						end;
+		                    		prefix.Text = tagText .. prefix.Text;
+		                	end;
+		                	if body and body:IsA("TextLabel") then
+		                    		self:newchat(body, plr, true);
+		                	else
+		                    		local fallback: any = textMessage:FindFirstChildWhichIsA("TextLabel")
+		                        		or textMessage:FindFirstChildWhichIsA("TextButton")
+		                        		or textMessage:FindFirstChildWhichIsA("TextBox");
+		                    		if fallback then
+		                        		whitelist:newchat(fallback, plr, true);
+		                    		end;
+		                	end;
+		            	end));
+		        end;
 		elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
-            pcall(function()
-                local message: any = replicatedStorageService.DefaultChatSystemChatEvents.OnNewMessage
-                if message and message.OnClientEvent then
-                    for i: any, v: any in next, message.OnClientEvent:GetConnections() do
-                        local updated: any = v.Function and tostring(v.Function):find('UpdateMessagePostedInChannel')
-                        if updated then
-                            whitelist:oldchat(v.Function)
-                            break
-                        end
-                    end
-                end
-                local filter: any = replicatedStorageService.DefaultChatSystemChatEvents.OnMessageDoneFiltering
-                if filter and filter.OnClientEvent then
-                    for i: any, v: any in next, filter.OnClientEvent:GetConnections() do
-                        local updated: any  = v.Function and tostring(v.Function):find('UpdateMessageFiltered')
-                        if updated then
-                            whitelist:oldchat(v.Function)
-                            break;
-                        end;
-                    end;
-                end;
-            end);
-        end;
+            		pcall(function()
+                		local message: any = replicatedStorageService.DefaultChatSystemChatEvents.OnNewMessage
+                		if message and message.OnClientEvent then
+                    			for i: any, v: any in next, message.OnClientEvent:GetConnections() do
+                        			local updated: any = v.Function and tostring(v.Function):find('UpdateMessagePostedInChannel')
+                        			if updated then
+                            				whitelist:oldchat(v.Function)
+                            				break
+                        			end
+                    			end
+                		end
+                		local filter: any = replicatedStorageService.DefaultChatSystemChatEvents.OnMessageDoneFiltering
+                		if filter and filter.OnClientEvent then
+                    			for i: any, v: any in next, filter.OnClientEvent:GetConnections() do
+                        			local updated: any  = v.Function and tostring(v.Function):find('UpdateMessageFiltered')
+                        			if updated then
+                            				whitelist:oldchat(v.Function)
+                            				break;
+                        			end;
+                    			end;
+                		end;
+            		end);
+        	end;
 
 		if exp then
 			local bubblechat: any = exp:WaitForChild('bubbleChat', 5)
@@ -1656,7 +1683,7 @@ velo.run(function()
 		return;
 	end;
 
-	function whitelist:update(first: any)
+	function whitelist:update(first)
 		local suc: boolean? = pcall(function()
 			local _, subbed = pcall(function() 
 				return game:HttpGet('https://github.com/Copiums/whitelistss/tree/main') 
@@ -1669,11 +1696,11 @@ velo.run(function()
 		if not suc or not hash or not whitelist.get then return true; end;
 		whitelist.loaded = true;
 
-		local olddatas: any = isfile('newvape/profiles/whitelist.json');
+		local olddatas: any = isfile('newvape/profiles/whitelist.json')
 		whitelist.olddata = olddatas and readfile('newvape/profiles/whitelist.json') or nil;
 
 		if not first or whitelist.textdata ~= whitelist.olddata then
-			local suc: boolean, res: string? = pcall(function()
+			local suc, res = pcall(function()
 				return httpService:JSONDecode(whitelist.textdata);
 			end);
 
@@ -1688,13 +1715,13 @@ velo.run(function()
 				end);
 			end;
 
-			for _: any, v: any in whitelist.data.WhitelistedUsers or {} do
+			for _, v in whitelist.data.WhitelistedUsers or {} do
 				if v.tags then
 					for _, tag in v.tags do
-						tag.color = Color3.fromRGB(unpack(tag.color));
-					end;
-				end;
-			end;
+						tag.color = Color3.fromRGB(unpack(tag.color))
+					end
+				end
+			end
 
 			if whitelist.data.Announcement.expiretime > os.time() then
 				local targets: any = whitelist.data.Announcement.targets;
@@ -1744,43 +1771,33 @@ velo.run(function()
 	end;
 
 	function whitelist:renderNametag(plr: Player)
-		if not plr or not plr:IsA("Player") or self:get(plr) == 0 then return; end;
-		if whitelist.localprio < 3 then return; end;
+		if not plr or not plr:IsA("Player") or self:get(plr) == 0 or whitelist.localprio < 3 then return; end;
 		local playerList: PlayerList? = coreGui:WaitForChild("PlayerList", 10);
-		if not playerList then
-			return;
-		end;
+		if not playerList then return; end;
 		local success: boolean, playerIcon: any = pcall(function()
-			return playerList
-				:WaitForChild("Children")
-				:WaitForChild("OffsetFrame")
-				:WaitForChild("PlayerScrollList")
-				:WaitForChild("SizeOffsetFrame")
-				:WaitForChild("ScrollingFrameContainer")
-				:WaitForChild("ScrollingFrameClippingFrame")
-				:WaitForChild("ScollingFrame") 
-				:WaitForChild("OffsetUndoFrame")
-				:WaitForChild("p_" .. plr.UserId)
-				:WaitForChild("ChildrenFrame")
-				:WaitForChild("NameFrame")
-				:WaitForChild("BGFrame")
-				:WaitForChild("OverlayFrame")
-				:WaitForChild("PlayerIcon")
+			local path: table? = {
+				"Children", "OffsetFrame", "PlayerScrollList", "SizeOffsetFrame",
+				"ScrollingFrameContainer", "ScrollingFrameClippingFrame", "ScollingFrame",
+				"OffsetUndoFrame", "p_" .. plr.UserId, "ChildrenFrame",
+				"NameFrame", "BGFrame", "OverlayFrame", "PlayerIcon"
+			};
+			local obj: any = playerList;
+			for _, name in next, path do
+				obj = obj:FindFirstChild(name);
+				if not obj then return; end;
+			end;
+			return obj
 		end);
-	
-		if not success or not playerIcon then
-			return;
-		end;
-		if playerIcon:IsA("ImageLabel") then
+		if success and playerIcon and playerIcon:IsA("ImageLabel") then
 			playerIcon.Image = "rbxassetid://13350808582";
 		end;
 	end;
-	
+
 	function whitelist:CheckPlayerType(plr: any): any
 		if not plr then 
 			return 'DEFAULT'; 
 		end;
-		local plrPriority: any, _: any, _: any = whitelist:get(plr) or 0;
+		local plrPriority, _, _ = self:get(plr) or 0;
 		if plrPriority == 0 then
 			return 'DEFAULT';
 		elseif plrPriority == 1 then
@@ -1809,7 +1826,7 @@ velo.run(function()
 		if whitelist.localprio >= 3 then
 			task.spawn(function()
 				repeat
-					task.wait(0.5)
+					task.wait(0.5);
 					whitelist:renderNametag(lplr);
 					whitelist:renderNametag(v);
 				until vape.Loaded == nil;
@@ -1826,6 +1843,13 @@ velo.run(function()
 			whitelist.connection = nil;
 		end;
 	end);
+
+	vape:Clean(textChatService.MessageReceived:Connect(function(message)
+		if message.TextSource then
+			local success: boolean?, plr: any = pcall(playersService.GetPlayerByUserId, playersService, message.TextSource.UserId)
+			whitelist:process(message.Text, plr);
+		end;
+	end));
 end);
 
 velo.run(function()
