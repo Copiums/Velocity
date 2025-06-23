@@ -46,8 +46,9 @@ local playersService: Players = cloneref(game:GetService('Players'));
 local runService: RunService = cloneref(game:GetService('RunService'));
 local replicatedStorage: ReplicatedStorage = cloneref(game:GetService('ReplicatedStorage'));
 local inputService: UserInputService = cloneref(game:GetService('UserInputService'));
-
+local tweenService: TweenService = cloneref(game:GetService("TweenService"));
 local lplr: Player = playersService.LocalPlayer;
+
 local vape: any = shared.vape;
 local entitylib: any = vape.Libraries.entity;
 local sessioninfo: any = vape.Libraries.sessioninfo;
@@ -106,26 +107,28 @@ for _, v in vape.Modules do
 end;
 
 velo.run(function()
-	local tags: string? = select(3, whitelist:get(lplr)) or whitelist.customtags[lplr.Name] or {}
-	local tagData: table? = tags[1]
-	if lplr.Character and lplr.Character:FindFirstChild("Head") then
-		local displayNameGui: Nametag? = lplr.Character.Head:FindFirstChild("Nametag");
-		if displayNameGui and displayNameGui.DisplayNameContainer and displayNameGui.DisplayNameContainer:FindFirstChild("DisplayName") then
-			if tagData then
-				local hexColor: any = string.format("%02X%02X%02X",
-					math.floor(tagData.color.R * 255),
-					math.floor(tagData.color.G * 255),
-					math.floor(tagData.color.B * 255))
+	for i,v in next, playersService:GetPlayers() do
+		local tags: string? = select(3, whitelist:get(v)) or whitelist.customtags[v.Name] or {}
+		local tagData: table? = tags[1]
+		if v.Character and v.Character:FindFirstChild("Head") then
+			local displayNameGui: Nametag? = v.Character.Head:FindFirstChild("Nametag");
+			if displayNameGui and displayNameGui.DisplayNameContainer and displayNameGui.DisplayNameContainer:FindFirstChild("DisplayName") then
+				if tagData then
+					local hexColor: any = string.format("%02X%02X%02X",
+						math.floor(tagData.color.R * 255),
+						math.floor(tagData.color.G * 255),
+						math.floor(tagData.color.B * 255))
 
-				local tagText: string? = string.format('<font color="#%s">[%s] </font>', hexColor, tagData.text);
-				displayNameGui.DisplayNameContainer.DisplayName.Text = tagText .. lplr.DisplayName;
-			else
-				displayNameGui.DisplayNameContainer.DisplayName.Text = lplr.DisplayName;
+					local tagText: string? = string.format('<font color="#%s">[%s] </font>', hexColor, tagData.text);
+					displayNameGui.DisplayNameContainer.DisplayName.Text = tagText .. v.DisplayName;
+				else
+					displayNameGui.DisplayNameContainer.DisplayName.Text = v.DisplayName;
+				end;
 			end;
 		end;
 	end;
 end);
-
+	
 velo.run(function()
 	local Sprint: table = {["Enabled"] = false};
 	local old: any;
@@ -162,7 +165,7 @@ velo.run(function()
 		["Tooltip"] = 'Sets your sprinting to true.';
 	});
 end)
-	
+
 velo.run(function()
 	local AutoGamble: table = {["Enabled"] = false};
 	AutoGamble = vape.Categories.Minigames:CreateModule({
@@ -198,7 +201,7 @@ velo.run(function()
 		["Tooltip"] = 'Automatically opens lucky crates, piston inspired!'
 	})
 end)
-
+	
 velo.run(function()
 	local Card: table = {["Enabled"] = false};
 	local CardGradient: table = {["Enabled"] = false};
@@ -216,9 +219,9 @@ velo.run(function()
 		local corners: UICorner = card:FindFirstChildOfClass('UICorner') or Instance.new('UICorner', card);
 		corners.CornerRadius = UDim.new(0, Round["Value"]);
 		card.BackgroundColor3 = Color3.fromHSV(CardColor["Hue"], CardColor["Sat"], CardColor["Value"]);
-        if not table.find(Object, corners) then
-            table.insert(Object, corners);
-        end;
+        	if not table.find(Object, corners) then
+            		table.insert(Object, corners);
+        	end;
 		if Highlight["Enabled"] then 
 			local stroke: UIStroke? = card:FindFirstChildOfClass('UIStroke') or Instance.new('UIStroke', card);
 			stroke.Thickness = 1.7;
@@ -228,9 +231,9 @@ velo.run(function()
 			end;
 		else
 			local stroke: UIStroke? = card:FindFirstChildOfClass("UIStroke") or Instance.new('UIStroke', card);
-            if stroke then
-                stroke:Destroy();
-            end;
+            		if stroke then
+                		stroke:Destroy();
+            		end;
 		end;
 		if CardGradient["Enabled"] then
 			card.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
@@ -251,26 +254,26 @@ velo.run(function()
 				pcall(CardFunc);
 				table.insert(Card.Connections, lplr.PlayerGui.ChildAdded:Connect(CardFunc));
 			else
-                for _, x in next, Object do
-                    if x and x.Destroy then
-                        x:Destroy();
-                    end;
-                end;
-                Object = {}
-                for _, v in next, Card.Connections do
-                    if v.Disconnect then
-                        v:Disconnect();
-                    end;
-                end;
-                Card.Connections = {};
-            end;
+                		for _, x in next, Object do
+                    			if x and x.Destroy then
+                        			x:Destroy();
+                    			end;
+                		end;
+                		Object = {}
+                		for _, v in next, Card.Connections do
+                    			if v.Disconnect then
+                        			v:Disconnect();
+                   			end;
+                		end;
+                		Card.Connections = {};
+            		end;
 		end;
 	});
 	CardGradient = Card:CreateToggle({
 		["Name"] = 'Gradient',
 		["Function"] = function(callback: boolean): void
-			pcall(function() CardColor2.Object.Visible = callback end) 
-		end
+			pcall(function() CardColor2.Object.Visible = callback end);
+		end;
 	});
 	Round = Card:CreateSlider({
 		["Name"] = 'Rounding',
@@ -288,28 +291,93 @@ velo.run(function()
 	CardColor = Card:CreateColorSlider({
 		["Name"] = 'Color',
 		["Function"] = function()
-			task.spawn(pcall, CardFunc)
-		end
+			task.spawn(pcall, CardFunc);
+		end;
 	});
 	CardColor2 = Card:CreateColorSlider({
 		["Name"] = 'Color 2',
 		["Function"] = function()
-			task.spawn(pcall, CardFunc)
-		end
+			task.spawn(pcall, CardFunc);
+		end;
 	});
 	Highlight = Card:CreateToggle({
 		["Name"] = 'Highlight',
 		["Function"] = function()
-			task.spawn(pcall, CardFunc)
-		end
+			task.spawn(pcall, CardFunc);
+		end;
 	});
 	HighlightColor = Card:CreateColorSlider({
 		["Name"] = 'Highlight Color',
 		["Function"] = function()
-			task.spawn(pcall, CardFunc)
+			task.spawn(pcall, CardFunc);
 		end;
 	});
 end);
+
+velo.run(function()
+	local anim: Animation?;
+    	local asset: Model?;
+    	local lastPos: Vector3?;
+    	local conn: RBXScriptConnection?;
+    	local NightmareEmote: table = {["Enabled"] = false};
+    	NightmareEmote = vape.Categories.World:CreateModule({
+		["Name"] = "NightmareEmote";
+ 		["Function"] = function(callback: boolean): nil
+            		if callback then
+                		local char: Model? = lplr.Character;
+                		if not char or not char.PrimaryPart then NightmareEmote:Toggle(); return; end;
+                		local GQU: any = cheatengine and { setQueryIgnored = function() end } or require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include").node_modules["@easy-games"]["game-core"].out).GameQueryUtil;
+                		asset = game:GetService("ReplicatedStorage").Assets.Effects.NightmareEmote:Clone();
+                		asset.Parent = workspace;
+                		lastPos = char.PrimaryPart.Position;
+                		conn = runService.RenderStepped:Connect(function()
+                   			if not asset or not char or not char:FindFirstChild("LowerTorso") then return; end;
+                    			local pos: Vector3 = char.PrimaryPart.Position;
+                    			if (pos - lastPos).Magnitude > 0.1 then
+                        			if conn then conn:Disconnect(); conn = nil; end;
+                        			if asset then asset:Destroy(); asset = nil; end;
+                        			NightmareEmote:Toggle();
+                        			return;
+                    			end;
+                    			lastPos = pos;
+                    			asset:SetPrimaryPartCFrame(char.LowerTorso.CFrame + Vector3.new(0, -2, 0));
+               			end);
+
+                		for _, d: Instance in next, asset:GetDescendants() do
+                    			if d:IsA("BasePart") then
+                        			GQU:setQueryIgnored(d, true);
+                        			d.CanCollide = false;
+                        			d.Anchored = true;
+                    			end;
+                		end;
+
+                		for _, part: BasePart? in {asset:FindFirstChild("Outer"), asset:FindFirstChild("Middle")} do
+                    			if part then
+                        			local isOuter: boolean = part.Name == "Outer";
+                        			local rot: Vector3 = Vector3.new(0, isOuter and 360 or -360, 0);
+                        			local time: number = isOuter and 1.5 or 12.5;
+                        			tweenService:Create(part, TweenInfo.new(time, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1), {
+                            				Orientation = part.Orientation + rot
+                        			}):Play();
+                    			end;
+                		end;
+
+                		local a: Animation = Instance.new("Animation");
+                		a.AnimationId = "rbxassetid://9191822700";
+                		local humanoid: Humanoid? = char:FindFirstChildWhichIsA("Humanoid");
+                		if humanoid then
+                    			anim = humanoid:LoadAnimation(a);
+                    			anim:Play();
+                		end;
+            		else
+                		if conn then conn:Disconnect(); conn = nil; end;
+                		if anim then anim:Stop(); anim = nil; end;
+                		if asset then asset:Destroy(); asset = nil; end;
+            		end;
+            		return;
+        	end;
+    	})
+end)
 
 velo.run(function()
 	local HotbarVisuals: table = {}
@@ -402,7 +470,7 @@ velo.run(function()
 		end;
 	})
 	local function forceRefresh()
-		if HotbarVisuals["Enabled"] then HotbarVisuals.ToggleButton(false); HotbarVisuals.ToggleButton(false); end
+		if HotbarVisuals["Enabled"] then HotbarVisuals:Toggle(); HotbarVisuals:Toggle(); end;
 	end;
 	HotbarColorToggle = HotbarVisuals:CreateToggle({
 		["Name"] = "Slot Color",
@@ -440,13 +508,13 @@ velo.run(function()
 			for i: any,v: any in hotbarcoloricons do
 				if HotbarColorToggle["Enabled"] then
 					pcall(function() v.BackgroundColor3 = Color3.fromHSV(HotbarColor.Hue, HotbarColor.Sat, HotbarColor.Value) end) 
-				end
-			end
-		end
+				end;
+			end;
+		end;
 	})
 	HotbarRounding = HotbarVisuals:CreateToggle({
 		["Name"] = 'Rounding',
-		["Function"] = function(callback: boolean): void pcall(function() HotbarRoundRadius.Object.Visible = state; end); forceRefresh(); end
+		["Function"] = function(callback: boolean): void pcall(function() HotbarRoundRadius.Object.Visible = callback; end); forceRefresh(); end
 	})
 	HotbarRoundRadius = HotbarVisuals:CreateSlider({
 		["Name"] = 'Corner Radius',
@@ -454,13 +522,13 @@ velo.run(function()
 		["Max"] = 20,
 		["Function"] = function(callback: boolean): void
 			for i,v in hotbarobjects do 
-				pcall(function() v.CornerRadius = UDim.new(0, callback) end)
-			end
-		end
+				pcall(function() v.CornerRadius = UDim.new(0, callback) end);
+			end;
+		end;
 	})
 	HotbarHighlight = HotbarVisuals:CreateToggle({
 		["Name"] = 'Outline Highlight',
-		["Function"] = function(callback: boolean): void pcall(function() HotbarHighlightColor.Object.Visible = state; end); forceRefresh(); end
+		["Function"] = function(callback: boolean): void pcall(function() HotbarHighlightColor.Object.Visible = callback; end); forceRefresh(); end
 	})
 	HotbarHighlightColor = HotbarVisuals:CreateColorSlider({
 		["Name"] = 'Highlight Color',
@@ -468,9 +536,9 @@ velo.run(function()
 			for i,v in hotbarobjects do 
 				if v:IsA('UIStroke') and HotbarHighlight.Enabled then 
 					pcall(function() v.Color = Color3.fromHSV(HotbarHighlightColor.Hue, HotbarHighlightColor.Sat, HotbarHighlightColor.Value) end)
-				end
-			end
-		end
+				end;
+			end;
+		end;
 	})
 	HotbarHideSlotIcons = HotbarVisuals:CreateToggle({
 		["Name"] = "No Slot Numbers", ["Function"] = forceRefresh
@@ -483,8 +551,8 @@ velo.run(function()
 		["Function"] = function(value)
 			for i,v in hotbarcoloricons do 
 				pcall(function() v.Transparency = (0.1 * value) end); 
-			end
-		end
+			end;
+		end;
 	})
 	HotbarSpacing = HotbarVisuals:CreateSlider({
 		["Name"] = 'Spacing',
@@ -492,13 +560,13 @@ velo.run(function()
 		["Max"] = 5,
 		["Function"] = function(value)
 			if HotbarVisuals["Enabled"] then 
-				pcall(function() inventoryiconobj:FindFirstChildOfClass('UIListLayout').Padding = UDim.new(0, value) end)
-			end
-		end
+				pcall(function() inventoryiconobj:FindFirstChildOfClass('UIListLayout').Padding = UDim.new(0, value) end);
+			end;
+		end;
 	})
-	HotbarColor.Object.Visible = false
-	HotbarRoundRadius.Object.Visible = false
-	HotbarHighlightColor.Object.Visible = false
+	HotbarColor.Object.Visible = false;
+	HotbarRoundRadius.Object.Visible = false;
+	HotbarHighlightColor.Object.Visible = false;
 end);
 
 
