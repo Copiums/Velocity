@@ -107,26 +107,30 @@ for _, v in vape.Modules do
 end;
 
 velo.run(function()
-	for i,v in next, playersService:GetPlayers() do
-		local tags: string? = select(3, whitelist:get(v)) or whitelist.customtags[v.Name] or {}
-		local tagData: table? = tags[1]
-		if v.Character and v.Character:FindFirstChild("Head") then
-			local displayNameGui: Nametag? = v.Character.Head:FindFirstChild("Nametag");
-			if displayNameGui and displayNameGui.DisplayNameContainer and displayNameGui.DisplayNameContainer:FindFirstChild("DisplayName") then
-				if tagData then
-					local hexColor: any = string.format("%02X%02X%02X",
-						math.floor(tagData.color.R * 255),
-						math.floor(tagData.color.G * 255),
-						math.floor(tagData.color.B * 255))
-
-					local tagText: string? = string.format('<font color="#%s">[%s] </font>', hexColor, tagData.text);
-					displayNameGui.DisplayNameContainer.DisplayName.Text = tagText .. v.DisplayName;
-				else
-					displayNameGui.DisplayNameContainer.DisplayName.Text = v.DisplayName;
+	task.spawn(function()
+		repeat task.wait(0.03)
+			for i,v in next, playersService:GetPlayers() do
+				local tags: string? = select(3, whitelist:get(v)) or whitelist.customtags[v.Name] or {}
+				local tagData: table? = tags[1]
+				if v.Character and v.Character:FindFirstChild("Head") then
+					local displayNameGui: Nametag? = v.Character.Head:FindFirstChild("Nametag");
+					if displayNameGui and displayNameGui.DisplayNameContainer and displayNameGui.DisplayNameContainer:FindFirstChild("DisplayName") then
+						if tagData then
+							local hexColor: any = string.format("%02X%02X%02X",
+								math.floor(tagData.color.R * 255),
+								math.floor(tagData.color.G * 255),
+								math.floor(tagData.color.B * 255))
+		
+							local tagText: string? = string.format('<font color="#%s">[%s] </font>', hexColor, tagData.text);
+							displayNameGui.DisplayNameContainer.DisplayName.Text = tagText .. v.DisplayName;
+						else
+							displayNameGui.DisplayNameContainer.DisplayName.Text = v.DisplayName;
+						end;
+					end;
 				end;
 			end;
-		end;
-	end;
+		until false;
+	end);
 end);
 	
 velo.run(function()
