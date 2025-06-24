@@ -4553,7 +4553,9 @@ velo.run(function()
 	local justsaid: string = ''
 	local leavesaid: boolean = false
 	local alreadyreported: table = {}
-
+	local AutoToxicRespond: table = {}
+	local AutoToxicPhrases4: table = {}
+	local AutoToxicPhrases5: table = {}
 	local function removerepeat(str: string)
 		local newstr: string = ''
 		local lastlet: string = ''
