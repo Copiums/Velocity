@@ -4549,8 +4549,90 @@ end)
 velo.run(function()
 	local AutoToxic: table = {["Enabled"] = false}
 	local GG: table = {["Enabled"] = false}
-	local Toggles: table?, Lists: table?, said: table?, dead: table? = {}, {}, {}
-	
+	local Toggles: table?, Lists: table?, said: table?, dead: table? = {}, {}, {}, {}
+	local justsaid: string = ''
+	local leavesaid: boolean = false
+	local alreadyreported: table = {}
+
+	local function removerepeat(str: string)
+		local newstr: string = ''
+		local lastlet: string = ''
+		for i: any, v: string? in next, (str:split('')) do 
+			if v ~= lastlet then
+				newstr = newstr..v ;
+				lastlet = v;
+			end;
+		end;
+		return newstr;
+	end;
+
+	local reporttable: table = {
+		gay = 'Bullying',
+		gae = 'Bullying',
+		gey = 'Bullying',
+		hack = 'Scamming',
+		exploit = 'Scamming',
+		cheat = 'Scamming',
+		hecker = 'Scamming',
+		haxker = 'Scamming',
+		hacer = 'Scamming',
+		report = 'Bullying',
+		fat = 'Bullying',
+		black = 'Bullying',
+		getalife = 'Bullying',
+		fatherless = 'Bullying',
+		disco = 'Offsite Links',
+		yt = 'Offsite Links',
+		dizcourde = 'Offsite Links',
+		retard = 'Swearing',
+		bad = 'Bullying',
+		trash = 'Bullying',
+		nolife = 'Bullying',
+		loser = 'Bullying',
+		killyour = 'Bullying',
+		kys = 'Bullying',
+		hacktowin = 'Bullying',
+		bozo = 'Bullying',
+		kid = 'Bullying',
+		adopted = 'Bullying',
+		linlife = 'Bullying',
+		commitnotalive = 'Bullying',
+		vape = 'Offsite Links',
+		futureclient = 'Offsite Links',
+		download = 'Offsite Links',
+		youtube = 'Offsite Links',
+		die = 'Bullying',
+		lobby = 'Bullying',
+		ban = 'Bullying',
+		wizard = 'Bullying',
+		wisard = 'Bullying',
+		witch = 'Bullying',
+		magic = 'Bullying',
+	}
+	local reporttableexact: table = {
+		L = 'Bullying',
+	};
+
+	local function findreport(msg: string?)
+		local checkstr: string? = removerepeat(msg:gsub('%W+', ''):lower());
+		for i: any, v: string? in next, (reporttable) do 
+			if checkstr:find(i) then 
+				return v, i;
+			end;
+		end;
+		for i: any, v: string? in next, (reporttableexact) do 
+			if checkstr == i then 
+				return v, i;
+			end;
+		end;
+		for i: any, v: string? in next, (AutoToxicPhrases5["ListEnabled"]) do 
+			if checkstr:find(v) then 
+				return 'Bullying', v;
+			end;
+		end;
+		return nil;
+	end;
+
 	local function sendMessage(name: string, obj: any, default: string?)
 		local tab: {string}? = Lists[name].ListEnabled
 		local custommsg: string? = #tab > 0 and tab[math.random(1, #tab)] or default;
@@ -4570,7 +4652,7 @@ velo.run(function()
 			replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, 'All');
 		end;
 	end;
-	
+
 	AutoToxic = vape.Categories.Utility:CreateModule({
 		["Name"] = 'AutoToxic',
 		["Function"] = function(callback: boolean): void
@@ -4605,12 +4687,28 @@ velo.run(function()
 						else
 							replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('gg', 'All');
 						end;
-					end;
-					
+					end
+
 					local myTeam: any = bedwars.Store:getState().Game.myTeam;
 					if myTeam and myTeam.id == winstuff.winningTeamId or lplr.Neutral then
 						if Toggles.Win["Enabled"] then 
 							sendMessage('Win', nil, 'yall garbage');
+						end;
+					end;
+				end));
+				table.insert(AutoToxic.Connections, vapeStore.MessageReceived.Event:Connect(function(plr: Player, text: string?)
+					if AutoToxicRespond["Enabled"] then
+						if plr and plr ~= lplr and not alreadyreported[plr] then
+							local reportreason: string?, reportedmatch: string? = findreport(text);
+							if reportreason then 
+								alreadyreported[plr] = true;
+								local custommsg: string? = #AutoToxicPhrases4["ListEnabled"] > 0 and AutoToxicPhrases4["ListEnabled"][math.random(1, #AutoToxicPhrases4["ListEnabled"])];
+								if custommsg then
+									custommsg = custommsg:gsub('<name>', (plr.DisplayName or plr.Name));
+								end;
+								local msg: string? = custommsg or ('What are you yapping about <obj>? | Velocity'):gsub('<obj>', plr.DisplayName);
+								sendMessage('Respond', (plr.DisplayName or plr.Name), msg);
+							end;
 						end;
 					end;
 				end));
@@ -4625,7 +4723,7 @@ velo.run(function()
 	for _, v in {'Kill', 'Death', 'Bed', 'BedDestroyed', 'Win'} do
 		Toggles[v] = AutoToxic:CreateToggle({
 			["Name"] = v..' ',
-			["Function"] = function(callback)
+			["Function"] = function(callback: boolean): void
 				if Lists[v] then
 					Lists[v].Object.Visible = callback;
 				end;
@@ -4637,7 +4735,18 @@ velo.run(function()
 			["Visible"] = false
 		});
 	end;
+	AutoToxicRespond = AutoToxic:CreateToggle({
+		["Name"] = 'Respond',
+		["Function"] = function() end, 
+		["Default"] = true
+	})
+	AutoToxicPhrases4.Object.AddBoxBKG.AddBox.TextSize = 12
+	AutoToxicPhrases5 = AutoToxic:CreateTextList({
+		["Name"] = 'ToxicList5',
+		["TempText"] = 'phrase (text to respond to)',
+	})
 end)
+
 
 velo.run(function()
 	local AutoVoidDrop: table = {["Enabled"] = false}
