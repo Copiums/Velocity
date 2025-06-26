@@ -8174,6 +8174,73 @@ velo.run(function()
 end)
 
 velo.run(function()
+    local anim: Animation?;
+    local asset: Model?;
+    local lastPos: Vector3?;
+    local conn: RBXScriptConnection?;
+    local NightmareEmote: table = {["Enabled"] = false};
+    NightmareEmote = vape.Categories.World:CreateModule({
+        ["Name"] = "NightmareEmote";
+        ["Function"] = function(callback: boolean): nil
+            if callback then
+                local char: Model? = lplr.Character;
+                if not char or not char.PrimaryPart then 
+			NightmareEmote:Toggle(); 
+			return; 
+		end;
+                local GQU: any = cheatengine and { setQueryIgnored = function() end } or require(replicatedStorage:WaitForChild("rbxts_include").node_modules["@easy-games"]["game-core"].out).GameQueryUtil;
+                asset = replicatedStorage.Assets.Effects.NightmareEmote:Clone();
+                asset.Parent = workspace;
+                lastPos = char.PrimaryPart.Position;
+                conn = runService.RenderStepped:Connect(function()
+                    if not asset or not char or not char:FindFirstChild("LowerTorso") then return; end;
+                    local pos: Vector3 = char.PrimaryPart.Position;
+                    if (pos - lastPos).Magnitude > 0.1 then
+                        if conn then conn:Disconnect(); conn = nil; end;
+                        if asset then asset:Destroy(); asset = nil; end;
+                        NightmareEmote:Toggle();
+                        return;
+                    end;
+                    lastPos = pos;
+                    asset:SetPrimaryPartCFrame(char.LowerTorso.CFrame + Vector3.new(0, -2, 0));
+                end);
+
+                for _, d: Instance in next, asset:GetDescendants() do
+                    if d:IsA("BasePart") then
+                        GQU:setQueryIgnored(d, true);
+                        d.CanCollide = false;
+                        d.Anchored = true;
+                    end;
+                end;
+
+                for _, part: BasePart? in {asset:FindFirstChild("Outer"), asset:FindFirstChild("Middle")} do
+                    if part then
+                        local isOuter: boolean = part.Name == "Outer";
+                        local rot: Vector3 = Vector3.new(0, isOuter and 360 or -360, 0);
+                        local time: number = isOuter and 1.5 or 12.5;
+                        tweenService:Create(part, TweenInfo.new(time, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1), {
+                            Orientation = part.Orientation + rot
+                        }):Play();
+                    end;
+                end;
+                local a: Animation = Instance.new("Animation");
+                a.AnimationId = "rbxassetid://9191822700";
+                local humanoid: Humanoid? = char:FindFirstChildWhichIsA("Humanoid");
+                if humanoid then
+                    anim = humanoid:LoadAnimation(a);
+                    anim:Play();
+                end;
+            else
+                if conn then conn:Disconnect(); conn = nil; end;
+                if anim then anim:Stop(); anim = nil; end;
+                if asset then asset:Destroy(); asset = nil; end;
+            end;
+            return;
+        end;
+    })
+end)
+
+velo.run(function()
     local Viewmodel: table = {["Enabled"] = false}
     local Depth: table = {["Value"] = 0.8}
     local Horizontal: table = {["Value"] = 0.8}
