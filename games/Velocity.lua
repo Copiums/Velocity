@@ -3385,8 +3385,8 @@ velo.run(function()
 	Value = Speed:CreateSlider({
 		["Name"] = 'Speed',
 		["Min"] = 1,
-		["Max"] = 24,
-		["Default"] = 24,
+		["Max"] = 23,
+		["Default"] = 23,
 		["Suffix"] = function(val) 
 			return val == 1 and 'stud' or 'studs'; 
 		end;
