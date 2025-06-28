@@ -54,10 +54,17 @@ local entitylib: any = vape.Libraries.entity;
 local sessioninfo: any = vape.Libraries.sessioninfo;
 local whitelist: any = vape.Libraries.whitelist;
 local bedwars: table = {};
-local cheatengine: boolean = false;
 
 local function notif(...)
 	return vape:CreateNotification(...);
+end;
+
+local function GetItems(item: string): table
+	local Items: table = {};
+	for _, v in next, Enum[item]:GetEnumItems() do 
+		table.insert(Items, v["Name"]); 
+	end;
+	return Items;
 end;
 
 velo.run(function()
@@ -74,8 +81,7 @@ velo.run(function()
 		end;
 		task.wait();
 	until KnitInit;
-	cheatengine = not KnitInit;
-	if not cheatengine and not debug.getupvalue(Knit.Start, 1) then
+	if not debug.getupvalue(Knit.Start, 1) then
 		repeat task.wait() until debug.getupvalue(Knit.Start, 1);
 	end;
 	local Flamework: any = require(replicatedStorage['rbxts_include']['node_modules']['@flamework'].core.out).Flamework
@@ -87,9 +93,9 @@ velo.run(function()
 		Store = require(lplr.PlayerScripts.TS.ui.store).ClientStore
 	}, {
 		__index = function(self, ind)
-			rawset(self, ind, Knit.Controllers[ind])
-			return rawget(self, ind)
-		end
+			rawset(self, ind, Knit.Controllers[ind]);
+			return rawget(self, ind);
+		end;
 	});
 
 	local kills: any = sessioninfo:AddItem('Kills');
@@ -102,7 +108,7 @@ velo.run(function()
 	end);
 end);
 
-for _, v in vape.Modules do
+for _: any, v: any in vape.Modules do
 	if v.Category == 'Combat' or v.Category == 'Minigames' then
 		vape:Remove(i);
 	end;
@@ -111,7 +117,7 @@ end;
 velo.run(function()
 	task.spawn(function()
 		repeat task.wait(0.03)
-			for i,v in next, playersService:GetPlayers() do
+			for i: any, v: Player in next, playersService:GetPlayers() do
 				local tags: string? = select(3, whitelist:get(v)) or whitelist.customtags[v.Name] or {}
 				local tagData: table? = tags[1]
 				if v.Character and v.Character:FindFirstChild("Head") then
@@ -207,73 +213,6 @@ velo.run(function()
 		["Tooltip"] = 'Automatically opens lucky crates, piston inspired!'
 	})
 end)
-
-velo.run(function()
-    local anim: Animation?;
-    local asset: Model?;
-    local lastPos: Vector3?;
-    local conn: RBXScriptConnection?;
-    local NightmareEmote: table = {["Enabled"] = false};
-    NightmareEmote = vape.Categories.World:CreateModule({
-        ["Name"] = "NightmareEmote";
-        ["Function"] = function(callback: boolean): nil
-            if callback then
-                local char: Model? = lplr.Character;
-                if not char or not char.PrimaryPart then 
-			NightmareEmote:Toggle(); 
-			return; 
-		end;
-                local GQU: any = cheatengine and { setQueryIgnored = function() end } or require(replicatedStorage:WaitForChild("rbxts_include").node_modules["@easy-games"]["game-core"].out).GameQueryUtil;
-                asset = replicatedStorage.Assets.Effects.NightmareEmote:Clone();
-                asset.Parent = workspace;
-                lastPos = char.PrimaryPart.Position;
-                conn = runService.RenderStepped:Connect(function()
-                    if not asset or not char or not char:FindFirstChild("LowerTorso") then return; end;
-                    local pos: Vector3 = char.PrimaryPart.Position;
-                    if (pos - lastPos).Magnitude > 0.1 then
-                        if conn then conn:Disconnect(); conn = nil; end;
-                        if asset then asset:Destroy(); asset = nil; end;
-                        NightmareEmote:Toggle();
-                        return;
-                    end;
-                    lastPos = pos;
-                    asset:SetPrimaryPartCFrame(char.LowerTorso.CFrame + Vector3.new(0, -2, 0));
-                end);
-
-                for _, d: Instance in next, asset:GetDescendants() do
-                    if d:IsA("BasePart") then
-                        GQU:setQueryIgnored(d, true);
-                        d.CanCollide = false;
-                        d.Anchored = true;
-                    end;
-                end;
-
-                for _, part: BasePart? in {asset:FindFirstChild("Outer"), asset:FindFirstChild("Middle")} do
-                    if part then
-                        local isOuter: boolean = part.Name == "Outer";
-                        local rot: Vector3 = Vector3.new(0, isOuter and 360 or -360, 0);
-                        local time: number = isOuter and 1.5 or 12.5;
-                        tweenService:Create(part, TweenInfo.new(time, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1), {
-                            Orientation = part.Orientation + rot
-                        }):Play();
-                    end;
-                end;
-                local a: Animation = Instance.new("Animation");
-                a.AnimationId = "rbxassetid://9191822700";
-                local humanoid: Humanoid? = char:FindFirstChildWhichIsA("Humanoid");
-                if humanoid then
-                    anim = humanoid:LoadAnimation(a);
-                    anim:Play();
-                end;
-            else
-                if conn then conn:Disconnect(); conn = nil; end;
-                if anim then anim:Stop(); anim = nil; end;
-                if asset then asset:Destroy(); asset = nil; end;
-            end;
-            return;
-        end;
-    })
-end)
 	
 velo.run(function()
 	local Card: table = {["Enabled"] = false};
@@ -284,6 +223,8 @@ velo.run(function()
 	local CardColor2: table = {};
 	local Object: table = {};
 	local Round: table = {};
+	local Font: table = {};
+	local FontSetting: table = {["Value"] = Enum.Font.SourceSans};
 	local CardFunc: () -> () = function()
 		if not lplr.PlayerGui:FindFirstChild('QueueApp') and Card["Enabled"] then 
 			return;
@@ -295,6 +236,14 @@ velo.run(function()
         	if not table.find(Object, corners) then
             		table.insert(Object, corners);
         	end;
+
+		if Font["Enabled"] then
+			for i: any, v: any in next, card:GetDescendants() do
+				if v:IsA("TextLabel") or v:IsA("TextButton") then
+					v.Font = FontSetting["Value"];
+				end;
+			end;
+		end;
 		if Highlight["Enabled"] then 
 			local stroke: UIStroke? = card:FindFirstChildOfClass('UIStroke') or Instance.new('UIStroke', card);
 			stroke.Thickness = 1.7;
@@ -383,6 +332,24 @@ velo.run(function()
 		["Name"] = 'Highlight Color',
 		["Function"] = function()
 			task.spawn(pcall, CardFunc);
+		end;
+	});
+	Font = Card:CreateToggle({
+		["Name"] ='Font',
+		["HoverText"] = 'custom fonts.',
+		["Function"] = function(callback: boolean): void 
+			FontSetting.Object.Visible = callback;
+		end;
+	})
+	FontSetting = Card:CreateDropdown({
+		["Name"] ="Fonts",
+		["List"] = GetItems("Font"),
+		["HoverText"] = "Font of the text.",
+		["Function"] = function()
+			if Card["Enabled"] then
+				Card:Toggle();
+				Card:Toggle();
+			end;
 		end;
 	});
 end);
@@ -576,5 +543,4 @@ velo.run(function()
 	HotbarRoundRadius.Object.Visible = false;
 	HotbarHighlightColor.Object.Visible = false;
 end);
-
 
