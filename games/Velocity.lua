@@ -91,7 +91,7 @@ local getcustomasset: any = vape.Libraries.getcustomasset;
 local cheatengine: boolean = false;
 local store: table = {
 	attackReach = 0,
-	attackSpeed = .1,
+	attackSpeed = .05,
 	attackReachUpdate = tick(),
 	damage = {},
 	damageBlockFail = tick(),
@@ -2502,17 +2502,16 @@ run(function()
 								end;
 
 								if delta.Magnitude > AttackRange["Value"] then continue; end;
-								--if delta.Magnitude < 14.4 and (tick() - swingCooldown) < math.max(ChargeTime["Value"], 0.02) then continue; end;
-
+								if delta.Magnitude < 14.4 and (tick() - swingCooldown) < ChargeTime["Value"] then continue; end;
 								local actualRoot: any = v.Character.PrimaryPart;
 								if actualRoot then
 									local dir: any = CFrame.lookAt(selfpos, actualRoot.Position).LookVector;
 									local pos: any = selfpos + dir * math.max(delta.Magnitude - 14.399, 0);
 									swingCooldown = tick();
 									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow()
-                                    bedwars.SwordController.lastSwingServerTime = workspace:GetServerTimeNow()
+                                    					bedwars.SwordController.lastSwingServerTime = workspace:GetServerTimeNow()
 									lastSwingServerTimeDelta = workspace:GetServerTimeNow() - lastSwingServerTime
-                                    lastSwingServerTime = workspace:GetServerTimeNow()
+                                    					lastSwingServerTime = workspace:GetServerTimeNow()
 									store.attackReach = (delta.Magnitude * 100) // 1 / 100;
 									store.attackReachUpdate = tick() + 1;
 
