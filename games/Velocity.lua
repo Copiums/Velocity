@@ -8459,8 +8459,6 @@ velo.run(function()
     end;
 end)
 
-
-
 --[[
 
 
@@ -8684,10 +8682,9 @@ velo.run(function()
 			end;
 		end;
 	end;
-
 	RemotesConnect = vape.Categories.Velocity:CreateModule({
 		["Name"] ='RemotesConnect',
-        ["HoverText"] = 'Spams remotes.',
+        	["HoverText"] = 'Spams remotes.',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				task.spawn(function()
@@ -8727,7 +8724,7 @@ velo.run(function()
 				end;
 			end
 		end,
-        ["Default"] =false
+        	["Default"] =false
 	})
 	RemotesConnectDelay = RemotesConnect:CreateSlider({
 		["Name"] ='Delay',
@@ -8764,13 +8761,13 @@ velo.run(function()
 end)
 
 velo.run(function()
-    local shaders: table = {};
+    	local shaders: table = {};
 	local shaders_m: table = {};
 	local shaders_l: table = {};
 	local shaders_t: table = {};
 	shaders = vape.Categories.Velocity:CreateModule({
 		["Name"] ='Shaders',
-        ["HoverText"] = 'Makes the game\'s shaders better.',
+        	["HoverText"] = 'Makes the game\'s shaders better.',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				local s: table = {};
@@ -8898,139 +8895,139 @@ end)
 
 velo.run(function()
 	local CustomClouds: table = {["Enabled"] = false}
-    local Material: table = {["Value"] = "Neon"}
+    	local Material: table = {["Value"] = "Neon"}
 	local Color: table = {
 		["Hue"] = 0,
 		["Sat"] = 0,
 		["Value"] = 0
-	}
+	};
 	local Trans: table = {["Value"] = 0}
-    local Old: table = {["Clouds"] = workspace:FindFirstChild("Clouds"):GetChildren()}
+    	local Old: table = {["Clouds"] = workspace:FindFirstChild("Clouds"):GetChildren()}
 	CustomClouds = vape.Categories.Velocity:CreateModule({
 		["Name"] = "CustomClouds",
-        ["HoverText"] = HoverText("Customizes the clouds."),
+        	["HoverText"] = HoverText("Customizes the clouds."),
 		["Function"] = function(callback: boolean): void
 			if callback then
 				task.spawn(function()
 					for _, v in next, Old["Clouds"] do
 						if v:IsA("Part") then
-							v["Transparency"] = Trans["Value"] / 100
-							v["Color"] = Color3["fromHSV"](Color["Hue"], Color["Sat"], Color["Value"])
-                            v["Material"] = Enum["Material"][Material["Value"]]
-						end
-					end
-				end)
+							v["Transparency"] = Trans["Value"] / 100;
+							v["Color"] = Color3["fromHSV"](Color["Hue"], Color["Sat"], Color["Value"]);
+                            				v["Material"] = Enum["Material"][Material["Value"]];
+						end;
+					end;
+				end);
 			else
 				task.spawn(function()
 					for _, v in next, Old["Clouds"] do
 						if v:IsA("Part") then
-							v["Transparency"] = 0
-							v["Color"] = Color3["fromRGB"](255, 255, 255)
-							v["Material"] = Enum["Material"]["SmoothPlastic"]
-						end
-					end
-				end)
-			end
+							v["Transparency"] = 0;
+							v["Color"] = Color3["fromRGB"](255, 255, 255);
+							v["Material"] = Enum["Material"]["SmoothPlastic"];
+						end;
+					end;
+				end);
+			end;
 		end,
         	["Default"] = false,
         	["ExtraText"] = function()
-            	return Material["Value"]
-        	end
+            		return Material["Value"];
+        	end;
 	})
-    Material = CustomClouds:CreateDropdown({
+    	Material = CustomClouds:CreateDropdown({
 		["Name"] = "Material",
 		["List"] = GetItems("Material"),
-        ["Default"] = "Neon",
+        	["Default"] = "Neon",
 		["HoverText"] = HoverText("Material of the clouds."),
 		["Function"] = function(val)
 			if CustomClouds["Enabled"] then
-                task.spawn(function()
+                		task.spawn(function()
 					for _, v in next, Old["Clouds"] do
 						if v:IsA("Part") then
-				            v["Material"] = Enum["Material"][val]
-                        end
-                    end
-                end)
-			end
-		end
+				            		v["Material"] = Enum["Material"][val];
+                        			end;
+                    			end;
+               		 	end);
+			end;
+		end;
 	})
 	Color = CustomClouds:CreateColorSlider({
 		["Name"] = "Color",
-        ["HoverText"] = HoverText("Color of the clouds."),
+        	["HoverText"] = HoverText("Color of the clouds."),
 		["Function"] = function()
 			if CustomClouds["Enabled"] then
-                task.spawn(function()
+                		task.spawn(function()
 					for _, v in next, Old["Clouds"] do
 						if v:IsA("Part") then
-				            v["Color"] = Color3["fromHSV"](Color["Hue"], Color["Sat"], Color["Value"])
-                        end
-                    end
-                end)
-			end
-		end
+				            		v["Color"] = Color3["fromHSV"](Color["Hue"], Color["Sat"], Color["Value"]);
+                        			end;
+                    			end;
+                		end);
+			end;
+		end;
 	})
 	Trans = CustomClouds:CreateSlider({
 		["Name"] = "Transparency",
 		["Min"] = 0,
 		["Max"] = 100,
-        ["HoverText"] = HoverText("Transparency of the clouds."),
+        	["HoverText"] = HoverText("Transparency of the clouds."),
 		["Function"] = function(val)
 			if CustomClouds["Enabled"] then
-                task.spawn(function()
+               			task.spawn(function()
 					for _, v in next, Old["Clouds"] do
 						if v:IsA("Part") then
-				            v["Transparency"] = val / 100
-                        end
-                    end
-                end)
-			end
+				            		v["Transparency"] = val / 100;
+                        			end;
+                    			end;
+                		end);
+			end;
 		end,
-        ["Default"] = 0
+        	["Default"] = 0
 	})
 end)
 
 velo.run(function()
-	local NoNameTag: table = {["Enabled"] = false}
+	local NoNameTag: table = {["Enabled"] = false};
 	NoNameTag = vape.Categories.Velocity:CreateModule({
 		["Name"] ='NoNameTag',
-        ["HoverText"] = 'Removes your NameTag.',
+        	["HoverText"] = 'Removes your NameTag.',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				RunLoops:BindToHeartbeat('NoNameTag', function()
 					pcall(function()
-						lplr.Character.Head.Nametag:Destroy()
-					end)
-				end)
+						lplr.Character.Head.Nametag:Destroy();
+					end);
+				end);
 			else
-				RunLoops:UnbindFromHeartbeat('NoNameTag')
-			end
+				RunLoops:UnbindFromHeartbeat('NoNameTag');
+			end;
 		end,
-        ["Default"] =false
+        	["Default"] =false
 	})
 end)
 
 velo.run(function()
-    local FeedRemover: table = {["Enabled"] = false}
+    	local FeedRemover: table = {["Enabled"] = false};
 	local function SetFeed(Boolean: boolean): void
-		local suc, res = pcall(function()
-			lplr["PlayerGui"]["KillFeedGui"]["Enabled"] = Boolean
-		end)
+		local suc: boolean, res: string? = pcall(function()
+			lplr["PlayerGui"]["KillFeedGui"]["Enabled"] = Boolean;
+		end);
 		if not suc then
-			repeat task.wait(0) until lplr["PlayerGui"]["KillFeedGui"]
-			lplr["PlayerGui"]["KillFeedGui"]["Enabled"] = Boolean
-		end
-	end
+			repeat task.wait(0) until lplr["PlayerGui"]["KillFeedGui"];
+			lplr["PlayerGui"]["KillFeedGui"]["Enabled"] = Boolean;
+		end;
+	end;
 	FeedRemover = vape.Categories.Velocity:CreateModule({
 		["Name"] = "FeedRemover",
-        ["HoverText"] = HoverText("Removes the kill feed interface."),
+        	["HoverText"] = HoverText("Removes the kill feed interface."),
 		["Function"] = function(callback: boolean): void
 			if callback then
-				SetFeed(false)
+				SetFeed(false);
 			else
-				SetFeed(true)
-			end
+				SetFeed(true);
+			end;
 		end,
-        ["Default"] = false
+        	["Default"] = false
 	})
 end)
 
@@ -9411,6 +9408,8 @@ velo.run(function()
 	local CardColor2: table = {};
 	local Object: table = {};
 	local Round: table = {};
+	local Font: table = {};
+	local FontSetting: table = {["Value"] = Enum.Font.SourceSans};
 	local CardFunc: () -> () = function()
 		if not lplr.PlayerGui:FindFirstChild('QueueApp') and Card["Enabled"] then 
 			return;
@@ -9419,9 +9418,17 @@ velo.run(function()
 		local corners: UICorner = card:FindFirstChildOfClass('UICorner') or Instance.new('UICorner', card);
 		corners.CornerRadius = UDim.new(0, Round["Value"]);
 		card.BackgroundColor3 = Color3.fromHSV(CardColor["Hue"], CardColor["Sat"], CardColor["Value"]);
-        if not table.find(Object, corners) then
-            table.insert(Object, corners);
-        end;
+        	if not table.find(Object, corners) then
+            		table.insert(Object, corners);
+        	end;
+
+		if Font["Enabled"] then
+			for i: any, v: any in next, card:GetDescendants() do
+				if v:IsA("TextLabel") or v:IsA("TextButton") then
+					v.Font = FontSetting["Value"];
+				end;
+			end;
+		end;
 		if Highlight["Enabled"] then 
 			local stroke: UIStroke? = card:FindFirstChildOfClass('UIStroke') or Instance.new('UIStroke', card);
 			stroke.Thickness = 1.7;
@@ -9431,9 +9438,9 @@ velo.run(function()
 			end;
 		else
 			local stroke: UIStroke? = card:FindFirstChildOfClass("UIStroke") or Instance.new('UIStroke', card);
-            if stroke then
-                stroke:Destroy();
-            end;
+            		if stroke then
+                		stroke:Destroy();
+            		end;
 		end;
 		if CardGradient["Enabled"] then
 			card.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
@@ -9454,26 +9461,26 @@ velo.run(function()
 				pcall(CardFunc);
 				table.insert(Card.Connections, lplr.PlayerGui.ChildAdded:Connect(CardFunc));
 			else
-                for _, x in next, Object do
-                    if x and x.Destroy then
-                        x:Destroy();
-                    end;
-                end;
-                Object = {}
-                for _, v in next, Card.Connections do
-                    if v.Disconnect then
-                        v:Disconnect();
-                    end;
-                end;
-                Card.Connections = {};
-            end;
+                		for _, x in next, Object do
+                    			if x and x.Destroy then
+                        			x:Destroy();
+                    			end;
+                		end;
+                		Object = {}
+                		for _, v in next, Card.Connections do
+                    			if v.Disconnect then
+                        			v:Disconnect();
+                   			end;
+                		end;
+                		Card.Connections = {};
+            		end;
 		end;
 	});
 	CardGradient = Card:CreateToggle({
 		["Name"] = 'Gradient',
 		["Function"] = function(callback: boolean): void
-			pcall(function() CardColor2.Object.Visible = callback end) 
-		end
+			pcall(function() CardColor2.Object.Visible = callback end);
+		end;
 	});
 	Round = Card:CreateSlider({
 		["Name"] = 'Rounding',
@@ -9491,28 +9498,47 @@ velo.run(function()
 	CardColor = Card:CreateColorSlider({
 		["Name"] = 'Color',
 		["Function"] = function()
-			task.spawn(pcall, CardFunc)
-		end
+			task.spawn(pcall, CardFunc);
+		end;
 	});
 	CardColor2 = Card:CreateColorSlider({
 		["Name"] = 'Color 2',
 		["Function"] = function()
-			task.spawn(pcall, CardFunc)
-		end
+			task.spawn(pcall, CardFunc);
+		end;
 	});
 	Highlight = Card:CreateToggle({
 		["Name"] = 'Highlight',
 		["Function"] = function()
-			task.spawn(pcall, CardFunc)
-		end
+			task.spawn(pcall, CardFunc);
+		end;
 	});
 	HighlightColor = Card:CreateColorSlider({
 		["Name"] = 'Highlight Color',
 		["Function"] = function()
-			task.spawn(pcall, CardFunc)
+			task.spawn(pcall, CardFunc);
+		end;
+	});
+	Font = Card:CreateToggle({
+		["Name"] ='Font',
+		["HoverText"] = 'custom fonts.',
+		["Function"] = function(callback: boolean): void 
+			FontSetting.Object.Visible = callback;
+		end;
+	})
+	FontSetting = Card:CreateDropdown({
+		["Name"] ="Fonts",
+		["List"] = GetItems("Font"),
+		["HoverText"] = "Font of the text.",
+		["Function"] = function()
+			if Card["Enabled"] then
+				Card:Toggle();
+				Card:Toggle();
+			end;
 		end;
 	});
 end);
+
 
 -- credits to catvape + render + snoopy + lunar + lunarvape
 -- IF YOU WANT THEM REMOVED, TELL ME AND I WILL REMOVE
