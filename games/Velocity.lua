@@ -2410,7 +2410,7 @@ run(function()
 						}
 					};
 					--debug.setupvalue(bedwars.SwordController.playSwordEffect, 6, fake);
-					debug.setupvalue(bedwars.ScytheController.playLocalAnimation, 3, fake);
+					--debug.setupvalue(bedwars.ScytheController.playLocalAnimation, 3, fake);
 
 					task.spawn(function()
 						local started: boolean = false;
@@ -2451,7 +2451,7 @@ run(function()
 				end;
 
 				local swingCooldown: number = 0;
-				lastSwingServerTime = workspace:GetServerTimeNow();
+				lastSwingServerTime = Workspace:GetServerTimeNow();
                 		lastSwingServerTimeDelta = 0;				
 				repeat
 					local attacked: any, sword: any, meta: any = {}, getAttackData();
