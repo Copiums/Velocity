@@ -113,6 +113,7 @@ local function finishLoading(): nil
 				if shared.VapeDeveloper then
 					loadstring(readfile('newvape/loader.lua'), 'loader')()
 				else
+					task.wait(2)
 					loadstring(game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/loader.lua', true), 'loader')()
 				end
 			]]
@@ -242,6 +243,7 @@ end;
 if not shared.VapeIndependent then
 	loadstring(downloadFile('newvape/games/universal.lua'), 'universal')();
 	if isfile('newvape/games/'..game.PlaceId..'.lua') then
+		task.wait(2)
 		loadstring(readfile('newvape/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...);
 	else
 		if not shared.VapeDeveloper then
