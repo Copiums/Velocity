@@ -10675,48 +10675,59 @@ velo.run(function()
 end)
 
 velo.run(function()
-    	local Loader: table = {["Enabled"] = false}
-    	local Font: table = {["Value"] = "FredokaOne"}
-    	local Color: table = {
-        	["Hue"] = 0,
-        	["Sat"] = 0,
-        	["Value"] = 0
-    	}
-   	local Size: table = {["Value"] = 10}
+	local Loader: table = {["Enabled"] = false}
+        local Font: table = {["Value"] = "FredokaOne"}
+	local Color: table = {
+		["Hue"] = 0,
+		["Sat"] = 0,
+	        ["Value"] = 0
+	}
+	local Size: table = {["Value"] = 10}
 	local Chat: table = {["Enabled"] = true}
-    	local Vape: table = {["Enabled"] = true}
+	local Vape: table = {["Enabled"] = true}
 	local function Round(number: number): number
-		local remainder = number % 0.1
+		local remainder: number? = number % 0.1;
 		if remainder >= 0.05 then
-			return number + (0.1 - remainder)
+			return number + (0.1 - remainder);
 		else
-			return number - remainder
-		end
-	end
+			return number - remainder;
+		end;
+	end;
 	Loader = vape.Categories.Velocity:CreateModule({
 		["Name"] = "Loader",
 		["Function"] = function(callback: boolean): void
 			if callback then
 				task.spawn(function()
-                    			local Time: string? = string.format("%.1f", Round(tick() - LoadTime))
+                    			local Time = string.format("%.1f", Round(tick() - LoadTime))
+					local message: string? = "[Velocity] [" .. VelocityVersion .. "]:\n- Loaded in " .. Time .. " seconds.\n- Logged in as " .. lplr["Name"] .. "."
 					if Chat["Enabled"] then
-						game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",  {
-							Text = "[Velocity] [" .. VelocityVersion .. "]:\n- Loaded in " .. Time .. " seconds.\n- Logged in as " .. lplr["Name"] .. ".",
-							Color = Color3.fromHSV(Color["Hue"], Color["Sat"], Color["Value"]),
-							Font = Enum["Font"][Font["Value"]],
-							FontSize = Enum["FontSize"]["Size" .. Size["Value"]] or Enum.FontSize.Size12 
-						})
-					end                                                                          
-                    			--if vape.Modules['Luminescents'].Enabled then
-						--vape.Modules['Luminescents']:Toggle()
-				    	--end
-				    	task.wait()
-				    	--vape.Modules['Luminescents']:Toggle(true)
-                    			if Vape["Enabled"] then
-                        			notif("[Velocity] [" .. VelocityVersion .. "]", "Loaded in " .. Time .. " seconds. Logged in as " .. lplr["Name"] .. ".", 5, 'warning')
-                    			end
-				end)
-			end
+					    if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+						local config: any = textChatService.ChatInputBarConfiguration
+						local targetChannel: any = config and config.TargetTextChannel
+						if targetChannel and targetChannel:IsA("TextChannel") then
+							local color: any = Color3.fromHSV(Color["Hue"], Color["Sat"], Color["Value"])
+							local r: any, g: any, b: any = color.R * 255, color.G * 255, color.B * 255
+							local coloredMessage: string? = string.format(
+								'<font color="rgb(%d,%d,%d)">%s</font>',
+								r, g, b, message
+							);
+							targetChannel:DisplaySystemMessage(coloredMessage);
+						end;
+					    else
+					        game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+					            Text = message,
+					            Color = Color3.fromHSV(Color["Hue"], Color["Sat"], Color["Value"]),
+					            Font = Enum.Font[Font["Value"]],
+					            TextSize = Size["Value"]
+					        });
+					    end;
+					end;                            
+				        task.wait()
+			                if Vape["Enabled"] then
+			                 	notif("[Velocity] [" .. VelocityVersion .. "]", "Loaded in " .. Time .. " seconds. Logged in as " .. lplr["Name"] .. ".", 5, 'warning')
+			                end;
+				end);
+			end;
 		end,
 	})
     	Font = Loader:CreateDropdown({
@@ -10725,27 +10736,27 @@ velo.run(function()
 		["HoverText"] = HoverText("Font of the text."),
 		["Function"] = function()
 			if Loader["Enabled"] then
-				Loader["ToggleButton"]()
-				Loader["ToggleButton"]()
-			end
-		end
+				Loader:Toggle();
+				Loader:Toggle();
+			end;
+		end;
 	})
-    	Color = Loader:CreateColorSlider({
-        	["Name"] = "Color",
-        	["HoverText"] = HoverText("Color of the text."),
-        	["Function"] = function() end
-    	})
-    	Size = Loader:CreateTextBox({
-        	["Name"] = "Size",
-        	["TempText"] = "Size",
-        	["HoverText"] = HoverText("Size of the text."),
-        	["Function"] = function(callback: boolean): void 
-           	 	if callback and Loader["Enabled"] then 
-				Loader:Toggle()
-				Loader:Toggle()
-            		end
-        	end
-    	})
+	Color = Loader:CreateColorSlider({
+		["Name"] = "Color",
+		["HoverText"] = HoverText("Color of the text."),
+		["Function"] = function() end
+	})
+        Size = Loader:CreateTextBox({
+	        ["Name"] = "Size",
+	        ["TempText"] = "Size",
+	        ["HoverText"] = HoverText("Size of the text."),
+	        ["Function"] = function(callback: boolean): void 
+	                if callback and Loader["Enabled"] then 
+				Loader:Toggle();
+				Loader:Toggle();
+	                end;
+                end;
+        })
 	Chat = Loader:CreateToggle({
 		["Name"] = "Chat",
 		["HoverText"] = HoverText("Sends a notification via chat."),
@@ -10814,17 +10825,17 @@ velo.run(function()
 											if b == 'Velocity' then
 												entitylib.character.HumanoidRootPart.Velocity += Vec3(z, v, z);
 												notif("BoostJump", "Boosted " .. v .. " studs in the air.", 3)
-												boost_jump.ToggleButton(l);
+												boost_jump:Toggle(l);
 											elseif b == 'CFrame' then
 												entitylib.character.HumanoidRootPart.CFrame += Vec3(z, c, z);
 												notif("BoostJump", "Teleported " .. c .. " studs in the air.", 3)
-												boost_jump.ToggleButton(l);
+												boost_jump:Toggle(l);
 											else
 												tweenService:Create(entitylib.character.HumanoidRootPart, TweenInfo.new(d), {
 													CFrame = entitylib.character.HumanoidRootPart.CFrame + Vec3(z, t, z)
 												}):Play();
 												notif("BoostJump", "Tweened " .. t .. " studs in the air.", 3)
-												boost_jump.ToggleButton(l);
+												boost_jump:Toggle(l);
 											end;
 										else
 											repeat
