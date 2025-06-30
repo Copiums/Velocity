@@ -5966,6 +5966,7 @@ end)
 	
 velo.run(function()
 	local GamingChair: table = {["Enabled"] = false}
+	local GamingChairSounds: table = {["Enabled"] = false};
 	local Color
 	local wheelpositions = {
 		Vector3.new(-0.8, -0.6, -0.18),
@@ -5986,6 +5987,41 @@ velo.run(function()
 		end;
 		return false;
 	end; 
+	local soundMap: table = {
+		["chair roll"] = {"ChairRolling.mp3", "https://raw.githubusercontent.com/Copiums/Velocity/main/assets/ChairRolling.mp3"},
+		["chair fly"] = {"ChairFlying", "https://raw.githubusercontent.com/Copiums/Velocity/main/assets/ChairFlying.mp3"},
+	};
+	local function getSound(key: string): string?
+		local info: any = soundMap[key]
+		local function Get(file: string, url: string): string?
+			local fullPath: string = "newvape/sounds/" .. file;
+			if not isfile(fullPath) then
+				local v: string = game:HttpGet(url);
+				if v then
+					writefile(fullPath, v);
+				else
+					return nil;
+				end;
+			end;
+			return getcustomasset(fullPath);
+		end;
+	
+		if type(info) == "string" then
+			if string.match(info, "^rbxassetid://") then
+				return info;
+			else
+				return nil;
+			end;
+		elseif type(info) == "table" then
+			local filename: string = info[1];
+			local url: string = info[2];
+			local result: any = Get(filename, url);
+			return result;
+		else
+			return nil;
+		end;
+	end;
+
 	GamingChair = vape.Categories.Render:CreateModule({
 		["Name"] = 'GamingChair',
 		["Function"] = function(callback: boolean): void
@@ -6002,12 +6038,12 @@ velo.run(function()
 				chair.Material = Enum.Material.SmoothPlastic
 				chair.Parent = workspace
 				movingsound = Instance.new('Sound')
-				--movingsound.SoundId = downloadVapeAsset('vape/assets/ChairRolling.mp3')
+				movingsound.SoundId = getSound("chair roll")
 				movingsound.Volume = 0.4
 				movingsound.Looped = true
 				movingsound.Parent = workspace
 				flyingsound = Instance.new('Sound')
-				--flyingsound.SoundId = downloadVapeAsset('vape/assets/ChairFlying.mp3')
+				flyingsound.SoundId = getSound("chair fly")
 				flyingsound.Volume = 0.4
 				flyingsound.Looped = true
 				flyingsound.Parent = workspace
@@ -6171,6 +6207,10 @@ velo.run(function()
 						chairlegs.Anchored = true
 						chairfan.Anchored = true
 						repeat task.wait() until entitylib.isAlive and entitylib.character.Humanoid.Health > 0
+						if GamingChair["Enabled"] then
+							GamingChair:Toggle()
+							GamingChair:Toggle()
+						end;
 						chair.Anchored = false
 						chairlegs.Anchored = false
 						chairfan.Anchored = false
