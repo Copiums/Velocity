@@ -30,7 +30,7 @@
 
 ]]--
 
-repeat task.wait() until game:IsLoaded()
+
 local velo: table = {};
 shared.nuker_range = 30;
 shared.velocity_client = true;
