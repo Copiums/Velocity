@@ -3349,7 +3349,6 @@ velo.run(function()
 			end);
 			if callback then
 				Speed:Clean(runService.PreSimulation:Connect(function(dt)
-					bedwars.StatefulEntityKnockbackController.lastImpulseTime = callback and math.huge or time()
 					if entitylib.isAlive and not Fly["Enabled"] and not LongJump["Enabled"] and isnetworkowner(entitylib.character.RootPart) then
 						local state: any = entitylib.character.Humanoid:GetState()
 						if state == Enum.HumanoidStateType.Climbing then return; end;
