@@ -8226,7 +8226,7 @@ velo.run(function()
 						local movedir: Vector3? = root.Position + vec;
 						local ray: RaycastResult? = workspace:Raycast(movedir, Vector3.new(0, -15, 0), rayCheck);
 						if not ray then
-							local check = workspace:Blockcast(root.CFrame, Vector3.new(3, 1, 3), Vector3.new(0, -(entitylib.character.HipHeight + 1), 0), rayCheck);
+							local check: any = workspace:Blockcast(root.CFrame, Vector3.new(3, 1, 3), Vector3.new(0, -(entitylib.character.HipHeight + 1), 0), rayCheck);
 							if check then
 								vec = (check.Instance:GetClosestPointOnSurface(movedir) - root.Position) * Vector3.new(1, 0, 1);
 							end;
@@ -8339,7 +8339,7 @@ velo.run(function()
 				end;
 				entitylib.targetCheck = function(ent)
 					if ent.Player and isFriend(ent.Player) then return false; end;
-					if murderer == lplr then return true end;
+					if murderer == lplr then return true; end;
 					return murderer == ent.Player or sheriff == ent.Player;
 				end;
 				for _, v in playersService:GetPlayers() do
@@ -8731,8 +8731,8 @@ velo.run(function()
     	local ILS: any = BeforeShaders()
 	local function removeObject(v: Instance?)
 		if not table.find(newobjects, v) then 
-			local v: table? = Toggles[v.ClassName]
-			if v and v.Toggle["Enabled"] then
+			local vt: table? = Toggles[v.ClassName]
+			if vt and vt.Toggle["Enabled"] then
 				table.insert(oldobjects, v);
 				v.Parent = game;
 			end;
