@@ -8754,7 +8754,7 @@ velo.run(function()
 	end;
 
 	Atmosphere = vape.Legit:CreateModule({
-		["Name"] = 'Atmosphere',
+		["Name"] = 'Atmospheres',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				for _, v in lightingService:GetChildren() do
