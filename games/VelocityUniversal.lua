@@ -8838,7 +8838,7 @@ velo.run(function()
 						end);
 					end;
 				end;
-			else;
+			else
 		                for _, v in newobjects do
 			                if v and v.Destroy then
 			                        v:Destroy();
@@ -8866,7 +8866,7 @@ velo.run(function()
 	themeName = Atmosphere:CreateDropdown({
 	        ["Name"] = "Mode",
 	        ["List"] = skyboxes,
-	        ["Function"] = function(val) end;
+	        ["Function"] = function(val) end
 	})
 	for i, v in apidump do
 		Toggles[i] = {Objects = {}}
