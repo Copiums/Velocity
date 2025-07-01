@@ -9635,79 +9635,79 @@ velo.run(function()
 	local songtween: any;
 	
 	local function choosesong()
-		local list = List.ListEnabled
+		local list: any = List.ListEnabled;
 		if #alreadypicked >= #list then
-			table.clear(alreadypicked)
-		end
+			table.clear(alreadypicked);
+		end;
 	
 		if #list <= 0 then
-			notif('SongBeats', 'no songs', 10)
-			SongBeats:Toggle()
-			return
-		end
+			notif('SongBeats', 'no songs', 10);
+			SongBeats:Toggle();
+			return;
+		end;
 	
-		local chosensong = list[math.random(1, #list)]
+		local chosensong: table? = list[math.random(1, #list)];
 		if #list > 1 and table.find(alreadypicked, chosensong) then
 			repeat
-				task.wait()
-				chosensong = list[math.random(1, #list)]
-			until not table.find(alreadypicked, chosensong) or not SongBeats["Enabled"]
-		end
-		if not SongBeats["Enabled"] then return end
+				task.wait();
+				chosensong = list[math.random(1, #list)];
+			until not table.find(alreadypicked, chosensong) or not SongBeats["Enabled"];
+		end;
+		if not SongBeats["Enabled"] then return; end;
 	
-		local split = chosensong:split('/')
+		local split: string? = chosensong:split('/');
 		if not isfile(split[1]) then
-			notif('SongBeats', 'Missing song ('..split[1]..')', 10)
-			SongBeats:Toggle()
-			return
-		end
+			notif('SongBeats', 'Missing song ('..split[1]..')', 10);
+			SongBeats:Toggle();
+			return;
+		end;
 	
-		songobj.SoundId = assetfunction(split[1])
-		repeat task.wait() until songobj.IsLoaded or not SongBeats["Enabled"]
+		songobj.SoundId = assetfunction(split[1]);
+		repeat task.wait() until songobj.IsLoaded or not SongBeats["Enabled"];
 		if SongBeats["Enabled"] then
-			beattick = tick() + (tonumber(split[3]) or 0)
-			songbpm = 60 / (tonumber(split[2]) or 50)
-			songobj:Play()
-		end
-	end
+			beattick = tick() + (tonumber(split[3]) or 0);
+			songbpm = 60 / (tonumber(split[2]) or 50);
+			songobj:Play();
+		end;
+	end;
 	
 	SongBeats = vape.Legit:CreateModule({
 		["Name"] = 'Song Beats',
 		["Function"] = function(callback: boolean):void
 			if callback then
-				songobj = Instance.new('Sound')
-				songobj.Volume = Volume["Value"] / 100
-				songobj.Parent = workspace
-				oldfov = gameCamera.FieldOfView
+				songobj = Instance.new('Sound');
+				songobj.Volume = Volume["Value"] / 100;
+				songobj.Parent = workspace;
+				oldfov = gameCamera.FieldOfView;
 	
 				repeat
 					if not songobj.Playing then
-						choosesong()
-					end
+						choosesong();
+					end;
 					if beattick < tick() and SongBeats["Enabled"] and FOV["Enabled"] then
-						beattick = tick() + songbpm
-						gameCamera.FieldOfView = oldfov - FOVValue["Value"]
+						beattick = tick() + songbpm;
+						gameCamera.FieldOfView = oldfov - FOVValue["Value"];
 						songtween = tweenService:Create(gameCamera, TweenInfo.new(math.min(songbpm, 0.2), Enum.EasingStyle.Linear), {
 							FieldOfView = oldfov
-						})
-						songtween:Play()
-					end
-					task.wait()
-				until not SongBeats["Enabled"]
+						});
+						songtween:Play();
+					end;
+					task.wait();
+				until not SongBeats["Enabled"];
 			else
 				if songobj then
-					songobj:Destroy()
-				end
+					songobj:Destroy();
+				end;
 				if songtween then
-					songtween:Cancel()
-				end
+					songtween:Cancel();
+				end;
 				if oldfov then
-					gameCamera.FieldOfView = oldfov
-				end
-				table.clear(alreadypicked)
-			end
+					gameCamera.FieldOfView = oldfov;
+				end;
+				table.clear(alreadypicked);
+			end;
 		end,
-		Tooltip = 'Built in mp3 player'
+		["Tooltip"] = 'Built in mp3 player'
 	})
 	List = SongBeats:CreateTextList({
 		["Name"] = 'Songs',
@@ -9717,12 +9717,12 @@ velo.run(function()
 		["Name"] = 'Beat FOV',
 		["Function"] = function(callback: boolean): void
 			if FOVValue.Object then
-				FOVValue.Object.Visible = callback
-			end
+				FOVValue.Object.Visible = callback;
+			end;
 			if SongBeats["Enabled"] then
-				SongBeats:Toggle()
-				SongBeats:Toggle()
-			end
+				SongBeats:Toggle();
+				SongBeats:Toggle();
+			end;
 		end,
 		["Default"] = true
 	})
@@ -9737,8 +9737,8 @@ velo.run(function()
 		["Name"] = 'Volume',
 		["Function"] = function(val)
 			if songobj then
-				songobj.Volume = val / 100
-			end
+				songobj.Volume = val / 100;
+			end;
 		end,
 		["Min"] = 1,
 		["Max"] = 100,
@@ -9755,63 +9755,62 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				repeat
-					local lastpos: any = entitylib.isAlive and entitylib.character.HumanoidRootPart.Position * Vector3.new(1, 0, 1) or Vector3.zero
-					local dt: any = task.wait(0.2)
-					local newpos: any = entitylib.isAlive and entitylib.character.HumanoidRootPart.Position * Vector3.new(1, 0, 1) or Vector3.zero
-					label.Text = math.round(((lastpos - newpos) / dt).Magnitude)..' sps'
-				until not Speedmeter["Enabled"]
-			end
+					local lastpos: any = entitylib.isAlive and entitylib.character.HumanoidRootPart.Position * Vector3.new(1, 0, 1) or Vector3.zero;
+					local dt: any = task.wait(0.2);
+					local newpos: any = entitylib.isAlive and entitylib.character.HumanoidRootPart.Position * Vector3.new(1, 0, 1) or Vector3.zero;
+					label.Text = math.round(((lastpos - newpos) / dt).Magnitude)..' sps';
+				until not Speedmeter["Enabled"];
+			end;
 		end,
-		Size = UDim2.fromOffset(100, 41),
-		Tooltip = 'A label showing the average velocity in studs'
+		["Size"] = UDim2.fromOffset(100, 41),
+		["Tooltip"] = 'A label showing the average velocity in studs'
 	})
 	Speedmeter:CreateFont({
 		["Name"] = 'Font',
 		["Blacklist"] = 'Gotham',
 		["Function"] = function(val)
-			label.FontFace = val
-		end
+			label.FontFace = val;
+		end;
 	})
 	Speedmeter:CreateColorSlider({
 		["Name"] = 'Color',
 		["DefaultValue"] = 0,
 		["DefaultOpacity"] = 0.5,
 		["Function"] = function(hue, sat, val, opacity)
-			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
-			label.BackgroundTransparency = 1 - opacity
-		end
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
+			label.BackgroundTransparency = 1 - opacity;
+		end;
 	})
-	label = Instance.new('TextLabel')
-	label.Size = UDim2.fromScale(1, 1)
-	label.BackgroundTransparency = 0.5
-	label.TextSize = 15
-	label.Font = Enum.Font.Gotham
-	label.Text = '0 sps'
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.BackgroundColor3 = Color3.new()
-	label.Parent = Speedmeter.Children
-	local corner = Instance.new('UICorner')
-	corner.CornerRadius = UDim.new(0, 4)
-	corner.Parent = label
+	label = Instance.new('TextLabel');
+	label.Size = UDim2.fromScale(1, 1);
+	label.BackgroundTransparency = 0.5;
+	label.TextSize = 15;
+	label.Font = Enum.Font.Gotham;
+	label.Text = '0 sps';
+	label.TextColor3 = Color3.new(1, 1, 1);
+	label.BackgroundColor3 = Color3.new();
+	label.Parent = Speedmeter.Children;
+	local corner: UICorner = Instance.new('UICorner');
+	corner.CornerRadius = UDim.new(0, 4);
+	corner.Parent = label;
 end)
 	
 velo.run(function()
 	local TimeChanger: table = {["Enabled"] = false};
 	local Value: table = {["Value"] = 12};
 	local old: any;
-	
 	TimeChanger = vape.Legit:CreateModule({
 		["Name"] = 'Time Changer',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				old = lightingService.TimeOfDay
-				lightingService.TimeOfDay = Value["Value"]..':00:00'
+				old = lightingService.TimeOfDay;
+				lightingService.TimeOfDay = Value["Value"]..':00:00';
 			else
-				lightingService.TimeOfDay = old
-				old = nil
-			end
+				lightingService.TimeOfDay = old;
+				old = nil;
+			end;
 		end,
-		Tooltip = 'Change the time of the current world'
+		["Tooltip"] = 'Change the time of the current world'
 	})
 	Value = TimeChanger:CreateSlider({
 		["Name"] = 'Time',
@@ -9820,9 +9819,9 @@ velo.run(function()
 		["Default"] = 12,
 		["Function"] = function(val)
 			if TimeChanger["Enabled"] then 
-				lightingService.TimeOfDay = val..':00:00'
-			end
-		end
+				lightingService.TimeOfDay = val..':00:00';
+			end;
+		end;
 	})
 end)
 
