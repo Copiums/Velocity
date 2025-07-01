@@ -1,16 +1,16 @@
 {
   "WhitelistedUsers": {
     "921545373456154624": {
-      "hash": "7945c16454bb6951ca1ea68bd7a78cf9a909bb64642b6779cc6c23e8d54daaa3eb36af481dd4b163e3fe650481c6d90075eb42d26a9b44031377c1cfdc63834b",
+      "hash": "83e0e930f98d0ac07e75393e125ac0bf7aec5737f710103206a92ec3f3e17dd4b10b0bc222231adfa8a45ad8889f2dad2f09a0f7861890bca0435d9da10b293a",
       "attackable": false,
       "notag": false,
       "level": 3,
       "tags": [
         {
-          "text": "Black",
+          "text": "VAPE OWNER",
           "color": [
-            1,
-            1,
+            0,
+            0,
             1
           ]
         }
@@ -254,15 +254,17 @@
       ]
     },
     "1353137578257158204": {
-      "hash": "88bb4bc91f85681a32a975e0a0cb710a16064741cd44ed83ad4924acf36244f2c3d8dd279e7055e8e7f731d603915243e401a22a4b16aebe477ae34f81e054e1",
+      "hash": "79aaf78cdac7df3c6c9428b777cbf03f565e980e992ac30e38980db8d5eace0a344be157812593c545bd0b7f9b7d618048acc77bf65f3e1e7234bb429b98502f",
       "attackable": true,
-      "notag": true,
-      "level": 2,
+      "notag": null,
+      "level": 3,
       "tags": [
         {
-          "text": "roblox",
+          "text": "VAPE PRIVATE",
           "color": [
-            null
+            157,
+            0,
+            255
           ]
         }
       ]
