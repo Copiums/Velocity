@@ -7994,7 +7994,7 @@ velo.run(function()
 				end;
 				
 				if Group["Value"] == '' or Role["Value"] == '' then 
-					return ;
+					return;
 				end;
 				
 				StaffDetector:Clean(playersService.PlayerAdded:Connect(playerAdded));
@@ -8223,7 +8223,7 @@ velo.run(function()
 					if entitylib.isAlive then
 						rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera};
 						local root: Humanoid? = entitylib.character.RootPart;
-						local movedir; Vector3? = root.Position + vec;
+						local movedir: Vector3? = root.Position + vec;
 						local ray: RaycastResult? = workspace:Raycast(movedir, Vector3.new(0, -15, 0), rayCheck);
 						if not ray then
 							local check = workspace:Blockcast(root.CFrame, Vector3.new(3, 1, 3), Vector3.new(0, -(entitylib.character.HipHeight + 1), 0), rayCheck);
