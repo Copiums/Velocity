@@ -8913,37 +8913,37 @@ velo.run(function()
 		["Name"] = 'Breadcrumbs',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				point = Instance.new('Attachment')
-				point.Position = Vector3.new(0, Thickness["Value"] - 2.7, 0)
-				point2 = Instance.new('Attachment')
-				point2.Position = Vector3.new(0, -Thickness["Value"] - 2.7, 0)
-				trail = Instance.new('Trail')
-				trail.Texture = Texture["Value"] == '' and 'http://www.roblox.com/asset/?id=14166981368' or Texture.Value
-				trail.TextureMode = Enum.TextureMode.Static
-				trail.Color = ColorSequence.new(Color3.fromHSV(FadeIn.Hue, FadeIn.Sat, FadeIn.Value), Color3.fromHSV(FadeOut.Hue, FadeOut.Sat, FadeOut.Value))
-				trail.Lifetime = Lifetime["Value"]
-				trail.Attachment0 = point
-				trail.Attachment1 = point2
-				trail.FaceCamera = true
+				point = Instance.new('Attachment');
+				point.Position = Vector3.new(0, Thickness["Value"] - 2.7, 0);
+				point2 = Instance.new('Attachment');
+				point2.Position = Vector3.new(0, -Thickness["Value"] - 2.7, 0);
+				trail = Instance.new('Trail');
+				trail.Texture = Texture["Value"] == '' and 'http://www.roblox.com/asset/?id=14166981368' or Texture["Value"];
+				trail.TextureMode = Enum.TextureMode.Static;
+				trail.Color = ColorSequence.new(Color3.fromHSV(FadeIn.Hue, FadeIn.Sat, FadeIn.Value), Color3.fromHSV(FadeOut.Hue, FadeOut.Sat, FadeOut.Value));
+				trail.Lifetime = Lifetime["Value"];
+				trail.Attachment0 = point;
+				trail.Attachment1 = point2;
+				trail.FaceCamera = true;
 	
-				Breadcrumbs:Clean(trail)
-				Breadcrumbs:Clean(point)
-				Breadcrumbs:Clean(point2)
-				Breadcrumbs:Clean(entitylib.Events.LocalAdded:Connect(function(ent)
-					point.Parent = ent.HumanoidRootPart
-					point2.Parent = ent.HumanoidRootPart
-					trail.Parent = gameCamera
-				end))
+				Breadcrumbs:Clean(trail);
+				Breadcrumbs:Clean(point);
+				Breadcrumbs:Clean(point2);
+				Breadcrumbs:Clean(entitylib.Events.LocalAdded:Connect(function(ent: Player?)
+					point.Parent = ent.HumanoidRootPart;
+					point2.Parent = ent.HumanoidRootPart;
+					trail.Parent = gameCamera;
+				end));
 				if entitylib.isAlive then
-					point.Parent = entitylib.character.RootPart
-					point2.Parent = entitylib.character.RootPart
-					trail.Parent = gameCamera
-				end
+					point.Parent = entitylib.character.RootPart;
+					point2.Parent = entitylib.character.RootPart;
+					trail.Parent = gameCamera;
+				end;
 			else
-				trail = nil
-				point = nil
-				point2 = nil
-			end
+				trail = nil;
+				point = nil;
+				point2 = nil;
+			end;
 		end,
 		["Tooltip"] = 'Shows a trail behind your character'
 	})
@@ -8952,25 +8952,25 @@ velo.run(function()
 		["Placeholder"] = 'Texture Id',
 		["Function"] = function(enter)
 			if enter and trail then
-				trail.Texture = Texture["Value"] == '' and 'http://www.roblox.com/asset/?id=14166981368' or Texture.Value
-			end
-		end
+				trail.Texture = Texture["Value"] == '' and 'http://www.roblox.com/asset/?id=14166981368' or Texture.Value;
+			end;
+		end;
 	})
 	FadeIn = Breadcrumbs:CreateColorSlider({
 		["Name"] = 'Fade In',
 		["Function"] = function(hue, sat, val)
 			if trail then
-				trail.Color = ColorSequence.new(Color3.fromHSV(hue, sat, val), Color3.fromHSV(FadeOut.Hue, FadeOut.Sat, FadeOut.Value))
-			end
-		end
+				trail.Color = ColorSequence.new(Color3.fromHSV(hue, sat, val), Color3.fromHSV(FadeOut.Hue, FadeOut.Sat, FadeOut.Value));
+			end;
+		end;
 	})
 	FadeOut = Breadcrumbs:CreateColorSlider({
 		["Name"] = 'Fade Out',
 		["Function"] = function(hue, sat, val)
 			if trail then
-				trail.Color = ColorSequence.new(Color3.fromHSV(FadeIn.Hue, FadeIn.Sat, FadeIn.Value), Color3.fromHSV(hue, sat, val))
-			end
-		end
+				trail.Color = ColorSequence.new(Color3.fromHSV(FadeIn.Hue, FadeIn.Sat, FadeIn.Value), Color3.fromHSV(hue, sat, val));
+			end;
+		end;
 	})
 	Lifetime = Breadcrumbs:CreateSlider({
 		["Name"] = 'Lifetime',
@@ -8980,12 +8980,12 @@ velo.run(function()
 		["Decimal"] = 10,
 		["Function"] = function(val)
 			if trail then
-				trail.Lifetime = val
-			end
+				trail.Lifetime = val;
+			end;
 		end,
 		["Suffix"] = function(val)
-			return val == 1 and 'second' or 'seconds'
-		end
+			return val == 1 and 'second' or 'seconds';
+		end;
 	})
 	Thickness = Breadcrumbs:CreateSlider({
 		["Name"] = 'Thickness',
@@ -8995,15 +8995,15 @@ velo.run(function()
 		["Decimal"] = 100,
 		["Function"] = function(val)
 			if point then
-				point.Position = Vector3.new(0, val - 2.7, 0)
-			end
+				point.Position = Vector3.new(0, val - 2.7, 0);
+			end;
 			if point2 then
-				point2.Position = Vector3.new(0, -val - 2.7, 0)
-			end
+				point2.Position = Vector3.new(0, -val - 2.7, 0);
+			end;
 		end,
 		["Suffix"] = function(val)
-			return val == 1 and 'stud' or 'studs'
-		end
+			return val == 1 and 'stud' or 'studs';
+		end;
 	})
 end)
 
@@ -9017,72 +9017,72 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				if vape.ThreadFix then
-					setthreadidentity(8)
-				end
-				hat = Instance.new('MeshPart')
-				hat.Size = Vector3.new(3, 0.7, 3)
-				hat.Name = 'ChinaHat'
-				hat.Material = Enum.Material[Material["Value"]]
-				hat.Color = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
-				hat.CanCollide = false
-				hat.CanQuery = false
-				hat.Massless = true
-				hat.MeshId = 'http://www.roblox.com/asset/?id=1778999'
-				hat.Transparency = 1 - Color.Opacity
-				hat.Parent = gameCamera
-				hat.CFrame = entitylib.isAlive and entitylib.character.Head.CFrame + Vector3.new(0, 1, 0) or CFrame.identity
-				local weld = Instance.new('WeldConstraint')
-				weld.Part0 = hat
-				weld.Part1 = entitylib.isAlive and entitylib.character.Head or nil
-				weld.Parent = hat
-				ChinaHat:Clean(hat)
-				ChinaHat:Clean(entitylib.Events.LocalAdded:Connect(function(char)
+					setthreadidentity(8);
+				end;
+				hat = Instance.new('MeshPart');
+				hat.Size = Vector3.new(3, 0.7, 3);
+				hat.Name = 'ChinaHat';
+				hat.Material = Enum.Material[Material["Value"]];
+				hat.Color = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value);
+				hat.CanCollide = false;
+				hat.CanQuery = false;
+				hat.Massless = true;
+				hat.MeshId = 'http://www.roblox.com/asset/?id=1778999';
+				hat.Transparency = 1 - Color.Opacity;
+				hat.Parent = gameCamera;
+				hat.CFrame = entitylib.isAlive and entitylib.character.Head.CFrame + Vector3.new(0, 1, 0) or CFrame.identity;
+				local weld: WeldConstraint = Instance.new('WeldConstraint');
+				weld.Part0 = hat;
+				weld.Part1 = entitylib.isAlive and entitylib.character.Head or nil;
+				weld.Parent = hat;
+				ChinaHat:Clean(hat);
+				ChinaHat:Clean(entitylib.Events.LocalAdded:Connect(function(char: Model?)
 					if weld then 
-						weld:Destroy() 
-					end
-					hat.Parent = gameCamera
-					hat.CFrame = char.Head.CFrame + Vector3.new(0, 1, 0)
-					hat.Velocity = Vector3.zero
-					weld = Instance.new('WeldConstraint')
-					weld.Part0 = hat
-					weld.Part1 = char.Head
-					weld.Parent = hat
-				end))
+						weld:Destroy();
+					end;
+					hat.Parent = gameCamera;
+					hat.CFrame = char.Head.CFrame + Vector3.new(0, 1, 0);
+					hat.Velocity = Vector3.zero;
+					weld = Instance.new('WeldConstraint');
+					weld.Part0 = hat;
+					weld.Part1 = char.Head;
+					weld.Parent = hat;
+				end));
 	
 				repeat
-					hat.LocalTransparencyModifier = ((gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and 1 or 0)
-					task.wait()
-				until not ChinaHat["Enabled"]
+					hat.LocalTransparencyModifier = ((gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and 1 or 0);
+					task.wait();
+				until not ChinaHat["Enabled"];
 			else
-				hat = nil
-			end
+				hat = nil;
+			end;
 		end,
 		["Tooltip"] = 'Puts a china hat on your character (ty mastadawn)'
 	})
 	local materials: any = {'ForceField'}
 	for _, v in Enum.Material:GetEnumItems() do
 		if v.Name ~= 'ForceField' then
-			table.insert(materials, v.Name)
-		end
-	end
+			table.insert(materials, v.Name);
+		end;
+	end;
 	Material = ChinaHat:CreateDropdown({
 		["Name"] = 'Material',
 		["List"] = materials,
 		["Function"] = function(val)
 			if hat then
-				hat.Material = Enum.Material[val]
-			end
-		end
+				hat.Material = Enum.Material[val];
+			end;
+		end;
 	})
 	Color = ChinaHat:CreateColorSlider({
 		["Name"] = 'Hat Color',
 		["DefaultOpacity"] = 0.7,
 		["Function"] = function(hue, sat, val, opacity)
 			if hat then
-				hat.Color = Color3.fromHSV(hue, sat, val)
-				hat.Transparency = 1 - opacity
-			end
-		end
+				hat.Color = Color3.fromHSV(hue, sat, val);
+				hat.Transparency = 1 - opacity;
+			end;
+		end;
 	})
 end)
 	
