@@ -9187,7 +9187,7 @@ velo.run(function()
 			end;
 			clone.Parent = game;
 	
-			local originalDesc: anu = char.Humanoid:WaitForChild('HumanoidDescription', 2) or {
+			local originalDesc: any = char.Humanoid:WaitForChild('HumanoidDescription', 2) or {
 				HeightScale = 1,
 				SetEmotes = function() end,
 				SetEquippedEmotes = function() end
