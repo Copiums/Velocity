@@ -9852,9 +9852,9 @@ end)
 
 velo.run(function()
     local Envision: table = {["Enabled"] = false};
-	local color: () -> {Hue: number, Sat: number, Value: number} = function()
+    local color: () -> {Hue: number, Sat: number, Value: number} = function()
 		return {Hue = 0, Sat = 0, Value = 0};
-	end;
+    end;
     local motionblur: table = {["Enabled"] = false};
     local motionblurtarget: table = {["Enabled"] = false};
     local motionblurintensity: table = {["Value"] = 8.5};
@@ -9873,67 +9873,72 @@ velo.run(function()
     local firetask: any;
     local trails: table = {["Enabled"] = false};
     local traildistance: table = {["Value"] = 7};
-	local trailparts: table = setmetatable({}, {__index = table, insert = table.insert, remove = table.remove, length = function(self) return #self end});
+    local trailparts: table = setmetatable({}, {__index = table, insert = table.insert, remove = table.remove, length = function(self) return #self end});
     local lastpos: any;
     local lastpart: any;
-	local trailcolor: table = color();
-	local function isAlive(v: Player): Boolean
+    local trailcolor: table = color();
+    local function isAlive(v: Player): Boolean
 		if v.Character and v.Character:FindFirstChild("Humanoid") then
 			if v.Character.Humanoid.Health > 0 and v.Character:FindFirstChild("HumanoidRootPart") then
 				return true;
 			end;
 		end;
 		return false;
-	end; 
+    end; 
+    local MAX_TRAIL_PARTS: number = 50;
     local createtrailpart = function()
-        local part: Part = Instance.new("Part", workspace)
-        part["Anchored"] = true
-        part["Material"] = Enum["Material"]["Neon"]
-        part["Size"] = Vector3["new"](2, 1, 1)
-        part["Shape"] = Enum["PartType"]["Ball"]
-        part["CFrame"] = lplr["Character"]["PrimaryPart"]["CFrame"]
-        part["CanCollide"] = false
-        part["Color"] = Color3.fromHSV(trailcolor["Hue"], trailcolor["Sat"], trailcolor["Value"])
-		lastpart = part
-        lastpos = part["Position"]
-		table.insert(trailparts, part)
-		task.delay(2.5, function()
-			tweenService:Create(part, TweenInfo.new(0.8, Enum.EasingStyle.Quad), {Transparency = 1}):Play()
-			repeat task.wait() until (part.Transparency == 1);
-			part:Destroy();
-		end);
-		return part;
+            local part: Part = Instance.new("Part", workspace)
+            part["Anchored"] = true
+            part["Material"] = Enum["Material"]["Neon"]
+            part["Size"] = Vector3["new"](2, 1, 1)
+            part["Shape"] = Enum["PartType"]["Ball"]
+            part["CFrame"] = lplr["Character"]["PrimaryPart"]["CFrame"]
+            part["CanCollide"] = false
+            part["Color"] = Color3.fromHSV(trailcolor["Hue"], trailcolor["Sat"], trailcolor["Value"])
+	    lastpart = part
+            lastpos = part["Position"]
+	    table.insert(trailparts, part)
+	    if #trailparts > MAX_TRAIL_PARTS then
+		    trailparts[1]:Destroy()
+		    table.remove(trailparts, 1)
+	    end;
+	    task.delay(2.5, function()
+		    tweenService:Create(part, TweenInfo.new(0.8, Enum.EasingStyle.Quad), {Transparency = 1}):Play()
+		    repeat task.wait() until (part.Transparency == 1);
+		    part:Destroy();
+	    end);
+	    return part;
     end;
     local lightfire = function()
-        pcall(task.cancel, firetask)
-        fireobject = Instance.new('Fire')
-        fireobject["Color"] = Color3.fromHSV(firecolor["Hue"], firecolor["Sat"], firecolor["Value"])
-        fireobject["SecondaryColor"] = Color3.fromHSV(firecolor2["Hue"], firecolor2["Sat"], firecolor2["Value"])
-        fireobject["Heat"] = fireflame["Value"]
-        firetask = task.spawn(function()
-            repeat task.wait()
-                pcall(function() fireobject["Parent"] = (gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and lplr.Character or lplr.Character[fireparent["Value"]] end)
-                task.wait();
-            until false;
-        end);
+            pcall(task.cancel, firetask)
+            fireobject = Instance.new('Fire')
+	    fireobject["Color"] = Color3.fromHSV(firecolor["Hue"], firecolor["Sat"], firecolor["Value"])
+	    fireobject["SecondaryColor"] = Color3.fromHSV(firecolor2["Hue"], firecolor2["Sat"], firecolor2["Value"])
+	    fireobject["Heat"] = fireflame["Value"]
+	    firetask = task.spawn(function()
+                    repeat task.wait()
+                            pcall(function() fireobject["Parent"] = (gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and lplr.Character or lplr.Character[fireparent["Value"]] end)
+                            task.wait();
+                    until false;
+            end);
     end;
     local addsparkle = function()
-        pcall(task.cancel, sparklestask)
-        local sparkle: Sparkles = Instance.new('Sparkles')
-        sparkle["Color"] = Color3.fromHSV(sparklescolor["Hue"], sparklescolor["Sat"], sparklescolor["Value"])
-        sparklesobject = sparkle
-        sparklestask = task.spawn(function()
-            repeat task.wait()
-                pcall(function() sparkle.Parent = (gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and lplr.Character or lplr.Character[sparklesparent["Value"]] end)
-                task.wait();
-            until false;
-        end);
+            pcall(task.cancel, sparklestask)
+            local sparkle: Sparkles = Instance.new('Sparkles')
+            sparkle["Color"] = Color3.fromHSV(sparklescolor["Hue"], sparklescolor["Sat"], sparklescolor["Value"])
+            sparklesobject = sparkle
+            sparklestask = task.spawn(function()
+                    repeat task.wait()
+                            pcall(function() sparkle.Parent = (gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and lplr.Character or lplr.Character[sparklesparent["Value"]] end)
+                            task.wait();
+                    until false;
+            end);
     end;
     Envision = vape.Legit:CreateModule({
-        ["Name"] = "Envision",
-        ["HoverText"] = HoverText("Let's you customize visuals!"),
-        ["Function"] = function(callback: boolean): void
-            if callback then
+            ["Name"] = "Envision",
+            ["HoverText"] = HoverText("Let's you customize visuals!"),
+            ["Function"] = function(callback: boolean): void
+                    if callback then
 				if not sparkle.Connections then
 					sparkle.Connections = {}
 				end
@@ -9961,8 +9966,8 @@ velo.run(function()
 							blur["Size"] = motionblurintensity["Value"];
 						end));
 						table.insert(motionblur.Connections, lplr.CharacterAdded:Connect(function()
-							motionblur["ToggleButton"]();
-							motionblur["ToggleButton"]();
+							motionblur:Toggle();
+							motionblur:Toggle();
 						end));
 					end;										
 					if sparkle["Enabled"] then
@@ -9982,7 +9987,7 @@ velo.run(function()
 					end;
 					if trails["Enabled"] then
 						task.spawn(function()
-							repeat task.wait()
+							repeat task.wait(0.03)
 								if isAlive(lplr) and (lastpos == nil or (lplr.Character.PrimaryPart.Position - lastpos).Magnitude > traildistance["Value"]) then
 									createtrailpart();
 								end;
@@ -9990,15 +9995,15 @@ velo.run(function()
 						end)
 					end;
 				end)
-            else
-                if fireobject then
+            	    else
+                		if fireobject then
 					fireobject:Destroy();
 				end;
-                pcall(task.cancel, sparklestask);
-                pcall(function() sparklesobject:Destroy() end);
+                		pcall(task.cancel, sparklestask);
+                		pcall(function() sparklesobject:Destroy() end);
 				trailparts = {};
+            	    end;
             end;
-        end;
     })
     motionblur = Envision:CreateToggle({
         ['Name'] = 'Motion Blur',
@@ -10025,14 +10030,14 @@ velo.run(function()
         ['Max'] = 10,
         ['Function'] = function() end
     })
-	trailcolor = Envision:CreateColorSlider({
-		["Name"] ="Trail Color",
-		["Function"] = function()
-			for i,v in trailparts do 
-				v.Color = Color3.fromHSV(trailcolor["Hue"], trailcolor["Sat"], trailcolor["Value"]);
-			end;
-		end,
-	})
+    trailcolor = Envision:CreateColorSlider({
+	["Name"] ="Trail Color",
+	["Function"] = function()
+		for i,v in trailparts do 
+			v.Color = Color3.fromHSV(trailcolor["Hue"], trailcolor["Sat"], trailcolor["Value"]);
+		end;
+	end,
+    })
     fire = Envision:CreateToggle({
         ['Name'] = 'Fire Effect',
         ['HoverText'] = 'Only works when killaura is active.',
