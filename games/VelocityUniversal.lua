@@ -9315,14 +9315,14 @@ velo.run(function()
 		["Name"] = 'FOV',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				oldfov = gameCamera.FieldOfView
+				oldfov = gameCamera.FieldOfView;
 				repeat
-					gameCamera.FieldOfView = Value.Value
-					task.wait()
+					gameCamera.FieldOfView = Value["Value"];
+					task.wait();
 				until not FOV["Enabled"]
 			else
-				gameCamera.FieldOfView = oldfov
-			end
+				gameCamera.FieldOfView = oldfov;
+			end;
 		end,
 		["Tooltip"] = 'Adjusts camera vision'
 	})
@@ -9330,7 +9330,7 @@ velo.run(function()
 		["Name"] = 'FOV',
 		["Min"] = 30,
 		["Max"] = 120
-	})
+	});
 end)
 	
 velo.run(function()
@@ -9344,53 +9344,53 @@ velo.run(function()
 		["Name"] = 'FPS',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				local frames = {}
-				local startClock = os.clock()
-				local updateTick = tick()
+				local frames: table = {}
+				local startClock: number? = os.clock()
+				local updateTick: number = tick()
 				FPS:Clean(runService.Heartbeat:Connect(function()
-					local updateClock = os.clock()
+					local updateClock: number? = os.clock();
 					for i = #frames, 1, -1 do
-						frames[i + 1] = frames[i] >= updateClock - 1 and frames[i] or nil
-					end
+						frames[i + 1] = frames[i] >= updateClock - 1 and frames[i] or nil;
+					end;
 					frames[1] = updateClock
 					if updateTick < tick() then
-						updateTick = tick() + 1
-						label.Text = math.floor(os.clock() - startClock >= 1 and #frames or #frames / (os.clock() - startClock))..' FPS'
-					end
-				end))
-			end
+						updateTick = tick() + 1;
+						label.Text = math.floor(os.clock() - startClock >= 1 and #frames or #frames / (os.clock() - startClock))..' FPS';
+					end;
+				end));
+			end;
 		end,
-		Size = UDim2.fromOffset(100, 41),
+		["Size"] = UDim2.fromOffset(100, 41),
 		["Tooltip"] = 'Shows the current framerate'
 	})
 	FPS:CreateFont({
 		["Name"] = 'Font',
 		["Blacklist"] = 'Gotham',
 		["Function"] = function(val)
-			label.FontFace = val
-		end
+			label.FontFace = val;
+		end;
 	})
 	FPS:CreateColorSlider({
 		["Name"] = 'Color',
 		["DefaultValue"] = 0,
 		["DefaultOpacity"] = 0.5,
 		["Function"] = function(hue, sat, val, opacity)
-			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
-			label.BackgroundTransparency = 1 - opacity
-		end
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
+			label.BackgroundTransparency = 1 - opacity;
+		end;
 	})
-	label = Instance.new('TextLabel')
-	label.Size = UDim2.fromScale(1, 1)
-	label.BackgroundTransparency = 0.5
-	label.TextSize = 15
-	label.Font = Enum.Font.Gotham
-	label.Text = 'inf FPS'
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.BackgroundColor3 = Color3.new()
-	label.Parent = FPS.Children
-	local corner = Instance.new('UICorner')
-	corner.CornerRadius = UDim.new(0, 4)
-	corner.Parent = label
+	label = Instance.new('TextLabel');
+	label.Size = UDim2.fromScale(1, 1);
+	label.BackgroundTransparency = 0.5;
+	label.TextSize = 15;
+	label.Font = Enum.Font.Gotham;
+	label.Text = 'inf FPS';
+	label.TextColor3 = Color3.new(1, 1, 1);
+	label.BackgroundColor3 = Color3.new();
+	label.Parent = FPS.Children;
+	local corner: UICorner = Instance.new('UICorner');
+	corner.CornerRadius = UDim.new(0, 4);
+	corner.Parent = label;
 end)
 	
 velo.run(function()
@@ -9399,107 +9399,107 @@ velo.run(function()
 	local Color: table = {}
 	local keys: any, holder: table? = {}
 	
-	local function createKeystroke(keybutton, pos, pos2, text)
+	local function createKeystroke(keybutton: any, pos: any, pos2: any, text: TextLabel?)
 		if keys[keybutton] then
-			keys[keybutton].Key:Destroy()
-			keys[keybutton] = nil
-		end
-		local key = Instance.new('Frame')
-		key.Size = keybutton == Enum.KeyCode.Space and UDim2.new(0, 110, 0, 24) or UDim2.new(0, 34, 0, 36)
-		key.BackgroundColor3 = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
-		key.BackgroundTransparency = 1 - Color.Opacity
-		key.Position = pos
-		key.Name = keybutton.Name
-		key.Parent = holder
-		local keytext = Instance.new('TextLabel')
-		keytext.BackgroundTransparency = 1
-		keytext.Size = UDim2.fromScale(1, 1)
-		keytext.Font = Enum.Font.Gotham
-		keytext.Text = text or keybutton.Name
-		keytext.TextXAlignment = Enum.TextXAlignment.Left
-		keytext.TextYAlignment = Enum.TextYAlignment.Top
-		keytext.Position = pos2
-		keytext.TextSize = keybutton == Enum.KeyCode.Space and 18 or 15
-		keytext.TextColor3 = Color3.new(1, 1, 1)
-		keytext.Parent = key
-		local corner = Instance.new('UICorner')
-		corner.CornerRadius = UDim.new(0, 4)
-		corner.Parent = key
-		keys[keybutton] = {Key = key}
-	end
+			keys[keybutton].Key:Destroy();
+			keys[keybutton] = nil;
+		end;
+		local key: Frame = Instance.new('Frame');
+		key.Size = keybutton == Enum.KeyCode.Space and UDim2.new(0, 110, 0, 24) or UDim2.new(0, 34, 0, 36);
+		key.BackgroundColor3 = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value);
+		key.BackgroundTransparency = 1 - Color.Opacity;
+		key.Position = pos;
+		key.Name = keybutton.Name;
+		key.Parent = holder;
+		local keytext: TextLabel = Instance.new('TextLabel');
+		keytext.BackgroundTransparency = 1;
+		keytext.Size = UDim2.fromScale(1, 1);
+		keytext.Font = Enum.Font.Gotham;
+		keytext.Text = text or keybutton.Name;
+		keytext.TextXAlignment = Enum.TextXAlignment.Left;
+		keytext.TextYAlignment = Enum.TextYAlignment.Top;
+		keytext.Position = pos2;
+		keytext.TextSize = keybutton == Enum.KeyCode.Space and 18 or 15;
+		keytext.TextColor3 = Color3.new(1, 1, 1);
+		keytext.Parent = key;
+		local corner: UICorner = Instance.new('UICorner');
+		corner.CornerRadius = UDim.new(0, 4);
+		corner.Parent = key;
+		keys[keybutton] = {Key = key};
+	end;
 	
 	Keystrokes = vape.Legit:CreateModule({
 		["Name"] = 'Keystrokes',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				createKeystroke(Enum.KeyCode.W, UDim2.new(0, 38, 0, 0), UDim2.new(0, 6, 0, 5), Style.Value == 'Arrow' and '↑' or nil)
-				createKeystroke(Enum.KeyCode.S, UDim2.new(0, 38, 0, 42), UDim2.new(0, 8, 0, 5), Style.Value == 'Arrow' and '↓' or nil)
-				createKeystroke(Enum.KeyCode.A, UDim2.new(0, 0, 0, 42), UDim2.new(0, 7, 0, 5), Style.Value == 'Arrow' and '←' or nil)
-				createKeystroke(Enum.KeyCode.D, UDim2.new(0, 76, 0, 42), UDim2.new(0, 8, 0, 5), Style.Value == 'Arrow' and '→' or nil)
+				createKeystroke(Enum.KeyCode.W, UDim2.new(0, 38, 0, 0), UDim2.new(0, 6, 0, 5), Style.Value == 'Arrow' and '↑' or nil);
+				createKeystroke(Enum.KeyCode.S, UDim2.new(0, 38, 0, 42), UDim2.new(0, 8, 0, 5), Style.Value == 'Arrow' and '↓' or nil);
+				createKeystroke(Enum.KeyCode.A, UDim2.new(0, 0, 0, 42), UDim2.new(0, 7, 0, 5), Style.Value == 'Arrow' and '←' or nil);
+				createKeystroke(Enum.KeyCode.D, UDim2.new(0, 76, 0, 42), UDim2.new(0, 8, 0, 5), Style.Value == 'Arrow' and '→' or nil);
 	
-				Keystrokes:Clean(inputService.InputBegan:Connect(function(inputType)
-					local key = keys[inputType.KeyCode]
+				Keystrokes:Clean(inputService.InputBegan:Connect(function(inputType: InputObject?)
+					local key: any = keys[inputType.KeyCode];
 					if key then
 						if key.Tween then
-							key.Tween:Cancel()
-						end
+							key.Tween:Cancel();
+						end;
 						if key.Tween2 then
-							key.Tween2:Cancel()
-						end
+							key.Tween2:Cancel();
+						end;
 	
-						key.Pressed = true
+						key.Pressed = true;
 						key.Tween = tweenService:Create(key.Key, TweenInfo.new(0.1), {
 							BackgroundColor3 = Color3.new(1, 1, 1), 
 							BackgroundTransparency = 0
-						})
+						});
 						key.Tween2 = tweenService:Create(key.Key.TextLabel, TweenInfo.new(0.1), {
 							TextColor3 = Color3.new()
-						})
-						key.Tween:Play()
-						key.Tween2:Play()
-					end
-				end))
+						});
+						key.Tween:Play();
+						key.Tween2:Play();
+					end;
+				end));
 	
-				Keystrokes:Clean(inputService.InputEnded:Connect(function(inputType)
-					local key = keys[inputType.KeyCode]
+				Keystrokes:Clean(inputService.InputEnded:Connect(function(inputType: InputObject?)
+					local key: any = keys[inputType.KeyCode];
 					if key then
 						if key.Tween then
-							key.Tween:Cancel()
-						end
+							key.Tween:Cancel();
+						end;
 						if key.Tween2 then
-							key.Tween2:Cancel()
-						end
+							key.Tween2:Cancel();
+						end;
 	
-						key.Pressed = false
+						key.Pressed = false;
 						key.Tween = tweenService:Create(key.Key, TweenInfo.new(0.1), {
 							BackgroundColor3 = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value), 
 							BackgroundTransparency = 1 - Color.Opacity
-						})
+						});
 						key.Tween2 = tweenService:Create(key.Key.TextLabel, TweenInfo.new(0.1), {
 							TextColor3 = Color3.new(1, 1, 1)
-						})
-						key.Tween:Play()
-						key.Tween2:Play()
-					end
-				end))
-			end
+						});
+						key.Tween:Play();
+						key.Tween2:Play();
+					end;
+				end));
+			end;
 		end,
-		Size = UDim2.fromOffset(110, 176),
+		["Size"] = UDim2.fromOffset(110, 176),
 		["Tooltip"] = 'Shows movement keys onscreen'
 	})
-	holder = Instance.new('Frame')
-	holder.Size = UDim2.fromScale(1, 1)
-	holder.BackgroundTransparency = 1
-	holder.Parent = Keystrokes.Children
+	holder = Instance.new('Frame');
+	holder.Size = UDim2.fromScale(1, 1);
+	holder.BackgroundTransparency = 1;
+	holder.Parent = Keystrokes.Children;
 	Style = Keystrokes:CreateDropdown({
 		["Name"] = 'Key Style',
 		["List"] = {'Keyboard', 'Arrow'},
 		["Function"] = function()
 			if Keystrokes["Enabled"] then
-				Keystrokes:Toggle()
-				Keystrokes:Toggle()
-			end
-		end
+				Keystrokes:Toggle();
+				Keystrokes:Toggle();
+			end;
+		end;
 	})
 	Color = Keystrokes:CreateColorSlider({
 		["Name"] = 'Color',
@@ -9508,22 +9508,22 @@ velo.run(function()
 		["Function"] = function(hue, sat, val, opacity)
 			for _, v in keys do
 				if not v.Pressed then
-					v.Key.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
-					v.Key.BackgroundTransparency = 1 - opacity
-				end
-			end
-		end
+					v.Key.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
+					v.Key.BackgroundTransparency = 1 - opacity;
+				end;
+			end;
+		end;
 	})
 	Keystrokes:CreateToggle({
 		["Name"] = 'Show Spacebar',
 		["Function"] = function(callback: boolean): void
-			Keystrokes.Children.Size = UDim2.fromOffset(110, callback and 107 or 78)
+			Keystrokes.Children.Size = UDim2.fromOffset(110, callback and 107 or 78);
 			if callback then
-				createKeystroke(Enum.KeyCode.Space, UDim2.new(0, 0, 0, 83), UDim2.new(0, 25, 0, -10), '______')
+				createKeystroke(Enum.KeyCode.Space, UDim2.new(0, 0, 0, 83), UDim2.new(0, 25, 0, -10), '______');
 			else
-				keys[Enum.KeyCode.Space].Key:Destroy()
-				keys[Enum.KeyCode.Space] = nil
-			end
+				keys[Enum.KeyCode.Space].Key:Destroy();
+				keys[Enum.KeyCode.Space] = nil;
+			end;
 		end,
 		["Default"] = true
 	})
@@ -9537,42 +9537,42 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				repeat
-					label.Text = math.floor(tonumber(game:GetService('Stats'):FindFirstChild('PerformanceStats').Memory:GetValue()))..' MB'
-					task.wait(1)
-				until not Memory["Enabled"]
-			end
+					label.Text = math.floor(tonumber(game:GetService('Stats'):FindFirstChild('PerformanceStats').Memory:GetValue()))..' MB';
+					task.wait(1);
+				until not Memory["Enabled"];
+			end;
 		end,
-		Size = UDim2.fromOffset(100, 41),
+		["Size"] = UDim2.fromOffset(100, 41),
 		["Tooltip"] = 'A label showing the memory currently used by roblox'
 	})
 	Memory:CreateFont({
 		["Name"] = 'Font',
 		["Blacklist"] = 'Gotham',
 		["Function"] = function(val)
-			label.FontFace = val
-		end
+			label.FontFace = val;
+		end;
 	})
 	Memory:CreateColorSlider({
 		["Name"] = 'Color',
 		["DefaultValue"] = 0,
 		["DefaultOpacity"] = 0.5,
 		["Function"] = function(hue, sat, val, opacity)
-			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
-			label.BackgroundTransparency = 1 - opacity
-		end
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
+			label.BackgroundTransparency = 1 - opacity;
+		end;
 	})
-	label = Instance.new('TextLabel')
-	label.Size = UDim2.new(0, 100, 0, 41)
-	label.BackgroundTransparency = 0.5
-	label.TextSize = 15
-	label.Font = Enum.Font.Gotham
-	label.Text = '0 MB'
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.BackgroundColor3 = Color3.new()
-	label.Parent = Memory.Children
-	local corner = Instance.new('UICorner')
-	corner.CornerRadius = UDim.new(0, 4)
-	corner.Parent = label
+	label = Instance.new('TextLabel');
+	label.Size = UDim2.new(0, 100, 0, 41);
+	label.BackgroundTransparency = 0.5;
+	label.TextSize = 15;
+	label.Font = Enum.Font.Gotham;
+	label.Text = '0 MB';
+	label.TextColor3 = Color3.new(1, 1, 1);
+	label.BackgroundColor3 = Color3.new();
+	label.Parent = Memory.Children;
+	local corner: UICorner = Instance.new('UICorner');
+	corner.CornerRadius = UDim.new(0, 4);
+	corner.Parent = label;
 end)
 	
 velo.run(function()
@@ -9583,42 +9583,42 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				repeat
-					label.Text = math.floor(tonumber(game:GetService('Stats'):FindFirstChild('PerformanceStats').Ping:GetValue()))..' ms'
-					task.wait(1)
-				until not Ping["Enabled"]
-			end
+					label.Text = math.floor(tonumber(game:GetService('Stats'):FindFirstChild('PerformanceStats').Ping:GetValue()))..' ms';
+					task.wait(1);
+				until not Ping["Enabled"];
+			end;
 		end,
-		Size = UDim2.fromOffset(100, 41),
+		["Size"] = UDim2.fromOffset(100, 41),
 		["Tooltip"] = 'Shows the current connection speed to the roblox server'
 	})
 	Ping:CreateFont({
 		["Name"] = 'Font',
 		["Blacklist"] = 'Gotham',
 		["Function"] = function(val)
-			label.FontFace = val
-		end
+			label.FontFace = val;
+		end;
 	})
 	Ping:CreateColorSlider({
 		["Name"] = 'Color',
 		["DefaultValue"] = 0,
 		["DefaultOpacity"] = 0.5,
 		["Function"] = function(hue, sat, val, opacity)
-			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
-			label.BackgroundTransparency = 1 - opacity
-		end
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
+			label.BackgroundTransparency = 1 - opacity;
+		end;
 	})
-	label = Instance.new('TextLabel')
-	label.Size = UDim2.new(0, 100, 0, 41)
-	label.BackgroundTransparency = 0.5
-	label.TextSize = 15
-	label.Font = Enum.Font.Gotham
-	label.Text = '0 ms'
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.BackgroundColor3 = Color3.new()
-	label.Parent = Ping.Children
-	local corner = Instance.new('UICorner')
-	corner.CornerRadius = UDim.new(0, 4)
-	corner.Parent = label
+	label = Instance.new('TextLabel');
+	label.Size = UDim2.new(0, 100, 0, 41);
+	label.BackgroundTransparency = 0.5;
+	label.TextSize = 15;
+	label.Font = Enum.Font.Gotham;
+	label.Text = '0 ms';
+	label.TextColor3 = Color3.new(1, 1, 1);
+	label.BackgroundColor3 = Color3.new();
+	label.Parent = Ping.Children;
+	local corner: UICorner = Instance.new('UICorner');
+	corner.CornerRadius = UDim.new(0, 4);
+	corner.Parent = label;
 end)
 	
 velo.run(function()
