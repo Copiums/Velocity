@@ -9095,45 +9095,45 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				repeat
-					label.Text = DateTime.now():FormatLocalTime('LT', TwentyFourHour["Enabled"] and 'zh-cn' or 'en-us')
-					task.wait(1)
-				until not Clock["Enabled"]
-			end
+					label.Text = DateTime.now():FormatLocalTime('LT', TwentyFourHour["Enabled"] and 'zh-cn' or 'en-us');
+					task.wait(1);
+				until not Clock["Enabled"];
+			end;
 		end,
-		Size = UDim2.fromOffset(100, 41),
+		["Size"] = UDim2.fromOffset(100, 41),
 		["Tooltip"] = 'Shows the current local time'
 	})
 	Clock:CreateFont({
 		["Name"] = 'Font',
 		["Blacklist"] = 'Gotham',
 		["Function"] = function(val)
-			label.FontFace = val
-		end
+			label.FontFace = val;
+		end;
 	})
 	Clock:CreateColorSlider({
 		["Name"] = 'Color',
 		["DefaultValue"] = 0,
 		["DefaultOpacity"] = 0.5,
 		["Function"] = function(hue, sat, val, opacity)
-			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
-			label.BackgroundTransparency = 1 - opacity
-		end
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
+			label.BackgroundTransparency = 1 - opacity;
+		end;
 	})
 	TwentyFourHour = Clock:CreateToggle({
 		["Name"] = '24 Hour Clock'
-	})
-	label = Instance.new('TextLabel')
-	label.Size = UDim2.new(0, 100, 0, 41)
-	label.BackgroundTransparency = 0.5
-	label.TextSize = 15
-	label.Font = Enum.Font.Gotham
-	label.Text = '0:00 PM'
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.BackgroundColor3 = Color3.new()
-	label.Parent = Clock.Children
-	local corner = Instance.new('UICorner')
-	corner.CornerRadius = UDim.new(0, 4)
-	corner.Parent = label
+	});
+	label = Instance.new('TextLabel');
+	label.Size = UDim2.new(0, 100, 0, 41);
+	label.BackgroundTransparency = 0.5;
+	label.TextSize = 15;
+	label.Font = Enum.Font.Gotham;
+	label.Text = '0:00 PM';
+	label.TextColor3 = Color3.new(1, 1, 1);
+	label.BackgroundColor3 = Color3.new();
+	label.Parent = Clock.Children;
+	local corner: UICorner = Instance.new('UICorner');
+	corner.CornerRadius = UDim.new(0, 4);
+	corner.Parent = label;
 end)
 	
 velo.run(function()
@@ -9142,146 +9142,146 @@ velo.run(function()
 	local IDBox: any;
 	local desc: any;
 	
-	local function itemAdded(v, manual)
+	local function itemAdded(v: Player?, manual: any)
 		if (not v:GetAttribute('Disguise')) and ((v:IsA('Accessory') and (not v:GetAttribute('InvItem')) and (not v:GetAttribute('ArmorSlot'))) or v:IsA('ShirtGraphic') or v:IsA('Shirt') or v:IsA('Pants') or v:IsA('BodyColors') or manual) then
 			repeat
-				task.wait()
-				v.Parent = game
-			until v.Parent == game
-			v:ClearAllChildren()
-			v:Destroy()
-		end
-	end
+				task.wait();
+				v.Parent = game;
+			until v.Parent == game;
+			v:ClearAllChildren();
+			v:Destroy();
+		end;
+	end;
 	
-	local function characterAdded(char)
+	local function characterAdded(char: Model?)
 		if Mode["Value"] == 'Character' then
-			task.wait(0.1)
-			char.Character.Archivable = true
-			local clone = char.Character:Clone()
+			task.wait(0.1);
+			char.Character.Archivable = true;
+			local clone: any = char.Character:Clone();
 			repeat
 				if pcall(function()
 					desc = playersService:GetHumanoidDescriptionFromUserId(IDBox["Value"] == '' and 239702688 or tonumber(IDBox["Value"]))
-				end) then break end
+				end) then break end;
 				task.wait(1)
-			until not Disguise["Enabled"]
+			until not Disguise["Enabled"];
 			if not Disguise["Enabled"] then
-				clone:ClearAllChildren()
-				clone:Destroy()
-				clone = nil
+				clone:ClearAllChildren();
+				clone:Destroy();
+				clone = nil;
 				if desc then
-					desc:Destroy()
-					desc = nil
-				end
-				return
-			end
-			clone.Parent = game
+					desc:Destroy();
+					desc = nil;
+				end;
+				return;
+			end;
+			clone.Parent = game;
 	
-			local originalDesc = char.Humanoid:WaitForChild('HumanoidDescription', 2) or {
+			local originalDesc: any = char.Humanoid:WaitForChild('HumanoidDescription', 2) or {
 				HeightScale = 1,
 				SetEmotes = function() end,
 				SetEquippedEmotes = function() end
-			}
-			originalDesc.JumpAnimation = desc.JumpAnimation
-			desc.HeightScale = originalDesc.HeightScale
+			};
+			originalDesc.JumpAnimation = desc.JumpAnimation;
+			desc.HeightScale = originalDesc.HeightScale;
 	
 			for _, v in clone:GetChildren() do
 				if v:IsA('Accessory') or v:IsA('ShirtGraphic') or v:IsA('Shirt') or v:IsA('Pants') then
-					v:ClearAllChildren()
-					v:Destroy()
-				end
-			end
+					v:ClearAllChildren();
+					v:Destroy();
+				end;
+			end;
 	
 			clone.Humanoid:ApplyDescriptionClientServer(desc)
 			for _, v in char.Character:GetChildren() do
-				itemAdded(v)
-			end
-			Disguise:Clean(char.Character.ChildAdded:Connect(itemAdded))
+				itemAdded(v);
+			end;
+			Disguise:Clean(char.Character.ChildAdded:Connect(itemAdded));
 	
 			for _, v in clone:WaitForChild('Animate'):GetChildren() do
-				if not char.Character:FindFirstChild('Animate') then return end
-				local real = char.Character.Animate:FindFirstChild(v.Name)
+				if not char.Character:FindFirstChild('Animate') then return; end;
+				local real: Animate? = char.Character.Animate:FindFirstChild(v.Name);
 				if v and real then
-					local anim = v:FindFirstChildWhichIsA('Animation') or {AnimationId = ''}
-					local realanim = real:FindFirstChildWhichIsA('Animation') or {AnimationId = ''}
+					local anim: any = v:FindFirstChildWhichIsA('Animation') or {AnimationId = ''};
+					local realanim: any = real:FindFirstChildWhichIsA('Animation') or {AnimationId = ''};
 					if realanim then
-						realanim.AnimationId = anim.AnimationId
-					end
-				end
-			end
+						realanim.AnimationId = anim.AnimationId;
+					end;
+				end;
+			end;
 	
 			for _, v in clone:GetChildren() do
-				v:SetAttribute('Disguise', true)
+				v:SetAttribute('Disguise', true);
 				if v:IsA('Accessory') then
 					for _, v2 in v:GetDescendants() do
 						if v2:IsA('Weld') and v2.Part1 then
-							v2.Part1 = char.Character[v2.Part1.Name]
-						end
-					end
-					v.Parent = char.Character
+							v2.Part1 = char.Character[v2.Part1.Name];
+						end;
+					end;
+					v.Parent = char.Character;
 				elseif v:IsA('ShirtGraphic') or v:IsA('Shirt') or v:IsA('Pants') or v:IsA('BodyColors') then
-					v.Parent = char.Character
+					v.Parent = char.Character;
 				elseif v.Name == 'Head' and char.Head:IsA('MeshPart') and (not char.Head:FindFirstChild('FaceControls')) then
-					char.Head.MeshId = v.MeshId
-				end
-			end
+					char.Head.MeshId = v.MeshId;
+				end;
+			end;
 	
-			local localface = char.Character:FindFirstChild('face', true)
-			local cloneface = clone:FindFirstChild('face', true)
+			local localface: any = char.Character:FindFirstChild('face', true);
+			local cloneface: any = clone:FindFirstChild('face', true);
 			if localface and cloneface then
-				itemAdded(localface, true)
-				cloneface.Parent = char.Head
-			end
-			originalDesc:SetEmotes(desc:GetEmotes())
-			originalDesc:SetEquippedEmotes(desc:GetEquippedEmotes())
-			clone:ClearAllChildren()
-			clone:Destroy()
+				itemAdded(localface, true);
+				cloneface.Parent = char.Head;
+			end;
+			originalDesc:SetEmotes(desc:GetEmotes());
+			originalDesc:SetEquippedEmotes(desc:GetEquippedEmotes());
+			clone:ClearAllChildren();
+			clone:Destroy();
 			clone = nil
 			if desc then
-				desc:Destroy()
-				desc = nil
-			end
+				desc:Destroy();
+				desc = nil;
+			end;
 		else
-			local data
+			local data: any;
 			repeat
 				if pcall(function()
-					data = marketplaceService:GetProductInfo(IDBox["Value"] == '' and 43 or tonumber(IDBox["Value"]), Enum.InfoType.Bundle)
-				end) then break end
-				task.wait(1)
-			until not Disguise["Enabled"]
+					data = marketplaceService:GetProductInfo(IDBox["Value"] == '' and 43 or tonumber(IDBox["Value"]), Enum.InfoType.Bundle);
+				end) then break end;
+				task.wait(1);
+			until not Disguise["Enabled"];
 			if not Disguise["Enabled"] then
 				if data then
-					table.clear(data)
-					data = nil
-				end
-				return
-			end
+					table.clear(data);
+					data = nil;
+				end;
+				return;
+			end;
 			if data.BundleType == 'AvatarAnimations' then
-				local animate = char.Character:FindFirstChild('Animate')
-				if not animate then return end
+				local animate: Animate? = char.Character:FindFirstChild('Animate');
+				if not animate then return; end;
 				for _, v in desc.Items do
-					local animtype = v.Name:split(' ')[2]:lower()
+					local animtype: string? = v.Name:split(' ')[2]:lower();
 					if animtype ~= 'animation' then
-						local suc, res = pcall(function() return game:GetObjects('rbxassetid://'..v.Id) end)
+						local suc: boolean, res: string? = pcall(function() return game:GetObjects('rbxassetid://'..v.Id) end);
 						if suc then
-							animate[animtype]:FindFirstChildWhichIsA('Animation').AnimationId = res[1]:FindFirstChildWhichIsA('Animation', true).AnimationId
-						end
-					end
-				end
+							animate[animtype]:FindFirstChildWhichIsA('Animation').AnimationId = res[1]:FindFirstChildWhichIsA('Animation', true).AnimationId;
+						end;
+					end;
+				end;
 			else
-				notif('Disguise', 'that\'s not an animation pack', 5, 'warning')
-			end
-		end
-	end
+				notif('Disguise', 'that\'s not an animation pack', 5, 'warning');
+			end;
+		end;
+	end;
 	
 	Disguise = vape.Legit:CreateModule({
 		["Name"] = 'Disguise',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				Disguise:Clean(entitylib.Events.LocalAdded:Connect(characterAdded))
+				Disguise:Clean(entitylib.Events.LocalAdded:Connect(characterAdded));
 				if entitylib.isAlive then
-					characterAdded(entitylib.character)
-				end
-			end
+					characterAdded(entitylib.character);
+				end;
+			end;
 		end,
 		["Tooltip"] = 'Changes your character or animation to a specific ID (animation packs or userid\'s only)'
 	})
@@ -9290,20 +9290,20 @@ velo.run(function()
 		["List"] = {'Character', 'Animation'},
 		["Function"] = function()
 			if Disguise["Enabled"] then
-				Disguise:Toggle()
-				Disguise:Toggle()
-			end
-		end
+				Disguise:Toggle();
+				Disguise:Toggle();
+			end;
+		end;
 	})
 	IDBox = Disguise:CreateTextBox({
 		["Name"] = 'Disguise',
 		["Placeholder"] = 'Disguise User Id',
 		["Function"] = function()
 			if Disguise["Enabled"] then
-				Disguise:Toggle()
-				Disguise:Toggle()
-			end
-		end
+				Disguise:Toggle();
+				Disguise:Toggle();
+			end;
+		end;
 	})
 end)
 	
