@@ -7805,27 +7805,26 @@ end)
 velo.run(function()
 	local Disabler: table = {["Enabled"] = false}
 	
-	local function characterAdded(char)
-		print('yes')
+	local function characterAdded(char: Model?)
 		for _, v in getconnections(char.RootPart:GetPropertyChangedSignal('CFrame')) do
-			hookfunction(v.Function, function() end)
-		end
+			hookfunction(v.Function, function() end);
+		end;
 		for _, v in getconnections(char.RootPart:GetPropertyChangedSignal('Velocity')) do
-			hookfunction(v.Function, function() end)
-		end
-	end
+			hookfunction(v.Function, function() end);
+		end;
+	end;
 	
 	Disabler = vape.Categories.Utility:CreateModule({
 		["Name"] = 'Disabler',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				Disabler:Clean(entitylib.Events.LocalAdded:Connect(characterAdded))
+				Disabler:Clean(entitylib.Events.LocalAdded:Connect(characterAdded));
 				if entitylib.isAlive then
-					characterAdded(entitylib.character)
-				end
-			end
+					characterAdded(entitylib.character);
+				end;
+			end;
 		end,
-		Tooltip = 'Disables GetPropertyChangedSignal detections for movement'
+		["Tooltip"] = 'Disables GetPropertyChangedSignal detections for movement'
 	})
 end)
 	
@@ -7836,12 +7835,12 @@ velo.run(function()
 			if callback then
 				for _, v in vape.Modules do
 					if v["Enabled"] then
-						v:Toggle()
-					end
-				end
-			end
+						v:Toggle();
+					end;
+				end;
+			end;
 		end,
-		Tooltip = 'Disables all currently enabled modules'
+		["Tooltip"] = 'Disables all currently enabled modules'
 	})
 end)
 	
@@ -7860,7 +7859,7 @@ velo.run(function()
 				end;
 			end;
 		end,
-		Tooltip = 'Rejoins the server'
+		["Tooltip"] = 'Rejoins the server'
 	})
 end)
 	
@@ -7901,108 +7900,108 @@ velo.run(function()
 	local Group: table = {}
 	local Role: table = {}
 	
-	local function getRole(plr, id)
-		local suc, res
+	local function getRole(plr: Player?, id: string?)
+		local suc: boolean, res: string?;
 		for _ = 1, 3 do
 			suc, res = pcall(function()
-				return plr:GetRankInGroup(id)
-			end)
-			if suc then break end
-		end
-		return suc and res or 0
-	end
+				return plr:GetRankInGroup(id);
+			end);
+			if suc then break; end;
+		end;
+		return suc and res or 0;
+	end;
 	
-	local function getLowestStaffRole(roles)
-		local highest = math.huge
+	local function getLowestStaffRole(roles: string?)
+		local highest: number? = math.huge;
 		for _, v in roles do
-			local low = v.Name:lower()
+			local low: string? = v.Name:lower();
 			if (low:find('admin') or low:find('mod') or low:find('dev')) and v.Rank < highest then
-				highest = v.Rank
-			end
-		end
-		return highest
-	end
+				highest = v.Rank;
+			end;
+		end;
+		return highest;
+	end;
 	
-	local function playerAdded(plr)
+	local function playerAdded(plr: Player?)
 		if not vape.Loaded then 
-			repeat task.wait() until vape.Loaded 
-		end
+			repeat task.wait() until vape.Loaded;
+		end;
 	
-		local user = table.find(Users.ListEnabled, tostring(plr.UserId))
+		local user: number? = table.find(Users.ListEnabled, tostring(plr.UserId));
 		if user or getRole(plr, tonumber(Group["Value"]) or 0) >= (tonumber(Role["Value"]) or 1) then
-			notif('StaffDetector', 'Staff Detected ('..(user and 'blacklisted_user' or 'staff_role')..'): '..plr.Name, 60, 'alert')
-			whitelist.customtags[plr.Name] = {{text = 'GAME STAFF', color = Color3.new(1, 0, 0)}}
+			notif('StaffDetector', 'Staff Detected ('..(user and 'blacklisted_user' or 'staff_role')..'): '..plr.Name, 60, 'alert');
+			whitelist.customtags[plr.Name] = {{text = 'GAME STAFF', color = Color3.new(1, 0, 0)}};
 			
 			if Mode["Value"] == 'Uninject' then
 				task.spawn(function() 
-					vape:Uninject() 
-				end)
+					vape:Uninject();
+				end);
 				game:GetService('StarterGui'):SetCore('SendNotification', {
 					Title = 'StaffDetector',
 					Text = 'Staff Detected\n'..plr.Name,
 					Duration = 60,
-				})
+				});
 			elseif Mode["Value"] == 'ServerHop' then
-				serverHop()
+				serverHop();
 			elseif Mode["Value"] == 'Profile' then
-				vape.Save = function() end
+				vape.Save = function() end;
 				if vape.Profile ~= Profile["Value"] then
-					vape.Profile = Profile["Value"]
-					vape:Load(true, Profile["Value"])
-				end
+					vape.Profile = Profile["Value"];
+					vape:Load(true, Profile["Value"]);
+				end;
 			elseif Mode["Value"] == 'AutoConfig' then
-				vape.Save = function() end
+				vape.Save = function() end;
 				for _, v in vape.Modules do
 					if v["Enabled"] then
-						v:Toggle()
-					end
-				end
-			end
-		end
-	end
+						v:Toggle();
+					end;
+				end;
+			end;
+		end;
+	end;
 	
 	StaffDetector = vape.Categories.Utility:CreateModule({
 		["Name"] = 'StaffDetector',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				if Group["Value"] == '' or Role["Value"] == '' then
-					local placeinfo = {Creator = {CreatorTargetId = tonumber(Group["Value"])}}
+					local placeinfo: number? = {Creator = {CreatorTargetId = tonumber(Group["Value"])}};
 					if Group["Value"] == '' then
-						placeinfo = marketplaceService:GetProductInfo(game.PlaceId)
+						placeinfo = marketplaceService:GetProductInfo(game.PlaceId);
 						if placeinfo.Creator.CreatorType ~= 'Group' then
-							local desc = placeinfo.Description:split('\n')
+							local desc: string? = placeinfo.Description:split('\n');
 							for _, str in desc do
-								local _, begin = str:find('roblox.com/groups/')
+								local _: any, begin: any = str:find('roblox.com/groups/');
 								if begin then
-									local endof = str:find('/', begin + 1)
+									local endof: string? = str:find('/', begin + 1)
 									placeinfo = {Creator = {
 										CreatorType = 'Group', 
 										CreatorTargetId = str:sub(begin + 1, endof - 1)
-									}}
-								end
-							end
-						end
+									}};
+								end;
+							end;
+						end;
 	
 						if placeinfo.Creator.CreatorType ~= 'Group' then
-							notif('StaffDetector', 'Automatic Setup Failed (no group detected)', 60, 'warning')
-							return
-						end
-					end
+							notif('StaffDetector', 'Automatic Setup Failed (no group detected)', 60, 'warning');
+							return;
+						end;
+					end;
 	
-					local groupinfo = groupService:GetGroupInfoAsync(placeinfo.Creator.CreatorTargetId)
-					Group:SetValue(placeinfo.Creator.CreatorTargetId)
-					Role:SetValue(getLowestStaffRole(groupinfo.Roles))
-				end
+					local groupinfo: any = groupService:GetGroupInfoAsync(placeinfo.Creator.CreatorTargetId);
+					Group:SetValue(placeinfo.Creator.CreatorTargetId);
+					Role:SetValue(getLowestStaffRole(groupinfo.Roles));
+				end;
 				
 				if Group["Value"] == '' or Role["Value"] == '' then 
-					return 
-				end
+					return;
+				end;
 				
-				StaffDetector:Clean(playersService.PlayerAdded:Connect(playerAdded))
+				StaffDetector:Clean(playersService.PlayerAdded:Connect(playerAdded));
 				for _, v in playersService:GetPlayers() do
-					task.spawn(playerAdded, v)
-				end
-			end
+					task.spawn(playerAdded, v);
+				end;
+			end;
 		end,
 		["Tooltip"] = 'Detects people with a staff rank ingame'
 	})
@@ -8011,9 +8010,9 @@ velo.run(function()
 		["List"] = {'Uninject', 'ServerHop', 'Profile', 'AutoConfig', 'Notify'},
 		["Function"] = function(val)
 			if Profile.Object then
-				Profile.Object.Visible = val == 'Profile'
-			end
-		end
+				Profile.Object.Visible = val == 'Profile';
+			end;
+		end;
 	})
 	Profile = StaffDetector:CreateTextBox({
 		["Name"] = 'Profile',
@@ -8042,54 +8041,53 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				for _, v in getconnections(lplr.Idled) do
-					table.insert(connections, v)
-					v:Disable()
-				end
+					table.insert(connections, v);
+					v:Disable();
+				end;
 			else
 				for _, v in connections do
-					v:Enable()
-				end
-				table.clear(connections)
-			end
+					v:Enable();
+				end;
+				table.clear(connections);
+			end;
 		end,
 		["Tooltip"] = 'Lets you stay ingame without getting kicked'
-	})
+	});
 end)
 	
 velo.run(function()
-	local Freecam: table = {["Enabled"] = false}
-	local Value: table = {}
-	local randomkey: any, module: any, old: any = httpService:GenerateGUID(false)
-	
+	local Freecam: table = {["Enabled"] = false};
+	local Value: table = {};
+	local randomkey: any, module: any, old: any = httpService:GenerateGUID(false);
 	Freecam = vape.Categories.World:CreateModule({
 		["Name"] = 'Freecam',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				repeat
-					task.wait(0.1)
+					task.wait(0.1);
 					for _, v in getconnections(gameCamera:GetPropertyChangedSignal('CameraType')) do
 						if v.Function then
-							module = debug.getupvalue(v.Function, 1)
-						end
-					end
-				until module or not Freecam["Enabled"]
+							module = debug.getupvalue(v.Function, 1);
+						end;
+					end;
+				until module or not Freecam["Enabled"];
 	
 				if module and module.activeCameraController and Freecam["Enabled"] then
-					old = module.activeCameraController.GetSubjectPosition
-					local camPos = old(module.activeCameraController) or Vector3.zero
+					old = module.activeCameraController.GetSubjectPosition;
+					local camPos: Vector3? = old(module.activeCameraController) or Vector3.zero;
 					module.activeCameraController.GetSubjectPosition = function()
-						return camPos
-					end
+						return camPos;
+					end;
 	
-					Freecam:Clean(runService.PreSimulation:Connect(function(dt)
+					Freecam:Clean(runService.PreSimulation:Connect(function(dt: InputObject?)
 						if not inputService:GetFocusedTextBox() then
-							local forward = (inputService:IsKeyDown(Enum.KeyCode.W) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.S) and 1 or 0)
-							local side = (inputService:IsKeyDown(Enum.KeyCode.A) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0)
-							local up = (inputService:IsKeyDown(Enum.KeyCode.Q) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.E) and 1 or 0)
-							dt = dt * (inputService:IsKeyDown(Enum.KeyCode.LeftShift) and 0.25 or 1)
-							camPos = (CFrame.lookAlong(camPos, gameCamera.CFrame.LookVector) * CFrame.new(Vector3.new(side, up, forward) * (Value.Value * dt))).Position
-						end
-					end))
+							local forward: any = (inputService:IsKeyDown(Enum.KeyCode.W) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.S) and 1 or 0);
+							local side: any = (inputService:IsKeyDown(Enum.KeyCode.A) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0);
+							local up: any = (inputService:IsKeyDown(Enum.KeyCode.Q) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.E) and 1 or 0);
+							dt = dt * (inputService:IsKeyDown(Enum.KeyCode.LeftShift) and 0.25 or 1);
+							camPos = (CFrame.lookAlong(camPos, gameCamera.CFrame.LookVector) * CFrame.new(Vector3.new(side, up, forward) * (Value["Value"] * dt))).Position;
+						end;
+					end));
 	
 					contextService:BindActionAtPriority('FreecamKeyboard'..randomkey, function() 
 						return Enum.ContextActionResult.Sink 
@@ -8102,18 +8100,18 @@ velo.run(function()
 						Enum.KeyCode.Q,
 						Enum.KeyCode.Up,
 						Enum.KeyCode.Down
-					)
-				end
+					);
+				end;
 			else
 				pcall(function()
-					contextService:UnbindAction('FreecamKeyboard'..randomkey)
-				end)
+					contextService:UnbindAction('FreecamKeyboard'..randomkey);
+				end);
 				if module and old then
-					module.activeCameraController.GetSubjectPosition = old
-					module = nil
-					old = nil
-				end
-			end
+					module.activeCameraController.GetSubjectPosition = old;
+					module = nil;
+					old = nil;
+				end;
+			end;
 		end,
 		["Tooltip"] = 'Lets you fly and clip through walls freely\nwithout moving your player server-sided.'
 	})
@@ -8123,43 +8121,43 @@ velo.run(function()
 		["Max"] = 150,
 		["Default"] = 50,
 		["Suffix"] = function(val)
-			return val == 1 and 'stud' or 'studs'
-		end
+			return val == 1 and 'stud' or 'studs';
+		end;
 	})
 end)
 	
 velo.run(function()
-	local Gravity: table = {["Enabled"] = false}
-	local Mode: table = {}
-	local Value: table = {}
-	local changed: any, old: any = false
+	local Gravity: table = {["Enabled"] = false};
+	local Mode: table = {};
+	local Value: table = {};
+	local changed: any, old: any = false;
 	Gravity = vape.Categories.World:CreateModule({
 		["Name"] = 'Gravity',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				if Mode.Value == 'Workspace' then
-					old = workspace.Gravity
-					workspace.Gravity = Value.Value
+				if Mode["Value"] == 'Workspace' then
+					old = workspace.Gravity;
+					workspace.Gravity = Value["Value"];
 					Gravity:Clean(workspace:GetPropertyChangedSignal('Gravity'):Connect(function()
-						if changed then return end
-						changed = true
-						old = workspace.Gravity
-						workspace.Gravity = Value.Value
-						changed = false
-					end))
+						if changed then return; end;
+						changed = true;
+						old = workspace.Gravity;
+						workspace.Gravity = Value["Value"];
+						changed = false;
+					end));
 				else
 					Gravity:Clean(runService.PreSimulation:Connect(function(dt)
 						if entitylib.isAlive and entitylib.character.Humanoid.FloorMaterial == Enum.Material.Air then
-							entitylib.character.RootPart.AssemblyLinearVelocity += Vector3.new(0, dt * (workspace.Gravity - Value.Value), 0)
-						end
-					end))
-				end
+							entitylib.character.RootPart.AssemblyLinearVelocity += Vector3.new(0, dt * (workspace.Gravity - Value["Value"]), 0);
+						end;
+					end));
+				end;
 			else
 				if old then
-					workspace.Gravity = old
-					old = nil
-				end
-			end
+					workspace.Gravity = old;
+					old = nil;
+				end;
+			end;
 		end,
 		["Tooltip"] = 'Changes the rate you fall'
 	})
@@ -8174,17 +8172,17 @@ velo.run(function()
 		["Max"] = 192,
 		["Function"] = function(val)
 			if Gravity["Enabled"] and Mode.Value == 'Workspace' then
-				changed = true
-				workspace.Gravity = val
-				changed = false
-			end
+				changed = true;
+				workspace.Gravity = val;
+				changed = false;
+			end;
 		end,
 		["Default"] = 192
 	})
 end)
 	
 velo.run(function()
-	local Parkour: table = {["Enabled"] = false}
+	local Parkour: table = {["Enabled"] = false};
 	Parkour = vape.Categories.World:CreateModule({
 		["Name"] = 'Parkour',
 		["Function"] = function(callback: boolean): void
@@ -8192,56 +8190,56 @@ velo.run(function()
 				local oldfloor
 				Parkour:Clean(runService.RenderStepped:Connect(function()
 					if entitylib.isAlive then 
-						local material = entitylib.character.Humanoid.FloorMaterial
+						local material: any = entitylib.character.Humanoid.FloorMaterial;
 						if material == Enum.Material.Air and oldfloor ~= Enum.Material.Air then 
-							entitylib.character.Humanoid.Jump = true
-						end
-						oldfloor = material
-					end
-				end))
-			end
+							entitylib.character.Humanoid.Jump = true;
+						end;
+						oldfloor = material;
+					end;
+				end));
+			end;
 		end,
 		["Tooltip"] = 'Automatically jumps after reaching the edge'
-	})
+	});
 end)
 	
 velo.run(function()
 	local rayCheck: RayCastParams? = RaycastParams.new();
-	rayCheck.RespectCanCollide = true
-	local module, old
+	rayCheck.RespectCanCollide = true;
+	local module: any, old: any;
 	vape.Categories.World:CreateModule({
 		["Name"] = 'SafeWalk',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				if not module then
-					local suc = pcall(function() 
-						module = require(lplr.PlayerScripts.PlayerModule).controls 
-					end)
-					if not suc then module = {} end
-				end
+					local suc: boolean? = pcall(function() 
+						module = require(lplr.PlayerScripts.PlayerModule).controls;
+					end);
+					if not suc then module = {}; end;
+				end;
 				
-				old = module.moveFunction
+				old = module.moveFunction;
 				module.moveFunction = function(self, vec, face)
 					if entitylib.isAlive then
-						rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera}
-						local root = entitylib.character.RootPart
-						local movedir = root.Position + vec
-						local ray = workspace:Raycast(movedir, Vector3.new(0, -15, 0), rayCheck)
+						rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera};
+						local root: Humanoid? = entitylib.character.RootPart;
+						local movedir: Vector3? = root.Position + vec;
+						local ray: RaycastResult? = workspace:Raycast(movedir, Vector3.new(0, -15, 0), rayCheck);
 						if not ray then
-							local check = workspace:Blockcast(root.CFrame, Vector3.new(3, 1, 3), Vector3.new(0, -(entitylib.character.HipHeight + 1), 0), rayCheck)
+							local check: any = workspace:Blockcast(root.CFrame, Vector3.new(3, 1, 3), Vector3.new(0, -(entitylib.character.HipHeight + 1), 0), rayCheck);
 							if check then
-								vec = (check.Instance:GetClosestPointOnSurface(movedir) - root.Position) * Vector3.new(1, 0, 1)
-							end
-						end
-					end
+								vec = (check.Instance:GetClosestPointOnSurface(movedir) - root.Position) * Vector3.new(1, 0, 1);
+							end;
+						end;
+					end;
 	
-					return old(self, vec, face)
-				end
+					return old(self, vec, face);
+				end;
 			else
 				if module and old then
-					module.moveFunction = old
-				end
-			end
+					module.moveFunction = old;
+				end;
+			end;
 		end,
 		["Tooltip"] = 'Prevents you from walking off the edge of parts'
 	})
@@ -8252,27 +8250,27 @@ velo.run(function()
 	local List: table = {}
 	local modified: table = {}
 	
-	local function modifyPart(v)
+	local function modifyPart(v: BasePart?)
 		if v:IsA('BasePart') and not table.find(List.ListEnabled, v.Name) then
-			modified[v] = true
-			v.LocalTransparencyModifier = 0.5
-		end
-	end
+			modified[v] = true;
+			v.LocalTransparencyModifier = 0.5;
+		end;
+	end;
 	
 	Xray = vape.Categories.World:CreateModule({
 		["Name"] = 'Xray',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				Xray:Clean(workspace.DescendantAdded:Connect(modifyPart))
+				Xray:Clean(workspace.DescendantAdded:Connect(modifyPart));
 				for _, v in workspace:GetDescendants() do
-					modifyPart(v)
-				end
+					modifyPart(v);
+				end;
 			else
 				for i in modified do
-					i.LocalTransparencyModifier = 0
-				end
-				table.clear(modified)
-			end
+					i.LocalTransparencyModifier = 0;
+				end;
+				table.clear(modified);
+			end;
 		end,
 		["Tooltip"] = 'Renders whitelisted parts through walls.'
 	})
@@ -8280,10 +8278,10 @@ velo.run(function()
 		["Name"] = 'Part',
 		["Function"] = function()
 			if Xray["Enabled"] then
-				Xray:Toggle()
-				Xray:Toggle()
-			end
-		end
+				Xray:Toggle();
+				Xray:Toggle();
+			end;
+		end;
 	})
 end)
 	
@@ -8291,69 +8289,69 @@ velo.run(function()
 	local MurderMystery: table = {["Enabled"] = false}
 	local murderer: any, sheriff: any, oldtargetable: any, oldgetcolor: any
 	
-	local function itemAdded(v, plr)
+	local function itemAdded(v: Model?, plr: Player?)
 		if v:IsA('Tool') then
-			local check = v:FindFirstChild('IsGun') and 'sheriff' or v:FindFirstChild('KnifeServer') and 'murderer' or nil
-			check = check or v.Name:lower():find('knife') and 'murderer' or v.Name:lower():find('gun') and 'sheriff' or nil
+			local check: any = v:FindFirstChild('IsGun') and 'sheriff' or v:FindFirstChild('KnifeServer') and 'murderer' or nil;
+			check = check or v.Name:lower():find('knife') and 'murderer' or v.Name:lower():find('gun') and 'sheriff' or nil;
 			if check == 'murderer' and plr ~= murderer then
-				murderer = plr
+				murderer = plr;
 				if plr.Character then
-					entitylib.refresh()
-				end
+					entitylib.refresh();
+				end;
 			elseif check == 'sheriff' and plr ~= sheriff then
-				sheriff = plr
+				sheriff = plr;
 				if plr.Character then
-					entitylib.refresh()
-				end
-			end
-		end
-	end
+					entitylib.refresh();
+				end;
+			end;
+		end;
+	end;
 	
-	local function playerAdded(plr)
-		MurderMystery:Clean(plr.DescendantAdded:Connect(function(v)
-			itemAdded(v, plr)
-		end))
-		local pack = plr:FindFirstChildWhichIsA('Backpack')
+	local function playerAdded(plr: Player?)
+		MurderMystery:Clean(plr.DescendantAdded:Connect(function(v: Player?)
+			itemAdded(v, plr);
+		end));
+		local pack: Backpack? = plr:FindFirstChildWhichIsA('Backpack')
 		if pack then
 			for _, v in pack:GetChildren() do
-				itemAdded(v, plr)
-			end
-		end
+				itemAdded(v, plr);
+			end;
+		end;
 		if plr.Character then
 			for _, v in plr.Character:GetChildren() do
-				itemAdded(v, plr)
-			end
-		end
-	end
+				itemAdded(v, plr);
+			end;
+		end;
+	end;
 	
 	MurderMystery = vape.Categories.Minigames:CreateModule({
 		["Name"] = 'MurderMystery',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				oldtargetable, oldgetcolor = entitylib.targetCheck, entitylib.getEntityColor
+				oldtargetable, oldgetcolor = entitylib.targetCheck, entitylib.getEntityColor;
 				entitylib.getEntityColor = function(ent)
 					ent = ent.Player
-					if not (ent and vape.Categories.Main.Options['Use team color']["Enabled"]) then return end
+					if not (ent and vape.Categories.Main.Options['Use team color']["Enabled"]) then return; end;
 					if isFriend(ent, true) then
-						return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value)
-					end
-					return murderer == ent and Color3.new(1, 0.3, 0.3) or sheriff == ent and Color3.new(0, 0.5, 1) or nil
-				end
+						return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value);
+					end;
+					return murderer == ent and Color3.new(1, 0.3, 0.3) or sheriff == ent and Color3.new(0, 0.5, 1) or nil;
+				end;
 				entitylib.targetCheck = function(ent)
-					if ent.Player and isFriend(ent.Player) then return false end
-					if murderer == lplr then return true end
-					return murderer == ent.Player or sheriff == ent.Player
-				end
+					if ent.Player and isFriend(ent.Player) then return false; end;
+					if murderer == lplr then return true; end;
+					return murderer == ent.Player or sheriff == ent.Player;
+				end;
 				for _, v in playersService:GetPlayers() do
-					playerAdded(v)
-				end
-				MurderMystery:Clean(playersService.PlayerAdded:Connect(playerAdded))
-				entitylib.refresh()
+					playerAdded(v);
+				end;
+				MurderMystery:Clean(playersService.PlayerAdded:Connect(playerAdded));
+				entitylib.refresh();
 			else
-				entitylib.getEntityColor = oldgetcolor
-				entitylib.targetCheck = oldtargetable
-				entitylib.refresh()
-			end
+				entitylib.getEntityColor = oldgetcolor;
+				entitylib.targetCheck = oldtargetable;
+				entitylib.refresh();
+			end;
 		end,
 		["Tooltip"] = 'Automatic murder mystery teaming based on equipped roblox tools.'
 	})
