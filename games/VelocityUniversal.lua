@@ -7314,10 +7314,10 @@ velo.run(function()
 				end
 			end
 		end,
-		["Tooltip"] = 'Renders tracers on players.'
+		Tooltip = 'Renders tracers on players.'
 	})
 	Targets = Tracers:CreateTargets({
-		["Players"] = true,
+		Players = true,
 		["Function"] = function()
 			if Tracers["Enabled"] then
 				Tracers:Toggle()
@@ -7444,7 +7444,7 @@ velo.run(function()
 				WaypointFolder:ClearAllChildren()
 			end
 		end,
-		["Tooltip"] = 'Mark certain spots with a visual indicator'
+		Tooltip = 'Mark certain spots with a visual indicator'
 	})
 	FontOption = Waypoints:CreateFont({
 		["Name"] = 'Font',
@@ -7566,11 +7566,11 @@ velo.run(function()
 				end
 			end
 		end,
-		["Tooltip"] = 'Plays a specific animation of your choosing at a certain speed'
+		Tooltip = 'Plays a specific animation of your choosing at a certain speed'
 	})
 	IDBox = AnimationPlayer:CreateTextBox({
 		["Name"] = 'Animation',
-		["Placeholder"] = 'anim (num only)',
+		Placeholder = 'anim (num only)',
 		["Function"] = function(enter)
 			if enter and AnimationPlayer["Enabled"] then
 				AnimationPlayer:Toggle()
@@ -7621,7 +7621,7 @@ velo.run(function()
 				end))
 			end
 		end,
-		["Tooltip"] = 'Prevents you from getting knocked down in a ragdoll state'
+		Tooltip = 'Prevents you from getting knocked down in a ragdoll state'
 	})
 end)
 	
@@ -7642,12 +7642,12 @@ velo.run(function()
 				end))
 			end
 		end,
-		["Tooltip"] = 'Automatically rejoins into a new server if you get disconnected / kicked'
+		Tooltip = 'Automatically rejoins into a new server if you get disconnected / kicked'
 	})
 	Sort = AutoRejoin:CreateDropdown({
 		["Name"] = 'Sort',
 		["List"] = {'Descending', 'Ascending'},
-		["Tooltip"] = 'Descending - Prefers full servers\nAscending - Prefers empty servers'
+		Tooltip = 'Descending - Prefers full servers\nAscending - Prefers empty servers'
 	})
 end)
 	
@@ -7691,19 +7691,19 @@ velo.run(function()
 				oldphys, oldsend = nil, nil
 			end
 		end,
-		["Tooltip"] = 'Chokes packets until disabled.'
+		Tooltip = 'Chokes packets until disabled.'
 	})
 	Type = Blink:CreateDropdown({
 		["Name"] = 'Type',
 		["List"] = {'Movement Only', 'All'},
-		["Tooltip"] = 'Movement Only - Only chokes movement packets\nAll - Chokes remotes & movement'
+		Tooltip = 'Movement Only - Only chokes movement packets\nAll - Chokes remotes & movement'
 	})
 	AutoSend = Blink:CreateToggle({
 		["Name"] = 'Auto send',
 		["Function"] = function(callback: boolean): void
 			AutoSendLength.Object.Visible = callback
 		end,
-		["Tooltip"] = 'Automatically send packets in intervals'
+		Tooltip = 'Automatically send packets in intervals'
 	})
 	AutoSendLength = Blink:CreateSlider({
 		["Name"] = 'Send threshold',
@@ -7773,7 +7773,7 @@ velo.run(function()
 				end
 			end
 		end,
-		["Tooltip"] = 'Automatically types in chat'
+		Tooltip = 'Automatically types in chat'
 	})
 	Lines = ChatSpammer:CreateTextList({["Name"] = 'Lines'})
 	Mode = ChatSpammer:CreateDropdown({
@@ -7805,26 +7805,27 @@ end)
 velo.run(function()
 	local Disabler: table = {["Enabled"] = false}
 	
-	local function characterAdded(char: Model?)
+	local function characterAdded(char)
+		print('yes')
 		for _, v in getconnections(char.RootPart:GetPropertyChangedSignal('CFrame')) do
-			hookfunction(v.Function, function() end);
-		end;
+			hookfunction(v.Function, function() end)
+		end
 		for _, v in getconnections(char.RootPart:GetPropertyChangedSignal('Velocity')) do
-			hookfunction(v.Function, function() end);
-		end;
-	end;
+			hookfunction(v.Function, function() end)
+		end
+	end
 	
 	Disabler = vape.Categories.Utility:CreateModule({
 		["Name"] = 'Disabler',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				Disabler:Clean(entitylib.Events.LocalAdded:Connect(characterAdded));
+				Disabler:Clean(entitylib.Events.LocalAdded:Connect(characterAdded))
 				if entitylib.isAlive then
-					characterAdded(entitylib.character);
-				end;
-			end;
+					characterAdded(entitylib.character)
+				end
+			end
 		end,
-		["Tooltip"] = 'Disables GetPropertyChangedSignal detections for movement'
+		Tooltip = 'Disables GetPropertyChangedSignal detections for movement'
 	})
 end)
 	
@@ -7835,12 +7836,12 @@ velo.run(function()
 			if callback then
 				for _, v in vape.Modules do
 					if v["Enabled"] then
-						v:Toggle();
-					end;
-				end;
-			end;
+						v:Toggle()
+					end
+				end
+			end
 		end,
-		["Tooltip"] = 'Disables all currently enabled modules'
+		Tooltip = 'Disables all currently enabled modules'
 	})
 end)
 	
@@ -7859,7 +7860,7 @@ velo.run(function()
 				end;
 			end;
 		end,
-		["Tooltip"] = 'Rejoins the server'
+		Tooltip = 'Rejoins the server'
 	})
 end)
 	
@@ -7900,108 +7901,108 @@ velo.run(function()
 	local Group: table = {}
 	local Role: table = {}
 	
-	local function getRole(plr: Player?, id: string?)
-		local suc: boolean, res: string?;
+	local function getRole(plr, id)
+		local suc, res
 		for _ = 1, 3 do
 			suc, res = pcall(function()
-				return plr:GetRankInGroup(id);
-			end);
-			if suc then break; end;
-		end;
-		return suc and res or 0;
-	end;
+				return plr:GetRankInGroup(id)
+			end)
+			if suc then break end
+		end
+		return suc and res or 0
+	end
 	
-	local function getLowestStaffRole(roles: string?)
-		local highest: number? = math.huge;
+	local function getLowestStaffRole(roles)
+		local highest = math.huge
 		for _, v in roles do
-			local low: string? = v.Name:lower();
+			local low = v.Name:lower()
 			if (low:find('admin') or low:find('mod') or low:find('dev')) and v.Rank < highest then
-				highest = v.Rank;
-			end;
-		end;
-		return highest;
-	end;
+				highest = v.Rank
+			end
+		end
+		return highest
+	end
 	
-	local function playerAdded(plr: Player?)
+	local function playerAdded(plr)
 		if not vape.Loaded then 
-			repeat task.wait() until vape.Loaded;
-		end;
+			repeat task.wait() until vape.Loaded 
+		end
 	
-		local user: number? = table.find(Users.ListEnabled, tostring(plr.UserId));
+		local user = table.find(Users.ListEnabled, tostring(plr.UserId))
 		if user or getRole(plr, tonumber(Group["Value"]) or 0) >= (tonumber(Role["Value"]) or 1) then
-			notif('StaffDetector', 'Staff Detected ('..(user and 'blacklisted_user' or 'staff_role')..'): '..plr.Name, 60, 'alert');
-			whitelist.customtags[plr.Name] = {{text = 'GAME STAFF', color = Color3.new(1, 0, 0)}};
+			notif('StaffDetector', 'Staff Detected ('..(user and 'blacklisted_user' or 'staff_role')..'): '..plr.Name, 60, 'alert')
+			whitelist.customtags[plr.Name] = {{text = 'GAME STAFF', color = Color3.new(1, 0, 0)}}
 			
 			if Mode["Value"] == 'Uninject' then
 				task.spawn(function() 
-					vape:Uninject();
-				end);
+					vape:Uninject() 
+				end)
 				game:GetService('StarterGui'):SetCore('SendNotification', {
 					Title = 'StaffDetector',
 					Text = 'Staff Detected\n'..plr.Name,
 					Duration = 60,
-				});
+				})
 			elseif Mode["Value"] == 'ServerHop' then
-				serverHop();
+				serverHop()
 			elseif Mode["Value"] == 'Profile' then
-				vape.Save = function() end;
+				vape.Save = function() end
 				if vape.Profile ~= Profile["Value"] then
-					vape.Profile = Profile["Value"];
-					vape:Load(true, Profile["Value"]);
-				end;
+					vape.Profile = Profile["Value"]
+					vape:Load(true, Profile["Value"])
+				end
 			elseif Mode["Value"] == 'AutoConfig' then
-				vape.Save = function() end;
+				vape.Save = function() end
 				for _, v in vape.Modules do
 					if v["Enabled"] then
-						v:Toggle();
-					end;
-				end;
-			end;
-		end;
-	end;
+						v:Toggle()
+					end
+				end
+			end
+		end
+	end
 	
 	StaffDetector = vape.Categories.Utility:CreateModule({
 		["Name"] = 'StaffDetector',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				if Group["Value"] == '' or Role["Value"] == '' then
-					local placeinfo: number? = {Creator = {CreatorTargetId = tonumber(Group["Value"])}};
+					local placeinfo = {Creator = {CreatorTargetId = tonumber(Group["Value"])}}
 					if Group["Value"] == '' then
-						placeinfo = marketplaceService:GetProductInfo(game.PlaceId);
+						placeinfo = marketplaceService:GetProductInfo(game.PlaceId)
 						if placeinfo.Creator.CreatorType ~= 'Group' then
-							local desc: string? = placeinfo.Description:split('\n');
+							local desc = placeinfo.Description:split('\n')
 							for _, str in desc do
-								local _: any, begin: any = str:find('roblox.com/groups/');
+								local _, begin = str:find('roblox.com/groups/')
 								if begin then
-									local endof: string? = str:find('/', begin + 1)
+									local endof = str:find('/', begin + 1)
 									placeinfo = {Creator = {
 										CreatorType = 'Group', 
 										CreatorTargetId = str:sub(begin + 1, endof - 1)
-									}};
-								end;
-							end;
-						end;
+									}}
+								end
+							end
+						end
 	
 						if placeinfo.Creator.CreatorType ~= 'Group' then
-							notif('StaffDetector', 'Automatic Setup Failed (no group detected)', 60, 'warning');
-							return;
-						end;
-					end;
+							notif('StaffDetector', 'Automatic Setup Failed (no group detected)', 60, 'warning')
+							return
+						end
+					end
 	
-					local groupinfo: any = groupService:GetGroupInfoAsync(placeinfo.Creator.CreatorTargetId);
-					Group:SetValue(placeinfo.Creator.CreatorTargetId);
-					Role:SetValue(getLowestStaffRole(groupinfo.Roles));
-				end;
+					local groupinfo = groupService:GetGroupInfoAsync(placeinfo.Creator.CreatorTargetId)
+					Group:SetValue(placeinfo.Creator.CreatorTargetId)
+					Role:SetValue(getLowestStaffRole(groupinfo.Roles))
+				end
 				
 				if Group["Value"] == '' or Role["Value"] == '' then 
-					return;
-				end;
+					return 
+				end
 				
-				StaffDetector:Clean(playersService.PlayerAdded:Connect(playerAdded));
+				StaffDetector:Clean(playersService.PlayerAdded:Connect(playerAdded))
 				for _, v in playersService:GetPlayers() do
-					task.spawn(playerAdded, v);
-				end;
-			end;
+					task.spawn(playerAdded, v)
+				end
+			end
 		end,
 		["Tooltip"] = 'Detects people with a staff rank ingame'
 	})
@@ -8010,9 +8011,9 @@ velo.run(function()
 		["List"] = {'Uninject', 'ServerHop', 'Profile', 'AutoConfig', 'Notify'},
 		["Function"] = function(val)
 			if Profile.Object then
-				Profile.Object.Visible = val == 'Profile';
-			end;
-		end;
+				Profile.Object.Visible = val == 'Profile'
+			end
+		end
 	})
 	Profile = StaffDetector:CreateTextBox({
 		["Name"] = 'Profile',
@@ -8041,53 +8042,54 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				for _, v in getconnections(lplr.Idled) do
-					table.insert(connections, v);
-					v:Disable();
-				end;
+					table.insert(connections, v)
+					v:Disable()
+				end
 			else
 				for _, v in connections do
-					v:Enable();
-				end;
-				table.clear(connections);
-			end;
+					v:Enable()
+				end
+				table.clear(connections)
+			end
 		end,
 		["Tooltip"] = 'Lets you stay ingame without getting kicked'
-	});
+	})
 end)
 	
 velo.run(function()
-	local Freecam: table = {["Enabled"] = false};
-	local Value: table = {};
-	local randomkey: any, module: any, old: any = httpService:GenerateGUID(false);
+	local Freecam: table = {["Enabled"] = false}
+	local Value: table = {}
+	local randomkey: any, module: any, old: any = httpService:GenerateGUID(false)
+	
 	Freecam = vape.Categories.World:CreateModule({
 		["Name"] = 'Freecam',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				repeat
-					task.wait(0.1);
+					task.wait(0.1)
 					for _, v in getconnections(gameCamera:GetPropertyChangedSignal('CameraType')) do
 						if v.Function then
-							module = debug.getupvalue(v.Function, 1);
-						end;
-					end;
-				until module or not Freecam["Enabled"];
+							module = debug.getupvalue(v.Function, 1)
+						end
+					end
+				until module or not Freecam["Enabled"]
 	
 				if module and module.activeCameraController and Freecam["Enabled"] then
-					old = module.activeCameraController.GetSubjectPosition;
-					local camPos: Vector3? = old(module.activeCameraController) or Vector3.zero;
+					old = module.activeCameraController.GetSubjectPosition
+					local camPos = old(module.activeCameraController) or Vector3.zero
 					module.activeCameraController.GetSubjectPosition = function()
-						return camPos;
-					end;
+						return camPos
+					end
 	
-					Freecam:Clean(runService.PreSimulation:Connect(function(dt: InputObject?)
+					Freecam:Clean(runService.PreSimulation:Connect(function(dt)
 						if not inputService:GetFocusedTextBox() then
-							local forward: any = (inputService:IsKeyDown(Enum.KeyCode.W) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.S) and 1 or 0);
-							local side: any = (inputService:IsKeyDown(Enum.KeyCode.A) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0);
-							local up: any = (inputService:IsKeyDown(Enum.KeyCode.Q) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.E) and 1 or 0);
-							dt = dt * (inputService:IsKeyDown(Enum.KeyCode.LeftShift) and 0.25 or 1);
-							camPos = (CFrame.lookAlong(camPos, gameCamera.CFrame.LookVector) * CFrame.new(Vector3.new(side, up, forward) * (Value["Value"] * dt))).Position;
-						end;
-					end));
+							local forward = (inputService:IsKeyDown(Enum.KeyCode.W) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.S) and 1 or 0)
+							local side = (inputService:IsKeyDown(Enum.KeyCode.A) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0)
+							local up = (inputService:IsKeyDown(Enum.KeyCode.Q) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.E) and 1 or 0)
+							dt = dt * (inputService:IsKeyDown(Enum.KeyCode.LeftShift) and 0.25 or 1)
+							camPos = (CFrame.lookAlong(camPos, gameCamera.CFrame.LookVector) * CFrame.new(Vector3.new(side, up, forward) * (Value.Value * dt))).Position
+						end
+					end))
 	
 					contextService:BindActionAtPriority('FreecamKeyboard'..randomkey, function() 
 						return Enum.ContextActionResult.Sink 
@@ -8100,18 +8102,18 @@ velo.run(function()
 						Enum.KeyCode.Q,
 						Enum.KeyCode.Up,
 						Enum.KeyCode.Down
-					);
-				end;
+					)
+				end
 			else
 				pcall(function()
-					contextService:UnbindAction('FreecamKeyboard'..randomkey);
-				end);
+					contextService:UnbindAction('FreecamKeyboard'..randomkey)
+				end)
 				if module and old then
-					module.activeCameraController.GetSubjectPosition = old;
-					module = nil;
-					old = nil;
-				end;
-			end;
+					module.activeCameraController.GetSubjectPosition = old
+					module = nil
+					old = nil
+				end
+			end
 		end,
 		["Tooltip"] = 'Lets you fly and clip through walls freely\nwithout moving your player server-sided.'
 	})
@@ -8121,43 +8123,43 @@ velo.run(function()
 		["Max"] = 150,
 		["Default"] = 50,
 		["Suffix"] = function(val)
-			return val == 1 and 'stud' or 'studs';
-		end;
+			return val == 1 and 'stud' or 'studs'
+		end
 	})
 end)
 	
 velo.run(function()
-	local Gravity: table = {["Enabled"] = false};
-	local Mode: table = {};
-	local Value: table = {};
-	local changed: any, old: any = false;
+	local Gravity: table = {["Enabled"] = false}
+	local Mode: table = {}
+	local Value: table = {}
+	local changed: any, old: any = false
 	Gravity = vape.Categories.World:CreateModule({
 		["Name"] = 'Gravity',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				if Mode["Value"] == 'Workspace' then
-					old = workspace.Gravity;
-					workspace.Gravity = Value["Value"];
+				if Mode.Value == 'Workspace' then
+					old = workspace.Gravity
+					workspace.Gravity = Value.Value
 					Gravity:Clean(workspace:GetPropertyChangedSignal('Gravity'):Connect(function()
-						if changed then return; end;
-						changed = true;
-						old = workspace.Gravity;
-						workspace.Gravity = Value["Value"];
-						changed = false;
-					end));
+						if changed then return end
+						changed = true
+						old = workspace.Gravity
+						workspace.Gravity = Value.Value
+						changed = false
+					end))
 				else
 					Gravity:Clean(runService.PreSimulation:Connect(function(dt)
 						if entitylib.isAlive and entitylib.character.Humanoid.FloorMaterial == Enum.Material.Air then
-							entitylib.character.RootPart.AssemblyLinearVelocity += Vector3.new(0, dt * (workspace.Gravity - Value["Value"]), 0);
-						end;
-					end));
-				end;
+							entitylib.character.RootPart.AssemblyLinearVelocity += Vector3.new(0, dt * (workspace.Gravity - Value.Value), 0)
+						end
+					end))
+				end
 			else
 				if old then
-					workspace.Gravity = old;
-					old = nil;
-				end;
-			end;
+					workspace.Gravity = old
+					old = nil
+				end
+			end
 		end,
 		["Tooltip"] = 'Changes the rate you fall'
 	})
@@ -8172,17 +8174,17 @@ velo.run(function()
 		["Max"] = 192,
 		["Function"] = function(val)
 			if Gravity["Enabled"] and Mode.Value == 'Workspace' then
-				changed = true;
-				workspace.Gravity = val;
-				changed = false;
-			end;
+				changed = true
+				workspace.Gravity = val
+				changed = false
+			end
 		end,
 		["Default"] = 192
 	})
 end)
 	
 velo.run(function()
-	local Parkour: table = {["Enabled"] = false};
+	local Parkour: table = {["Enabled"] = false}
 	Parkour = vape.Categories.World:CreateModule({
 		["Name"] = 'Parkour',
 		["Function"] = function(callback: boolean): void
@@ -8190,56 +8192,56 @@ velo.run(function()
 				local oldfloor
 				Parkour:Clean(runService.RenderStepped:Connect(function()
 					if entitylib.isAlive then 
-						local material: any = entitylib.character.Humanoid.FloorMaterial;
+						local material = entitylib.character.Humanoid.FloorMaterial
 						if material == Enum.Material.Air and oldfloor ~= Enum.Material.Air then 
-							entitylib.character.Humanoid.Jump = true;
-						end;
-						oldfloor = material;
-					end;
-				end));
-			end;
+							entitylib.character.Humanoid.Jump = true
+						end
+						oldfloor = material
+					end
+				end))
+			end
 		end,
 		["Tooltip"] = 'Automatically jumps after reaching the edge'
-	});
+	})
 end)
 	
 velo.run(function()
 	local rayCheck: RayCastParams? = RaycastParams.new();
-	rayCheck.RespectCanCollide = true;
-	local module: any, old: any;
+	rayCheck.RespectCanCollide = true
+	local module, old
 	vape.Categories.World:CreateModule({
 		["Name"] = 'SafeWalk',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				if not module then
-					local suc: boolean? = pcall(function() 
-						module = require(lplr.PlayerScripts.PlayerModule).controls;
-					end);
-					if not suc then module = {}; end;
-				end;
+					local suc = pcall(function() 
+						module = require(lplr.PlayerScripts.PlayerModule).controls 
+					end)
+					if not suc then module = {} end
+				end
 				
-				old = module.moveFunction;
+				old = module.moveFunction
 				module.moveFunction = function(self, vec, face)
 					if entitylib.isAlive then
-						rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera};
-						local root: Humanoid? = entitylib.character.RootPart;
-						local movedir: Vector3? = root.Position + vec;
-						local ray: RaycastResult? = workspace:Raycast(movedir, Vector3.new(0, -15, 0), rayCheck);
+						rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera}
+						local root = entitylib.character.RootPart
+						local movedir = root.Position + vec
+						local ray = workspace:Raycast(movedir, Vector3.new(0, -15, 0), rayCheck)
 						if not ray then
-							local check: any = workspace:Blockcast(root.CFrame, Vector3.new(3, 1, 3), Vector3.new(0, -(entitylib.character.HipHeight + 1), 0), rayCheck);
+							local check = workspace:Blockcast(root.CFrame, Vector3.new(3, 1, 3), Vector3.new(0, -(entitylib.character.HipHeight + 1), 0), rayCheck)
 							if check then
-								vec = (check.Instance:GetClosestPointOnSurface(movedir) - root.Position) * Vector3.new(1, 0, 1);
-							end;
-						end;
-					end;
+								vec = (check.Instance:GetClosestPointOnSurface(movedir) - root.Position) * Vector3.new(1, 0, 1)
+							end
+						end
+					end
 	
-					return old(self, vec, face);
-				end;
+					return old(self, vec, face)
+				end
 			else
 				if module and old then
-					module.moveFunction = old;
-				end;
-			end;
+					module.moveFunction = old
+				end
+			end
 		end,
 		["Tooltip"] = 'Prevents you from walking off the edge of parts'
 	})
@@ -8250,27 +8252,27 @@ velo.run(function()
 	local List: table = {}
 	local modified: table = {}
 	
-	local function modifyPart(v: BasePart?)
+	local function modifyPart(v)
 		if v:IsA('BasePart') and not table.find(List.ListEnabled, v.Name) then
-			modified[v] = true;
-			v.LocalTransparencyModifier = 0.5;
-		end;
-	end;
+			modified[v] = true
+			v.LocalTransparencyModifier = 0.5
+		end
+	end
 	
 	Xray = vape.Categories.World:CreateModule({
 		["Name"] = 'Xray',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				Xray:Clean(workspace.DescendantAdded:Connect(modifyPart));
+				Xray:Clean(workspace.DescendantAdded:Connect(modifyPart))
 				for _, v in workspace:GetDescendants() do
-					modifyPart(v);
-				end;
+					modifyPart(v)
+				end
 			else
 				for i in modified do
-					i.LocalTransparencyModifier = 0;
-				end;
-				table.clear(modified);
-			end;
+					i.LocalTransparencyModifier = 0
+				end
+				table.clear(modified)
+			end
 		end,
 		["Tooltip"] = 'Renders whitelisted parts through walls.'
 	})
@@ -8278,10 +8280,10 @@ velo.run(function()
 		["Name"] = 'Part',
 		["Function"] = function()
 			if Xray["Enabled"] then
-				Xray:Toggle();
-				Xray:Toggle();
-			end;
-		end;
+				Xray:Toggle()
+				Xray:Toggle()
+			end
+		end
 	})
 end)
 	
@@ -8289,69 +8291,69 @@ velo.run(function()
 	local MurderMystery: table = {["Enabled"] = false}
 	local murderer: any, sheriff: any, oldtargetable: any, oldgetcolor: any
 	
-	local function itemAdded(v: Model?, plr: Player?)
+	local function itemAdded(v, plr)
 		if v:IsA('Tool') then
-			local check: any = v:FindFirstChild('IsGun') and 'sheriff' or v:FindFirstChild('KnifeServer') and 'murderer' or nil;
-			check = check or v.Name:lower():find('knife') and 'murderer' or v.Name:lower():find('gun') and 'sheriff' or nil;
+			local check = v:FindFirstChild('IsGun') and 'sheriff' or v:FindFirstChild('KnifeServer') and 'murderer' or nil
+			check = check or v.Name:lower():find('knife') and 'murderer' or v.Name:lower():find('gun') and 'sheriff' or nil
 			if check == 'murderer' and plr ~= murderer then
-				murderer = plr;
+				murderer = plr
 				if plr.Character then
-					entitylib.refresh();
-				end;
+					entitylib.refresh()
+				end
 			elseif check == 'sheriff' and plr ~= sheriff then
-				sheriff = plr;
+				sheriff = plr
 				if plr.Character then
-					entitylib.refresh();
-				end;
-			end;
-		end;
-	end;
+					entitylib.refresh()
+				end
+			end
+		end
+	end
 	
-	local function playerAdded(plr: Player?)
-		MurderMystery:Clean(plr.DescendantAdded:Connect(function(v: Player?)
-			itemAdded(v, plr);
-		end));
-		local pack: Backpack? = plr:FindFirstChildWhichIsA('Backpack')
+	local function playerAdded(plr)
+		MurderMystery:Clean(plr.DescendantAdded:Connect(function(v)
+			itemAdded(v, plr)
+		end))
+		local pack = plr:FindFirstChildWhichIsA('Backpack')
 		if pack then
 			for _, v in pack:GetChildren() do
-				itemAdded(v, plr);
-			end;
-		end;
+				itemAdded(v, plr)
+			end
+		end
 		if plr.Character then
 			for _, v in plr.Character:GetChildren() do
-				itemAdded(v, plr);
-			end;
-		end;
-	end;
+				itemAdded(v, plr)
+			end
+		end
+	end
 	
 	MurderMystery = vape.Categories.Minigames:CreateModule({
 		["Name"] = 'MurderMystery',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				oldtargetable, oldgetcolor = entitylib.targetCheck, entitylib.getEntityColor;
+				oldtargetable, oldgetcolor = entitylib.targetCheck, entitylib.getEntityColor
 				entitylib.getEntityColor = function(ent)
 					ent = ent.Player
-					if not (ent and vape.Categories.Main.Options['Use team color']["Enabled"]) then return; end;
+					if not (ent and vape.Categories.Main.Options['Use team color']["Enabled"]) then return end
 					if isFriend(ent, true) then
-						return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value);
-					end;
-					return murderer == ent and Color3.new(1, 0.3, 0.3) or sheriff == ent and Color3.new(0, 0.5, 1) or nil;
-				end;
+						return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value)
+					end
+					return murderer == ent and Color3.new(1, 0.3, 0.3) or sheriff == ent and Color3.new(0, 0.5, 1) or nil
+				end
 				entitylib.targetCheck = function(ent)
-					if ent.Player and isFriend(ent.Player) then return false; end;
-					if murderer == lplr then return true; end;
-					return murderer == ent.Player or sheriff == ent.Player;
-				end;
+					if ent.Player and isFriend(ent.Player) then return false end
+					if murderer == lplr then return true end
+					return murderer == ent.Player or sheriff == ent.Player
+				end
 				for _, v in playersService:GetPlayers() do
-					playerAdded(v);
-				end;
-				MurderMystery:Clean(playersService.PlayerAdded:Connect(playerAdded));
-				entitylib.refresh();
+					playerAdded(v)
+				end
+				MurderMystery:Clean(playersService.PlayerAdded:Connect(playerAdded))
+				entitylib.refresh()
 			else
-				entitylib.getEntityColor = oldgetcolor;
-				entitylib.targetCheck = oldtargetable;
-				entitylib.refresh();
-			end;
+				entitylib.getEntityColor = oldgetcolor
+				entitylib.targetCheck = oldtargetable
+				entitylib.refresh()
+			end
 		end,
 		["Tooltip"] = 'Automatic murder mystery teaming based on equipped roblox tools.'
 	})
@@ -8362,39 +8364,39 @@ velo.run(function()
 	local Toggles: table = {}
 	local themeName: any;
 	local newobjects: table, oldobjects: table = {}, {}
-	local function BeforeShaders()
-	        return {
-	            Brightness = lightingService.Brightness,
-	            ColorShift_Bottom = lightingService.ColorShift_Bottom,
-	            ColorShift_Top = lightingService.ColorShift_Top,
-	            OutdoorAmbient = lightingService.OutdoorAmbient,
-	            TimeOfDay = lightingService.TimeOfDay,
-	            FogColor = lightingService.FogColor,
-	            FogEnd = lightingService.FogEnd,
-	            FogStart = lightingService.FogStart,
-	            ExposureCompensation = lightingService.ExposureCompensation,
-	            ShadowSoftness = lightingService.ShadowSoftness,
-	            Ambient = lightingService.Ambient,
-	            children = lightingService:GetChildren()
-	        };
-	end;
-	local function restoreDefault(lightingState)
-	        lightingService:ClearAllChildren();
-	        lightingService.Brightness = lightingState.Brightness;
-	        lightingService.ColorShift_Bottom = lightingState.ColorShift_Bottom;
-	        lightingService.ColorShift_Top = lightingState.ColorShift_Top;
-	        lightingService.OutdoorAmbient = lightingState.OutdoorAmbient;
-	        lightingService.TimeOfDay = lightingState.TimeOfDay;
-	        lightingService.FogColor = lightingState.FogColor;
-	        lightingService.FogEnd = lightingState.FogEnd;
-	        lightingService.FogStart = lightingState.FogStart;
-	        lightingService.ExposureCompensation = lightingState.ExposureCompensation;
-	        lightingService.ShadowSoftness = lightingState.ShadowSoftness;
-	        lightingService.Ambient = lightingState.Ambient;
-	        for _, child in next, workspace.ItemDrops:GetChildren() do
-	            child.Parent = lightingService;
-	        end;
-	end;
+    local function BeforeShaders()
+        return {
+            Brightness = lightingService.Brightness,
+            ColorShift_Bottom = lightingService.ColorShift_Bottom,
+            ColorShift_Top = lightingService.ColorShift_Top,
+            OutdoorAmbient = lightingService.OutdoorAmbient,
+            TimeOfDay = lightingService.TimeOfDay,
+            FogColor = lightingService.FogColor,
+            FogEnd = lightingService.FogEnd,
+            FogStart = lightingService.FogStart,
+            ExposureCompensation = lightingService.ExposureCompensation,
+            ShadowSoftness = lightingService.ShadowSoftness,
+            Ambient = lightingService.Ambient,
+            children = lightingService:GetChildren()
+        }
+    end
+    local function restoreDefault(lightingState)
+        lightingService:ClearAllChildren()
+        lightingService.Brightness = lightingState.Brightness
+        lightingService.ColorShift_Bottom = lightingState.ColorShift_Bottom
+        lightingService.ColorShift_Top = lightingState.ColorShift_Top
+        lightingService.OutdoorAmbient = lightingState.OutdoorAmbient
+        lightingService.TimeOfDay = lightingState.TimeOfDay
+        lightingService.FogColor = lightingState.FogColor
+        lightingService.FogEnd = lightingState.FogEnd
+        lightingService.FogStart = lightingState.FogStart
+        lightingService.ExposureCompensation = lightingState.ExposureCompensation
+        lightingService.ShadowSoftness = lightingState.ShadowSoftness
+        lightingService.Ambient = lightingState.Ambient
+        for _, child in next, workspace.ItemDrops:GetChildren() do
+            child.Parent = lightingService
+        end
+    end
 	local apidump: table = {
 		Sky = {
 			SkyboxUp = 'Text',
@@ -8439,446 +8441,433 @@ velo.run(function()
 			Brightness = 'Number'
 		}
 	}
-    	local skyThemes: table = {
-		        NetherWorld = {
-			            MoonAngularSize = 0,
-			            SunAngularSize = 0,
-			            SkyboxBk = 'rbxassetid://14365019002',
-			            SkyboxDn = 'rbxassetid://14365023350',
-			            SkyboxFt = 'rbxassetid://14365018399',
-			            SkyboxLf = 'rbxassetid://14365018705',
-			            SkyboxRt = 'rbxassetid://14365018143',
-			            SkyboxUp = 'rbxassetid://14365019327',
-		        },
-		        Neptune = {
-				    SkyboxBk = 'rbxassetid://218955819',
-				    SkyboxDn = 'rbxassetid://218953419',
-				    SkyboxFt = 'rbxassetid://218954524',
-				    SkyboxLf = 'rbxassetid://218958493',
-				    SkyboxRt = 'rbxassetid://218957134',
-				    SkyboxUp = 'rbxassetid://218950090',
-		        },
-		        Velocity = {
-			            SkyboxBk = 'rbxassetid://570557514',
-			            SkyboxDn = 'rbxassetid://570557775',
-			            SkyboxFt = 'rbxassetid://570557559',
-			            SkyboxLf = 'rbxassetid://570557620',
-			            SkyboxRt = 'rbxassetid://570557672',
-			            SkyboxUp = 'rbxassetid://570557727',
-		        },
-		        Minecraft = {
-			            SkyboxBk = 'rbxassetid://591058823',
-			            SkyboxDn = 'rbxassetid://591059876',
-			            SkyboxFt = 'rbxassetid://591058104',
-			            SkyboxLf = 'rbxassetid://591057861',
-			            SkyboxRt = 'rbxassetid://591057625',
-			            SkyboxUp = 'rbxassetid://591059642',
-		        },
-		        Purple = {
-			            SkyboxBk = "rbxassetid://8539982183",
-			            SkyboxDn = "rbxassetid://8539981943",
-			            SkyboxFt = "rbxassetid://8539981721",
-			            SkyboxLf = "rbxassetid://8539981424",
-			            SkyboxRt = "rbxassetid://8539980766",
-			            SkyboxUp = "rbxassetid://8539981085",
-			            MoonAngularSize = 0,
-			            SunAngularSize = 0,
-			            StarCount = 3000,
-		        }, 
-		        ["日の出"] = {
-				    SkyboxBk = "rbxassetid://600830446",
-				    SkyboxDn = "rbxassetid://600831635",
-				    SkyboxFt = "rbxassetid://600832720",
-				    SkyboxLf = "rbxassetid://600886090",
-				    SkyboxRt = "rbxassetid://600833862",
-				    SkyboxUp = "rbxassetid://600835177",
-		        },
-		        Sakura = {
-			            SkyboxBk = "http://www.roblox.com/asset/?id=16694315897",
-			            SkyboxDn = "http://www.roblox.com/asset/?id=16694319417",
-			            SkyboxFt = "http://www.roblox.com/asset/?id=16694324910",
-			            SkyboxLf = "http://www.roblox.com/asset/?id=16694328308",
-			            SkyboxRt = "http://www.roblox.com/asset/?id=16694331447",
-			            SkyboxUp = "http://www.roblox.com/asset/?id=16694334666",
-			            SunAngularSize = 21,
-			            StarCount = 3000,
-		        },
-		        Hexagonal = {
-			            SkyboxBk = "http://www.roblox.com/asset/?id=15876463105",
-			            SkyboxDn = "http://www.roblox.com/asset/?id=15876464432",
-			            SkyboxFt = "http://www.roblox.com/asset/?id=15876465852",
-			            SkyboxLf = "http://www.roblox.com/asset/?id=15876467260",
-			            SkyboxRt = "http://www.roblox.com/asset/?id=15876469097",
-			            SkyboxUp = "http://www.roblox.com/asset/?id=15876470945",
-			            SunAngularSize = 21,
-			            StarCount = 3000,
-		        },
-		        Reality = {
-			            SkyboxBk = "http://www.roblox.com/asset/?id=6778646360",
-			            SkyboxDn = "http://www.roblox.com/asset/?id=6778658683",
-			            SkyboxFt = "http://www.roblox.com/asset/?id=6778648039",
-			            SkyboxLf = "http://www.roblox.com/asset/?id=6778649136",
-			            SkyboxRt = "http://www.roblox.com/asset/?id=6778650519",
-			            SkyboxUp = "http://www.roblox.com/asset/?id=6778658364",
-		        },
-		        LunarNight = {
-			            SkyboxBk = 'rbxassetid://187713366',
-			            SkyboxDn = 'rbxassetid://187712428',
-			            SkyboxFt = 'rbxassetid://187712836',
-			            SkyboxLf = 'rbxassetid://187713755',
-			            SkyboxRt = 'rbxassetid://187714525',
-			            SkyboxUp = 'rbxassetid://187712111',
-			            SunAngularSize = 0,
-			            StarCount = 0,
-		        },
-		        FPSBoost = {
-			            SkyboxBk = 'rbxassetid://11457548274',
-			            SkyboxDn = 'rbxassetid://11457548274',
-			            SkyboxFt = 'rbxassetid://11457548274',
-			            SkyboxLf = 'rbxassetid://11457548274',
-			            SkyboxRt = 'rbxassetid://11457548274',
-			            SkyboxUp = 'rbxassetid://11457548274',
-			            SunAngularSize = 0,
-			            StarCount = 3000,
-		        },
-		        Etheral = {
-			            SkyboxBk = 'rbxassetid://16262356578',
-			            SkyboxDn = 'rbxassetid://16262358026',
-			            SkyboxFt = 'rbxassetid://16262360469',
-			            SkyboxLf = 'rbxassetid://16262362003',
-			            SkyboxRt = 'rbxassetid://16262363873',
-			            SkyboxUp = 'rbxassetid://16262366016',
-			            SunAngularSize = 21,
-			            StarCount = 3000,
-		        },
-		        Pandora = {
-			            SkyboxBk = 'http://www.roblox.com/asset/?id=16739324092',
-			            SkyboxDn = 'http://www.roblox.com/asset/?id=16739325541',
-			            SkyboxFt = 'http://www.roblox.com/asset/?id=16739327056',
-			            SkyboxLf = 'http://www.roblox.com/asset/?id=16739329370',
-			            SkyboxRt = 'http://www.roblox.com/asset/?id=16739331050',
-			            SkyboxUp = 'http://www.roblox.com/asset/?id=16739332736',
-			            SunAngularSize = 21,
-			            StarCount = 3000,
-		        },
-		        Polaris = {
-			            SkyboxBk = 'http://www.roblox.com/asset/?id=16823270864',
-			            SkyboxDn = 'http://www.roblox.com/asset/?id=16823272150',
-			            SkyboxFt = 'http://www.roblox.com/asset/?id=16823273508',
-			            SkyboxLf = 'http://www.roblox.com/asset/?id=16823274898',
-			            SkyboxRt = 'http://www.roblox.com/asset/?id=16823276281',
-			            SkyboxUp = 'http://www.roblox.com/asset/?id=16823277547',
-			            SunAngularSize = 21,
-			            StarCount = 3000,
-		        },
-		        Diaphanous = {
-			            SkyboxBk = 'http://www.roblox.com/asset/?id=16888989874',
-			            SkyboxDn = 'http://www.roblox.com/asset/?id=16888991855',
-			            SkyboxFt = 'http://www.roblox.com/asset/?id=16888995219',
-			            SkyboxLf = 'http://www.roblox.com/asset/?id=16888998994',
-			            SkyboxRt = 'http://www.roblox.com/asset/?id=16889000916',
-			            SkyboxUp = 'http://www.roblox.com/asset/?id=16889004122',
-			            SunAngularSize = 21,
-			            StarCount = 3000,
-		        },
-		        Transcendent = {
-			            SkyboxBk = 'http://www.roblox.com/asset/?id=17124357467',
-			            SkyboxDn = 'http://www.roblox.com/asset/?id=17124359797',
-			            SkyboxFt = 'http://www.roblox.com/asset/?id=17124362093',
-			            SkyboxLf = 'http://www.roblox.com/asset/?id=17124365127',
-			            SkyboxRt = 'http://www.roblox.com/asset/?id=17124367200',
-			            SkyboxUp = 'http://www.roblox.com/asset/?id=17124369657',
-			            SunAngularSize = 21,
-			            StarCount = 3000,
-		        },
-		        Truth = {
-			            SkyboxBk = "http://www.roblox.com/asset/?id=144933338",
-			            SkyboxDn = "http://www.roblox.com/asset/?id=144931530",
-			            SkyboxFt = "http://www.roblox.com/asset/?id=144933262",
-			            SkyboxLf = "http://www.roblox.com/asset/?id=144933244",
-			            SkyboxRt = "http://www.roblox.com/asset/?id=144933299",
-			            SkyboxUp = "http://www.roblox.com/asset/?id=144931564",
-		        },
-		        RayTracing = {
-			            SkyboxBk = "http://www.roblox.com/asset/?id=271042516",
-			            SkyboxDn = "http://www.roblox.com/asset/?id=271077243",
-			            SkyboxFt = "http://www.roblox.com/asset/?id=271042556",
-			            SkyboxLf = "http://www.roblox.com/asset/?id=271042310",
-			            SkyboxRt = "http://www.roblox.com/asset/?id=271042467",
-			            SkyboxUp = "http://www.roblox.com/asset/?id=271077958",
-		        },
-		        Nebula = {
-			            MoonAngularSize = 0,
-			            SunAngularSize = 0,
-			            SkyboxBk = 'rbxassetid://5260808177',
-			            SkyboxDn = 'rbxassetid://5260653793',
-			            SkyboxFt = 'rbxassetid://5260817288',
-			            SkyboxLf = 'rbxassetid://5260800833',
-			            SkyboxRt = 'rbxassetid://5260811073',
-			            SkyboxUp = 'rbxassetid://5260824661',
-		        },
-		        Planets = {
-			            MoonAngularSize = 0,
-			            SunAngularSize = 0,
-			            SkyboxBk = 'rbxassetid://15983968922',
-			            SkyboxDn = 'rbxassetid://15983966825',
-			            SkyboxFt = 'rbxassetid://15983965025',
-			            SkyboxLf = 'rbxassetid://15983967420',
-			            SkyboxRt = 'rbxassetid://15983966246',
-			            SkyboxUp = 'rbxassetid://15983964246',
-			            StarCount = 3000,
-		        },
-		        Galaxy = {
-			            SkyboxBk = "rbxassetid://159454299",
-			            SkyboxDn = "rbxassetid://159454296",
-			            SkyboxFt = "rbxassetid://159454293",
-			            SkyboxLf = "rbxassetid://159454293",
-			            SkyboxRt = "rbxassetid://159454293",
-			            SkyboxUp = "rbxassetid://159454288",
-			            SunAngularSize = 0,
-		        }, 
-		        Blues = {
-			            SkyboxBk = 'http://www.roblox.com/asset/?id=17124357467',
-			            SkyboxDn = 'http://www.roblox.com/asset/?id=17124359797',
-			            SkyboxFt = 'http://www.roblox.com/asset/?id=17124362093',
-			            SkyboxLf = 'http://www.roblox.com/asset/?id=17124365127',
-			            SkyboxRt = 'http://www.roblox.com/asset/?id=17124367200',
-			            SkyboxUp = 'http://www.roblox.com/asset/?id=17124369657',
-			            SunAngularSize = 21,
-			            StarCount = 3000,
-		        },
-		        Milkyway = {
-			            MoonTextureId = 'rbxassetid://1075087760',
-			            SkyboxBk = 'rbxassetid://2670643994',
-			            SkyboxDn = 'rbxassetid://2670643365',
-			            SkyboxFt = 'rbxassetid://2670643214',
-			            SkyboxLf = 'rbxassetid://2670643070',
-			            SkyboxRt = 'rbxassetid://2670644173',
-			            SkyboxUp = 'rbxassetid://2670644331',
-			            MoonAngularSize = 1.5,
-			            StarCount = 500,
-		        },
-		        Orange = {
-			            SkyboxBk = 'rbxassetid://150939022',
-			            SkyboxDn = 'rbxassetid://150939038',
-			            SkyboxFt = 'rbxassetid://150939047',
-			            SkyboxLf = 'rbxassetid://150939056',
-			            SkyboxRt = 'rbxassetid://150939063',
-			            SkyboxUp = 'rbxassetid://150939082',
-		        },
-		        DarkMountains = {
-			            SkyboxBk = 'rbxassetid://5098814730',
-			            SkyboxDn = 'rbxassetid://5098815227',
-			            SkyboxFt = 'rbxassetid://5098815653',
-			            SkyboxLf = 'rbxassetid://5098816155',
-			            SkyboxRt = 'rbxassetid://5098820352',
-			            SkyboxUp = 'rbxassetid://5098819127',
-		        },
-		        Space = {
-			            MoonAngularSize = 0,
-			            SunAngularSize = 0,
-			            SkyboxBk = 'rbxassetid://166509999',
-			            SkyboxDn = 'rbxassetid://166510057',
-			            SkyboxFt = 'rbxassetid://166510116',
-			            SkyboxLf = 'rbxassetid://166510092',
-			            SkyboxRt = 'rbxassetid://166510131',
-			            SkyboxUp = 'rbxassetid://166510114',
-		        },
-		        Void = {
-			            MoonAngularSize = 0,
-			            SunAngularSize = 0,
-			            SkyboxBk = 'rbxassetid://14543264135',
-			            SkyboxDn = 'rbxassetid://14543358958',
-			            SkyboxFt = 'rbxassetid://14543257810',
-			            SkyboxLf = 'rbxassetid://14543275895',
-			            SkyboxRt = 'rbxassetid://14543280890',
-			            SkyboxUp = 'rbxassetid://14543371676',
-		        },
-		        Stary = {
-			            SkyboxBk = 'rbxassetid://248431616',
-			            SkyboxDn = 'rbxassetid://248431677',
-			            SkyboxFt = 'rbxassetid://248431598',
-			            SkyboxLf = 'rbxassetid://248431686',
-			            SkyboxRt = 'rbxassetid://248431611',
-			            SkyboxUp = 'rbxassetid://248431605',
-				    StarCount = 3000,       
-		        },
-			Violet = {
-				    SkyboxBk = 'rbxassetid://8107841671',
-				    SkyboxDn = 'rbxassetid://6444884785',
-				    SkyboxFt = 'rbxassetid://8107841671',
-				    SkyboxLf = 'rbxassetid://8107841671',
-				    SkyboxRt = 'rbxassetid://8107841671',
-				    SkyboxUp = 'rbxassetid://8107849791',
-				    SunTextureId = 'rbxassetid://6196665106',
-				    MoonTextureId = 'rbxassetid://6444320592',
-				    MoonAngularSize = 0,
-		        },
-			Cloudy = {
-				    SkyboxBk = 'rbxassetid://15876597103',
-				    SkyboxDn = 'rbxassetid://15876592775',
-				    SkyboxFt = 'rbxassetid://15876640231',
-				    SkyboxLf = 'rbxassetid://15876638420',
-				    SkyboxRt = 'rbxassetid://15876595486',
-				    SkyboxUp = 'rbxassetid://15876639348',
-				    SunTextureId = 'rbxasset://sky/sun.jpg',
-				    MoonTextureId = 'rbxasset://sky/moon.jpg',
-				    MoonAngularSize = 11,
-		            	    SunAngularSize = 21,
-				    StarCount = 3000,
-		    	}
-	};																																					
-    	local ILS: any = BeforeShaders()
-	local function removeObject(v: Instance?)
+    local skyThemes: table = {
+        NetherWorld = {
+            MoonAngularSize = 0,
+            SunAngularSize = 0,
+            SkyboxBk = 'rbxassetid://14365019002',
+            SkyboxDn = 'rbxassetid://14365023350',
+            SkyboxFt = 'rbxassetid://14365018399',
+            SkyboxLf = 'rbxassetid://14365018705',
+            SkyboxRt = 'rbxassetid://14365018143',
+            SkyboxUp = 'rbxassetid://14365019327',
+        },
+        Neptune = {
+		    SkyboxBk = 'rbxassetid://218955819',
+		    SkyboxDn = 'rbxassetid://218953419',
+		    SkyboxFt = 'rbxassetid://218954524',
+		    SkyboxLf = 'rbxassetid://218958493',
+		    SkyboxRt = 'rbxassetid://218957134',
+		    SkyboxUp = 'rbxassetid://218950090',
+        },
+        Velocity = {
+            SkyboxBk = 'rbxassetid://570557514',
+            SkyboxDn = 'rbxassetid://570557775',
+            SkyboxFt = 'rbxassetid://570557559',
+            SkyboxLf = 'rbxassetid://570557620',
+            SkyboxRt = 'rbxassetid://570557672',
+            SkyboxUp = 'rbxassetid://570557727',
+        },
+        Minecraft = {
+            SkyboxBk = 'rbxassetid://591058823',
+            SkyboxDn = 'rbxassetid://591059876',
+            SkyboxFt = 'rbxassetid://591058104',
+            SkyboxLf = 'rbxassetid://591057861',
+            SkyboxRt = 'rbxassetid://591057625',
+            SkyboxUp = 'rbxassetid://591059642',
+        },
+        Purple = {
+            SkyboxBk = "rbxassetid://8539982183",
+            SkyboxDn = "rbxassetid://8539981943",
+            SkyboxFt = "rbxassetid://8539981721",
+            SkyboxLf = "rbxassetid://8539981424",
+            SkyboxRt = "rbxassetid://8539980766",
+            SkyboxUp = "rbxassetid://8539981085",
+            MoonAngularSize = 0,
+            SunAngularSize = 0,
+            StarCount = 3000,
+        }, 
+        ["日の出"] = {
+			SkyboxBk = "rbxassetid://600830446",
+			SkyboxDn = "rbxassetid://600831635",
+			SkyboxFt = "rbxassetid://600832720",
+			SkyboxLf = "rbxassetid://600886090",
+			SkyboxRt = "rbxassetid://600833862",
+			SkyboxUp = "rbxassetid://600835177",
+        },
+        Sakura = {
+            SkyboxBk = "http://www.roblox.com/asset/?id=16694315897",
+            SkyboxDn = "http://www.roblox.com/asset/?id=16694319417",
+            SkyboxFt = "http://www.roblox.com/asset/?id=16694324910",
+            SkyboxLf = "http://www.roblox.com/asset/?id=16694328308",
+            SkyboxRt = "http://www.roblox.com/asset/?id=16694331447",
+            SkyboxUp = "http://www.roblox.com/asset/?id=16694334666",
+            SunAngularSize = 21,
+            StarCount = 3000,
+        },
+        Hexagonal = {
+            SkyboxBk = "http://www.roblox.com/asset/?id=15876463105",
+            SkyboxDn = "http://www.roblox.com/asset/?id=15876464432",
+            SkyboxFt = "http://www.roblox.com/asset/?id=15876465852",
+            SkyboxLf = "http://www.roblox.com/asset/?id=15876467260",
+            SkyboxRt = "http://www.roblox.com/asset/?id=15876469097",
+            SkyboxUp = "http://www.roblox.com/asset/?id=15876470945",
+            SunAngularSize = 21,
+            StarCount = 3000,
+        },
+        Reality = {
+            SkyboxBk = "http://www.roblox.com/asset/?id=6778646360",
+            SkyboxDn = "http://www.roblox.com/asset/?id=6778658683",
+            SkyboxFt = "http://www.roblox.com/asset/?id=6778648039",
+            SkyboxLf = "http://www.roblox.com/asset/?id=6778649136",
+            SkyboxRt = "http://www.roblox.com/asset/?id=6778650519",
+            SkyboxUp = "http://www.roblox.com/asset/?id=6778658364",
+        },
+        LunarNight = {
+            SkyboxBk = 'rbxassetid://187713366',
+            SkyboxDn = 'rbxassetid://187712428',
+            SkyboxFt = 'rbxassetid://187712836',
+            SkyboxLf = 'rbxassetid://187713755',
+            SkyboxRt = 'rbxassetid://187714525',
+            SkyboxUp = 'rbxassetid://187712111',
+            SunAngularSize = 0,
+            StarCount = 0,
+        },
+        FPSBoost = {
+            SkyboxBk = 'rbxassetid://11457548274',
+            SkyboxDn = 'rbxassetid://11457548274',
+            SkyboxFt = 'rbxassetid://11457548274',
+            SkyboxLf = 'rbxassetid://11457548274',
+            SkyboxRt = 'rbxassetid://11457548274',
+            SkyboxUp = 'rbxassetid://11457548274',
+            SunAngularSize = 0,
+            StarCount = 3000,
+        },
+        Etheral = {
+            SkyboxBk = 'rbxassetid://16262356578',
+            SkyboxDn = 'rbxassetid://16262358026',
+            SkyboxFt = 'rbxassetid://16262360469',
+            SkyboxLf = 'rbxassetid://16262362003',
+            SkyboxRt = 'rbxassetid://16262363873',
+            SkyboxUp = 'rbxassetid://16262366016',
+            SunAngularSize = 21,
+            StarCount = 3000,
+        },
+        Pandora = {
+            SkyboxBk = 'http://www.roblox.com/asset/?id=16739324092',
+            SkyboxDn = 'http://www.roblox.com/asset/?id=16739325541',
+            SkyboxFt = 'http://www.roblox.com/asset/?id=16739327056',
+            SkyboxLf = 'http://www.roblox.com/asset/?id=16739329370',
+            SkyboxRt = 'http://www.roblox.com/asset/?id=16739331050',
+            SkyboxUp = 'http://www.roblox.com/asset/?id=16739332736',
+            SunAngularSize = 21,
+            StarCount = 3000,
+        },
+        Polaris = {
+            SkyboxBk = 'http://www.roblox.com/asset/?id=16823270864',
+            SkyboxDn = 'http://www.roblox.com/asset/?id=16823272150',
+            SkyboxFt = 'http://www.roblox.com/asset/?id=16823273508',
+            SkyboxLf = 'http://www.roblox.com/asset/?id=16823274898',
+            SkyboxRt = 'http://www.roblox.com/asset/?id=16823276281',
+            SkyboxUp = 'http://www.roblox.com/asset/?id=16823277547',
+            SunAngularSize = 21,
+            StarCount = 3000,
+        },
+        Diaphanous = {
+            SkyboxBk = 'http://www.roblox.com/asset/?id=16888989874',
+            SkyboxDn = 'http://www.roblox.com/asset/?id=16888991855',
+            SkyboxFt = 'http://www.roblox.com/asset/?id=16888995219',
+            SkyboxLf = 'http://www.roblox.com/asset/?id=16888998994',
+            SkyboxRt = 'http://www.roblox.com/asset/?id=16889000916',
+            SkyboxUp = 'http://www.roblox.com/asset/?id=16889004122',
+            SunAngularSize = 21,
+            StarCount = 3000,
+        },
+        Transcendent = {
+            SkyboxBk = 'http://www.roblox.com/asset/?id=17124357467',
+            SkyboxDn = 'http://www.roblox.com/asset/?id=17124359797',
+            SkyboxFt = 'http://www.roblox.com/asset/?id=17124362093',
+            SkyboxLf = 'http://www.roblox.com/asset/?id=17124365127',
+            SkyboxRt = 'http://www.roblox.com/asset/?id=17124367200',
+            SkyboxUp = 'http://www.roblox.com/asset/?id=17124369657',
+            SunAngularSize = 21,
+            StarCount = 3000,
+        },
+        Truth = {
+            SkyboxBk = "http://www.roblox.com/asset/?id=144933338",
+            SkyboxDn = "http://www.roblox.com/asset/?id=144931530",
+            SkyboxFt = "http://www.roblox.com/asset/?id=144933262",
+            SkyboxLf = "http://www.roblox.com/asset/?id=144933244",
+            SkyboxRt = "http://www.roblox.com/asset/?id=144933299",
+            SkyboxUp = "http://www.roblox.com/asset/?id=144931564",
+        },
+        RayTracing = {
+            SkyboxBk = "http://www.roblox.com/asset/?id=271042516",
+            SkyboxDn = "http://www.roblox.com/asset/?id=271077243",
+            SkyboxFt = "http://www.roblox.com/asset/?id=271042556",
+            SkyboxLf = "http://www.roblox.com/asset/?id=271042310",
+            SkyboxRt = "http://www.roblox.com/asset/?id=271042467",
+            SkyboxUp = "http://www.roblox.com/asset/?id=271077958",
+        },
+        Nebula = {
+            MoonAngularSize = 0,
+            SunAngularSize = 0,
+            SkyboxBk = 'rbxassetid://5260808177',
+            SkyboxDn = 'rbxassetid://5260653793',
+            SkyboxFt = 'rbxassetid://5260817288',
+            SkyboxLf = 'rbxassetid://5260800833',
+            SkyboxRt = 'rbxassetid://5260811073',
+            SkyboxUp = 'rbxassetid://5260824661',
+        },
+        Planets = {
+            MoonAngularSize = 0,
+            SunAngularSize = 0,
+            SkyboxBk = 'rbxassetid://15983968922',
+            SkyboxDn = 'rbxassetid://15983966825',
+            SkyboxFt = 'rbxassetid://15983965025',
+            SkyboxLf = 'rbxassetid://15983967420',
+            SkyboxRt = 'rbxassetid://15983966246',
+            SkyboxUp = 'rbxassetid://15983964246',
+            StarCount = 3000,
+        },
+        Galaxy = {
+            SkyboxBk = "rbxassetid://159454299",
+            SkyboxDn = "rbxassetid://159454296",
+            SkyboxFt = "rbxassetid://159454293",
+            SkyboxLf = "rbxassetid://159454293",
+            SkyboxRt = "rbxassetid://159454293",
+            SkyboxUp = "rbxassetid://159454288",
+            SunAngularSize = 0,
+        }, 
+        Blues = {
+            SkyboxBk = 'http://www.roblox.com/asset/?id=17124357467',
+            SkyboxDn = 'http://www.roblox.com/asset/?id=17124359797',
+            SkyboxFt = 'http://www.roblox.com/asset/?id=17124362093',
+            SkyboxLf = 'http://www.roblox.com/asset/?id=17124365127',
+            SkyboxRt = 'http://www.roblox.com/asset/?id=17124367200',
+            SkyboxUp = 'http://www.roblox.com/asset/?id=17124369657',
+            SunAngularSize = 21,
+            StarCount = 3000,
+        },
+        Milkyway = {
+            MoonTextureId = 'rbxassetid://1075087760',
+            SkyboxBk = 'rbxassetid://2670643994',
+            SkyboxDn = 'rbxassetid://2670643365',
+            SkyboxFt = 'rbxassetid://2670643214',
+            SkyboxLf = 'rbxassetid://2670643070',
+            SkyboxRt = 'rbxassetid://2670644173',
+            SkyboxUp = 'rbxassetid://2670644331',
+            MoonAngularSize = 1.5,
+            StarCount = 500,
+        },
+        Orange = {
+            SkyboxBk = 'rbxassetid://150939022',
+            SkyboxDn = 'rbxassetid://150939038',
+            SkyboxFt = 'rbxassetid://150939047',
+            SkyboxLf = 'rbxassetid://150939056',
+            SkyboxRt = 'rbxassetid://150939063',
+            SkyboxUp = 'rbxassetid://150939082',
+        },
+        DarkMountains = {
+            SkyboxBk = 'rbxassetid://5098814730',
+            SkyboxDn = 'rbxassetid://5098815227',
+            SkyboxFt = 'rbxassetid://5098815653',
+            SkyboxLf = 'rbxassetid://5098816155',
+            SkyboxRt = 'rbxassetid://5098820352',
+            SkyboxUp = 'rbxassetid://5098819127',
+        },
+        Space = {
+            MoonAngularSize = 0,
+            SunAngularSize = 0,
+            SkyboxBk = 'rbxassetid://166509999',
+            SkyboxDn = 'rbxassetid://166510057',
+            SkyboxFt = 'rbxassetid://166510116',
+            SkyboxLf = 'rbxassetid://166510092',
+            SkyboxRt = 'rbxassetid://166510131',
+            SkyboxUp = 'rbxassetid://166510114',
+        },
+        Void = {
+            MoonAngularSize = 0,
+            SunAngularSize = 0,
+            SkyboxBk = 'rbxassetid://14543264135',
+            SkyboxDn = 'rbxassetid://14543358958',
+            SkyboxFt = 'rbxassetid://14543257810',
+            SkyboxLf = 'rbxassetid://14543275895',
+            SkyboxRt = 'rbxassetid://14543280890',
+            SkyboxUp = 'rbxassetid://14543371676',
+        },
+        Stary = {
+            SkyboxBk = 'rbxassetid://248431616',
+            SkyboxDn = 'rbxassetid://248431677',
+            SkyboxFt = 'rbxassetid://248431598',
+            SkyboxLf = 'rbxassetid://248431686',
+            SkyboxRt = 'rbxassetid://248431611',
+            SkyboxUp = 'rbxassetid://248431605',
+			StarCount = 3000,       
+        },
+		Violet = {
+			SkyboxBk = 'rbxassetid://8107841671',
+			SkyboxDn = 'rbxassetid://6444884785',
+			SkyboxFt = 'rbxassetid://8107841671',
+			SkyboxLf = 'rbxassetid://8107841671',
+			SkyboxRt = 'rbxassetid://8107841671',
+			SkyboxUp = 'rbxassetid://8107849791',
+			SunTextureId = 'rbxassetid://6196665106',
+			MoonTextureId = 'rbxassetid://6444320592',
+			MoonAngularSize = 0
+        }
+    }
+    local ILS: any = BeforeShaders()
+	local function removeObject(v)
 		if not table.find(newobjects, v) then 
-			local vt: table? = Toggles[v.ClassName]
-			if vt and vt.Toggle["Enabled"] then
-				table.insert(oldobjects, v);
-				v.Parent = game;
-			end;
-		end;
-	end;
+			local toggle = Toggles[v.ClassName]
+			if toggle and toggle.Toggle["Enabled"] then
+				table.insert(oldobjects, v)
+				v.Parent = game
+			end
+		end
+	end
 	
-	local function themes(val: any)
-	        local theme: any = skyThemes[themeName["Value"]];
-	        if theme then
-		        local sky: Sky? = lightingService:FindFirstChild("CustomSky") or Instance.new("Sky", lightingService);
-		        for v: any, value: any in next, theme do
-		                if v ~= "Atmosphere" then
-		                        sky[v] = value;
-		                end;
-		        end;
-		end;
-	end;
+	local function themes(val)
+        local theme = skyThemes[themeName["Value"]]
+        if theme then
+            local sky = lightingService:FindFirstChild("CustomSky") or Instance.new("Sky", lightingService)
+            for v, value in next, theme do
+                if v ~= "Atmosphere" then
+                    sky[v] = value
+                end
+            end
+        end;
+    end;
 
 	Atmosphere = vape.Legit:CreateModule({
 		["Name"] = 'Atmosphere',
 		["Function"] = function(callback: boolean): void
 			if callback then
 				for _, v in lightingService:GetChildren() do
-			                if v:IsA('PostEffect') or v:IsA('Sky') or v:IsA('Atmosphere') or v:IsA('Clouds') then
-			                        v:Destroy();
-			                end;
-		                end;
-		
-		                for _, v in workspace:GetDescendants() do
-			                if v:IsA("Clouds") then
-			                        v:Destroy();
-			                end;
-		                end;
-				local d: number = 0;
-				local r: any = workspace.Terrain;
+                    if v:IsA('PostEffect') or v:IsA('Sky') or v:IsA('Atmosphere') or v:IsA('Clouds') then
+                        v:Destroy()
+                    end
+                end
+
+                for _, v in workspace:GetDescendants() do
+                    if v:IsA("Clouds") then
+                        v:Destroy()
+                    end;
+                end;
+				local d: number = 0
+				local r: any = workspace.Terrain
 				for _, v in lightingService:GetChildren() do
-		                    	if v:IsA('PostEffect') or v:IsA('Sky') or v:IsA('Atmosphere') or v:IsA('Clouds') then
-		                        	v:Destroy();
-		                    	end;
-		                end;
+                    if v:IsA('PostEffect') or v:IsA('Sky') or v:IsA('Atmosphere') or v:IsA('Clouds') then -- Added Clouds
+                        v:Destroy();
+                    end;
+                end;
 				lightingService.Brightness = d + 1;
-		                lightingService.EnvironmentDiffuseScale = d + 0.2;
-		                lightingService.EnvironmentSpecularScale = d + 0.82;
-		
-		                local sunRays: SunRaysEffect = Instance.new('SunRaysEffect');
-		                table.insert(newobjects, sunRays);
-		                pcall(function() sunRays.Parent = lightingService end);
-		
-		                local atmosphere: Atmosphere = Instance.new('Atmosphere');
-		                table.insert(newobjects, atmosphere);
-		                pcall(function() atmosphere.Parent = lightingService end);
-		
-		                local sky: Sky = Instance.new('Sky');
-		                table.insert(newobjects, sky);
-		                pcall(function() sky.Parent = lightingService end);
-		
-		                local blur = Instance.new('BlurEffect');
-		                blur.Size = d + 3.921;
-		                table.insert(newobjects, blur);
-		                pcall(function() blur.Parent = lightingService end);
-		
-		                local color_correction: ColorCorrectionEffect = Instance.new('ColorCorrectionEffect');
-		                color_correction.Saturation = d + 0.092;
-		                table.insert(newobjects, color_correction);
-		                pcall(function() color_correction.Parent = lightingService end);
-		
-		                local clouds: Clouds = Instance.new('Clouds');
-		                clouds.Cover = d + 0.4;
-		                table.insert(newobjects, clouds);
-		                pcall(function() clouds.Parent = r end);
-		
-		                r.WaterTransparency = d + 1;
-		                r.WaterReflectance = d + 1;
+                lightingService.EnvironmentDiffuseScale = d + 0.2;
+                lightingService.EnvironmentSpecularScale = d + 0.82;
+
+                local sunRays = Instance.new('SunRaysEffect')
+                table.insert(newobjects, sunRays)
+                pcall(function() sunRays.Parent = lightingService end)
+
+                local atmosphere = Instance.new('Atmosphere')
+                table.insert(newobjects, atmosphere)
+                pcall(function() atmosphere.Parent = lightingService end)
+
+                local sky = Instance.new('Sky')
+                table.insert(newobjects, sky)
+                pcall(function() sky.Parent = lightingService end)
+
+                local blur = Instance.new('BlurEffect')
+                blur.Size = d + 3.921
+                table.insert(newobjects, blur)
+                pcall(function() blur.Parent = lightingService end)
+
+                local color_correction = Instance.new('ColorCorrectionEffect')
+                color_correction.Saturation = d + 0.092
+                table.insert(newobjects, color_correction)
+                pcall(function() color_correction.Parent = lightingService end)
+
+                local clouds = Instance.new('Clouds')
+                clouds.Cover = d + 0.4
+                table.insert(newobjects, clouds)
+                pcall(function() clouds.Parent = r end)
+
+                r.WaterTransparency = d + 1
+                r.WaterReflectance = d + 1
 
 				themes()
 				for _, v in lightingService:GetChildren() do
-					removeObject(v);
-				end;
+					removeObject(v)
+				end
 				Atmosphere:Clean(lightingService.ChildAdded:Connect(function(v)
-					task.defer(removeObject, v);
-				end));
+					task.defer(removeObject, v)
+				end))
 	
 				for className, classData in Toggles do
 					if classData.Toggle["Enabled"] then
-						local obj: any = Instance.new(className);
+						local obj: any = Instance.new(className)
 						for propName, propData in classData.Objects do
 							if propData.Type == 'ColorSlider' then
-								obj[propName] = Color3.fromHSV(propData.Hue, propData.Sat, propData.Value);
+								obj[propName] = Color3.fromHSV(propData.Hue, propData.Sat, propData.Value)
 							else
 								if apidump[className][propName] == 'Number' then
-									obj[propName] = tonumber(propData.Value) or 0;
+									obj[propName] = tonumber(propData.Value) or 0
 								else
-									obj[propName] = propData.Value;
-								end;
-							end;
-						end;
-						obj.Name = "Custom" .. className;
-						table.insert(newobjects, obj);
+									obj[propName] = propData.Value
+								end
+							end
+						end
+						obj.Name = "Custom" .. className
+						table.insert(newobjects, obj)
 						task.defer(function()
-							pcall(function() obj.Parent = lightingService end);
-						end);
-					end;
-				end;
-			else;
-		                for _, v in newobjects do
-			                if v and v.Destroy then
-			                        v:Destroy();
-			                end;
-		                end;
-		                for _, v in oldobjects do
-		                    	pcall(function() v.Parent = lightingService end);
-		                end;
-		                table.clear(newobjects);
-		                table.clear(oldobjects);
+							pcall(function() obj.Parent = lightingService end)
+						end)
+					end
+				end
+			else
+                for _, v in newobjects do
+                    if v and v.Destroy then
+                        v:Destroy()
+                    end
+                end
+                for _, v in oldobjects do
+                    pcall(function() v.Parent = lightingService end)
+                end
+                table.clear(newobjects)
+                table.clear(oldobjects)
 				for _, v in lightingService:GetChildren() do
-		                    	if v:IsA("ColorCorrectionEffect") then
-		                        	v:Destroy();
-		                    	end;
-		                end;
-				restoreDefault(ILS);
-			end;
+                    if v:IsA("ColorCorrectionEffect") then
+                        v:Destroy()
+                    end
+                end
+				restoreDefault(ILS)
+			end
 		end,
 		["Tooltip"] = 'Custom lighting objects'
 	})
-	local skyboxes: table = {};
-	for v,_ in next, skyThemes do
-	        table.insert(skyboxes, v);
-	end;
+	local skyboxes: table = {}
+    for v,_ in next, skyThemes do
+        table.insert(skyboxes, v)
+    end
 	themeName = Atmosphere:CreateDropdown({
-	        ["Name"] = "Mode",
-	        ["List"] = skyboxes,
-	        ["Function"] = function(val) end;
-	})
-	for i: any, v: any in apidump do
+        ["Name"] = "Mode",
+        ["List"] = skyboxes,
+        ["Function"] = function(val) end;
+    })
+	for i, v in apidump do
 		Toggles[i] = {Objects = {}}
 		Toggles[i].Toggle = Atmosphere:CreateToggle({
 			["Name"] = i,
 			["Function"] = function(callback: boolean): void
 				if Atmosphere["Enabled"] then
-					Atmosphere:Toggle();
-					Atmosphere:Toggle();
-				end;
+					Atmosphere:Toggle()
+					Atmosphere:Toggle()
+				end
 				for _, toggle in Toggles[i].Objects do
-					toggle.Object.Visible = callback;
-				end;
-			end;
+					toggle.Object.Visible = callback
+				end
+			end
 		})
 	
 		for i2, v2 in v do
@@ -8887,9 +8876,9 @@ velo.run(function()
 					["Name"] = i2,
 					["Function"] = function(enter)
 						if Atmosphere["Enabled"] and enter then
-							Atmosphere:Toggle();
-							Atmosphere:Toggle();
-						end;
+							Atmosphere:Toggle()
+							Atmosphere:Toggle()
+						end
 					end,
 					["Darker"] = true,
 					["Default"] = v2 == 'Number' and '0' or nil,
@@ -8900,16 +8889,16 @@ velo.run(function()
 					["Name"] = i2,
 					["Function"] = function()
 						if Atmosphere["Enabled"] then
-							Atmosphere:Toggle();
-							Atmosphere:Toggle();
-						end;
+							Atmosphere:Toggle()
+							Atmosphere:Toggle()
+						end
 					end,
 					["Darker"] = true,
 					["Visible"] = false
 				})
-			end;
-		end;
-	end;
+			end
+		end
+	end
 end)
 
 velo.run(function()
@@ -8924,37 +8913,37 @@ velo.run(function()
 		["Name"] = 'Breadcrumbs',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				point = Instance.new('Attachment');
-				point.Position = Vector3.new(0, Thickness["Value"] - 2.7, 0);
-				point2 = Instance.new('Attachment');
-				point2.Position = Vector3.new(0, -Thickness["Value"] - 2.7, 0);
-				trail = Instance.new('Trail');
-				trail.Texture = Texture["Value"] == '' and 'http://www.roblox.com/asset/?id=14166981368' or Texture["Value"];
-				trail.TextureMode = Enum.TextureMode.Static;
-				trail.Color = ColorSequence.new(Color3.fromHSV(FadeIn.Hue, FadeIn.Sat, FadeIn.Value), Color3.fromHSV(FadeOut.Hue, FadeOut.Sat, FadeOut.Value));
-				trail.Lifetime = Lifetime["Value"];
-				trail.Attachment0 = point;
-				trail.Attachment1 = point2;
-				trail.FaceCamera = true;
+				point = Instance.new('Attachment')
+				point.Position = Vector3.new(0, Thickness["Value"] - 2.7, 0)
+				point2 = Instance.new('Attachment')
+				point2.Position = Vector3.new(0, -Thickness["Value"] - 2.7, 0)
+				trail = Instance.new('Trail')
+				trail.Texture = Texture["Value"] == '' and 'http://www.roblox.com/asset/?id=14166981368' or Texture.Value
+				trail.TextureMode = Enum.TextureMode.Static
+				trail.Color = ColorSequence.new(Color3.fromHSV(FadeIn.Hue, FadeIn.Sat, FadeIn.Value), Color3.fromHSV(FadeOut.Hue, FadeOut.Sat, FadeOut.Value))
+				trail.Lifetime = Lifetime["Value"]
+				trail.Attachment0 = point
+				trail.Attachment1 = point2
+				trail.FaceCamera = true
 	
-				Breadcrumbs:Clean(trail);
-				Breadcrumbs:Clean(point);
-				Breadcrumbs:Clean(point2);
-				Breadcrumbs:Clean(entitylib.Events.LocalAdded:Connect(function(ent: Player?)
-					point.Parent = ent.HumanoidRootPart;
-					point2.Parent = ent.HumanoidRootPart;
-					trail.Parent = gameCamera;
-				end));
+				Breadcrumbs:Clean(trail)
+				Breadcrumbs:Clean(point)
+				Breadcrumbs:Clean(point2)
+				Breadcrumbs:Clean(entitylib.Events.LocalAdded:Connect(function(ent)
+					point.Parent = ent.HumanoidRootPart
+					point2.Parent = ent.HumanoidRootPart
+					trail.Parent = gameCamera
+				end))
 				if entitylib.isAlive then
-					point.Parent = entitylib.character.RootPart;
-					point2.Parent = entitylib.character.RootPart;
-					trail.Parent = gameCamera;
-				end;
+					point.Parent = entitylib.character.RootPart
+					point2.Parent = entitylib.character.RootPart
+					trail.Parent = gameCamera
+				end
 			else
-				trail = nil;
-				point = nil;
-				point2 = nil;
-			end;
+				trail = nil
+				point = nil
+				point2 = nil
+			end
 		end,
 		["Tooltip"] = 'Shows a trail behind your character'
 	})
@@ -8963,25 +8952,25 @@ velo.run(function()
 		["Placeholder"] = 'Texture Id',
 		["Function"] = function(enter)
 			if enter and trail then
-				trail.Texture = Texture["Value"] == '' and 'http://www.roblox.com/asset/?id=14166981368' or Texture.Value;
-			end;
-		end;
+				trail.Texture = Texture["Value"] == '' and 'http://www.roblox.com/asset/?id=14166981368' or Texture.Value
+			end
+		end
 	})
 	FadeIn = Breadcrumbs:CreateColorSlider({
 		["Name"] = 'Fade In',
 		["Function"] = function(hue, sat, val)
 			if trail then
-				trail.Color = ColorSequence.new(Color3.fromHSV(hue, sat, val), Color3.fromHSV(FadeOut.Hue, FadeOut.Sat, FadeOut.Value));
-			end;
-		end;
+				trail.Color = ColorSequence.new(Color3.fromHSV(hue, sat, val), Color3.fromHSV(FadeOut.Hue, FadeOut.Sat, FadeOut.Value))
+			end
+		end
 	})
 	FadeOut = Breadcrumbs:CreateColorSlider({
 		["Name"] = 'Fade Out',
 		["Function"] = function(hue, sat, val)
 			if trail then
-				trail.Color = ColorSequence.new(Color3.fromHSV(FadeIn.Hue, FadeIn.Sat, FadeIn.Value), Color3.fromHSV(hue, sat, val));
-			end;
-		end;
+				trail.Color = ColorSequence.new(Color3.fromHSV(FadeIn.Hue, FadeIn.Sat, FadeIn.Value), Color3.fromHSV(hue, sat, val))
+			end
+		end
 	})
 	Lifetime = Breadcrumbs:CreateSlider({
 		["Name"] = 'Lifetime',
@@ -8991,12 +8980,12 @@ velo.run(function()
 		["Decimal"] = 10,
 		["Function"] = function(val)
 			if trail then
-				trail.Lifetime = val;
-			end;
+				trail.Lifetime = val
+			end
 		end,
 		["Suffix"] = function(val)
-			return val == 1 and 'second' or 'seconds';
-		end;
+			return val == 1 and 'second' or 'seconds'
+		end
 	})
 	Thickness = Breadcrumbs:CreateSlider({
 		["Name"] = 'Thickness',
@@ -9006,15 +8995,15 @@ velo.run(function()
 		["Decimal"] = 100,
 		["Function"] = function(val)
 			if point then
-				point.Position = Vector3.new(0, val - 2.7, 0);
-			end;
+				point.Position = Vector3.new(0, val - 2.7, 0)
+			end
 			if point2 then
-				point2.Position = Vector3.new(0, -val - 2.7, 0);
-			end;
+				point2.Position = Vector3.new(0, -val - 2.7, 0)
+			end
 		end,
 		["Suffix"] = function(val)
-			return val == 1 and 'stud' or 'studs';
-		end;
+			return val == 1 and 'stud' or 'studs'
+		end
 	})
 end)
 
@@ -9028,72 +9017,72 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				if vape.ThreadFix then
-					setthreadidentity(8);
-				end;
-				hat = Instance.new('MeshPart');
-				hat.Size = Vector3.new(3, 0.7, 3);
-				hat.Name = 'ChinaHat';
-				hat.Material = Enum.Material[Material["Value"]];
-				hat.Color = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value);
-				hat.CanCollide = false;
-				hat.CanQuery = false;
-				hat.Massless = true;
-				hat.MeshId = 'http://www.roblox.com/asset/?id=1778999';
-				hat.Transparency = 1 - Color.Opacity;
-				hat.Parent = gameCamera;
-				hat.CFrame = entitylib.isAlive and entitylib.character.Head.CFrame + Vector3.new(0, 1, 0) or CFrame.identity;
-				local weld: WeldConstraint = Instance.new('WeldConstraint');
-				weld.Part0 = hat;
-				weld.Part1 = entitylib.isAlive and entitylib.character.Head or nil;
-				weld.Parent = hat;
-				ChinaHat:Clean(hat);
-				ChinaHat:Clean(entitylib.Events.LocalAdded:Connect(function(char: Model?)
+					setthreadidentity(8)
+				end
+				hat = Instance.new('MeshPart')
+				hat.Size = Vector3.new(3, 0.7, 3)
+				hat.Name = 'ChinaHat'
+				hat.Material = Enum.Material[Material["Value"]]
+				hat.Color = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
+				hat.CanCollide = false
+				hat.CanQuery = false
+				hat.Massless = true
+				hat.MeshId = 'http://www.roblox.com/asset/?id=1778999'
+				hat.Transparency = 1 - Color.Opacity
+				hat.Parent = gameCamera
+				hat.CFrame = entitylib.isAlive and entitylib.character.Head.CFrame + Vector3.new(0, 1, 0) or CFrame.identity
+				local weld = Instance.new('WeldConstraint')
+				weld.Part0 = hat
+				weld.Part1 = entitylib.isAlive and entitylib.character.Head or nil
+				weld.Parent = hat
+				ChinaHat:Clean(hat)
+				ChinaHat:Clean(entitylib.Events.LocalAdded:Connect(function(char)
 					if weld then 
-						weld:Destroy();
-					end;
-					hat.Parent = gameCamera;
-					hat.CFrame = char.Head.CFrame + Vector3.new(0, 1, 0);
-					hat.Velocity = Vector3.zero;
-					weld = Instance.new('WeldConstraint');
-					weld.Part0 = hat;
-					weld.Part1 = char.Head;
-					weld.Parent = hat;
-				end));
+						weld:Destroy() 
+					end
+					hat.Parent = gameCamera
+					hat.CFrame = char.Head.CFrame + Vector3.new(0, 1, 0)
+					hat.Velocity = Vector3.zero
+					weld = Instance.new('WeldConstraint')
+					weld.Part0 = hat
+					weld.Part1 = char.Head
+					weld.Parent = hat
+				end))
 	
 				repeat
-					hat.LocalTransparencyModifier = ((gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and 1 or 0);
-					task.wait();
-				until not ChinaHat["Enabled"];
+					hat.LocalTransparencyModifier = ((gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and 1 or 0)
+					task.wait()
+				until not ChinaHat["Enabled"]
 			else
-				hat = nil;
-			end;
+				hat = nil
+			end
 		end,
 		["Tooltip"] = 'Puts a china hat on your character (ty mastadawn)'
 	})
 	local materials: any = {'ForceField'}
 	for _, v in Enum.Material:GetEnumItems() do
 		if v.Name ~= 'ForceField' then
-			table.insert(materials, v.Name);
-		end;
-	end;
+			table.insert(materials, v.Name)
+		end
+	end
 	Material = ChinaHat:CreateDropdown({
 		["Name"] = 'Material',
 		["List"] = materials,
 		["Function"] = function(val)
 			if hat then
-				hat.Material = Enum.Material[val];
-			end;
-		end;
+				hat.Material = Enum.Material[val]
+			end
+		end
 	})
 	Color = ChinaHat:CreateColorSlider({
 		["Name"] = 'Hat Color',
 		["DefaultOpacity"] = 0.7,
 		["Function"] = function(hue, sat, val, opacity)
 			if hat then
-				hat.Color = Color3.fromHSV(hue, sat, val);
-				hat.Transparency = 1 - opacity;
-			end;
-		end;
+				hat.Color = Color3.fromHSV(hue, sat, val)
+				hat.Transparency = 1 - opacity
+			end
+		end
 	})
 end)
 	
@@ -9106,45 +9095,45 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				repeat
-					label.Text = DateTime.now():FormatLocalTime('LT', TwentyFourHour["Enabled"] and 'zh-cn' or 'en-us');
-					task.wait(1);
-				until not Clock["Enabled"];
-			end;
+					label.Text = DateTime.now():FormatLocalTime('LT', TwentyFourHour["Enabled"] and 'zh-cn' or 'en-us')
+					task.wait(1)
+				until not Clock["Enabled"]
+			end
 		end,
-		["Size"] = UDim2.fromOffset(100, 41),
+		Size = UDim2.fromOffset(100, 41),
 		["Tooltip"] = 'Shows the current local time'
 	})
 	Clock:CreateFont({
 		["Name"] = 'Font',
 		["Blacklist"] = 'Gotham',
 		["Function"] = function(val)
-			label.FontFace = val;
-		end;
+			label.FontFace = val
+		end
 	})
 	Clock:CreateColorSlider({
 		["Name"] = 'Color',
 		["DefaultValue"] = 0,
 		["DefaultOpacity"] = 0.5,
 		["Function"] = function(hue, sat, val, opacity)
-			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
-			label.BackgroundTransparency = 1 - opacity;
-		end;
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+			label.BackgroundTransparency = 1 - opacity
+		end
 	})
 	TwentyFourHour = Clock:CreateToggle({
 		["Name"] = '24 Hour Clock'
-	});
-	label = Instance.new('TextLabel');
-	label.Size = UDim2.new(0, 100, 0, 41);
-	label.BackgroundTransparency = 0.5;
-	label.TextSize = 15;
-	label.Font = Enum.Font.Gotham;
-	label.Text = '0:00 PM';
-	label.TextColor3 = Color3.new(1, 1, 1);
-	label.BackgroundColor3 = Color3.new();
-	label.Parent = Clock.Children;
-	local corner: UICorner = Instance.new('UICorner');
-	corner.CornerRadius = UDim.new(0, 4);
-	corner.Parent = label;
+	})
+	label = Instance.new('TextLabel')
+	label.Size = UDim2.new(0, 100, 0, 41)
+	label.BackgroundTransparency = 0.5
+	label.TextSize = 15
+	label.Font = Enum.Font.Gotham
+	label.Text = '0:00 PM'
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.BackgroundColor3 = Color3.new()
+	label.Parent = Clock.Children
+	local corner = Instance.new('UICorner')
+	corner.CornerRadius = UDim.new(0, 4)
+	corner.Parent = label
 end)
 	
 velo.run(function()
@@ -9153,146 +9142,146 @@ velo.run(function()
 	local IDBox: any;
 	local desc: any;
 	
-	local function itemAdded(v: Player?, manual: any)
+	local function itemAdded(v, manual)
 		if (not v:GetAttribute('Disguise')) and ((v:IsA('Accessory') and (not v:GetAttribute('InvItem')) and (not v:GetAttribute('ArmorSlot'))) or v:IsA('ShirtGraphic') or v:IsA('Shirt') or v:IsA('Pants') or v:IsA('BodyColors') or manual) then
 			repeat
-				task.wait();
-				v.Parent = game;
-			until v.Parent == game;
-			v:ClearAllChildren();
-			v:Destroy();
-		end;
-	end;
+				task.wait()
+				v.Parent = game
+			until v.Parent == game
+			v:ClearAllChildren()
+			v:Destroy()
+		end
+	end
 	
-	local function characterAdded(char: Model?)
+	local function characterAdded(char)
 		if Mode["Value"] == 'Character' then
-			task.wait(0.1);
-			char.Character.Archivable = true;
-			local clone: any = char.Character:Clone();
+			task.wait(0.1)
+			char.Character.Archivable = true
+			local clone = char.Character:Clone()
 			repeat
 				if pcall(function()
 					desc = playersService:GetHumanoidDescriptionFromUserId(IDBox["Value"] == '' and 239702688 or tonumber(IDBox["Value"]))
-				end) then break end;
+				end) then break end
 				task.wait(1)
-			until not Disguise["Enabled"];
+			until not Disguise["Enabled"]
 			if not Disguise["Enabled"] then
-				clone:ClearAllChildren();
-				clone:Destroy();
-				clone = nil;
+				clone:ClearAllChildren()
+				clone:Destroy()
+				clone = nil
 				if desc then
-					desc:Destroy();
-					desc = nil;
-				end;
-				return;
-			end;
-			clone.Parent = game;
+					desc:Destroy()
+					desc = nil
+				end
+				return
+			end
+			clone.Parent = game
 	
-			local originalDesc: any = char.Humanoid:WaitForChild('HumanoidDescription', 2) or {
+			local originalDesc = char.Humanoid:WaitForChild('HumanoidDescription', 2) or {
 				HeightScale = 1,
 				SetEmotes = function() end,
 				SetEquippedEmotes = function() end
-			};
-			originalDesc.JumpAnimation = desc.JumpAnimation;
-			desc.HeightScale = originalDesc.HeightScale;
+			}
+			originalDesc.JumpAnimation = desc.JumpAnimation
+			desc.HeightScale = originalDesc.HeightScale
 	
 			for _, v in clone:GetChildren() do
 				if v:IsA('Accessory') or v:IsA('ShirtGraphic') or v:IsA('Shirt') or v:IsA('Pants') then
-					v:ClearAllChildren();
-					v:Destroy();
-				end;
-			end;
+					v:ClearAllChildren()
+					v:Destroy()
+				end
+			end
 	
 			clone.Humanoid:ApplyDescriptionClientServer(desc)
 			for _, v in char.Character:GetChildren() do
-				itemAdded(v);
-			end;
-			Disguise:Clean(char.Character.ChildAdded:Connect(itemAdded));
+				itemAdded(v)
+			end
+			Disguise:Clean(char.Character.ChildAdded:Connect(itemAdded))
 	
 			for _, v in clone:WaitForChild('Animate'):GetChildren() do
-				if not char.Character:FindFirstChild('Animate') then return; end;
-				local real: Animate? = char.Character.Animate:FindFirstChild(v.Name);
+				if not char.Character:FindFirstChild('Animate') then return end
+				local real = char.Character.Animate:FindFirstChild(v.Name)
 				if v and real then
-					local anim: any = v:FindFirstChildWhichIsA('Animation') or {AnimationId = ''};
-					local realanim: any = real:FindFirstChildWhichIsA('Animation') or {AnimationId = ''};
+					local anim = v:FindFirstChildWhichIsA('Animation') or {AnimationId = ''}
+					local realanim = real:FindFirstChildWhichIsA('Animation') or {AnimationId = ''}
 					if realanim then
-						realanim.AnimationId = anim.AnimationId;
-					end;
-				end;
-			end;
+						realanim.AnimationId = anim.AnimationId
+					end
+				end
+			end
 	
 			for _, v in clone:GetChildren() do
-				v:SetAttribute('Disguise', true);
+				v:SetAttribute('Disguise', true)
 				if v:IsA('Accessory') then
 					for _, v2 in v:GetDescendants() do
 						if v2:IsA('Weld') and v2.Part1 then
-							v2.Part1 = char.Character[v2.Part1.Name];
-						end;
-					end;
-					v.Parent = char.Character;
+							v2.Part1 = char.Character[v2.Part1.Name]
+						end
+					end
+					v.Parent = char.Character
 				elseif v:IsA('ShirtGraphic') or v:IsA('Shirt') or v:IsA('Pants') or v:IsA('BodyColors') then
-					v.Parent = char.Character;
+					v.Parent = char.Character
 				elseif v.Name == 'Head' and char.Head:IsA('MeshPart') and (not char.Head:FindFirstChild('FaceControls')) then
-					char.Head.MeshId = v.MeshId;
-				end;
-			end;
+					char.Head.MeshId = v.MeshId
+				end
+			end
 	
-			local localface: any = char.Character:FindFirstChild('face', true);
-			local cloneface: any = clone:FindFirstChild('face', true);
+			local localface = char.Character:FindFirstChild('face', true)
+			local cloneface = clone:FindFirstChild('face', true)
 			if localface and cloneface then
-				itemAdded(localface, true);
-				cloneface.Parent = char.Head;
-			end;
-			originalDesc:SetEmotes(desc:GetEmotes());
-			originalDesc:SetEquippedEmotes(desc:GetEquippedEmotes());
-			clone:ClearAllChildren();
-			clone:Destroy();
+				itemAdded(localface, true)
+				cloneface.Parent = char.Head
+			end
+			originalDesc:SetEmotes(desc:GetEmotes())
+			originalDesc:SetEquippedEmotes(desc:GetEquippedEmotes())
+			clone:ClearAllChildren()
+			clone:Destroy()
 			clone = nil
 			if desc then
-				desc:Destroy();
-				desc = nil;
-			end;
+				desc:Destroy()
+				desc = nil
+			end
 		else
-			local data: any;
+			local data
 			repeat
 				if pcall(function()
-					data = marketplaceService:GetProductInfo(IDBox["Value"] == '' and 43 or tonumber(IDBox["Value"]), Enum.InfoType.Bundle);
-				end) then break end;
-				task.wait(1);
-			until not Disguise["Enabled"];
+					data = marketplaceService:GetProductInfo(IDBox["Value"] == '' and 43 or tonumber(IDBox["Value"]), Enum.InfoType.Bundle)
+				end) then break end
+				task.wait(1)
+			until not Disguise["Enabled"]
 			if not Disguise["Enabled"] then
 				if data then
-					table.clear(data);
-					data = nil;
-				end;
-				return;
-			end;
+					table.clear(data)
+					data = nil
+				end
+				return
+			end
 			if data.BundleType == 'AvatarAnimations' then
-				local animate: Animate? = char.Character:FindFirstChild('Animate');
-				if not animate then return; end;
+				local animate = char.Character:FindFirstChild('Animate')
+				if not animate then return end
 				for _, v in desc.Items do
-					local animtype: string? = v.Name:split(' ')[2]:lower();
+					local animtype = v.Name:split(' ')[2]:lower()
 					if animtype ~= 'animation' then
-						local suc: boolean, res: string? = pcall(function() return game:GetObjects('rbxassetid://'..v.Id) end);
+						local suc, res = pcall(function() return game:GetObjects('rbxassetid://'..v.Id) end)
 						if suc then
-							animate[animtype]:FindFirstChildWhichIsA('Animation').AnimationId = res[1]:FindFirstChildWhichIsA('Animation', true).AnimationId;
-						end;
-					end;
-				end;
+							animate[animtype]:FindFirstChildWhichIsA('Animation').AnimationId = res[1]:FindFirstChildWhichIsA('Animation', true).AnimationId
+						end
+					end
+				end
 			else
-				notif('Disguise', 'that\'s not an animation pack', 5, 'warning');
-			end;
-		end;
-	end;
+				notif('Disguise', 'that\'s not an animation pack', 5, 'warning')
+			end
+		end
+	end
 	
 	Disguise = vape.Legit:CreateModule({
 		["Name"] = 'Disguise',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				Disguise:Clean(entitylib.Events.LocalAdded:Connect(characterAdded));
+				Disguise:Clean(entitylib.Events.LocalAdded:Connect(characterAdded))
 				if entitylib.isAlive then
-					characterAdded(entitylib.character);
-				end;
-			end;
+					characterAdded(entitylib.character)
+				end
+			end
 		end,
 		["Tooltip"] = 'Changes your character or animation to a specific ID (animation packs or userid\'s only)'
 	})
@@ -9301,20 +9290,20 @@ velo.run(function()
 		["List"] = {'Character', 'Animation'},
 		["Function"] = function()
 			if Disguise["Enabled"] then
-				Disguise:Toggle();
-				Disguise:Toggle();
-			end;
-		end;
+				Disguise:Toggle()
+				Disguise:Toggle()
+			end
+		end
 	})
 	IDBox = Disguise:CreateTextBox({
 		["Name"] = 'Disguise',
 		["Placeholder"] = 'Disguise User Id',
 		["Function"] = function()
 			if Disguise["Enabled"] then
-				Disguise:Toggle();
-				Disguise:Toggle();
-			end;
-		end;
+				Disguise:Toggle()
+				Disguise:Toggle()
+			end
+		end
 	})
 end)
 	
@@ -9326,14 +9315,14 @@ velo.run(function()
 		["Name"] = 'FOV',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				oldfov = gameCamera.FieldOfView;
+				oldfov = gameCamera.FieldOfView
 				repeat
-					gameCamera.FieldOfView = Value["Value"];
-					task.wait();
+					gameCamera.FieldOfView = Value.Value
+					task.wait()
 				until not FOV["Enabled"]
 			else
-				gameCamera.FieldOfView = oldfov;
-			end;
+				gameCamera.FieldOfView = oldfov
+			end
 		end,
 		["Tooltip"] = 'Adjusts camera vision'
 	})
@@ -9341,7 +9330,7 @@ velo.run(function()
 		["Name"] = 'FOV',
 		["Min"] = 30,
 		["Max"] = 120
-	});
+	})
 end)
 	
 velo.run(function()
@@ -9355,53 +9344,53 @@ velo.run(function()
 		["Name"] = 'FPS',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				local frames: table = {}
-				local startClock: number? = os.clock()
-				local updateTick: number = tick()
+				local frames = {}
+				local startClock = os.clock()
+				local updateTick = tick()
 				FPS:Clean(runService.Heartbeat:Connect(function()
-					local updateClock: number? = os.clock();
+					local updateClock = os.clock()
 					for i = #frames, 1, -1 do
-						frames[i + 1] = frames[i] >= updateClock - 1 and frames[i] or nil;
-					end;
+						frames[i + 1] = frames[i] >= updateClock - 1 and frames[i] or nil
+					end
 					frames[1] = updateClock
 					if updateTick < tick() then
-						updateTick = tick() + 1;
-						label.Text = math.floor(os.clock() - startClock >= 1 and #frames or #frames / (os.clock() - startClock))..' FPS';
-					end;
-				end));
-			end;
+						updateTick = tick() + 1
+						label.Text = math.floor(os.clock() - startClock >= 1 and #frames or #frames / (os.clock() - startClock))..' FPS'
+					end
+				end))
+			end
 		end,
-		["Size"] = UDim2.fromOffset(100, 41),
+		Size = UDim2.fromOffset(100, 41),
 		["Tooltip"] = 'Shows the current framerate'
 	})
 	FPS:CreateFont({
 		["Name"] = 'Font',
 		["Blacklist"] = 'Gotham',
 		["Function"] = function(val)
-			label.FontFace = val;
-		end;
+			label.FontFace = val
+		end
 	})
 	FPS:CreateColorSlider({
 		["Name"] = 'Color',
 		["DefaultValue"] = 0,
 		["DefaultOpacity"] = 0.5,
 		["Function"] = function(hue, sat, val, opacity)
-			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
-			label.BackgroundTransparency = 1 - opacity;
-		end;
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+			label.BackgroundTransparency = 1 - opacity
+		end
 	})
-	label = Instance.new('TextLabel');
-	label.Size = UDim2.fromScale(1, 1);
-	label.BackgroundTransparency = 0.5;
-	label.TextSize = 15;
-	label.Font = Enum.Font.Gotham;
-	label.Text = 'inf FPS';
-	label.TextColor3 = Color3.new(1, 1, 1);
-	label.BackgroundColor3 = Color3.new();
-	label.Parent = FPS.Children;
-	local corner: UICorner = Instance.new('UICorner');
-	corner.CornerRadius = UDim.new(0, 4);
-	corner.Parent = label;
+	label = Instance.new('TextLabel')
+	label.Size = UDim2.fromScale(1, 1)
+	label.BackgroundTransparency = 0.5
+	label.TextSize = 15
+	label.Font = Enum.Font.Gotham
+	label.Text = 'inf FPS'
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.BackgroundColor3 = Color3.new()
+	label.Parent = FPS.Children
+	local corner = Instance.new('UICorner')
+	corner.CornerRadius = UDim.new(0, 4)
+	corner.Parent = label
 end)
 	
 velo.run(function()
@@ -9410,107 +9399,107 @@ velo.run(function()
 	local Color: table = {}
 	local keys: any, holder: table? = {}
 	
-	local function createKeystroke(keybutton: any, pos: any, pos2: any, text: TextLabel?)
+	local function createKeystroke(keybutton, pos, pos2, text)
 		if keys[keybutton] then
-			keys[keybutton].Key:Destroy();
-			keys[keybutton] = nil;
-		end;
-		local key: Frame = Instance.new('Frame');
-		key.Size = keybutton == Enum.KeyCode.Space and UDim2.new(0, 110, 0, 24) or UDim2.new(0, 34, 0, 36);
-		key.BackgroundColor3 = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value);
-		key.BackgroundTransparency = 1 - Color.Opacity;
-		key.Position = pos;
-		key.Name = keybutton.Name;
-		key.Parent = holder;
-		local keytext: TextLabel = Instance.new('TextLabel');
-		keytext.BackgroundTransparency = 1;
-		keytext.Size = UDim2.fromScale(1, 1);
-		keytext.Font = Enum.Font.Gotham;
-		keytext.Text = text or keybutton.Name;
-		keytext.TextXAlignment = Enum.TextXAlignment.Left;
-		keytext.TextYAlignment = Enum.TextYAlignment.Top;
-		keytext.Position = pos2;
-		keytext.TextSize = keybutton == Enum.KeyCode.Space and 18 or 15;
-		keytext.TextColor3 = Color3.new(1, 1, 1);
-		keytext.Parent = key;
-		local corner: UICorner = Instance.new('UICorner');
-		corner.CornerRadius = UDim.new(0, 4);
-		corner.Parent = key;
-		keys[keybutton] = {Key = key};
-	end;
+			keys[keybutton].Key:Destroy()
+			keys[keybutton] = nil
+		end
+		local key = Instance.new('Frame')
+		key.Size = keybutton == Enum.KeyCode.Space and UDim2.new(0, 110, 0, 24) or UDim2.new(0, 34, 0, 36)
+		key.BackgroundColor3 = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
+		key.BackgroundTransparency = 1 - Color.Opacity
+		key.Position = pos
+		key.Name = keybutton.Name
+		key.Parent = holder
+		local keytext = Instance.new('TextLabel')
+		keytext.BackgroundTransparency = 1
+		keytext.Size = UDim2.fromScale(1, 1)
+		keytext.Font = Enum.Font.Gotham
+		keytext.Text = text or keybutton.Name
+		keytext.TextXAlignment = Enum.TextXAlignment.Left
+		keytext.TextYAlignment = Enum.TextYAlignment.Top
+		keytext.Position = pos2
+		keytext.TextSize = keybutton == Enum.KeyCode.Space and 18 or 15
+		keytext.TextColor3 = Color3.new(1, 1, 1)
+		keytext.Parent = key
+		local corner = Instance.new('UICorner')
+		corner.CornerRadius = UDim.new(0, 4)
+		corner.Parent = key
+		keys[keybutton] = {Key = key}
+	end
 	
 	Keystrokes = vape.Legit:CreateModule({
 		["Name"] = 'Keystrokes',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				createKeystroke(Enum.KeyCode.W, UDim2.new(0, 38, 0, 0), UDim2.new(0, 6, 0, 5), Style.Value == 'Arrow' and '↑' or nil);
-				createKeystroke(Enum.KeyCode.S, UDim2.new(0, 38, 0, 42), UDim2.new(0, 8, 0, 5), Style.Value == 'Arrow' and '↓' or nil);
-				createKeystroke(Enum.KeyCode.A, UDim2.new(0, 0, 0, 42), UDim2.new(0, 7, 0, 5), Style.Value == 'Arrow' and '←' or nil);
-				createKeystroke(Enum.KeyCode.D, UDim2.new(0, 76, 0, 42), UDim2.new(0, 8, 0, 5), Style.Value == 'Arrow' and '→' or nil);
+				createKeystroke(Enum.KeyCode.W, UDim2.new(0, 38, 0, 0), UDim2.new(0, 6, 0, 5), Style.Value == 'Arrow' and '↑' or nil)
+				createKeystroke(Enum.KeyCode.S, UDim2.new(0, 38, 0, 42), UDim2.new(0, 8, 0, 5), Style.Value == 'Arrow' and '↓' or nil)
+				createKeystroke(Enum.KeyCode.A, UDim2.new(0, 0, 0, 42), UDim2.new(0, 7, 0, 5), Style.Value == 'Arrow' and '←' or nil)
+				createKeystroke(Enum.KeyCode.D, UDim2.new(0, 76, 0, 42), UDim2.new(0, 8, 0, 5), Style.Value == 'Arrow' and '→' or nil)
 	
-				Keystrokes:Clean(inputService.InputBegan:Connect(function(inputType: InputObject?)
-					local key: any = keys[inputType.KeyCode];
+				Keystrokes:Clean(inputService.InputBegan:Connect(function(inputType)
+					local key = keys[inputType.KeyCode]
 					if key then
 						if key.Tween then
-							key.Tween:Cancel();
-						end;
+							key.Tween:Cancel()
+						end
 						if key.Tween2 then
-							key.Tween2:Cancel();
-						end;
+							key.Tween2:Cancel()
+						end
 	
-						key.Pressed = true;
+						key.Pressed = true
 						key.Tween = tweenService:Create(key.Key, TweenInfo.new(0.1), {
 							BackgroundColor3 = Color3.new(1, 1, 1), 
 							BackgroundTransparency = 0
-						});
+						})
 						key.Tween2 = tweenService:Create(key.Key.TextLabel, TweenInfo.new(0.1), {
 							TextColor3 = Color3.new()
-						});
-						key.Tween:Play();
-						key.Tween2:Play();
-					end;
-				end));
+						})
+						key.Tween:Play()
+						key.Tween2:Play()
+					end
+				end))
 	
-				Keystrokes:Clean(inputService.InputEnded:Connect(function(inputType: InputObject?)
-					local key: any = keys[inputType.KeyCode];
+				Keystrokes:Clean(inputService.InputEnded:Connect(function(inputType)
+					local key = keys[inputType.KeyCode]
 					if key then
 						if key.Tween then
-							key.Tween:Cancel();
-						end;
+							key.Tween:Cancel()
+						end
 						if key.Tween2 then
-							key.Tween2:Cancel();
-						end;
+							key.Tween2:Cancel()
+						end
 	
-						key.Pressed = false;
+						key.Pressed = false
 						key.Tween = tweenService:Create(key.Key, TweenInfo.new(0.1), {
 							BackgroundColor3 = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value), 
 							BackgroundTransparency = 1 - Color.Opacity
-						});
+						})
 						key.Tween2 = tweenService:Create(key.Key.TextLabel, TweenInfo.new(0.1), {
 							TextColor3 = Color3.new(1, 1, 1)
-						});
-						key.Tween:Play();
-						key.Tween2:Play();
-					end;
-				end));
-			end;
+						})
+						key.Tween:Play()
+						key.Tween2:Play()
+					end
+				end))
+			end
 		end,
-		["Size"] = UDim2.fromOffset(110, 176),
+		Size = UDim2.fromOffset(110, 176),
 		["Tooltip"] = 'Shows movement keys onscreen'
 	})
-	holder = Instance.new('Frame');
-	holder.Size = UDim2.fromScale(1, 1);
-	holder.BackgroundTransparency = 1;
-	holder.Parent = Keystrokes.Children;
+	holder = Instance.new('Frame')
+	holder.Size = UDim2.fromScale(1, 1)
+	holder.BackgroundTransparency = 1
+	holder.Parent = Keystrokes.Children
 	Style = Keystrokes:CreateDropdown({
 		["Name"] = 'Key Style',
 		["List"] = {'Keyboard', 'Arrow'},
 		["Function"] = function()
 			if Keystrokes["Enabled"] then
-				Keystrokes:Toggle();
-				Keystrokes:Toggle();
-			end;
-		end;
+				Keystrokes:Toggle()
+				Keystrokes:Toggle()
+			end
+		end
 	})
 	Color = Keystrokes:CreateColorSlider({
 		["Name"] = 'Color',
@@ -9519,22 +9508,22 @@ velo.run(function()
 		["Function"] = function(hue, sat, val, opacity)
 			for _, v in keys do
 				if not v.Pressed then
-					v.Key.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
-					v.Key.BackgroundTransparency = 1 - opacity;
-				end;
-			end;
-		end;
+					v.Key.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+					v.Key.BackgroundTransparency = 1 - opacity
+				end
+			end
+		end
 	})
 	Keystrokes:CreateToggle({
 		["Name"] = 'Show Spacebar',
 		["Function"] = function(callback: boolean): void
-			Keystrokes.Children.Size = UDim2.fromOffset(110, callback and 107 or 78);
+			Keystrokes.Children.Size = UDim2.fromOffset(110, callback and 107 or 78)
 			if callback then
-				createKeystroke(Enum.KeyCode.Space, UDim2.new(0, 0, 0, 83), UDim2.new(0, 25, 0, -10), '______');
+				createKeystroke(Enum.KeyCode.Space, UDim2.new(0, 0, 0, 83), UDim2.new(0, 25, 0, -10), '______')
 			else
-				keys[Enum.KeyCode.Space].Key:Destroy();
-				keys[Enum.KeyCode.Space] = nil;
-			end;
+				keys[Enum.KeyCode.Space].Key:Destroy()
+				keys[Enum.KeyCode.Space] = nil
+			end
 		end,
 		["Default"] = true
 	})
@@ -9548,42 +9537,42 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				repeat
-					label.Text = math.floor(tonumber(game:GetService('Stats'):FindFirstChild('PerformanceStats').Memory:GetValue()))..' MB';
-					task.wait(1);
-				until not Memory["Enabled"];
-			end;
+					label.Text = math.floor(tonumber(game:GetService('Stats'):FindFirstChild('PerformanceStats').Memory:GetValue()))..' MB'
+					task.wait(1)
+				until not Memory["Enabled"]
+			end
 		end,
-		["Size"] = UDim2.fromOffset(100, 41),
+		Size = UDim2.fromOffset(100, 41),
 		["Tooltip"] = 'A label showing the memory currently used by roblox'
 	})
 	Memory:CreateFont({
 		["Name"] = 'Font',
 		["Blacklist"] = 'Gotham',
 		["Function"] = function(val)
-			label.FontFace = val;
-		end;
+			label.FontFace = val
+		end
 	})
 	Memory:CreateColorSlider({
 		["Name"] = 'Color',
 		["DefaultValue"] = 0,
 		["DefaultOpacity"] = 0.5,
 		["Function"] = function(hue, sat, val, opacity)
-			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
-			label.BackgroundTransparency = 1 - opacity;
-		end;
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+			label.BackgroundTransparency = 1 - opacity
+		end
 	})
-	label = Instance.new('TextLabel');
-	label.Size = UDim2.new(0, 100, 0, 41);
-	label.BackgroundTransparency = 0.5;
-	label.TextSize = 15;
-	label.Font = Enum.Font.Gotham;
-	label.Text = '0 MB';
-	label.TextColor3 = Color3.new(1, 1, 1);
-	label.BackgroundColor3 = Color3.new();
-	label.Parent = Memory.Children;
-	local corner: UICorner = Instance.new('UICorner');
-	corner.CornerRadius = UDim.new(0, 4);
-	corner.Parent = label;
+	label = Instance.new('TextLabel')
+	label.Size = UDim2.new(0, 100, 0, 41)
+	label.BackgroundTransparency = 0.5
+	label.TextSize = 15
+	label.Font = Enum.Font.Gotham
+	label.Text = '0 MB'
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.BackgroundColor3 = Color3.new()
+	label.Parent = Memory.Children
+	local corner = Instance.new('UICorner')
+	corner.CornerRadius = UDim.new(0, 4)
+	corner.Parent = label
 end)
 	
 velo.run(function()
@@ -9594,42 +9583,42 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				repeat
-					label.Text = math.floor(tonumber(game:GetService('Stats'):FindFirstChild('PerformanceStats').Ping:GetValue()))..' ms';
-					task.wait(1);
-				until not Ping["Enabled"];
-			end;
+					label.Text = math.floor(tonumber(game:GetService('Stats'):FindFirstChild('PerformanceStats').Ping:GetValue()))..' ms'
+					task.wait(1)
+				until not Ping["Enabled"]
+			end
 		end,
-		["Size"] = UDim2.fromOffset(100, 41),
+		Size = UDim2.fromOffset(100, 41),
 		["Tooltip"] = 'Shows the current connection speed to the roblox server'
 	})
 	Ping:CreateFont({
 		["Name"] = 'Font',
 		["Blacklist"] = 'Gotham',
 		["Function"] = function(val)
-			label.FontFace = val;
-		end;
+			label.FontFace = val
+		end
 	})
 	Ping:CreateColorSlider({
 		["Name"] = 'Color',
 		["DefaultValue"] = 0,
 		["DefaultOpacity"] = 0.5,
 		["Function"] = function(hue, sat, val, opacity)
-			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
-			label.BackgroundTransparency = 1 - opacity;
-		end;
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+			label.BackgroundTransparency = 1 - opacity
+		end
 	})
-	label = Instance.new('TextLabel');
-	label.Size = UDim2.new(0, 100, 0, 41);
-	label.BackgroundTransparency = 0.5;
-	label.TextSize = 15;
-	label.Font = Enum.Font.Gotham;
-	label.Text = '0 ms';
-	label.TextColor3 = Color3.new(1, 1, 1);
-	label.BackgroundColor3 = Color3.new();
-	label.Parent = Ping.Children;
-	local corner: UICorner = Instance.new('UICorner');
-	corner.CornerRadius = UDim.new(0, 4);
-	corner.Parent = label;
+	label = Instance.new('TextLabel')
+	label.Size = UDim2.new(0, 100, 0, 41)
+	label.BackgroundTransparency = 0.5
+	label.TextSize = 15
+	label.Font = Enum.Font.Gotham
+	label.Text = '0 ms'
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.BackgroundColor3 = Color3.new()
+	label.Parent = Ping.Children
+	local corner = Instance.new('UICorner')
+	corner.CornerRadius = UDim.new(0, 4)
+	corner.Parent = label
 end)
 	
 velo.run(function()
@@ -9646,79 +9635,79 @@ velo.run(function()
 	local songtween: any;
 	
 	local function choosesong()
-		local list: any = List.ListEnabled;
+		local list = List.ListEnabled
 		if #alreadypicked >= #list then
-			table.clear(alreadypicked);
-		end;
+			table.clear(alreadypicked)
+		end
 	
 		if #list <= 0 then
-			notif('SongBeats', 'no songs', 10);
-			SongBeats:Toggle();
-			return;
-		end;
+			notif('SongBeats', 'no songs', 10)
+			SongBeats:Toggle()
+			return
+		end
 	
-		local chosensong: table? = list[math.random(1, #list)];
+		local chosensong = list[math.random(1, #list)]
 		if #list > 1 and table.find(alreadypicked, chosensong) then
 			repeat
-				task.wait();
-				chosensong = list[math.random(1, #list)];
-			until not table.find(alreadypicked, chosensong) or not SongBeats["Enabled"];
-		end;
-		if not SongBeats["Enabled"] then return; end;
+				task.wait()
+				chosensong = list[math.random(1, #list)]
+			until not table.find(alreadypicked, chosensong) or not SongBeats["Enabled"]
+		end
+		if not SongBeats["Enabled"] then return end
 	
-		local split: string? = chosensong:split('/');
+		local split = chosensong:split('/')
 		if not isfile(split[1]) then
-			notif('SongBeats', 'Missing song ('..split[1]..')', 10);
-			SongBeats:Toggle();
-			return;
-		end;
+			notif('SongBeats', 'Missing song ('..split[1]..')', 10)
+			SongBeats:Toggle()
+			return
+		end
 	
-		songobj.SoundId = assetfunction(split[1]);
-		repeat task.wait() until songobj.IsLoaded or not SongBeats["Enabled"];
+		songobj.SoundId = assetfunction(split[1])
+		repeat task.wait() until songobj.IsLoaded or not SongBeats["Enabled"]
 		if SongBeats["Enabled"] then
-			beattick = tick() + (tonumber(split[3]) or 0);
-			songbpm = 60 / (tonumber(split[2]) or 50);
-			songobj:Play();
-		end;
-	end;
+			beattick = tick() + (tonumber(split[3]) or 0)
+			songbpm = 60 / (tonumber(split[2]) or 50)
+			songobj:Play()
+		end
+	end
 	
 	SongBeats = vape.Legit:CreateModule({
 		["Name"] = 'Song Beats',
 		["Function"] = function(callback: boolean):void
 			if callback then
-				songobj = Instance.new('Sound');
-				songobj.Volume = Volume["Value"] / 100;
-				songobj.Parent = workspace;
-				oldfov = gameCamera.FieldOfView;
+				songobj = Instance.new('Sound')
+				songobj.Volume = Volume["Value"] / 100
+				songobj.Parent = workspace
+				oldfov = gameCamera.FieldOfView
 	
 				repeat
 					if not songobj.Playing then
-						choosesong();
-					end;
+						choosesong()
+					end
 					if beattick < tick() and SongBeats["Enabled"] and FOV["Enabled"] then
-						beattick = tick() + songbpm;
-						gameCamera.FieldOfView = oldfov - FOVValue["Value"];
+						beattick = tick() + songbpm
+						gameCamera.FieldOfView = oldfov - FOVValue["Value"]
 						songtween = tweenService:Create(gameCamera, TweenInfo.new(math.min(songbpm, 0.2), Enum.EasingStyle.Linear), {
 							FieldOfView = oldfov
-						});
-						songtween:Play();
-					end;
-					task.wait();
-				until not SongBeats["Enabled"];
+						})
+						songtween:Play()
+					end
+					task.wait()
+				until not SongBeats["Enabled"]
 			else
 				if songobj then
-					songobj:Destroy();
-				end;
+					songobj:Destroy()
+				end
 				if songtween then
-					songtween:Cancel();
-				end;
+					songtween:Cancel()
+				end
 				if oldfov then
-					gameCamera.FieldOfView = oldfov;
-				end;
-				table.clear(alreadypicked);
-			end;
+					gameCamera.FieldOfView = oldfov
+				end
+				table.clear(alreadypicked)
+			end
 		end,
-		["Tooltip"] = 'Built in mp3 player'
+		Tooltip = 'Built in mp3 player'
 	})
 	List = SongBeats:CreateTextList({
 		["Name"] = 'Songs',
@@ -9728,12 +9717,12 @@ velo.run(function()
 		["Name"] = 'Beat FOV',
 		["Function"] = function(callback: boolean): void
 			if FOVValue.Object then
-				FOVValue.Object.Visible = callback;
-			end;
+				FOVValue.Object.Visible = callback
+			end
 			if SongBeats["Enabled"] then
-				SongBeats:Toggle();
-				SongBeats:Toggle();
-			end;
+				SongBeats:Toggle()
+				SongBeats:Toggle()
+			end
 		end,
 		["Default"] = true
 	})
@@ -9748,8 +9737,8 @@ velo.run(function()
 		["Name"] = 'Volume',
 		["Function"] = function(val)
 			if songobj then
-				songobj.Volume = val / 100;
-			end;
+				songobj.Volume = val / 100
+			end
 		end,
 		["Min"] = 1,
 		["Max"] = 100,
@@ -9766,62 +9755,63 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				repeat
-					local lastpos: any = entitylib.isAlive and entitylib.character.HumanoidRootPart.Position * Vector3.new(1, 0, 1) or Vector3.zero;
-					local dt: any = task.wait(0.2);
-					local newpos: any = entitylib.isAlive and entitylib.character.HumanoidRootPart.Position * Vector3.new(1, 0, 1) or Vector3.zero;
-					label.Text = math.round(((lastpos - newpos) / dt).Magnitude)..' sps';
-				until not Speedmeter["Enabled"];
-			end;
+					local lastpos: any = entitylib.isAlive and entitylib.character.HumanoidRootPart.Position * Vector3.new(1, 0, 1) or Vector3.zero
+					local dt: any = task.wait(0.2)
+					local newpos: any = entitylib.isAlive and entitylib.character.HumanoidRootPart.Position * Vector3.new(1, 0, 1) or Vector3.zero
+					label.Text = math.round(((lastpos - newpos) / dt).Magnitude)..' sps'
+				until not Speedmeter["Enabled"]
+			end
 		end,
-		["Size"] = UDim2.fromOffset(100, 41),
-		["Tooltip"] = 'A label showing the average velocity in studs'
+		Size = UDim2.fromOffset(100, 41),
+		Tooltip = 'A label showing the average velocity in studs'
 	})
 	Speedmeter:CreateFont({
 		["Name"] = 'Font',
 		["Blacklist"] = 'Gotham',
 		["Function"] = function(val)
-			label.FontFace = val;
-		end;
+			label.FontFace = val
+		end
 	})
 	Speedmeter:CreateColorSlider({
 		["Name"] = 'Color',
 		["DefaultValue"] = 0,
 		["DefaultOpacity"] = 0.5,
 		["Function"] = function(hue, sat, val, opacity)
-			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
-			label.BackgroundTransparency = 1 - opacity;
-		end;
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+			label.BackgroundTransparency = 1 - opacity
+		end
 	})
-	label = Instance.new('TextLabel');
-	label.Size = UDim2.fromScale(1, 1);
-	label.BackgroundTransparency = 0.5;
-	label.TextSize = 15;
-	label.Font = Enum.Font.Gotham;
-	label.Text = '0 sps';
-	label.TextColor3 = Color3.new(1, 1, 1);
-	label.BackgroundColor3 = Color3.new();
-	label.Parent = Speedmeter.Children;
-	local corner: UICorner = Instance.new('UICorner');
-	corner.CornerRadius = UDim.new(0, 4);
-	corner.Parent = label;
+	label = Instance.new('TextLabel')
+	label.Size = UDim2.fromScale(1, 1)
+	label.BackgroundTransparency = 0.5
+	label.TextSize = 15
+	label.Font = Enum.Font.Gotham
+	label.Text = '0 sps'
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.BackgroundColor3 = Color3.new()
+	label.Parent = Speedmeter.Children
+	local corner = Instance.new('UICorner')
+	corner.CornerRadius = UDim.new(0, 4)
+	corner.Parent = label
 end)
 	
 velo.run(function()
 	local TimeChanger: table = {["Enabled"] = false};
 	local Value: table = {["Value"] = 12};
 	local old: any;
+	
 	TimeChanger = vape.Legit:CreateModule({
 		["Name"] = 'Time Changer',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				old = lightingService.TimeOfDay;
-				lightingService.TimeOfDay = Value["Value"]..':00:00';
+				old = lightingService.TimeOfDay
+				lightingService.TimeOfDay = Value["Value"]..':00:00'
 			else
-				lightingService.TimeOfDay = old;
-				old = nil;
-			end;
+				lightingService.TimeOfDay = old
+				old = nil
+			end
 		end,
-		["Tooltip"] = 'Change the time of the current world'
+		Tooltip = 'Change the time of the current world'
 	})
 	Value = TimeChanger:CreateSlider({
 		["Name"] = 'Time',
@@ -9830,9 +9820,9 @@ velo.run(function()
 		["Default"] = 12,
 		["Function"] = function(val)
 			if TimeChanger["Enabled"] then 
-				lightingService.TimeOfDay = val..':00:00';
-			end;
-		end;
+				lightingService.TimeOfDay = val..':00:00'
+			end
+		end
 	})
 end)
 
