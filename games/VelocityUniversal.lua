@@ -8912,7 +8912,1190 @@ velo.run(function()
 	end;
 end)
 
+velo.run(function()
+	local Breadcrumbs: table = {["Enabled"] = false}
+	local Texture: table = {}
+	local Lifetime: table = {}
+	local Thickness: table = {}
+	local FadeIn: any;
+	local FadeOut: any
+	local trail: any, point: any, point2: any;
+	Breadcrumbs = vape.Legit:CreateModule({
+		["Name"] = 'Breadcrumbs',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				point = Instance.new('Attachment');
+				point.Position = Vector3.new(0, Thickness["Value"] - 2.7, 0);
+				point2 = Instance.new('Attachment');
+				point2.Position = Vector3.new(0, -Thickness["Value"] - 2.7, 0);
+				trail = Instance.new('Trail');
+				trail.Texture = Texture["Value"] == '' and 'http://www.roblox.com/asset/?id=14166981368' or Texture["Value"];
+				trail.TextureMode = Enum.TextureMode.Static;
+				trail.Color = ColorSequence.new(Color3.fromHSV(FadeIn.Hue, FadeIn.Sat, FadeIn.Value), Color3.fromHSV(FadeOut.Hue, FadeOut.Sat, FadeOut.Value));
+				trail.Lifetime = Lifetime["Value"];
+				trail.Attachment0 = point;
+				trail.Attachment1 = point2;
+				trail.FaceCamera = true;
+	
+				Breadcrumbs:Clean(trail);
+				Breadcrumbs:Clean(point);
+				Breadcrumbs:Clean(point2);
+				Breadcrumbs:Clean(entitylib.Events.LocalAdded:Connect(function(ent: Player?)
+					point.Parent = ent.HumanoidRootPart;
+					point2.Parent = ent.HumanoidRootPart;
+					trail.Parent = gameCamera;
+				end));
+				if entitylib.isAlive then
+					point.Parent = entitylib.character.RootPart;
+					point2.Parent = entitylib.character.RootPart;
+					trail.Parent = gameCamera;
+				end;
+			else
+				trail = nil;
+				point = nil;
+				point2 = nil;
+			end;
+		end,
+		["Tooltip"] = 'Shows a trail behind your character'
+	})
+	Texture = Breadcrumbs:CreateTextBox({
+		["Name"] = 'Texture',
+		["Placeholder"] = 'Texture Id',
+		["Function"] = function(enter)
+			if enter and trail then
+				trail.Texture = Texture["Value"] == '' and 'http://www.roblox.com/asset/?id=14166981368' or Texture.Value;
+			end;
+		end;
+	})
+	FadeIn = Breadcrumbs:CreateColorSlider({
+		["Name"] = 'Fade In',
+		["Function"] = function(hue, sat, val)
+			if trail then
+				trail.Color = ColorSequence.new(Color3.fromHSV(hue, sat, val), Color3.fromHSV(FadeOut.Hue, FadeOut.Sat, FadeOut.Value));
+			end;
+		end;
+	})
+	FadeOut = Breadcrumbs:CreateColorSlider({
+		["Name"] = 'Fade Out',
+		["Function"] = function(hue, sat, val)
+			if trail then
+				trail.Color = ColorSequence.new(Color3.fromHSV(FadeIn.Hue, FadeIn.Sat, FadeIn.Value), Color3.fromHSV(hue, sat, val));
+			end;
+		end;
+	})
+	Lifetime = Breadcrumbs:CreateSlider({
+		["Name"] = 'Lifetime',
+		["Min"] = 1,
+		["Max"] = 5,
+		["Default"] = 3,
+		["Decimal"] = 10,
+		["Function"] = function(val)
+			if trail then
+				trail.Lifetime = val;
+			end;
+		end,
+		["Suffix"] = function(val)
+			return val == 1 and 'second' or 'seconds';
+		end;
+	})
+	Thickness = Breadcrumbs:CreateSlider({
+		["Name"] = 'Thickness',
+		["Min"] = 0,
+		["Max"] = 2,
+		["Default"] = 0.1,
+		["Decimal"] = 100,
+		["Function"] = function(val)
+			if point then
+				point.Position = Vector3.new(0, val - 2.7, 0);
+			end;
+			if point2 then
+				point2.Position = Vector3.new(0, -val - 2.7, 0);
+			end;
+		end,
+		["Suffix"] = function(val)
+			return val == 1 and 'stud' or 'studs';
+		end;
+	})
+end)
 
+velo.run(function()
+	local ChinaHat: table = {["Enabled"] = false}
+	local Material: table = {["Value"] = "ForceField"}
+	local Color: table = {}
+	local hat: any;
+	ChinaHat = vape.Legit:CreateModule({
+		["Name"] = 'China Hat',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
+				hat = Instance.new('MeshPart');
+				hat.Size = Vector3.new(3, 0.7, 3);
+				hat.Name = 'ChinaHat';
+				hat.Material = Enum.Material[Material["Value"]];
+				hat.Color = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value);
+				hat.CanCollide = false;
+				hat.CanQuery = false;
+				hat.Massless = true;
+				hat.MeshId = 'http://www.roblox.com/asset/?id=1778999';
+				hat.Transparency = 1 - Color.Opacity;
+				hat.Parent = gameCamera;
+				hat.CFrame = entitylib.isAlive and entitylib.character.Head.CFrame + Vector3.new(0, 1, 0) or CFrame.identity;
+				local weld: WeldConstraint = Instance.new('WeldConstraint');
+				weld.Part0 = hat;
+				weld.Part1 = entitylib.isAlive and entitylib.character.Head or nil;
+				weld.Parent = hat;
+				ChinaHat:Clean(hat);
+				ChinaHat:Clean(entitylib.Events.LocalAdded:Connect(function(char: Model?)
+					if weld then 
+						weld:Destroy();
+					end;
+					hat.Parent = gameCamera;
+					hat.CFrame = char.Head.CFrame + Vector3.new(0, 1, 0);
+					hat.Velocity = Vector3.zero;
+					weld = Instance.new('WeldConstraint');
+					weld.Part0 = hat;
+					weld.Part1 = char.Head;
+					weld.Parent = hat;
+				end));
+	
+				repeat
+					hat.LocalTransparencyModifier = ((gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and 1 or 0);
+					task.wait();
+				until not ChinaHat["Enabled"];
+			else
+				hat = nil;
+			end;
+		end,
+		["Tooltip"] = 'Puts a china hat on your character (ty mastadawn)'
+	})
+	local materials: any = {'ForceField'}
+	for _, v in Enum.Material:GetEnumItems() do
+		if v.Name ~= 'ForceField' then
+			table.insert(materials, v.Name);
+		end;
+	end;
+	Material = ChinaHat:CreateDropdown({
+		["Name"] = 'Material',
+		["List"] = materials,
+		["Function"] = function(val)
+			if hat then
+				hat.Material = Enum.Material[val];
+			end;
+		end;
+	})
+	Color = ChinaHat:CreateColorSlider({
+		["Name"] = 'Hat Color',
+		["DefaultOpacity"] = 0.7,
+		["Function"] = function(hue, sat, val, opacity)
+			if hat then
+				hat.Color = Color3.fromHSV(hue, sat, val);
+				hat.Transparency = 1 - opacity;
+			end;
+		end;
+	})
+end)
+	
+velo.run(function()
+	local Clock: table = {["Enabled"] = false} 
+	local TwentyFourHour: table = {["Enabled"] = false} 
+	local label: any;
+	Clock = vape.Legit:CreateModule({
+		["Name"] = 'Clock',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				repeat
+					label.Text = DateTime.now():FormatLocalTime('LT', TwentyFourHour["Enabled"] and 'zh-cn' or 'en-us');
+					task.wait(1);
+				until not Clock["Enabled"];
+			end;
+		end,
+		["Size"] = UDim2.fromOffset(100, 41),
+		["Tooltip"] = 'Shows the current local time'
+	})
+	Clock:CreateFont({
+		["Name"] = 'Font',
+		["Blacklist"] = 'Gotham',
+		["Function"] = function(val)
+			label.FontFace = val;
+		end;
+	})
+	Clock:CreateColorSlider({
+		["Name"] = 'Color',
+		["DefaultValue"] = 0,
+		["DefaultOpacity"] = 0.5,
+		["Function"] = function(hue, sat, val, opacity)
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
+			label.BackgroundTransparency = 1 - opacity;
+		end;
+	})
+	TwentyFourHour = Clock:CreateToggle({
+		["Name"] = '24 Hour Clock'
+	});
+	label = Instance.new('TextLabel');
+	label.Size = UDim2.new(0, 100, 0, 41);
+	label.BackgroundTransparency = 0.5;
+	label.TextSize = 15;
+	label.Font = Enum.Font.Gotham;
+	label.Text = '0:00 PM';
+	label.TextColor3 = Color3.new(1, 1, 1);
+	label.BackgroundColor3 = Color3.new();
+	label.Parent = Clock.Children;
+	local corner: UICorner = Instance.new('UICorner');
+	corner.CornerRadius = UDim.new(0, 4);
+	corner.Parent = label;
+end)
+	
+velo.run(function()
+	local Disguise: table = {["Enabled"] = false} 
+	local Mode: table = {["Value"] = 'Character'} 
+	local IDBox: any;
+	local desc: any;
+	
+	local function itemAdded(v: Player?, manual: any)
+		if (not v:GetAttribute('Disguise')) and ((v:IsA('Accessory') and (not v:GetAttribute('InvItem')) and (not v:GetAttribute('ArmorSlot'))) or v:IsA('ShirtGraphic') or v:IsA('Shirt') or v:IsA('Pants') or v:IsA('BodyColors') or manual) then
+			repeat
+				task.wait();
+				v.Parent = game;
+			until v.Parent == game;
+			v:ClearAllChildren();
+			v:Destroy();
+		end;
+	end;
+	
+	local function characterAdded(char: Model?)
+		if Mode["Value"] == 'Character' then
+			task.wait(0.1);
+			char.Character.Archivable = true;
+			local clone: any = char.Character:Clone();
+			repeat
+				if pcall(function()
+					desc = playersService:GetHumanoidDescriptionFromUserId(IDBox["Value"] == '' and 239702688 or tonumber(IDBox["Value"]))
+				end) then break end;
+				task.wait(1)
+			until not Disguise["Enabled"];
+			if not Disguise["Enabled"] then
+				clone:ClearAllChildren();
+				clone:Destroy();
+				clone = nil;
+				if desc then
+					desc:Destroy();
+					desc = nil;
+				end;
+				return;
+			end;
+			clone.Parent = game;
+	
+			local originalDesc: any = char.Humanoid:WaitForChild('HumanoidDescription', 2) or {
+				HeightScale = 1,
+				SetEmotes = function() end,
+				SetEquippedEmotes = function() end
+			};
+			originalDesc.JumpAnimation = desc.JumpAnimation;
+			desc.HeightScale = originalDesc.HeightScale;
+	
+			for _, v in clone:GetChildren() do
+				if v:IsA('Accessory') or v:IsA('ShirtGraphic') or v:IsA('Shirt') or v:IsA('Pants') then
+					v:ClearAllChildren();
+					v:Destroy();
+				end;
+			end;
+	
+			clone.Humanoid:ApplyDescriptionClientServer(desc)
+			for _, v in char.Character:GetChildren() do
+				itemAdded(v);
+			end;
+			Disguise:Clean(char.Character.ChildAdded:Connect(itemAdded));
+	
+			for _, v in clone:WaitForChild('Animate'):GetChildren() do
+				if not char.Character:FindFirstChild('Animate') then return; end;
+				local real: Animate? = char.Character.Animate:FindFirstChild(v.Name);
+				if v and real then
+					local anim: any = v:FindFirstChildWhichIsA('Animation') or {AnimationId = ''};
+					local realanim: any = real:FindFirstChildWhichIsA('Animation') or {AnimationId = ''};
+					if realanim then
+						realanim.AnimationId = anim.AnimationId;
+					end;
+				end;
+			end;
+	
+			for _, v in clone:GetChildren() do
+				v:SetAttribute('Disguise', true);
+				if v:IsA('Accessory') then
+					for _, v2 in v:GetDescendants() do
+						if v2:IsA('Weld') and v2.Part1 then
+							v2.Part1 = char.Character[v2.Part1.Name];
+						end;
+					end;
+					v.Parent = char.Character;
+				elseif v:IsA('ShirtGraphic') or v:IsA('Shirt') or v:IsA('Pants') or v:IsA('BodyColors') then
+					v.Parent = char.Character;
+				elseif v.Name == 'Head' and char.Head:IsA('MeshPart') and (not char.Head:FindFirstChild('FaceControls')) then
+					char.Head.MeshId = v.MeshId;
+				end;
+			end;
+	
+			local localface: any = char.Character:FindFirstChild('face', true);
+			local cloneface: any = clone:FindFirstChild('face', true);
+			if localface and cloneface then
+				itemAdded(localface, true);
+				cloneface.Parent = char.Head;
+			end;
+			originalDesc:SetEmotes(desc:GetEmotes());
+			originalDesc:SetEquippedEmotes(desc:GetEquippedEmotes());
+			clone:ClearAllChildren();
+			clone:Destroy();
+			clone = nil
+			if desc then
+				desc:Destroy();
+				desc = nil;
+			end;
+		else
+			local data: any;
+			repeat
+				if pcall(function()
+					data = marketplaceService:GetProductInfo(IDBox["Value"] == '' and 43 or tonumber(IDBox["Value"]), Enum.InfoType.Bundle);
+				end) then break end;
+				task.wait(1);
+			until not Disguise["Enabled"];
+			if not Disguise["Enabled"] then
+				if data then
+					table.clear(data);
+					data = nil;
+				end;
+				return;
+			end;
+			if data.BundleType == 'AvatarAnimations' then
+				local animate: Animate? = char.Character:FindFirstChild('Animate');
+				if not animate then return; end;
+				for _, v in desc.Items do
+					local animtype: string? = v.Name:split(' ')[2]:lower();
+					if animtype ~= 'animation' then
+						local suc: boolean, res: string? = pcall(function() return game:GetObjects('rbxassetid://'..v.Id) end);
+						if suc then
+							animate[animtype]:FindFirstChildWhichIsA('Animation').AnimationId = res[1]:FindFirstChildWhichIsA('Animation', true).AnimationId;
+						end;
+					end;
+				end;
+			else
+				notif('Disguise', 'that\'s not an animation pack', 5, 'warning');
+			end;
+		end;
+	end;
+	
+	Disguise = vape.Legit:CreateModule({
+		["Name"] = 'Disguise',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				Disguise:Clean(entitylib.Events.LocalAdded:Connect(characterAdded));
+				if entitylib.isAlive then
+					characterAdded(entitylib.character);
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Changes your character or animation to a specific ID (animation packs or userid\'s only)'
+	})
+	Mode = Disguise:CreateDropdown({
+		["Name"] = 'Mode',
+		["List"] = {'Character', 'Animation'},
+		["Function"] = function()
+			if Disguise["Enabled"] then
+				Disguise:Toggle();
+				Disguise:Toggle();
+			end;
+		end;
+	})
+	IDBox = Disguise:CreateTextBox({
+		["Name"] = 'Disguise',
+		["Placeholder"] = 'Disguise User Id',
+		["Function"] = function()
+			if Disguise["Enabled"] then
+				Disguise:Toggle();
+				Disguise:Toggle();
+			end;
+		end;
+	})
+end)
+	
+velo.run(function()
+	local FOV: table = {["Enabled"] = false} 
+	local Value: table = {["Value"] = 120} 
+	local oldfov: any;
+	FOV = vape.Legit:CreateModule({
+		["Name"] = 'FOV',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				oldfov = gameCamera.FieldOfView;
+				repeat
+					gameCamera.FieldOfView = Value["Value"];
+					task.wait();
+				until not FOV["Enabled"];
+			else
+				gameCamera.FieldOfView = oldfov;
+			end;
+		end,
+		["Tooltip"] = 'Adjusts camera vision'
+	})
+	Value = FOV:CreateSlider({
+		["Name"] = 'FOV',
+		["Min"] = 30,
+		["Max"] = 120
+	});
+end)
+	
+velo.run(function()
+	--[[
+		Grabbing an accurate count of the current framerate
+		Source: https://devforum.roblox.com/t/get-client-FPS-trough-a-script/282631
+	]]
+	local FPS: table = {["Enabled"] = false} 
+	local label: any;
+	FPS = vape.Legit:CreateModule({
+		["Name"] = 'FPS',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				local frames: table = {};
+				local startClock: number? = os.clock();
+				local updateTick: number = tick();
+				FPS:Clean(runService.Heartbeat:Connect(function()
+					local updateClock: number? = os.clock();
+					for i = #frames, 1, -1 do
+						frames[i + 1] = frames[i] >= updateClock - 1 and frames[i] or nil;
+					end;
+					frames[1] = updateClock
+					if updateTick < tick() then
+						updateTick = tick() + 1;
+						label.Text = math.floor(os.clock() - startClock >= 1 and #frames or #frames / (os.clock() - startClock))..' FPS';
+					end;
+				end));
+			end;
+		end,
+		["Size"] = UDim2.fromOffset(100, 41),
+		["Tooltip"] = 'Shows the current framerate'
+	})
+	FPS:CreateFont({
+		["Name"] = 'Font',
+		["Blacklist"] = 'Gotham',
+		["Function"] = function(val)
+			label.FontFace = val;
+		end;
+	})
+	FPS:CreateColorSlider({
+		["Name"] = 'Color',
+		["DefaultValue"] = 0,
+		["DefaultOpacity"] = 0.5,
+		["Function"] = function(hue, sat, val, opacity)
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
+			label.BackgroundTransparency = 1 - opacity;
+		end;
+	})
+	label = Instance.new('TextLabel');
+	label.Size = UDim2.fromScale(1, 1);
+	label.BackgroundTransparency = 0.5;
+	label.TextSize = 15;
+	label.Font = Enum.Font.Gotham;
+	label.Text = 'inf FPS';
+	label.TextColor3 = Color3.new(1, 1, 1);
+	label.BackgroundColor3 = Color3.new();
+	label.Parent = FPS.Children;
+	local corner: UICorner = Instance.new('UICorner');
+	corner.CornerRadius = UDim.new(0, 4);
+	corner.Parent = label;
+end)
+	
+velo.run(function()
+	local Keystrokes: table = {["Enabled"] = false} 
+	local Style: table = {} 
+	local Color: table = {}
+	local keys: any, holder: table? = {}
+	
+	local function createKeystroke(keybutton: any, pos: any, pos2: any, text: TextLabel?)
+		if keys[keybutton] then
+			keys[keybutton].Key:Destroy();
+			keys[keybutton] = nil;
+		end;
+		local key: Frame = Instance.new('Frame');
+		key.Size = keybutton == Enum.KeyCode.Space and UDim2.new(0, 110, 0, 24) or UDim2.new(0, 34, 0, 36);
+		key.BackgroundColor3 = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value);
+		key.BackgroundTransparency = 1 - Color.Opacity;
+		key.Position = pos;
+		key.Name = keybutton.Name;
+		key.Parent = holder;
+		local keytext: TextLabel = Instance.new('TextLabel');
+		keytext.BackgroundTransparency = 1;
+		keytext.Size = UDim2.fromScale(1, 1);
+		keytext.Font = Enum.Font.Gotham;
+		keytext.Text = text or keybutton.Name;
+		keytext.TextXAlignment = Enum.TextXAlignment.Left;
+		keytext.TextYAlignment = Enum.TextYAlignment.Top;
+		keytext.Position = pos2;
+		keytext.TextSize = keybutton == Enum.KeyCode.Space and 18 or 15;
+		keytext.TextColor3 = Color3.new(1, 1, 1);
+		keytext.Parent = key;
+		local corner: UICorner = Instance.new('UICorner');
+		corner.CornerRadius = UDim.new(0, 4);
+		corner.Parent = key;
+		keys[keybutton] = {Key = key};
+	end;
+	
+	Keystrokes = vape.Legit:CreateModule({
+		["Name"] = 'Keystrokes',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				createKeystroke(Enum.KeyCode.W, UDim2.new(0, 38, 0, 0), UDim2.new(0, 6, 0, 5), Style.Value == 'Arrow' and '↑' or nil);
+				createKeystroke(Enum.KeyCode.S, UDim2.new(0, 38, 0, 42), UDim2.new(0, 8, 0, 5), Style.Value == 'Arrow' and '↓' or nil);
+				createKeystroke(Enum.KeyCode.A, UDim2.new(0, 0, 0, 42), UDim2.new(0, 7, 0, 5), Style.Value == 'Arrow' and '←' or nil);
+				createKeystroke(Enum.KeyCode.D, UDim2.new(0, 76, 0, 42), UDim2.new(0, 8, 0, 5), Style.Value == 'Arrow' and '→' or nil);
+	
+				Keystrokes:Clean(inputService.InputBegan:Connect(function(inputType: InputObject?)
+					local key: any = keys[inputType.KeyCode];
+					if key then
+						if key.Tween then
+							key.Tween:Cancel();
+						end;
+						if key.Tween2 then
+							key.Tween2:Cancel();
+						end;
+	
+						key.Pressed = true;
+						key.Tween = tweenService:Create(key.Key, TweenInfo.new(0.1), {
+							BackgroundColor3 = Color3.new(1, 1, 1), 
+							BackgroundTransparency = 0
+						});
+						key.Tween2 = tweenService:Create(key.Key.TextLabel, TweenInfo.new(0.1), {
+							TextColor3 = Color3.new()
+						});
+						key.Tween:Play();
+						key.Tween2:Play();
+					end;
+				end));
+	
+				Keystrokes:Clean(inputService.InputEnded:Connect(function(inputType: InputObject?)
+					local key: any = keys[inputType.KeyCode];
+					if key then
+						if key.Tween then
+							key.Tween:Cancel();
+						end;
+						if key.Tween2 then
+							key.Tween2:Cancel();
+						end;
+	
+						key.Pressed = false;
+						key.Tween = tweenService:Create(key.Key, TweenInfo.new(0.1), {
+							BackgroundColor3 = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value), 
+							BackgroundTransparency = 1 - Color.Opacity
+						});
+						key.Tween2 = tweenService:Create(key.Key.TextLabel, TweenInfo.new(0.1), {
+							TextColor3 = Color3.new(1, 1, 1)
+						});
+						key.Tween:Play();
+						key.Tween2:Play();
+					end;
+				end));
+			end;
+		end,
+		["Size"] = UDim2.fromOffset(110, 176),
+		["Tooltip"] = 'Shows movement keys onscreen'
+	})
+	holder = Instance.new('Frame');
+	holder.Size = UDim2.fromScale(1, 1);
+	holder.BackgroundTransparency = 1;
+	holder.Parent = Keystrokes.Children;
+	Style = Keystrokes:CreateDropdown({
+		["Name"] = 'Key Style',
+		["List"] = {'Keyboard', 'Arrow'},
+		["Function"] = function()
+			if Keystrokes["Enabled"] then
+				Keystrokes:Toggle();
+				Keystrokes:Toggle();
+			end;
+		end;
+	})
+	Color = Keystrokes:CreateColorSlider({
+		["Name"] = 'Color',
+		["DefaultValue"] = 0,
+		["DefaultOpacity"] = 0.5,
+		["Function"] = function(hue, sat, val, opacity)
+			for _, v in keys do
+				if not v.Pressed then
+					v.Key.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
+					v.Key.BackgroundTransparency = 1 - opacity;
+				end;
+			end;
+		end;
+	})
+	Keystrokes:CreateToggle({
+		["Name"] = 'Show Spacebar',
+		["Function"] = function(callback: boolean): void
+			Keystrokes.Children.Size = UDim2.fromOffset(110, callback and 107 or 78);
+			if callback then
+				createKeystroke(Enum.KeyCode.Space, UDim2.new(0, 0, 0, 83), UDim2.new(0, 25, 0, -10), '______');
+			else
+				keys[Enum.KeyCode.Space].Key:Destroy();
+				keys[Enum.KeyCode.Space] = nil;
+			end;
+		end,
+		["Default"] = true
+	})
+end)
+	
+velo.run(function()
+	local Memory: table = {["Enabled"] = false} 
+	local label: any;
+	Memory = vape.Legit:CreateModule({
+		["Name"] = 'Memory',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				repeat
+					label.Text = math.floor(tonumber(game:GetService('Stats'):FindFirstChild('PerformanceStats').Memory:GetValue()))..' MB';
+					task.wait(1);
+				until not Memory["Enabled"];
+			end;
+		end,
+		["Size"] = UDim2.fromOffset(100, 41),
+		["Tooltip"] = 'A label showing the memory currently used by roblox'
+	})
+	Memory:CreateFont({
+		["Name"] = 'Font',
+		["Blacklist"] = 'Gotham',
+		["Function"] = function(val)
+			label.FontFace = val;
+		end;
+	})
+	Memory:CreateColorSlider({
+		["Name"] = 'Color',
+		["DefaultValue"] = 0,
+		["DefaultOpacity"] = 0.5,
+		["Function"] = function(hue, sat, val, opacity)
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
+			label.BackgroundTransparency = 1 - opacity;
+		end;
+	})
+	label = Instance.new('TextLabel');
+	label.Size = UDim2.new(0, 100, 0, 41);
+	label.BackgroundTransparency = 0.5;
+	label.TextSize = 15;
+	label.Font = Enum.Font.Gotham;
+	label.Text = '0 MB';
+	label.TextColor3 = Color3.new(1, 1, 1);
+	label.BackgroundColor3 = Color3.new();
+	label.Parent = Memory.Children;
+	local corner: UICorner = Instance.new('UICorner');
+	corner.CornerRadius = UDim.new(0, 4);
+	corner.Parent = label;
+end)
+	
+velo.run(function()
+	local Ping: table = {["Enabled"] = false} 
+	local label: any;
+	Ping = vape.Legit:CreateModule({
+		["Name"] = 'Ping',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				repeat
+					label.Text = math.floor(tonumber(game:GetService('Stats'):FindFirstChild('PerformanceStats').Ping:GetValue()))..' ms';
+					task.wait(1);
+				until not Ping["Enabled"];
+			end;
+		end,
+		["Size"] = UDim2.fromOffset(100, 41),
+		["Tooltip"] = 'Shows the current connection speed to the roblox server'
+	})
+	Ping:CreateFont({
+		["Name"] = 'Font',
+		["Blacklist"] = 'Gotham',
+		["Function"] = function(val)
+			label.FontFace = val;
+		end;
+	})
+	Ping:CreateColorSlider({
+		["Name"] = 'Color',
+		["DefaultValue"] = 0,
+		["DefaultOpacity"] = 0.5,
+		["Function"] = function(hue, sat, val, opacity)
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
+			label.BackgroundTransparency = 1 - opacity;
+		end;
+	})
+	label = Instance.new('TextLabel');
+	label.Size = UDim2.new(0, 100, 0, 41);
+	label.BackgroundTransparency = 0.5;
+	label.TextSize = 15;
+	label.Font = Enum.Font.Gotham;
+	label.Text = '0 ms';
+	label.TextColor3 = Color3.new(1, 1, 1);
+	label.BackgroundColor3 = Color3.new();
+	label.Parent = Ping.Children;
+	local corner: UICorner = Instance.new('UICorner');
+	corner.CornerRadius = UDim.new(0, 4);
+	corner.Parent = label;
+end)
+	
+velo.run(function()
+	local SongBeats: table = {["Enabled"] = false}
+	local List: table = {};
+	local FOV: table = {["Enabled"] = false}
+	local FOVValue: table = {}
+	local Volume: table = {};
+	local alreadypicked: any = {}
+	local beattick: number = tick()
+	local oldfov: any;
+	local songobj: Sound;
+	local songbpm: any;
+	local songtween: any;
+	
+	local function choosesong()
+		local list: any = List.ListEnabled;
+		if #alreadypicked >= #list then
+			table.clear(alreadypicked);
+		end;
+	
+		if #list <= 0 then
+			notif('SongBeats', 'no songs', 10);
+			SongBeats:Toggle();
+			return;
+		end;
+	
+		local chosensong: table? = list[math.random(1, #list)];
+		if #list > 1 and table.find(alreadypicked, chosensong) then
+			repeat
+				task.wait();
+				chosensong = list[math.random(1, #list)];
+			until not table.find(alreadypicked, chosensong) or not SongBeats["Enabled"];
+		end;
+		if not SongBeats["Enabled"] then return; end;
+	
+		local split: string? = chosensong:split('/');
+		if not isfile(split[1]) then
+			notif('SongBeats', 'Missing song ('..split[1]..')', 10);
+			SongBeats:Toggle();
+			return;
+		end;
+	
+		songobj.SoundId = assetfunction(split[1]);
+		repeat task.wait() until songobj.IsLoaded or not SongBeats["Enabled"];
+		if SongBeats["Enabled"] then
+			beattick = tick() + (tonumber(split[3]) or 0);
+			songbpm = 60 / (tonumber(split[2]) or 50);
+			songobj:Play();
+		end;
+	end;
+	
+	SongBeats = vape.Legit:CreateModule({
+		["Name"] = 'Song Beats',
+		["Function"] = function(callback: boolean):void
+			if callback then
+				songobj = Instance.new('Sound');
+				songobj.Volume = Volume["Value"] / 100;
+				songobj.Parent = workspace;
+				oldfov = gameCamera.FieldOfView;
+	
+				repeat
+					if not songobj.Playing then
+						choosesong();
+					end;
+					if beattick < tick() and SongBeats["Enabled"] and FOV["Enabled"] then
+						beattick = tick() + songbpm;
+						gameCamera.FieldOfView = oldfov - FOVValue["Value"];
+						songtween = tweenService:Create(gameCamera, TweenInfo.new(math.min(songbpm, 0.2), Enum.EasingStyle.Linear), {
+							FieldOfView = oldfov
+						});
+						songtween:Play();
+					end;
+					task.wait();
+				until not SongBeats["Enabled"];
+			else
+				if songobj then
+					songobj:Destroy();
+				end;
+				if songtween then
+					songtween:Cancel();
+				end;
+				if oldfov then
+					gameCamera.FieldOfView = oldfov;
+				end;
+				table.clear(alreadypicked);
+			end;
+		end,
+		["Tooltip"] = 'Built in mp3 player'
+	})
+	List = SongBeats:CreateTextList({
+		["Name"] = 'Songs',
+		["Placeholder"] = 'filepath/bpm/start'
+	})
+	FOV = SongBeats:CreateToggle({
+		["Name"] = 'Beat FOV',
+		["Function"] = function(callback: boolean): void
+			if FOVValue.Object then
+				FOVValue.Object.Visible = callback;
+			end;
+			if SongBeats["Enabled"] then
+				SongBeats:Toggle();
+				SongBeats:Toggle();
+			end;
+		end,
+		["Default"] = true
+	})
+	FOVValue = SongBeats:CreateSlider({
+		["Name"] = 'Adjustment',
+		["Min"] = 1,
+		["Max"] = 30,
+		["Default"] = 5,
+		["Darker"] = true
+	})
+	Volume = SongBeats:CreateSlider({
+		["Name"] = 'Volume',
+		["Function"] = function(val)
+			if songobj then
+				songobj.Volume = val / 100;
+			end;
+		end,
+		["Min"] = 1,
+		["Max"] = 100,
+		["Default"] = 100,
+		["Suffix"] = '%'
+	})
+end)
+	
+velo.run(function()
+	local Speedmeter: table = {["Enabled"] = false};
+	local label: any;
+	Speedmeter = vape.Legit:CreateModule({
+		["Name"] = 'Speedmeter',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				repeat
+					local lastpos: any = entitylib.isAlive and entitylib.character.HumanoidRootPart.Position * Vector3.new(1, 0, 1) or Vector3.zero;
+					local dt: any = task.wait(0.2);
+					local newpos: any = entitylib.isAlive and entitylib.character.HumanoidRootPart.Position * Vector3.new(1, 0, 1) or Vector3.zero;
+					label.Text = math.round(((lastpos - newpos) / dt).Magnitude)..' sps';
+				until not Speedmeter["Enabled"];
+			end;
+		end,
+		["Size"] = UDim2.fromOffset(100, 41),
+		["Tooltip"] = 'A label showing the average velocity in studs'
+	})
+	Speedmeter:CreateFont({
+		["Name"] = 'Font',
+		["Blacklist"] = 'Gotham',
+		["Function"] = function(val)
+			label.FontFace = val;
+		end;
+	})
+	Speedmeter:CreateColorSlider({
+		["Name"] = 'Color',
+		["DefaultValue"] = 0,
+		["DefaultOpacity"] = 0.5,
+		["Function"] = function(hue, sat, val, opacity)
+			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val);
+			label.BackgroundTransparency = 1 - opacity;
+		end;
+	})
+	label = Instance.new('TextLabel');
+	label.Size = UDim2.fromScale(1, 1);
+	label.BackgroundTransparency = 0.5;
+	label.TextSize = 15;
+	label.Font = Enum.Font.Gotham;
+	label.Text = '0 sps';
+	label.TextColor3 = Color3.new(1, 1, 1);
+	label.BackgroundColor3 = Color3.new();
+	label.Parent = Speedmeter.Children;
+	local corner: UICorner = Instance.new('UICorner');
+	corner.CornerRadius = UDim.new(0, 4);
+	corner.Parent = label;
+end)
+	
+velo.run(function()
+	local TimeChanger: table = {["Enabled"] = false};
+	local Value: table = {["Value"] = 12};
+	local old: any;
+	TimeChanger = vape.Legit:CreateModule({
+		["Name"] = 'Time Changer',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				old = lightingService.TimeOfDay;
+				lightingService.TimeOfDay = Value["Value"]..':00:00';
+			else
+				lightingService.TimeOfDay = old;
+				old = nil;
+			end;
+		end,
+		["Tooltip"] = 'Change the time of the current world'
+	})
+	Value = TimeChanger:CreateSlider({
+		["Name"] = 'Time',
+		["Min"] = 0,
+		["Max"] = 24,
+		["Default"] = 12,
+		["Function"] = function(val)
+			if TimeChanger["Enabled"] then 
+				lightingService.TimeOfDay = val..':00:00';
+			end;
+		end;
+	})
+end)
+
+--[[
+
+
+██╗░░░██╗███████╗██╗░░░░░░█████╗░░█████╗░██╗████████╗██╗░░░██╗
+██║░░░██║██╔════╝██║░░░░░██╔══██╗██╔══██╗██║╚══██╔══╝╚██╗░██╔╝
+╚██╗░██╔╝█████╗░░██║░░░░░██║░░██║██║░░╚═╝██║░░░██║░░░░╚████╔╝░
+░╚████╔╝░██╔══╝░░██║░░░░░██║░░██║██║░░██╗██║░░░██║░░░░░╚██╔╝░░
+░░╚██╔╝░░███████╗███████╗╚█████╔╝╚█████╔╝██║░░░██║░░░░░░██║░░░
+░░░╚═╝░░░╚══════╝╚══════╝░╚════╝░░╚════╝░╚═╝░░░╚═╝░░░░░░╚═╝░░░
+
+	- The Velocity Universal Custom Modules starts here.
+	- reformatted and fixed by: Copium
+]]
+
+velo.run(function()
+    local Envision: table = {["Enabled"] = false};
+    local color: () -> {Hue: number, Sat: number, Value: number} = function()
+		return {Hue = 0, Sat = 0, Value = 0};
+    end;
+    local motionblur: table = {["Enabled"] = false};
+    local motionblurtarget: table = {["Enabled"] = false};
+    local motionblurintensity: table = {["Value"] = 8.5};
+    local blur: any = {};
+    local sparkle: table = {["Enabled"] = false};
+    local sparklesparent: table = {["Value"] = 'Head'};
+    local sparklescolor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 0};
+    local sparklesobject: any;
+    local sparklestask: any;
+    local fire: table = {["Enabled"] = false};
+    local fireparent: table = {["Value"] = 'Head'};
+    local fireflame: table = {["Value"] = 25};
+    local firecolor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 0};
+    local firecolor2: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 0};
+    local fireobject: any;
+    local firetask: any;
+    local trails: table = {["Enabled"] = false};
+    local traildistance: table = {["Value"] = 7};
+    local trailparts: table = setmetatable({}, {__index = table, insert = table.insert, remove = table.remove, length = function(self) return #self end});
+    local lastpos: any;
+    local lastpart: any;
+    local trailcolor: table = color();
+    local function isAlive(v: Player): Boolean
+		if v.Character and v.Character:FindFirstChild("Humanoid") then
+			if v.Character.Humanoid.Health > 0 and v.Character:FindFirstChild("HumanoidRootPart") then
+				return true;
+			end;
+		end;
+		return false;
+    end; 
+    local MAX_TRAIL_PARTS: number = 50;
+    local createtrailpart = function()
+            local part: Part = Instance.new("Part", workspace)
+            part["Anchored"] = true
+            part["Material"] = Enum["Material"]["Neon"]
+            part["Size"] = Vector3["new"](2, 1, 1)
+            part["Shape"] = Enum["PartType"]["Ball"]
+            part["CFrame"] = lplr["Character"]["PrimaryPart"]["CFrame"]
+            part["CanCollide"] = false
+            part["Color"] = Color3.fromHSV(trailcolor["Hue"], trailcolor["Sat"], trailcolor["Value"])
+	    lastpart = part
+            lastpos = part["Position"]
+	    table.insert(trailparts, part)
+	    if #trailparts > MAX_TRAIL_PARTS then
+		    trailparts[1]:Destroy()
+		    table.remove(trailparts, 1)
+	    end;
+	    task.delay(2.5, function()
+		    tweenService:Create(part, TweenInfo.new(0.8, Enum.EasingStyle.Quad), {Transparency = 1}):Play()
+		    repeat task.wait() until (part.Transparency == 1);
+		    part:Destroy();
+	    end);
+	    return part;
+    end;
+    local lightfire = function()
+            pcall(task.cancel, firetask)
+            fireobject = Instance.new('Fire')
+	    fireobject["Color"] = Color3.fromHSV(firecolor["Hue"], firecolor["Sat"], firecolor["Value"])
+	    fireobject["SecondaryColor"] = Color3.fromHSV(firecolor2["Hue"], firecolor2["Sat"], firecolor2["Value"])
+	    fireobject["Heat"] = fireflame["Value"]
+	    firetask = task.spawn(function()
+                    repeat task.wait()
+                            pcall(function() fireobject["Parent"] = (gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and lplr.Character or lplr.Character[fireparent["Value"]] end)
+                            task.wait();
+                    until false;
+            end);
+    end;
+    local addsparkle = function()
+            pcall(task.cancel, sparklestask)
+            local sparkle: Sparkles = Instance.new('Sparkles')
+            sparkle["Color"] = Color3.fromHSV(sparklescolor["Hue"], sparklescolor["Sat"], sparklescolor["Value"])
+            sparklesobject = sparkle
+            sparklestask = task.spawn(function()
+                    repeat task.wait()
+                            pcall(function() sparkle.Parent = (gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and lplr.Character or lplr.Character[sparklesparent["Value"]] end)
+                            task.wait();
+                    until false;
+            end);
+    end;
+    Envision = vape.Legit:CreateModule({
+            ["Name"] = "Envision",
+            ["HoverText"] = HoverText("Let's you customize visuals!"),
+            ["Function"] = function(callback: boolean): void
+                    if callback then
+				if not sparkle.Connections then
+					sparkle.Connections = {}
+				end
+				if not fire.Connections then
+					fire.Connections = {}
+				end
+				if not trails.Connections then
+					trails.Connections = {}
+				end
+				task.spawn(function()
+					if motionblur["Enabled"] then
+						task.spawn(function()
+							repeat task.wait() 
+							until (isAlive(lplr) or not motionblur["Enabled"])
+						end)
+						table.insert(motionblur.Connections, lplr.Character.PrimaryPart:GetPropertyChangedSignal('CFrame'):Connect(function()
+							if motionblurtarget["Enabled"] and vapeTargetInfo.Targets.Killaura == nil then 
+								return;
+							end;
+							if blur["Parent"] == nil then 
+								blur = Instance.new("BlurEffect");
+								blur.Parent = lightingService;
+								Debris:AddItem(blur, 0);
+							end;
+							blur["Size"] = motionblurintensity["Value"];
+						end));
+						table.insert(motionblur.Connections, lplr.CharacterAdded:Connect(function()
+							motionblur:Toggle();
+							motionblur:Toggle();
+						end));
+					end;										
+					if sparkle["Enabled"] then
+						task.spawn(function() addsparkle() end) 
+						table.insert(sparkle.Connections, lplr.CharacterAdded:Connect(addsparkle));
+					else
+						pcall(task.cancel, sparklestask);
+						pcall(function() sparklesobject:Destroy() end);
+					end;
+					if fire["Enabled"] then
+						task.spawn(function() lightfire() end);
+						table.insert(fire.Connections, lplr.CharacterAdded:Connect(lightfire));
+					else
+						if fireobject then
+							fireobject:Destroy();
+						end;
+					end;
+					if trails["Enabled"] then
+						task.spawn(function()
+							repeat task.wait(0.03)
+								if isAlive(lplr) and (lastpos == nil or (lplr.Character.PrimaryPart.Position - lastpos).Magnitude > traildistance["Value"]) then
+									createtrailpart();
+								end;
+							until not trails["Enabled"] or not Envision["Enabled"];
+						end)
+					end;
+				end)
+            	    else
+                		if fireobject then
+					fireobject:Destroy();
+				end;
+                		pcall(task.cancel, sparklestask);
+                		pcall(function() sparklesobject:Destroy() end);
+				trailparts = {};
+            	    end;
+            end;
+    })
+    motionblur = Envision:CreateToggle({
+        ['Name'] = 'Motion Blur',
+        ['HoverText'] = 'motion blur',
+        ['Default'] = false,
+        ['Function'] = function() end
+    })
+    motionblurintensity = Envision:CreateSlider({
+        ['Name'] = 'Intensity',
+        ['Min'] = 2,
+        ['Max'] = 10,
+        ['Default'] = 8.5,
+        ['Function'] = function() end
+    })
+    trails = Envision:CreateToggle({
+        ['Name'] = 'Trails Effect',
+        ['HoverText'] = 'Only works when killaura is active.',
+        ['Default'] = false,
+        ['Function'] = function() end
+    })
+    traildistance = Envision:CreateSlider({
+        ['Name'] = 'Distance',
+        ['Min'] = 3,
+        ['Max'] = 10,
+        ['Function'] = function() end
+    })
+    trailcolor = Envision:CreateColorSlider({
+	["Name"] ="Trail Color",
+	["Function"] = function()
+		for i,v in trailparts do 
+			v.Color = Color3.fromHSV(trailcolor["Hue"], trailcolor["Sat"], trailcolor["Value"]);
+		end;
+	end,
+    })
+    fire = Envision:CreateToggle({
+        ['Name'] = 'Fire Effect',
+        ['HoverText'] = 'Only works when killaura is active.',
+        ['Default'] = false,
+        ['Function'] = function() end
+    })
+    fireparent = Envision:CreateDropdown({
+        ['Name'] = 'Parent',
+        ['List'] = {'PrimaryPart', 'Head'},
+        ['Function'] = function() end
+    })
+    fireflame = Envision:CreateSlider({
+        ['Name'] = 'Flame', 
+        ['Min'] = 1,
+        ['Max'] = 25,
+        ['Default'] = 25,
+        ['Function'] = function(value)
+            if fireobject and fire["Enabled"] then 
+                fireobject["Heat"] = value
+            end;
+        end;
+    })
+    firecolor = Envision:CreateColorSlider({
+        ['Name'] = 'Color',
+        ['Function'] = function()
+            if fireobject and fire["Enabled"] then 
+                fireobject["Color"] = Color3.fromHSV(firecolor['Hue'], firecolor['Sat'], firecolor['Value'])
+            end;
+        end;
+    })
+    firecolor2 = Envision:CreateColorSlider({
+        ['Name'] = 'Color 2',
+        ['Function'] = function()
+            if fireobject and fire['Enabled'] then 
+                fireobject["SecondaryColor"] = Color3.fromHSV(firecolor2['Hue'], firecolor2['Sat'], firecolor2['Value'])
+            end;
+        end;
+    })
+    sparkle = Envision:CreateToggle({
+        ['Name'] = 'Sparkle Effect',
+        ['HoverText'] = 'sparkles effect.',
+        ['Default'] = false,
+        ['Function'] = function() end
+    })
+    sparklesparent = Envision:CreateDropdown({
+        ['Name'] = 'Sparkles Parent',
+        ['List'] = {'PrimaryPart', 'Head'},
+        ['Function'] = function() end
+    })
+    sparklescolor = Envision:CreateColorSlider({
+        ['Name'] = 'Sparkles Color',
+        ['Function'] = function()
+            if sparklesobject then
+                sparklesobject["Color"] = Color3.fromHSV(sparklescolor['Hue'], sparklescolor['Sat'], sparklescolor['Value'])
+            end;
+        end;
+    })
+end)
 
 velo.run(function()
 	local custom_char: table = {["Enabled"] = false};
