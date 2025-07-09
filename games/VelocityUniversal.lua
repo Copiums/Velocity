@@ -10693,7 +10693,7 @@ velo.run(function()
 					if Mode["Value"] == "State" then
 						lplr["Character"]["Humanoid"]:ChangeState("Jumping")
 					else
-						lplr["Character"]["HumanoidRootPart"]["Velocity"] += Vec3(0, Power["Value"], 0)
+						lplr["Character"]["HumanoidRootPart"]["Velocity"] += Vector3.new(0, Power["Value"], 0)
 					end
 				end)
                 		AirJump["Connection"] = connection
