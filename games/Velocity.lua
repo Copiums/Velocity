@@ -822,7 +822,7 @@ velo.run(function()
 	for i = 1, 7 do
 		task.wait(0.07)
 		KnitInit, Knit = pcall(function()
-			return debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 6);
+			return debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 9);
 		end);
 		if KnitInit then break; end;
 	end;
