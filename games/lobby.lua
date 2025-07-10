@@ -75,7 +75,7 @@ velo.run(function()
 
 	local KnitInit: any, Knit: any;
 	repeat
-		KnitInit, Knit = pcall(function() return debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 6) end);
+		KnitInit, Knit = pcall(function() return debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 9) end);
 		if KnitInit then 
 			break;
 		end;
