@@ -817,22 +817,37 @@ velo.run(function()
 end)
 
 velo.run(function()
-
-	local KnitInit: boolean, Knit: any;
-	for i = 1, 7 do
-		task.wait(0.07)
-		KnitInit, Knit = pcall(function()
-			return debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 9);
-		end);
-		if KnitInit then break; end;
+	local KnitInit: boolean;
+	local Knit: any;
+	local knitModule: table = require(lplr.PlayerScripts.TS.knit);
+	local findKnitIndex: () -> number? = function()
+		for i: number = 1, 20 do
+	        	local success: boolean, value: any = pcall(function()
+	                	return debug.getupvalue(knitModule.setup, i)
+	            	end)
+	            	if success and type(value) == "table" then
+	                	if value.Controllers and type(value.Controllers) == "table" and value.Start then
+	                    		return i;
+	                	end;
+	            	end;
+	        end;
+	        return nil;
 	end;
-
-	cheatengine = not KnitInit;
-
+	local knitIndex: number? = findKnitIndex();
+	if not knitIndex then
+	        return;
+	end;
+	for i: number = 1, 7 do
+	        task.wait(0.07)
+	        KnitInit, Knit = pcall(function()
+	            	return debug.getupvalue(knitModule.setup, knitIndex);
+	        end);
+	        if KnitInit then break; end;
+	end;
+	local cheatengine: boolean = not KnitInit;
 	if not cheatengine and not debug.getupvalue(Knit.Start, 1) then
-		repeat task.wait() until debug.getupvalue(Knit.Start, 1);
+	        repeat task.wait() until debug.getupvalue(Knit.Start, 1);
 	end;
-
 	local engine_loader: any = loadfile('newvape/libraries/constructor.lua')() :: table;
 	local Flamework: any = ({pcall(function() return require(replicatedStorage['rbxts_include']['node_modules']['@flamework'].core.out).Flamework end)})[2];
 	local InventoryUtil: any = ({pcall(function() return require(replicatedStorage.TS.inventory['inventory-util']).InventoryUtil end)})[2];
