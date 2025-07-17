@@ -11219,11 +11219,18 @@ velo.run(function()
 						until not vapeInjected
 					else
 						-- creds to AntiMonacoGang
-						repeat task.wait(0)
+						repeat task.wait(0.03)
 							local Player = game:GetService('Players').LocalPlayer
 							local Camera = workspace.CurrentCamera
 							repeat wait() until Player.Character ~= nil
-							local Torso = Player.Character:WaitForChild("UpperTorso")
+							local Torso;
+							repeat
+								task.wait(0.03)
+								if Player.Character and Player.Character:FindFirstChild("UpperTorso") then
+							        	Torso = Player.Character.UpperTorso;
+									break;
+							    	end;
+							until Torso;
 							local RainSound = Instance.new("Sound", Camera)
 							RainSound.SoundId = "http://www.roblox.com/asset/?ID=236148388"
 							RainSound.Looped = true
