@@ -249,7 +249,7 @@ end;
 if not shared.VapeIndependent then
 	loadstring(downloadFile('newvape/games/universal.lua'), 'universal')();
 	if isfile('newvape/games/'..game.PlaceId..'.lua') then
-		task.wait(2)
+		task.wait()
 		loadstring(readfile('newvape/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...);
 	else
 		if not shared.VapeDeveloper then
