@@ -77,19 +77,25 @@ local cloneref: (obj: any) -> any = cloneref or function(obj)
     return obj;
 end;
 local playersService: Players = cloneref(game:GetService('Players'));
-local lplr = playersService.LocalPlayer
+local lplr: Player = playersService.LocalPlayer
 local httpService: HttpService = cloneref(game:GetService("HttpService"));
 local function downloadFile(path: string, func: any)
 	if not isfile(path) then
-		local suc: boolean, res: string? = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true);
+		local commit: string = "main";
+		local ok, result = pcall(function()
+			return readfile("newvape/profiles/commit.txt");
 		end);
-		if not suc or res == '404: Not Found' then
-			error(res);
+		if ok and result and result ~= "" then
+			commit = result;
 		end;
-		--if path:find('.lua') then
-			--res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res;
-		--end;
+		local relativePath = path:gsub("newvape/", "");
+		local url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/"..commit.."/"..relativePath;
+		local suc: boolean, res: string? = pcall(function()
+			return game:HttpGet(url, true);
+		end);
+		if not suc or not res or res == "404: Not Found" then
+			error("[downloadFile] Failed to download file:\nURL: " .. url .. "\nError: " .. tostring(res));
+		end;
 		writefile(path, res);
 	end;
 	return (func or readfile)(path);
