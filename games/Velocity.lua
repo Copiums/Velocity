@@ -2393,7 +2393,9 @@ run(function()
 		end;
 		return sword, meta;
 	end;
-
+	local killaurarangecirclepart: Instance? = nil;
+	local killaurarangecircle: table = {};
+	local killauracolor: table = {};
 	Killaura = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'Killaura',
 		["Function"] = function(callback: boolean): void
@@ -2403,7 +2405,6 @@ run(function()
 						lplr.PlayerGui.MobileUI['2'].Visible = Limit.Enabled
 					end)
 				end
-
 				if inputService.TouchEnabled then 
 					pcall(function() 
 						lplr.PlayerGui.MobileUI['2'].Visible = Limit["Enabled"];
@@ -2424,8 +2425,17 @@ run(function()
 							}
 						}
 					};
-					--debug.setupvalue(bedwars.SwordController.playSwordEffect, 6, fake);
-					--debug.setupvalue(bedwars.ScytheController.playLocalAnimation, 3, fake);
+					if killaurarangecircle["Enabled"] and killaurarangecirclepart == nil and Killaura["Enabled"] then
+			                    	killaurarangecirclepart = Instance.new("MeshPart");
+			                    	killaurarangecirclepart.MeshId = "rbxassetid://3726303797";
+			                    	killaurarangecirclepart.Color = Color3.fromHSV(killauracolor["Hue"], killauracolor["Sat"], killauracolor.Value)
+			                    	killaurarangecirclepart.CanCollide = false;
+			                    	killaurarangecirclepart.Anchored = true;
+			                    	killaurarangecirclepart.Material = Enum.Material.Neon;
+			                    	killaurarangecirclepart.Size = Vector3.new(AttackRange.Value * 0.7, 0.01, AttackRange.Value * 0.7);
+			                    	killaurarangecirclepart.Parent = gameCamera;
+			                    	bedwars.QueryUtil:setQueryIgnored(killaurarangecirclepart, true);
+			                end;
 
 					task.spawn(function()
 						local started: boolean = false;
@@ -2469,6 +2479,11 @@ run(function()
 				lastSwingServerTime = Workspace:GetServerTimeNow();
                 		lastSwingServerTimeDelta = 0;				
 				repeat
+					if killaurarangecircle["Enabled"] and killaurarangecirclepart then
+			                        if entitylib.isAlive and entitylib.character.HumanoidRootPart then
+			                            	killaurarangecirclepart.Position = entitylib.character.HumanoidRootPart.Position - Vector3.new(0, entitylib.character.Humanoid.HipHeight, 0)
+			                        end
+			                end
 					local attacked: any, sword: any, meta: any = {}, getAttackData();
 					Attacking = false;
 					store.KillauraTarget = nil;
@@ -2575,6 +2590,10 @@ run(function()
 					task.wait(1 / UpdateRate.Value);
 				until not Killaura.Enabled;
 			else
+				if killaurarangecirclepart then 
+				        killaurarangecirclepart:Destroy();
+				        killaurarangecirclepart = nil;
+				end;
 				store.KillauraTarget = nil
 				for _, v in Boxes do
 					v.Adornee = nil;
@@ -2658,6 +2677,36 @@ run(function()
 	Sort = Killaura:CreateDropdown({
 		["Name"] = 'Target Mode',
 		["List"] = methods
+	})
+	killaurarangecircle = Killaura:CreateToggle({
+        	Name = "Range Visualizer",
+        	Function = function(callback: boolean): void
+            		if callback then 
+                		killaurarangecirclepart = Instance.new("MeshPart")
+		                killaurarangecirclepart.MeshId = "rbxassetid://3726303797"
+		                killaurarangecirclepart.Color = Color3.fromHSV(killauracolor["Hue"], killauracolor["Sat"], killauracolor.Value)
+		                killaurarangecirclepart.CanCollide = false
+		                killaurarangecirclepart.Anchored = true
+		                killaurarangecirclepart.Material = Enum.Material.Neon
+		                killaurarangecirclepart.Size = Vector3.new(AttackRange.Value * 0.7, 0.01, AttackRange.Value * 0.7)
+		                if Killaura.Enabled then 
+		                    	killaurarangecirclepart.Parent = gameCamera
+		                end
+		                bedwars.QueryUtil:setQueryIgnored(killaurarangecirclepart, true)
+            		else
+		                if killaurarangecirclepart then 
+		                    	killaurarangecirclepart:Destroy()
+		                    	killaurarangecirclepart = nil
+		                end
+            		end
+        	end
+    	})
+    	killauracolor = Killaura:CreateColorSlider({
+         	Name = 'colour',
+         	Darker = true,
+		DefaultHue = 0.6,
+		DefaultOpacity = 0.5,
+		Visible = true
 	})
 	Mouse = Killaura:CreateToggle({["Name"] = 'Require mouse down'})
 	Swing = Killaura:CreateToggle({["Name"] = 'No Swing'})
