@@ -7,18 +7,11 @@
 		       \___/  \___  >____/\____/ \___  >__||__|  / ____|
 		                  \/                 \/          \/      
 		
-		       The #1 Roblox Bedwars Vape Config on the market.
+		       The #1 Roblox Ink Game Script on the market.
 		
-		        - luc - modules / organizer
-			- null.wtf - modules 
-			- copium - modules
-			- sammz - modules
-			- lr - modules
-		        - blanked - modules
-		        - gamesense - modules
-		        - sown - modules
-		        - relevant - executor
-		        - nick - first UI
+		        - luc - founder / organizer
+			- copium - modules / developer
+			- rxma - Thank you bro
 		
 		
 		
@@ -28,7 +21,6 @@
 		    \___||_|/__/\_|_.\___/|_|  \___|<_>\_. |\_. |/_/  |_||_||_|_||_\_\|__/ \___.|_|    |_|  |_|/__/\___.
 		                                       <___'<___'                                                       
 		
-			(also I am adding comments for this file only idk why)
 ]]--
 
 local velo: table = {};
