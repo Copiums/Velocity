@@ -25,6 +25,17 @@
         - Xylex/7GrandDad - developer / organizer
 ]]--
 
+local inkgame: table = {
+    [99567941238278] = true,
+    [125009265613167] = true
+};
+
+if inkgame[game.PlaceId] then
+        if isfile("newvape/games/antiban.lua") then
+                loadstring(readfile("newvape/games/antiban.lua"))();
+        end;
+end;
+
 repeat 
 	task.wait() 
 until game:IsLoaded();
