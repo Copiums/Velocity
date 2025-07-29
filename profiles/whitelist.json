@@ -1,17 +1,17 @@
 {
   "WhitelistedUsers": {
     "921545373456154624": {
-      "hash": "83e0e930f98d0ac07e75393e125ac0bf7aec5737f710103206a92ec3f3e17dd4b10b0bc222231adfa8a45ad8889f2dad2f09a0f7861890bca0435d9da10b293a",
+      "hash": "262a732378f2b65a7c8cd07358d61d51c250506a5a97fabf564b978c49aa8325a74868d7fe6018845d4fe5d216499827fc8abef413e6200775749624a8587464",
       "attackable": false,
       "notag": false,
-      "level": 3,
+      "level": 999,
       "tags": [
         {
-          "text": "VAPE OWNER",
+          "text": "Veloc",
           "color": [
-            0,
-            0,
-            1
+            100,
+            110,
+            196
           ]
         }
       ]
@@ -46,13 +46,13 @@
       ]
     },
     "1144349422143143947": {
-      "hash": "236178747147566fbde631e156c0548070735cdb38c1837b59d17ca28b00a57229fb7044c098d3a44a9fc968a9b8e483bb8f9a0dff8167134d04a2e824fd94b3",
-      "attackable": false,
+      "hash": "c04f4a223787a0aacafe8ae715a20d8d378a0515ef5f8a181d00da03ff8186357f737e477c501446b921ec3737e9eb34955141320c4913514157962e877663b0",
+      "attackable": true,
       "notag": false,
-      "level": 3,
+      "level": 1,
       "tags": [
         {
-          "text": "LUC (needs update)",
+          "text": "luc",
           "color": [
             255,
             255,
@@ -311,6 +311,22 @@
             255,
             255,
             255
+          ]
+        }
+      ]
+    },
+    "1075223769343336551": {
+      "hash": "f4f173a4f2fcffa39d58cb1eb8edb13b4991155f85fdfc42cd7e33b216d9062397ecaad294b8faef2f1d0486eb83b9f7d1de877873cf8788c6bf017a2bbe806e",
+      "attackable": false,
+      "notag": false,
+      "level": 999,
+      "tags": [
+        {
+          "text": "veloc",
+          "color": [
+            115,
+            117,
+            240
           ]
         }
       ]
