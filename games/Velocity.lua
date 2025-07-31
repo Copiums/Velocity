@@ -1983,95 +1983,155 @@ velo.run(function()
 	})
 end)
 
-velo.run(function()
-	local NoFall: table = {["Enabled"] = false};
-	local NoFallRisk: table = {["Value"] = 30};
-	local oldvelo: table = {};
-	local velosize: number = 10;
-	local NoFallMode: table = {["Value"] = "Velocity"}
-	local def: any = workspace.Gravity;
-	local gravlow: boolean = false;
-	NoFall = vape.Categories.Blatant:CreateModule({
-		["Name"] = "NoFall",
-		["Function"] = function(callback: boolean): void
-			if callback then
-				RunLoops:BindToHeartbeat("NoFall", function()
-					if not entitylib.isAlive or not entitylib.character or not entitylib.character.RootPart then 
-						return 
-					end
-					local root: any = entitylib.character.RootPart;
-					local humanoid: any = entitylib.character.Humanoid
-					local currentvelo: number = root.Velocity.Y;
-					if NoFallMode["Value"] == "Velocity" then
-						table.insert(oldvelo, currentvelo)
-						if #oldvelo > velosize then
-							table.remove(oldvelo, 1);
-						end
-						if #oldvelo < velosize then 
-							return;
-						end;
-						local totalSpeed: number = 0
-						for i = 2, #oldvelo do
-							if oldvelo[i] < oldvelo[i - 1] and oldvelo[i] < 0 then
-								totalSpeed += (oldvelo[i - 1] - oldvelo[i]);
-							end;
-						end;
-						local rayParams: any = RaycastParams.new();
-						rayParams.FilterType = Enum.RaycastFilterType.Blacklist;
-						rayParams.FilterDescendantsInstances = {lplr.Character};
-						local startPos: Vector3? = root.Position;
-						local groundRay: any = workspace:Raycast(startPos, Vector3.new(0, -50, 0), rayParams);
-						local disFloor: number? = groundRay and (startPos.Y - groundRay.Position.Y) or math.huge;
-						local risk: number = totalSpeed * (disFloor > 10 and 1.5 or 1);
-						if risk > NoFallRisk["Value"] then
-							if currentvelo < -50 then
-								root.Velocity = Vector3.new(root.Velocity.X, -50, root.Velocity.Z)
-							end
-						end
-					elseif NoFallMode["Value"] == "Spoof" then
-						if currentvelo < -40 then
-							humanoid:ChangeState(Enum.HumanoidStateType.Seated);
-						end;
-					elseif NoFallMode["Value"] == "Gravity" then
-						if currentvelo < -40 and not gravlow then
-							workspace.Gravity = 50 
-							gravlow = true
-						elseif currentvelo >= 0 and gravlow then
-							workspace.Gravity = def
-							gravlow = false
-						end
-					end
-				end)
-			else
-				RunLoops:UnbindFromHeartbeat("NoFall")
-				table.clear(oldvelo)
-				if gravlow then
-					workspace.Gravity = def
-					gravlow = false
+-- skidded from catvape. Why? I am busy with Ink game and since Im the only dev I got lazy.
+-- So this is TEMEPORAY NOT PERMNAMENT, I WILL REMOVE THIS CODE
+-- ALL credits to MaxLaserTech and QwertyUI		
+getgenv().FlyLandTick = tick()
+local NoFall
+run(function()
+	local Mode
+	local rayParams = RaycastParams.new()
+	local tracked
+	local oldroot
+	local clone
+	local hip = 2.3
+	local function createClone()
+		if entitylib.isAlive and entitylib.character.Humanoid.Health > 0 and (not oldroot or not oldroot.Parent) then
+			hip = entitylib.character.Humanoid.HipHeight
+			oldroot = entitylib.character.HumanoidRootPart
+			if not lplr.Character.Parent then return false end
+			lplr.Character.Parent = game
+			clone = oldroot:Clone()
+			clone.Parent = lplr.Character
+			oldroot.Transparency = 0
+			Instance.new('Highlight', oldroot)
+			oldroot.Parent = gameCamera
+			store.rootpart = clone
+			bedwars.QueryUtil:setQueryIgnored(oldroot, true)
+			lplr.Character.PrimaryPart = clone
+			lplr.Character.Parent = workspace
+			for _, v in lplr.Character:GetDescendants() do
+				if v:IsA('Weld') or v:IsA('Motor6D') then
+					if v.Part0 == oldroot then v.Part0 = clone end
+					if v.Part1 == oldroot then v.Part1 = clone end
 				end
 			end
-		end,
-		["Tooltip"] = "Simplified anti-fall system using velocity."
-	})
-	NoFallRisk = NoFall:CreateSlider({
-		["Name"] = "Risk",
-		["Function"] = function() end,
-		["Min"] = 10,
-		["Max"] = 100,
-		["Default"] = 30
-	})
-	NoFallMode = NoFall:CreateDropdown({
-		["Name"] = "Mode",
-		["List"] = {"Velocity", "Spoof", "Gravity"},
-		["Function"] = function(val)
-			NoFallMode["Value"] = val
-			if val ~= "Gravity" and gravlow then
-				workspace.Gravity = def
-				gravlow = false
+			return true
+		end
+		return false
+	end
+	local function destroyClone()
+		if not oldroot or not oldroot.Parent or not entitylib.isAlive then return false end
+		lplr.Character.Parent = game
+		oldroot.Parent = lplr.Character
+		lplr.Character.PrimaryPart = oldroot
+		lplr.Character.Parent = workspace
+		for _, v in lplr.Character:GetDescendants() do
+			if v:IsA('Weld') or v:IsA('Motor6D') then
+				if v.Part0 == clone then v.Part0 = oldroot end
+				if v.Part1 == clone then v.Part1 = oldroot end
+			end
+		end
+		oldroot.CanCollide = true
+		if clone then
+			clone:Destroy()
+			clone = nil
+		end
+		entitylib.character.Humanoid.HipHeight = hip or 2.6
+		oldroot.Transparency = 1
+		oldroot = nil
+		store.rootpart = nil
+	end
+	NoFall = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'NoFall',
+		["Function"] = function(callback: boolean): void
+			if callback then
+				local tracked = 0
+				local extraGravity = 0
+				if Mode.Value == 'Spoof' then
+					NoFall:Clean(runService.PreSimulation:Connect(function(dt)
+						if entitylib.isAlive then
+							local root = entitylib.character.RootPart
+							if root.AssemblyLinearVelocity.Y < -85 then
+								rayParams.FilterDescendantsInstances = {lplr.Character, gameCamera}
+								rayParams.CollisionGroup = root.CollisionGroup
+								local rootSize = root.Size.Y / 2 + entitylib.character.HipHeight
+								local ray = workspace:Blockcast(root.CFrame, Vector3.new(3, 3, 3), Vector3.new(0, (tracked * 0.1) - rootSize, 0), rayParams)
+								if not ray then
+									root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, -86, root.AssemblyLinearVelocity.Z)
+									root.CFrame += Vector3.new(0, extraGravity * dt, 0)
+									extraGravity += -workspace.Gravity * dt
+								end
+							else
+								extraGravity = 0
+							end
+						end
+					end))
+				else
+					local rootylevel = nil
+					NoFall:Clean(runService.PostSimulation:Connect(function()
+						if ((workspace:GetServerTimeNow() - lplr:GetAttribute('LastTeleported')) < 2 or tick() < FlyLandTick or not entitylib.isAlive or not isnetworkowner((oldroot and oldroot.Parent) and oldroot or entitylib.character.RootPart) or pingSpiking) and oldroot and oldroot.Parent then
+							destroyClone()
+							return
+						end
+						if oldroot and oldroot.Parent then
+							oldroot.CFrame = CFrame.lookAlong(Vector3.new(clone.Position.X, rootylevel or clone.Position.Y, clone.Position.Z), clone.CFrame.LookVector)
+							oldroot.AssemblyLinearVelocity = Vector3.zero
+						end
+					end))
+					repeat
+						if (workspace:GetServerTimeNow() - lplr:GetAttribute('LastTeleported')) < 2 or (tick() < FlyLandTick) or not entitylib.isAlive or not isnetworkowner((oldroot and oldroot.Parent) and oldroot or entitylib.character.RootPart) or pingSpiking then
+							task.wait();
+							continue;
+						else
+							if not oldroot or not oldroot.Parent then
+								createClone();
+							end;
+							rayParams.FilterDescendantsInstances = {lplr.Character, gameCamera, oldroot, clone}
+							rayParams.CollisionGroup = oldroot.CollisionGroup
+							if (tick() - entitylib.character.AirTime) < 1.6 then
+								local raycast = workspace:Blockcast(clone.CFrame, Vector3.new(3, 3, 3), Vector3.new(0, -7, 0), rayParams)
+								local uppercast = workspace:Blockcast(clone.CFrame, Vector3.new(3, 3, 3), Vector3.new(0, 6.1, 0), rayParams)
+								if raycast then
+									rootylevel = uppercast and (uppercast.Position.Y - 1) or (clone.CFrame.Y + 6)
+									task.wait(0.1)
+									rootylevel = nil
+									task.wait(0.1)
+								end
+							end
+						end
+						task.wait()
+					until not NoFall["Enabled"]
+				end
+			else
+				destroyClone()
 			end
 		end,
-		["Default"] = "Velocity"
+		Tooltip = 'Prevents you from taking fall damage.'
 	})
+	Mode = NoFall:CreateDropdown({
+		["Name"] = 'Mode',
+		["List"] = {'Spoof', 'Packet'},
+		["Default"] = 'Spoof',
+		["Function"] = function()
+			if NoFall.Enabled then
+				NoFall:Toggle()
+				NoFall:Toggle()
+			end
+		end
+	})
+end)
+
+-- sorry skidded catvape, too busy with ink game anticheat
+local namecall; namecall = hookmetamethod(game, '__namecall', function(self, ...)
+	if getnamecallmethod() == 'FireServer' and tostring(self) == 'GroundHit' and NoFall.Enabled then
+		local args = {...}
+		if args[3] then
+			args[3] = 1/1
+		end
+		return namecall(self, unpack(args))
+	end
+	return namecall(self, ...)
 end)
 
 velo.run(function()
