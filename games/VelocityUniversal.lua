@@ -5963,7 +5963,7 @@ velo.run(function()
 		["Visible"] = false
 	})
 end)
-	
+--[[
 velo.run(function()
 	local GamingChair: table = {["Enabled"] = false}
 	local GamingChairSounds: table = {["Enabled"] = false};
@@ -6235,7 +6235,8 @@ velo.run(function()
 		end
 	})
 end)
-	
+	]]--
+
 velo.run(function()
 	local Health: table = {["Enabled"] = false};
 	Health = vape.Categories.Render:CreateModule({
@@ -10448,82 +10449,58 @@ velo.run(function()
 end)
 
 velo.run(function()
-    local SkidRoaster: table = {["Enabled"] = false}
-    local Mode: table = {["Value"] = "Custom"}
-    local delay: table = {["Value"] = 3.3}
-    SkidRoaster = vape.Categories.Utility:CreateModule({
-        ["Name"] = "🤡",
-        ["Function"] = function(callback: boolean): void
-            if callback then
-                task.spawn(function()
-                    repeat
-                        if Mode["Value"] == "Custom" then
-                            notif("Vape", #SkidPhrases.ListEnabled > 0 and SkidPhrases.ListEnabled[math.random(1, #SkidPhrases.ListEnabled)] or "Voidware still pasting in 2025 be like 💀🤡", delay["Value"], 'warning')
-                            task.wait(delay["Value"])
-                        else
-                            notif("Vape", "Snoopy more like shitnoopy!", 3, 'warning')
-                            task.wait(delay["Value"])
-                            notif("Vape", "Skidding = NN", 3, 'warning')
-                            task.wait(delay["Value"])
-                            notif("Vape", "Moon on top!", 3, 'warning')
-                            task.wait(delay["Value"])
-                            notif("Vape", "Snoopy + Grass = skids", 3, 'warning')
-                            task.wait(delay["Value"])
-                            notif("Vape", "Pistonware? nah bro. Pisstonware", 3, 'warning')
-                            task.wait(delay["Value"])
-			    notif("Vape", "Piston loves underaged girls and boys", 3, 'warning')
-                            task.wait(delay["Value"])
-                            notif("Vape", "Acronis = NN", 3)
-                            task.wait(delay["Value"])
-                            notif("Vape", "Vape private?? 💀🤡", 3, 'warning')
-                            task.wait(delay["Value"])
-                            notif("Vape", "Mysticware? = Mysticshit", 3, 'warning')
-                            task.wait(delay["Value"])
-                            notif("Vape", "Really bro? Tryna skid? KYS", 3, 'warning')
-                            task.wait(delay["Value"])
-                            notif("Vape", "Imagine skidding and then call yourself a coder 🤡", 3, 'warning')
-                            task.wait(delay["Value"])
-                            notif("Vape", "Ercho and Abyss still pasting in 2026 💀", 3, 'warning')
-                            task.wait(delay["Value"])
-                            notif("Vape", "How to not get doxxed? Don't be like Snoopy please...", 3, 'warning')
-                            task.wait(delay["Value"])
-                            notif("Vape", "Complexware?? Simpleware and Skiddedware", 3, 'warning')
-                            task.wait(delay["Value"])
-                            notif("Vape", "Remember, Skid Client and Nebulaware are shit.", 3, 'warning')
-                            task.wait(delay["Value"])
-			    notif("Vape", "Keep pasting cocosploit/Aurora.", 3, 'warning')
-                            task.wait(delay["Value"])
-			    notif("Vape", "Voidware = garbage paste made by autistic child", 3, 'warning')
-                            task.wait(delay["Value"])
-                            notif("Vape", "W Zenith, W null.wtf, W blanked", 3, 'warning')
-                            task.wait(delay["Value"])
-			    notif("Vape", "Packet on top fellas, discord.gg/packet", 3, 'warning')
-                            task.wait(delay["Value"])
-			    notif("Vape", "Velocity & Night on top RAH", 3, 'warning')
-                            task.wait(delay["Value"])
-                        end;
-                    until not SkidRoaster["Enabled"];
-                end);
-            end;
-        end,
-        HoverText = "Roasts skids",
-    })
-    Mode = SkidRoaster:CreateDropdown({
-        ["Name"] = "Mode",
-        ["List"] = {"Custom", "Copium"},
-        ["Function"] = function() end
-    })
-    SkidPhrases = SkidRoaster:CreateTextList({
-        ["Name"] = "Phrases",
-        ["TempText"] = "SkidRoaster Phrases",
-    })
-    delay = SkidRoaster:CreateSlider({
-        ["Name"] = "Delay",
-        ["Min"] = 2,
-        ["Max"] = 5,
-        ["Default"] = 2,
-        ["Function"] = function() end
-    })
+	    local SkidRoaster: table = {["Enabled"] = false}
+	    local Mode: table = {["Value"] = "Custom"}
+	    local delay: table = {["Value"] = 3.3}
+	    local cope: table = {
+	            "Snoopy more like shitnoopy!", "Skidding = NN", "Moon on top!", 
+	            "Snoopy + Grass = skids", "Pisstonware", "Piston loves underaged girls and boys", 
+	            "Acronis = NN", "Vape private?? 💀🤡", "Mysticware? = Mysticshit", 
+	            "Tryna skid? KYS", "Imagine skidding and calling yourself a coder 🤡", 
+	            "Ercho and Abyss still pasting in 2026 💀", "Don't be like Snoopy...", 
+	            "Complexware = Skiddedware", "Skid Client & Nebulaware = shit", 
+	            "Keep pasting cocosploit/Aurora.", "Voidware = garbage paste", 
+	            "W zenith, W null.wtf, W Render", "Render on top - discord.gg/renderintents", 
+	            "Velocity & Night on top RAH"
+	    };
+	    SkidRoaster = vape.Categories.Utility:CreateModule({
+		        ["Name"] = "🤡",
+		        ["Function"] = function(callback: boolean): void
+			            if callback then
+				                task.spawn(function()
+					                    repeat
+												task.wait()
+						                        if Mode["Value"] == "Custom" then
+							                            notif("Vape", #SkidPhrases.ListEnabled > 0 and SkidPhrases.ListEnabled[math.random(1, #SkidPhrases.ListEnabled)] or "Voidware still pasting in 2025 be like 💀🤡", delay["Value"], 'warning')
+							                            task.wait(delay["Value"])
+						                        else
+							                            for _: any, msg: string? in next, cope do
+							                                	notif("Vape", msg, 3, 'warning');
+							                                	task.wait(delay.Value);
+							                            end;
+						                        end;
+					                    until not SkidRoaster["Enabled"];
+				                end);
+			            end;
+		        end,
+		        ["HoverText"] = "Roasts skids",
+	    })
+	    Mode = SkidRoaster:CreateDropdown({
+		        ["Name"] = "Mode",
+		        ["List"] = {"Custom", "Copium"},
+		        ["Function"] = function() end
+	    })
+	    SkidPhrases = SkidRoaster:CreateTextList({
+		        ["Name"] = "Phrases",
+		        ["TempText"] = "SkidRoaster Phrases",
+	    })
+	    delay = SkidRoaster:CreateSlider({
+		        ["Name"] = "Delay",
+		        ["Min"] = 2,
+		        ["Max"] = 5,
+		        ["Default"] = 2,
+		        ["Function"] = function() end
+	    })
 end)
 
 -- credits: Render
@@ -11597,3 +11574,4 @@ velo.run(function()
 	});
 end)	
 	
+
