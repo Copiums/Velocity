@@ -91,7 +91,7 @@ if vape.ThreadFix then
 	    setthreadidentity(8);
 end;
 
-for _: any, v: string? in {'ScriptHub', 'ChatBypass', 'Invisible', 'Timer', 'MurderMystery'} do
+for _: any, v: string? in {'ScriptHub', 'ChatBypass', 'Invisible', 'Timer', 'MurderMystery', 'SilentAim'} do
       vape:Remove(v);
 end;
 
