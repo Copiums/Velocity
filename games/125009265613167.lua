@@ -11,6 +11,7 @@
        The #1 Roblox Ink Game Script on the market.
 
         - Copium - Developer / organizer
+        - Engineer - Troll Glass + many more (I dont remember) / The GOAT
 		- Jorsan - Dalgona
         - luc - Founder / organizer
         - blanked - Security
