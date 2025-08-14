@@ -10,8 +10,8 @@
 		       The #1 Roblox Ink Game Script on the market.
 		
 		        - luc - founder / organizer
-			- copium - modules / developer
-			- rxma - Thank you bro
+				- copium - modules / developer
+				- rxma - Thank you bro
 		
 		
 		
