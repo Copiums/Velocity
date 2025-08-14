@@ -1,37 +1,3 @@
---[[
-
-    ____   ____     .__                .__  __          
-    \   \ /   /____ |  |   ____   ____ |__|/  |_ ___.__.
-     \   Y   // __ \|  |  /  _ \_/ ___\|  \   __<   |  |
-      \     /\  ___/|  |_(  <_> )  \___|  ||  |  \___  |
-       \___/  \___  >____/\____/ \___  >__||__|  / ____|
-                  \/                 \/          \/      
-
-       The #1 Roblox Bedwars Vape Config on the market.
-
-        - luc - modules / organizer
-		- null.wtf - modules 
-		- copium - modules
-		- sammz - modules
-		- lr - modules
-        - blanked - modules
-        - gamesense - modules
-        - sown - modules
-        - relevant - executor
-        - nick - first UI
-
-
-
-       _  _                       _                 __ _  _       _                     _    _          
-     _| |<_> ___ ___  ___  _ _  _| |    ___  ___   / /| |<_>._ _ | |__ _ _  ___  _ _  _| |_ <_> ___ ___ 
-    / . || |<_-</ | '/ . \| '_>/ . | _ / . |/ . | / / | || || ' || / /| | |/ ._>| '_>  | |  | |<_-</ ._>
-    \___||_|/__/\_|_.\___/|_|  \___|<_>\_. |\_. |/_/  |_||_||_|_||_\_\|__/ \___.|_|    |_|  |_|/__/\___.
-                                       <___'<___'                                                       
-
-]]--
-
-
-
 local mainapi: table = {
 	Categories = {},
 	GUIColor = {
@@ -70,7 +36,6 @@ local httpService: HttpService = cloneref(game:GetService('HttpService'))
 local fontsize = Instance.new('GetTextBoundsParams')
 fontsize.Width = math.huge
 local notifications
-local assetfunction = getcustomasset
 local getcustomasset
 local clickgui
 local scaledgui
@@ -153,7 +118,7 @@ local getcustomassets: table = {
 	['newvape/assets/new/textvape.png'] = 'rbxassetid://14368358200',
 	['newvape/assets/new/utilityicon.png'] = 'rbxassetid://14368359107',
 	['newvape/assets/new/vape.png'] = 'rbxassetid://14373395239',
-	['newvape/assets/new/warning.png'] = 'rbxassetid://14368361552',
+	['newvape/assets/new/warning.png'] = 'rbxassetid://128664271265613',
 	['newvape/assets/new/worldicon.png'] = 'rbxassetid://14368362492'
 }
 
@@ -298,7 +263,7 @@ local function createDownloader(text)
 			downloader.Parent = mainapi.gui
 			mainapi.Downloader = downloader
 		end
-		downloader.Text = 'Installing '..text
+		downloader.Text = 'Downloading '..text
 	end
 end
 
@@ -360,11 +325,11 @@ local function downloadFile(path, func)
 	return (func or readfile)(path)
 end
 
-getcustomasset = not inputService.TouchEnabled and assetfunction and function(path)
-	return downloadFile(path, assetfunction)
-end or function(path)
-	return getcustomassets[path] or ''
-end
+getcustomasset = function(path)
+    return getcustomassets[path] or '';
+end;
+
+local assetfunction = getcustomasset
 
 local function getTableSize(tab)
 	local ind = 0
@@ -3700,7 +3665,7 @@ function mainapi:CreateCategory(categorysettings)
 	windowlist.Parent = children
 
 	function categoryapi:CreateModule(modulesettings)
-        if mainapi.Modules[modulesettings.Name] then
+		if mainapi.Modules[modulesettings.Name] then
 			mainapi:Remove(modulesettings.Name)
 		end
 		local moduleapi = {
@@ -5698,7 +5663,7 @@ gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 gui.IgnoreGuiInset = true
 gui.OnTopOfCoreBlur = true
 if mainapi.ThreadFix then
-	gui.Parent = cloneref(game:GetService('CoreGui'))--(gethui and gethui()) or cloneref(game:GetService('CoreGui'))
+	gui.Parent = cloneref(game:GetService('CoreGui'))--(gethui and gethui()) or cloneref(game:GetService('CoreGui')) 
 else
 	gui.Parent = cloneref(game:GetService('Players')).LocalPlayer.PlayerGui
 	gui.ResetOnSpawn = false
@@ -5833,7 +5798,7 @@ mainapi:CreateCategory({
 	Icon = getcustomasset('newvape/assets/new/miniicon.png'),
 	Size = UDim2.fromOffset(19, 12)
 })
-
+mainapi.Categories.Main:CreateDivider('misc')
 mainapi:CreateCategory({
 	Name = 'Velocity',
 	Icon = getcustomasset('newvape/assets/new/radaricon.png'),
@@ -5970,7 +5935,7 @@ general:CreateButton({
 		if shared.VapeDeveloper then
 			loadstring(readfile('newvape/loader.lua'), 'loader')()
 		else
-			loadstring(game:HttpGet('https://raw.githubusercontent.com/Copiums/Velocity/'..readfile('newvape/profiles/commit.txt')..'/loader.lua', true))()
+			loadstring(game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/loader.lua', true))()
 		end
 	end,
 	Tooltip = 'Reloads vape for debugging purposes'
@@ -6078,15 +6043,7 @@ guipane:CreateDropdown({
 			if shared.VapeDeveloper then
 				loadstring(readfile('newvape/loader.lua'), 'loader')()
 			else
-				local url = 'https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/loader.lua'
-                local res = game:HttpGet(url, true)
-                print(res)
-                local func, err = loadstring(res)
-                if not func then
-                    error("Failed to load script: "..tostring(err))
-                else
-                    func()
-                end
+				loadstring(game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/loader.lua', true))()
 			end
 		end
 	end,
