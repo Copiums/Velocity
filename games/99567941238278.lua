@@ -11,6 +11,8 @@
 		
 		        - luc - founder / organizer
 				- copium - modules / developer
+				- engineer - the goat
+				- Jorsan - Dalgona
 				- rxma - Thank you bro
 		
 		
@@ -92,7 +94,7 @@ if vape.ThreadFix then
 end;
 
 for _: any, v: string? in {'ScriptHub', 'ChatBypass', 'Invisible', 'Timer', 'MurderMystery', 'SilentAim'} do
-      vape:Remove(v);
+      	vape:Remove(v);
 end;
 
 velo.run(function()
