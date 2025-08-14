@@ -11,6 +11,7 @@
        The #1 Roblox Ink Game Script on the market.
 
         - Copium - Developer / organizer
+		- Jorsan - Dalgona
         - luc - Founder / organizer
         - blanked - Security
         - gamesense - modules
