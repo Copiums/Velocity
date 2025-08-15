@@ -66,7 +66,7 @@ end;
 copy_discord()
 
 if identifyexecutor then
-        local execName: string? = ({identifyexecutor()})[1]
+          local execName: string? = ({identifyexecutor()})[1]
 	      if table.find({'Argon', 'Wave', 'Hyerin'}, execName) then
 		            getgenv().setthreadidentity = nil;
 	      end;
@@ -271,24 +271,40 @@ if latestSHA and latestSHA ~= storedSHA then
 		print("Update complete!");
 end;
 
-local commitFilepath = "newvape/profiles/commit_profiles.txt"
+if not isfile("newvape/profiles/commit_profiles.txt") then
+		writefile("newvape/profiles/commit_profiles.txt", "");
+end;
+
+local commitFilepath = "newvape/profiles/commit_profiles.txt";
+local profileFilename = "default"..game.PlaceId..".txt";
+local profileLocalPath = "newvape/profiles/"..profileFilename;
+
 local function getProfilesLatestSHA()
-	    local suc, res = pcall(function()
-		        local url = "https://api.github.com/repos/Copiums/Velocity/commits?path=profiles/"..game.PlaceId..".gui.txt&sha=main";
-		        return game:HttpGet(url, true);
-	    end);
-	    if not suc then return nil; end;
-	    local data = httpService:JSONDecode(res);
-	    return data[1] and data[1].sha or nil;
+        local suc, res = pcall(function()
+                local url = "https://api.github.com/repos/Copiums/Velocity/commits?path=profiles/"..profileFilename.."&sha=main";
+                return game:HttpGet(url, true);
+        end);
+        if not suc then return nil; end;
+        local data = httpService:JSONDecode(res);
+        return data[1] and data[1].sha or nil;
 end;
 
 local storedSHA = isfile(commitFilepath) and readfile(commitFilepath) or "";
 local latestSHA = getProfilesLatestSHA();
-if latestSHA and latestSHA ~= storedSHA then
-	    vape:CreateNotification('Profiles Updated', 'Profiles have been updated, syncing...', 5);
-	    syncFolder("profiles", "newvape/profiles");
-	    writefile(commitFilepath, latestSHA);
-	    print("Profiles sync complete!");
+
+if not isfile(profileLocalPath) or (latestSHA and latestSHA ~= storedSHA) then
+        vape:CreateNotification("Profiles Updated", "Profiles have been updated, syncing...", 5)
+        local profileURL = "https://raw.githubusercontent.com/Copiums/Velocity/main/profiles/"..profileFilename;
+        local suc, fileData = pcall(function()
+                return game:HttpGet(profileURL, true);
+        end);
+        if suc and fileData then
+                writefile(profileLocalPath, fileData);
+                if latestSHA then
+                        writefile(commitFilepath, latestSHA);
+                end;
+                print("Profile "..profileFilename.." sync complete!");
+        end;
 end;
 
 if not shared.VapeIndependent then
