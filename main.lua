@@ -271,6 +271,26 @@ if latestSHA and latestSHA ~= storedSHA then
 		print("Update complete!");
 end;
 
+local commitFilepath = "newvape/profiles/commit_profiles.txt"
+local function getProfilesLatestSHA()
+	    local suc, res = pcall(function()
+		        local url = "https://api.github.com/repos/Copiums/Velocity/commits?path=profiles/"..game.PlaceId..".gui.txt&sha=main";
+		        return game:HttpGet(url, true);
+	    end);
+	    if not suc then return nil; end;
+	    local data = httpService:JSONDecode(res);
+	    return data[1] and data[1].sha or nil;
+end;
+
+local storedSHA = isfile(commitFilepath) and readfile(commitFilepath) or "";
+local latestSHA = getProfilesLatestSHA();
+if latestSHA and latestSHA ~= storedSHA then
+	    vape:CreateNotification('Profiles Updated', 'Profiles have been updated, syncing...', 5);
+	    syncFolder("profiles", "newvape/profiles");
+	    writefile(commitFilepath, latestSHA);
+	    print("Profiles sync complete!");
+end;
+
 if not shared.VapeIndependent then
 		loadstring(downloadFile('newvape/games/universal.lua'), 'universal')();
 		if isfile('newvape/games/'..game.PlaceId..'.lua') then
