@@ -25,6 +25,11 @@
         - Xylex/7GrandDad - developer / organizer
 ]]--
 
+local cloneref: (obj: any) -> any = cloneref or function(obj)
+        return obj;
+end;
+
+local inputService: UserInputService = cloneref(game:GetService('UserInputService'));
 local inkgame: table = {
         [99567941238278] = true,
         [125009265613167] = true,
@@ -36,14 +41,17 @@ local exec: boolean = false;
 if inkgame[game.PlaceId] and not exec then
         exec = true;
         if isfile(antiban) then
-                local source: string = readfile(antiban);
-                local fn: (() -> any)?, err: string? = loadstring(source);
-                if fn then
-                        local ok: boolean, returnedFunc: any = pcall(fn);
-                        if ok and typeof(returnedFunc) == "function" then
-                                pcall(returnedFunc);
-                        end;
-                end;
+				local execName = identifyexecutor and ({identifyexecutor()})[1] or "Unknown"
+				if not (inputService:GetPlatform() == Enum.Platform.IOS and execName == "Delta") then
+		                local source: string = readfile(antiban);
+		                local fn: (() -> any)?, err: string? = loadstring(source);
+		                if fn then
+		                        local ok: boolean, returnedFunc: any = pcall(fn);
+		                        if ok and typeof(returnedFunc) == "function" then
+		                                pcall(returnedFunc);
+		                        end;
+		                end;
+				end;
         end;
 end;
 
@@ -95,10 +103,6 @@ local isfile: (string) -> boolean = isfile or function(file: string): boolean
 		            return readfile(file);
 	      end);
 	      return suc and res ~= nil and res ~= '';
-end;
-
-local cloneref: (obj: any) -> any = cloneref or function(obj)
-        return obj;
 end;
 
 local playersService: Players = cloneref(game:GetService('Players'));
