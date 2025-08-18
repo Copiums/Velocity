@@ -11475,103 +11475,99 @@ velo.run(function()
     })
 end)
 
-local synapsev3: string = syn and syn.toast_notification and "V3" or "";
 velo.run(function()
-	local AutoReport: table = {["Enabled"] = false}
-	local AutoReportList: any = {}
-	local AutoReportNotify: table = {["Enabled"] = false}
-	local alreadyreported: table = {}
-	local removerepeat = function(str: string?)
-		local new: string = ""
-		local last: string = ""
-		for _: any, v: string? in next, str:split("") do
-			if v ~= last then new ..= v last = v; end;
-		end;
-		return new;
-	end;
-	local reporttable: table = {
-		gay = "Bullying", gae = "Bullying", gey = "Bullying",
-		hack = "Scamming", exploit = "Scamming", cheat = "Scamming",
-		hecker = "Scamming", haxker = "Scamming", hacer = "Scamming",
-		report = "Bullying", fat = "Bullying", black = "Bullying",
-		getalife = "Bullying", fatherless = "Bullying", fk = "Bullying",
-		disco = "Offsite Links", yt = "Offsite Links", dizcourde = "Offsite Links",
-		retard = "Swearing", bad = "Bullying", trash = "Bullying", nolife = "Bullying",
-		negar = "Bullying", loser = "Bullying", killyour = "Bullying", kys = "Bullying",
-		hacktowin = "Bullying", bozo = "Bullying", kid = "Bullying", adopted = "Bullying",
-		linlife = "Bullying", commitnotalive = "Bullying", vape = "Offsite Links",
-		futureclient = "Offsite Links", download = "Offsite Links", youtube = "Offsite Links",
-		die = "Bullying", lobby = "Bullying", ban = "Bullying", wizard = "Bullying",
-		wisard = "Bullying", witch = "Bullying", magic = "Bullying"
-	};
-	local reporttableexact: table = {
-		L = "Bullying",
-	};
-	local function findreport(msg: string?)
-		local str: string = removerepeat((msg or ""):gsub("%W+", ""):lower());
-		for w, r in next, reporttable do
-			if str:find(w) then return r, w end;
-		end;
-		for w, r in next, reporttableexact do
-			if str == w then return r, w end;
-		end;
-		if AutoReportList.ListEnabled then
-			for _, w in next, AutoReportList.ListEnabled do
-				if str:find(w) then return "Bullying", w; end;
-			end;
-		end;
-		return nil;
-	end;
-    local function handlechat(plr: Player?, msg: string?)
-		if plr and plr ~= lplr and whitelist:get(plr) == 0 then
-			local reason: string?, match: any = findreport(msg);
-			if reason and not alreadyreported[plr] then
-				task.spawn(function()
-					if not syn or reportplayer then
-						if reportplayer then
-							reportplayer(plr, reason, "he said a bad word");
-						else
-							playersService:ReportAbuse(plr, reason, "he said a bad word");
-						end;
-					end;
-				end);
-				if AutoReportNotify["Enabled"] then
-					notif("Vape", "Reported "..plr.Name.." for "..reason.." ("..match..")", 15, "alert");
-				end;
-				alreadyreported[plr] = true;
-			end;
-		end;
-	end;
+        local AutoReport: table = {["Enabled"] = false}
+        local AutoReportList: any = {}
+        local AutoReportNotify: table = {["Enabled"] = false}
+        local alreadyreported: table = {}
+        local removerepeat = function(str: string?)
+                local new: string = ""
+                local last: string = ""
+                for _: any, v: string? in next, str:split("") do
+                        if v ~= last then 
+                                new ..= v ;
+                                last = v ;
+                        end;
+                end;
+                return new;
+        end;
+        local reporttable: table = {
+                gay = "Bullying", gae = "Bullying", gey = "Bullying",
+                hack = "Scamming", exploit = "Scamming", cheat = "Scamming",
+                hecker = "Scamming", haxker = "Scamming", hacer = "Scamming",
+                report = "Bullying", fat = "Bullying", black = "Bullying",
+                getalife = "Bullying", fatherless = "Bullying", fk = "Bullying",
+                disco = "Offsite Links", yt = "Offsite Links", dizcourde = "Offsite Links",
+                retard = "Swearing", bad = "Bullying", trash = "Bullying", nolife = "Bullying",
+                negar = "Bullying", loser = "Bullying", killyour = "Bullying", kys = "Bullying",
+                hacktowin = "Bullying", bozo = "Bullying", kid = "Bullying", adopted = "Bullying",
+                linlife = "Bullying", commitnotalive = "Bullying", vape = "Offsite Links",
+                futureclient = "Offsite Links", download = "Offsite Links", youtube = "Offsite Links",
+                die = "Bullying", lobby = "Bullying", ban = "Bullying", wizard = "Bullying",
+                wisard = "Bullying", witch = "Bullying", magic = "Bullying"
+        };
+        local reporttableexact: table = {
+                L = "Bullying",
+        };
+        local function findreport(msg: string?)
+                local str: string = removerepeat((msg or ""):gsub("%W+", ""):lower())
+                for w, r in next, reporttable do
+                        if str:find(w) then return r, w end;
+                end;
+                for w, r in next, reporttableexact do
+                        if str == w then return r, w end;
+                end;
+                if AutoReportList.ListEnabled then
+                        for _, w in next, AutoReportList.ListEnabled do
+                                if str:find(w) then return "Bullying", w end;
+                        end;
+                end;
+                return nil;
+        end;
+        local function handlechat(plr: Player?, msg: string?)
+                if plr and plr ~= lplr and whitelist:get(plr) == 0 then
+                        local reason: string?, match: any = findreport(msg);
+                        if reason and not alreadyreported[plr] then
+                                task.spawn(function()
+                                        playersService:ReportAbuse(plr, reason, "he said a bad word");
+                                end);
+                                if AutoReportNotify["Enabled"] then
+                                        notif("Vape", "Reported "..plr.Name.." for "..reason.." ("..match..")", 15, "alert");
+                                end;
+                                alreadyreported[plr] = true;
+                        end;
+                end;
+        end;
+        AutoReport = vape.Categories.Utility:CreateModule({
+                ["Name"] ="AutoReport",
+                ["Function"] = function(callback: boolean): void
+                        if not callback then return end
+                        if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                                table.insert(AutoReport.Connections, textChatService.MessageReceived:Connect(function(tab)
+                                        if tab.TextSource then
+                                                local plr: Player? = playersService:GetPlayerByUserId(tab.TextSource.UserId);
+                                                handlechat(plr, tab.Text);
+                                        end;
+                                end));
+                        elseif replicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") then
+                                table.insert(AutoReport.Connections, replicatedStorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(tab)
+                                        handlechat(playersService:FindFirstChild(tab.FromSpeaker), tab.Message);
+                                end));
+                        else
+                                notif("Vape", "Default chat not found.", 5);
+                                AutoReport:Toggle();
+                        end;
+                end;
+        });
+        AutoReportNotify = AutoReport:CreateToggle({
+                ["Name"] = "Notify",
+                ["Function"] = function() end
+        });
+        AutoReportList = AutoReport:CreateTextList({
+                ["Name"] = "Report Words",
+                ["TempText"] = "phrase (to report)"
+        });
+end)
 
-	AutoReport = vape.Categories.Utility:CreateModule({
-		["Name"] ="AutoReport",
-		["Function"] = function(callback: boolean): void
-			if not callback then return; end;
-			if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-				table.insert(AutoReport.Connections, textChatService.MessageReceived:Connect(function(tab)
-					if tab.TextSource then
-						local plr: Player? = playersService:GetPlayerByUserId(tab.TextSource.UserId);
-						handlechat(plr, tab.Text);
-					end;
-				end));
-			elseif replicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") then
-				table.insert(AutoReport.Connections, replicatedStorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(tab)
-					handlechat(playersService:FindFirstChild(tab.FromSpeaker), tab.Message);
-				end));
-			else
-				notif("Vape", "Default chat not found.", 5)
-				AutoReport:Toggle()
-			end;
-		end;
-	})
-	AutoReportNotify = AutoReport:CreateToggle({
-		["Name"] = "Notify",
-		["Function"] = function() end
-	})
-	AutoReportList = AutoReport:CreateTextList({
-		["Name"] = "Report Words",
-		["TempText"] = "phrase (to report)"
-	});
-end)	
-	
+
 
