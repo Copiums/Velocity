@@ -162,3 +162,271 @@ velo.run(function()
                 ["ToolTip"] = 'Leaves the game queue',
         })
 end)
+
+velo.run(function()
+        local AttributeSpoofer: table = {["Enabled"] = false}
+        local Title: table = {["Enabled"] = false}
+        local Won: table = {["Enabled"] = false}
+        local WonAmount: table = {["Value"] = 999999999}
+        local Glass: table = {["Enabled"] = false}
+        local TitleVal: table = {["Value"] = "Rich Millionaire"}
+        local Wins: table = {["Enabled"] = false}
+        local WinsAmount: table = {["Value"] = 999}
+        local Level: table = {["Enabled"] = false}
+        local LevelAmount: table = {["Value"] = 999}
+        local PlayerTag: table = {["Enabled"] = false}
+        local PlayerTagVal = {["Value"] = ""}
+        AttributeSpoofer = vape.Categories.Utility:CreateModule({
+                ["Name"] = "AttributeSpoofer",
+                ["Function"] = function(callback: boolean): void
+                        if callback then
+                                task.spawn(function()
+                                        while AttributeSpoofer["Enabled"] do
+                                                if Title["Enabled"] and lplr:GetAttribute("_CurrentTitle") ~= TitleVal["Value"] then
+                                                        lplr:SetAttribute("_CurrentTitle", TitleVal["Value"]);
+                                                end;
+                                                if Level["Enabled"] then
+                                                        lplr:SetAttribute("_CurrentLevel", LevelAmount["Value"]);
+                                                end;
+                                                if Won["Enabled"] then
+                                                        lplr:SetAttribute("_Won", WonAmont["Value"]);
+                                                end;
+                                                if Wins["Enabled"] and lplr:GetAttribute("_GameWins") ~= WinsAmount["Value"] then
+                                                        lplr:SetAttribute("_GameWins", WinsAmount["Value"]);
+                                                end;
+                                                if Glass["Enabled"] then
+                                                        lplr:SetAttribute("DisableGlassManufacturerGP", false)
+                                                end;
+										        if PlayerTag["Enabled"] then
+														lplr:SetAttribute("__OwnsCustomPlayerTag", true);
+														local playerTagValue: IntValue? = lplr:FindFirstChild("PlayerTagValue");
+												        if playerTagValue then
+														        local tagNumber: number = tonumber(PlayerTagVal["Value"]) or 0;
+														        playerTagValue.Value = tagNumber;
+														end;
+										                local playerTagsFolder: Instance? = workspace.Live:FindFirstChild(lplr.Name):FindFirstChild("PlayerTags");
+													    local content: any = lplr.PlayerGui.Leaderboard.Leaderboard.MainLeaderboard.Content;
+													    local playerNumber: any = content[tostring(lplr.UserId)].PlayerNumber;
+														playerNumber.Text = tostring(PlayerTagVal["Value"] or "")
+														if playerTagsFolder then
+															    for _, partName in next, {"Front", "Back"} do
+																        local part: any = playerTagsFolder:FindFirstChild(partName)
+																        if part then
+																	            local gui: SurfaceGui? = part:FindFirstChild("SurfaceGui")
+																	            if gui then
+																	                	local label: TextLabel? = gui:FindFirstChildWhichIsA("TextLabel")
+																		                if label then
+																		                    	label.Text = tostring(PlayerTagVal["Value"] or "");
+																		                end;
+																	            end;
+																        end;
+															    end;
+														end;
+										        end;
+                                                task.wait(0.2);
+                                        end;
+                                end);
+                        end;
+                end,
+                ["Tooltip"] = "Spoofing your attributes to get stuff!"
+        });
+        Title = AttributeSpoofer:CreateToggle({
+                ["Name"] = "Title",
+                ["Default"] = true,
+                ["Function"] = function(callback: boolean)
+                        Title["Enabled"] = callback;
+                end;
+        });
+        Glass = AttributeSpoofer:CreateToggle({
+                ["Name"] = "Glass Manufacturer",
+                ["Default"] = true,
+                ["Function"] = function(callback: boolean)
+                        Glass["Enabled"] = callback;
+                end;
+        });
+        TitleVal = AttributeSpoofer:CreateDropdown({
+                ["Name"] = "Titles",
+                ["Default"] = "Rich Millionaire",
+                ["List"] = {
+                        "Manipulator",
+                        "Rich Millionaire",
+                        "The Recruiter",
+                        "Tanos",
+                        "The Glass Maker",
+                        "Frontman",
+                        "Squidder",
+                        "Game VIP",
+						"Sackboy",
+                        "Him",
+                        "Honeycomb Artist",
+                        "The Chosen One",
+                        "Content Creator",
+						"Game VIP",
+						"Game Developer",
+                        "Game Administrator",
+                        "Game Animator",
+                        "Game Artist",
+                        "Game Builder",
+                        "Game Contributer",
+                        "Game Modeller",
+                        "Game Moderator",
+                        "Game SFX Designer",
+						"The Strongest",
+						"The Perfect Lifeform",
+						"Voice Actor",
+						"SFX Designer"
+                },
+                ["Function"] = function(value: string)
+                        TitleVal["Value"] = value
+                end;
+        });
+        Won = AttributeSpoofer:CreateToggle({
+                ["Name"] = "Won",
+                ["Default"] = true,
+                ["Function"] = function(callback: boolean)
+                        Won["Enabled"] = callback;
+                end;
+        });
+        WonAmount = AttributeSpoofer:CreateSlider({
+                ["Name"] = "Won Amount",
+                ["Min"] = 0,
+                ["Max"] = 99999999999,
+                ["Default"] = 999,
+                ["Function"] = function(value: number)
+                        WonAmount["Value"] = value
+                end;
+        });
+        Wins = AttributeSpoofer:CreateToggle({
+                ["Name"] = "Wins",
+                ["Default"] = true,
+                ["Function"] = function(callback: boolean)
+                        Wins["Enabled"] = callback;
+                end;
+        });
+        WinsAmount = AttributeSpoofer:CreateSlider({
+                ["Name"] = "Wins Amount",
+                ["Min"] = 0,
+                ["Max"] = 9999,
+                ["Default"] = 999,
+                ["Function"] = function(value: number)
+                        WinsAmount["Value"] = value
+                end;
+        });
+        PlayerTag = AttributeSpoofer:CreateToggle({
+                ["Name"] = "Player Tag",
+                ["Default"] = true,
+                ["Function"] = function(callback: boolean)
+                        PlayerTag["Enabled"] = callback;
+                end;
+        });
+	    PlayerTagVal = AttributeSpoofer:CreateTextBox({
+		        ["Name"] = "Tag Text",
+		        ["Placeholder"] = "Enter tag",
+		       	["Function"] = function()
+						if AttributeSpoofer["Enabled"] then
+								AttributeSpoofer:Toggle();
+								AttributeSpoofer:Toggle();
+						end;
+				end;
+	    });
+        Level = AttributeSpoofer:CreateToggle({
+                ["Name"] = "Level",
+                ["Default"] = true,
+                ["Function"] = function(callback: boolean)
+                        Level["Enabled"] = callback;
+                end;
+        });
+        LevelAmount = AttributeSpoofer:CreateSlider({
+                ["Name"] = "Level Amount",
+                ["Min"] = 0,
+                ["Max"] = 999999,
+                ["Default"] = 999,
+                ["Function"] = function(value: number)
+                        LevelAmount["Value"] = value
+                end;
+        });
+end)
+
+velo.run(function()
+        local VIP: table = { ["Enabled"] = false };
+        local VIPChattag: table = { ["Enabled"] = false };
+        local VIPClothes: table = { ["Enabled"] = false };
+        local VIPClothesColor: table = { ["Enabled"] = false };
+        local Color: table = { ["Hue"] = 0, ["Sat"] = 1, ["Value"] = 1 };
+        local ApplyClothingColor = function(v: Player)
+                local character: Model? = v.Character;
+                if not character then return end;
+                for _, part in next, character:GetChildren() do
+                        if part:IsA("Shirt") then
+                                part.Color3 = v:GetAttribute("ClothingColor") or Color3.new(1,1,1);
+                                part.ShirtTemplate = "rbxassetid://94276245685443";
+                        elseif part:IsA("Pants") then
+                                part.Color3 = v:GetAttribute("ClothingColor") or Color3.new(1,1,1);
+                                part.PantsTemplate = "rbxassetid://79912511323571";
+                        end;
+                end;
+        end;
+        VIP = vape.Categories.Utility:CreateModule({
+                ["Name"] = "VIPSpoofer",
+                ["Function"] = function(callback: boolean)
+                        if callback then
+                                task.spawn(function()
+                                        lplr:SetAttribute("__OwnsVIPGamepass", true);
+                                        if VIPClothes["Enabled"] then
+                                                lplr:SetAttribute("ClothingColorToggle", true);
+                                        end;
+                                        if VIPClothesColor["Enabled"] then
+                                                lplr:SetAttribute("ClothingColor", Color3.fromHSV(Color["Hue"], Color["Sat"], Color["Value"]))
+                                                ApplyClothingColor(lplr);
+                                                lplr.CharacterAdded:Connect(function(char: Model)
+                                                        task.wait(1);
+                                                        ApplyClothingColor(lplr);
+                                                end);
+                                                lplr:GetAttributeChangedSignal("ClothingColor"):Connect(function()
+                                                        ApplyClothingColor(lplr);
+                                                end);
+                                                lplr:GetAttributeChangedSignal("ClothingColorToggle"):Connect(function()
+                                                        ApplyClothingColor(lplr);
+                                                end);
+                                        end;
+                                        if VIPChattag["Enabled"] then
+                                                lplr:SetAttribute("VIPChatTag", true);
+                                        end;
+                                end);
+                        end;
+                end,
+                ["Tooltip"] = "Spoofing your VIP attributes to get stuff!"
+        });
+        VIPClothes = VIP:CreateToggle({
+                ["Name"] = "Clothes",
+                ["Default"] = true,
+                ["Function"] = function(callback: boolean)
+                        VIPClothes["Enabled"] = callback;
+                end;
+        });
+        VIPClothesColor = VIP:CreateToggle({
+                ["Name"] = "Clothes Color",
+                ["Default"] = true,
+                ["Function"] = function(callback: boolean)
+                        VIPClothesColor["Enabled"] = callback;
+                end;
+        });
+        VIPChattag = VIP:CreateToggle({
+                ["Name"] = "Chat Tag",
+                ["Default"] = true,
+                ["Function"] = function(callback: boolean)
+                        VIPChattag["Enabled"] = callback;
+                end;
+        });
+        Color = VIP:CreateColorSlider({
+                ["Name"] = "Color",
+                ["Function"] = function(hue: number, sat: number, val: number)
+                        Color["Hue"] = hue
+                        Color["Sat"] = sat
+                        Color["Value"] = val
+                        if VIPClothesColor["Enabled"] then
+                                lplr:SetAttribute("ClothingColor", Color3.fromHSV(hue, sat, val));
+                        end;
+                end;
+        });
+end)
