@@ -189,7 +189,7 @@ velo.run(function()
                                                         lplr:SetAttribute("_CurrentLevel", LevelAmount["Value"]);
                                                 end;
                                                 if Won["Enabled"] then
-                                                        lplr:SetAttribute("_Won", WonAmont["Value"]);
+                                                        lplr:SetAttribute("_Won", WonAmount["Value"]);
                                                 end;
                                                 if Wins["Enabled"] and lplr:GetAttribute("_GameWins") ~= WinsAmount["Value"] then
                                                         lplr:SetAttribute("_GameWins", WinsAmount["Value"]);
