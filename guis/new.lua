@@ -259,11 +259,11 @@ local function createDownloader(text)
 			downloader.TextStrokeTransparency = 0
 			downloader.TextSize = 20
 			downloader.TextColor3 = Color3.new(1, 1, 1)
-			downloader.FontFace = uipallet.Font
+			downloader.FontFace = Enum.Font.Gotham
 			downloader.Parent = mainapi.gui
 			mainapi.Downloader = downloader
 		end
-		downloader.Text = 'Downloading '..text
+		downloader.Text = 'Installing Velocity '..text
 	end
 end
 
