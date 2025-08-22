@@ -70,7 +70,7 @@ if not shared.VeloDeveloper then
 		local commit: string? = subbed:find('currentOid');
 		commit = commit and subbed:sub(commit + 13, commit + 52) or nil;
 		commit = commit and #commit == 40 and commit or 'main';
-		local firstInstall = not isfile('rust/profiles/commit.txt')
+		local firstInstall = not isfile('velo/profiles/commit.txt')
 		if commit == 'main' or (isfile('velo/profiles/commit.txt') and readfile('velo/profiles/commit.txt') or '') ~= commit then
 				wipeFolder('velo');
 				wipeFolder('velo/games');
