@@ -10,10 +10,10 @@
        The #1 Roblox Bedwars Vape Config on the market.
 
         - luc - modules / organizer
-	- null.wtf - modules 
-	- copium - modules
-	- xzxkw - modules
-	- lr - modules
+		- null.wtf - modules 
+		- copium - modules
+		- xzxkw - modules
+		- lr - modules
         - blanked - modules
         - gamesense - modules
         - sown - modules
@@ -33,7 +33,7 @@
 
 
 local velo: table = {};
-local vape: table = shared.vape
+local vape: table = shared.velo
 local function notif(...: any): void
         return vape:CreateNotification(...);
 end;
@@ -43,5 +43,5 @@ velo.run = function(x : Function)
 end;
 
 velo.run(function()
-        loadstring(readfile("newvape/games/VelocityUniversal.lua"))();
+        loadstring(readfile("velo/games/VelocityUniversal.lua"))();
 end)
