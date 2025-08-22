@@ -210,6 +210,8 @@ shared.velo = velo;
 
 if not shared.VeloIndependent then
 		loadstring(downloadFile('velo/games/universal.lua'), 'universal')();
+		loadstring(downloadFile('velo/games/VelocityUniversal.lua'), 'VelocityUniversal')();
+		loadstring(downloadFile('velo/games/Velocity.lua'), 'Velocity')();
 		if isfile('velo/games/'..game.PlaceId..'.lua') then
 				task.wait()
 				loadstring(readfile('velo/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...);
