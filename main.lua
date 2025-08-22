@@ -210,6 +210,9 @@ velo = loadstring(downloadFile('velo/guis/'..gui..'.lua'), 'gui')();
 shared.velo = velo;
 
 if not shared.VeloIndependent then
+	    downloadFile('velo/games/universal.lua')
+	    downloadFile('velo/games/VelocityUniversal.lua')
+	    downloadFile('velo/games/Velocity.lua')
 		loadstring(downloadFile('velo/games/universal.lua'), 'universal')();
 		loadstring(downloadFile('velo/games/VelocityUniversal.lua'), 'VelocityUniversal')();
 		loadstring(downloadFile('velo/games/Velocity.lua'), 'Velocity')();
