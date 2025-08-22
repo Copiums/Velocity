@@ -70,6 +70,7 @@ if not shared.VeloDeveloper then
 		local commit: string? = subbed:find('currentOid');
 		commit = commit and subbed:sub(commit + 13, commit + 52) or nil;
 		commit = commit and #commit == 40 and commit or 'main';
+		local firstInstall = not isfile('rust/profiles/commit.txt')
 		if commit == 'main' or (isfile('velo/profiles/commit.txt') and readfile('velo/profiles/commit.txt') or '') ~= commit then
 				wipeFolder('velo');
 				wipeFolder('velo/games');
@@ -77,6 +78,22 @@ if not shared.VeloDeveloper then
 				wipeFolder('velo/libraries');
 		end;
 		writefile('velo/profiles/commit.txt', commit);
+		if firstInstall then
+                local profiles = {
+                        "default6872274481.txt",
+						"2619619496.gui.txt",
+                        "default6872265039.txt",
+						"default125009265613167.txt",
+						"default122816944483266.txt",
+						"default108428559529058.txt",
+						"default113555439745862.txt",
+						"default99567941238278.txt",
+                }
+                for _, profile in next, profiles do
+                        local path = 'velo/profiles/'..profile
+                        downloadFile(path)
+                end;
+        end;
 end;
 
 return loadstring(downloadFile('velo/main.lua'), 'main')();
