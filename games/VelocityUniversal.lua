@@ -121,7 +121,7 @@ local function addBlur(parent)
 	blur.Size = UDim2.new(1, 89, 1, 52);
 	blur.Position = UDim2.fromOffset(-48, -31);
 	blur.BackgroundTransparency = 1;
-	blur.Image = getcustomasset('newvape/assets/new/blur.png');
+	blur.Image = getcustomasset('velo/assets/new/blur.png');
 	blur.ScaleType = Enum.ScaleType.Slice;
 	blur.SliceCenter = Rect.new(52, 31, 261, 502);
 	blur.Parent = parent;
@@ -264,9 +264,9 @@ local function updateVelocity(): (any, any)
 	end;
 end;
 
-local hash: any = loadstring(downloadFile('newvape/libraries/hash.lua'), 'hash')()
-local prediction: any = loadstring(downloadFile('newvape/libraries/prediction.lua'), 'prediction')()
-entitylib = loadstring(downloadFile('newvape/libraries/entity.lua'), 'entitylib')()
+local hash: any = loadstring(downloadFile('velo/libraries/hash.lua'), 'hash')()
+local prediction: any = loadstring(downloadFile('velo/libraries/prediction.lua'), 'prediction')()
+entitylib = loadstring(downloadFile('velo/libraries/entity.lua'), 'entitylib')()
 local whitelist: table = {
 	alreadychecked = {},
 	customtags = {},
@@ -1696,8 +1696,8 @@ velo.run(function()
 		if not suc or not hash or not whitelist.get then return true; end;
 		whitelist.loaded = true;
 
-		local olddatas: any = isfile('newvape/profiles/whitelist.json')
-		whitelist.olddata = olddatas and readfile('newvape/profiles/whitelist.json') or nil;
+		local olddatas: any = isfile('velo/profiles/whitelist.json')
+		whitelist.olddata = olddatas and readfile('velo/profiles/whitelist.json') or nil;
 
 		if not first or whitelist.textdata ~= whitelist.olddata then
 			local suc, res = pcall(function()
@@ -1711,7 +1711,7 @@ velo.run(function()
 			if whitelist.textdata ~= whitelist.olddata then
 				whitelist.olddata = whitelist.textdata;
 				pcall(function()
-					writefile('newvape/profiles/whitelist.json', whitelist.textdata);
+					writefile('velo/profiles/whitelist.json', whitelist.textdata);
 				end);
 			end;
 
@@ -5102,7 +5102,7 @@ velo.run(function()
 		EntityArrow.BackgroundTransparency = 1
 		EntityArrow.BorderSizePixel = 0
 		EntityArrow.Visible = false
-		EntityArrow.Image = getcustomasset('newvape/assets/new/arrowmodule.png')
+		EntityArrow.Image = getcustomasset('velo/assets/new/arrowmodule.png')
 		EntityArrow.ImageColor3 = entitylib.getEntityColor(ent) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
 		EntityArrow.Parent = Folder
 		Reference[ent] = EntityArrow
@@ -5994,7 +5994,7 @@ velo.run(function()
 	local function getSound(key: string): string?
 		local info: any = soundMap[key]
 		local function Get(file: string, url: string): string?
-			local fullPath: string = "newvape/sounds/" .. file;
+			local fullPath: string = "velo/sounds/" .. file;
 			if not isfile(fullPath) then
 				local v: string = game:HttpGet(url);
 				if v then
@@ -6845,7 +6845,7 @@ velo.run(function()
 	
 	Radar = vape:CreateOverlay({
 		["Name"] = 'Radar',
-		Icon = getcustomasset('newvape/assets/new/radaricon.png'),
+		Icon = getcustomasset('velo/assets/new/radaricon.png'),
 		Size = UDim2.fromOffset(14, 14),
 		Position = UDim2.fromOffset(12, 13),
 		["Function"] = function(callback: boolean): void
@@ -7062,7 +7062,7 @@ velo.run(function()
 	
 	SessionInfo = vape:CreateOverlay({
 		["Name"] = 'Session Info',
-		Icon = getcustomasset('newvape/assets/new/textguiicon.png'),
+		Icon = getcustomasset('velo/assets/new/textguiicon.png'),
 		Size = UDim2.fromOffset(16, 12),
 		Position = UDim2.fromOffset(12, 14),
 		["Function"] = function(callback: boolean): void
@@ -11568,7 +11568,6 @@ velo.run(function()
                 ["TempText"] = "phrase (to report)"
         });
 end)
-
 
 
 
