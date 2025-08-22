@@ -118,7 +118,7 @@ local function downloadFile(path: string, func: any)
 						commit = result;
 				end;
 				local relativePath: string? = path:gsub("velo/", "");
-				local url: string? = "https://raw.githubusercontent.com/Copiums/Velocity/"..commit.."/"..relativePath;
+				local url: string? = "https://raw.githubusercontent.com/Copiums/Velocity/refs/heads/"..commit.."/"..relativePath
 				print("[downloadFile] Downloading:", url)
 				local suc: boolean, res: string? = pcall(function()
 						return game:HttpGet(url, true);
