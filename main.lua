@@ -112,7 +112,7 @@ local httpService: HttpService = cloneref(game:GetService("HttpService"));
 local function downloadFile(path, func)
 	    if not isfile(path) then
 		        local suc, res = pcall(function()
-		            	return game:HttpGet('https://raw.githubusercontent.com/Copiuns/velo/'..readfile('velo/profiles/commit.txt')..'/'..select(1, path:gsub('velo/', '')), true)
+		            	return game:HttpGet('https://raw.githubusercontent.com/Copiuns/Velocity/'..readfile('velo/profiles/commit.txt')..'/'..select(1, path:gsub('velo/', '')), true)
 		        end);
 		        if not suc or res == '404: Not Found' then
 		            	error(res);
