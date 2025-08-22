@@ -10,10 +10,10 @@
        The #1 Roblox Bedwars Vape Config on the market.
 
         - luc - modules / organizer
-	- null.wtf - modules 
-	- copium - modules
-	- sammz - modules
-	- lr - modules
+		- null.wtf - modules 
+		- copium - modules
+		- sammz - modules
+		- lr - modules
         - blanked - modules
         - gamesense - modules
         - sown - modules
@@ -37,10 +37,10 @@ local function HoverText(Text: string): void
 end
 local run = function(func) func() end
 velo.run = function(x : Function)
-	return x();
+		return x();
 end;
 local cloneref: any = cloneref or function(obj) 
-	return obj;
+		return obj;
 end;
 local playersService: Players = cloneref(game:GetService('Players'));
 local runService: RunService = cloneref(game:GetService('RunService'));
@@ -49,7 +49,7 @@ local inputService: UserInputService = cloneref(game:GetService('UserInputServic
 local tweenService: TweenService = cloneref(game:GetService("TweenService"));
 local lplr: Player = playersService.LocalPlayer;
 
-local vape: any = shared.vape;
+local vape: any = shared.velo;
 local entitylib: any = vape.Libraries.entity;
 local sessioninfo: any = vape.Libraries.sessioninfo;
 local whitelist: any = vape.Libraries.whitelist;
@@ -543,4 +543,5 @@ velo.run(function()
 	HotbarRoundRadius.Object.Visible = false;
 	HotbarHighlightColor.Object.Visible = false;
 end);
+
 
