@@ -64,4 +64,4 @@ if not shared.VeloDeveloper then
         writefile('velo/profiles/commit.txt', commit);
 end;
 
-return loadstring(downloadFile('rust/main.lua'), 'main')();
+return loadstring(downloadFile('velo/main.lua'), 'main')();
