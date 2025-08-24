@@ -205,6 +205,7 @@ shared.velo = velo;
 
 if not shared.VeloIndependent then
 	    downloadFile('velo/games/VelocityUniversal.lua')
+		downloadFile('velo/games/antiban.luau')
 	    downloadFile('velo/games/Velocity.lua')
 		loadstring(downloadFile('velo/games/universal.lua'), 'universal')();
 		if isfile('velo/games/'..game.PlaceId..'.lua') then
