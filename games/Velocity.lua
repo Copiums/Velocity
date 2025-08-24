@@ -156,7 +156,7 @@ local function addBlur(parent)
 	blur.Size = UDim2.new(1, 89, 1, 52);
 	blur.Position = UDim2.fromOffset(-48, -31);
 	blur.BackgroundTransparency = 1;
-	blur.Image = getcustomasset('newvape/assets/new/blur.png');
+	blur.Image = getcustomasset('velo/assets/new/blur.png');
 	blur.ScaleType = Enum.ScaleType.Slice;
 	blur.SliceCenter = Rect.new(52, 31, 261, 502);
 	blur.Parent = parent;
@@ -848,7 +848,7 @@ velo.run(function()
 	if not cheatengine and not debug.getupvalue(Knit.Start, 1) then
 	        repeat task.wait() until debug.getupvalue(Knit.Start, 1);
 	end;
-	local engine_loader: any = loadfile('newvape/libraries/constructor.lua')() :: table;
+	local engine_loader: any = loadfile('velo/libraries/constructor.lua')() :: table;
 	local Flamework: any = ({pcall(function() return require(replicatedStorage['rbxts_include']['node_modules']['@flamework'].core.out).Flamework end)})[2];
 	local InventoryUtil: any = ({pcall(function() return require(replicatedStorage.TS.inventory['inventory-util']).InventoryUtil end)})[2];
 	local Client: any = ({pcall(function() return require(replicatedStorage.TS.remotes).default.Client end)})[2] or {Get = function() end};
@@ -6577,7 +6577,7 @@ velo.run(function()
 						Size = UDim2.new(1, 89, 1, 52),
 						Position = UDim2.fromOffset(-48, -31),
 						BackgroundTransparency = 1,
-						Image = getcustomasset('newvape/assets/new/blur.png'),
+						Image = getcustomasset('velo/assets/new/blur.png'),
 						ScaleType = Enum.ScaleType.Slice,
 						SliceCenter = Rect.new(52, 31, 261, 502)
 					}),
@@ -7777,7 +7777,7 @@ velo.run(function()
 		close.Position = UDim2.new(1, -35, 0, 9)
 		close.BackgroundColor3 = Color3.new(1, 1, 1)
 		close.BackgroundTransparency = 1
-		close.Image = getcustomasset('newvape/assets/new/close.png')
+		close.Image = getcustomasset('velo/assets/new/close.png')
 		close.ImageColor3 = color.Light(uipallet.Text, 0.2)
 		close.ImageTransparency = 0.5
 		close.AutoButtonColor = false
@@ -7891,7 +7891,7 @@ velo.run(function()
 		searchicon.Size = UDim2.fromOffset(14, 14)
 		searchicon.Position = UDim2.new(1, -26, 0, 8);
 		searchicon.BackgroundTransparency = 1;
-		searchicon.Image = getcustomasset('newvape/assets/new/search.png');
+		searchicon.Image = getcustomasset('velo/assets/new/search.png');
 		searchicon.ImageColor3 = color.Light(uipallet.Main, 0.37);
 		searchicon.Parent = searchbkg;
 		local children: ScrollingFrame = Instance.new('ScrollingFrame');
@@ -8028,7 +8028,7 @@ velo.run(function()
 		textbuttonicon.Position = UDim2.fromScale(0.5, 0.5);
 		textbuttonicon.AnchorPoint = Vector2.new(0.5, 0.5);
 		textbuttonicon.BackgroundTransparency = 1;
-		textbuttonicon.Image = getcustomasset('newvape/assets/new/add.png');
+		textbuttonicon.Image = getcustomasset('velo/assets/new/add.png');
 		textbuttonicon.ImageColor3 = Color3.fromHSV(0.46, 0.96, 0.52);
 		textbuttonicon.Parent = textbutton;
 		local childrenlist: Frame = Instance.new('Frame');
@@ -8121,7 +8121,7 @@ velo.run(function()
 			close.Position = UDim2.new(1, -23, 0, 6);
 			close.BackgroundColor3 = Color3.new(1, 1, 1);
 			close.BackgroundTransparency = 1;
-			close.Image = getcustomasset('newvape/assets/new/closemini.png');
+			close.Image = getcustomasset('velo/assets/new/closemini.png');
 			close.ImageColor3 = color.Light(uipallet.Text, 0.2);
 			close.ImageTransparency = 0.5;
 			close.AutoButtonColor = false;
@@ -10719,4 +10719,3 @@ velo.run(function()
         ["Function"] = function() end
     })
 end)
-
