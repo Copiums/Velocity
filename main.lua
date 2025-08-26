@@ -109,20 +109,20 @@ local playersService: Players = cloneref(game:GetService('Players'));
 local lplr: Player = playersService.LocalPlayer
 local httpService: HttpService = cloneref(game:GetService("HttpService"));
 
-local function downloadFile(path, func)
-	    if not isfile(path) then
-		        local suc, res = pcall(function()
-		            	return game:HttpGet('https://raw.githubusercontent.com/Copiums/Velocity/'..readfile('velo/profiles/commit.txt')..'/'..select(1, path:gsub('velo/', '')), true)
-		        end);
-		        if not suc or res == '404: Not Found' then
-		            	error(res);
-		        end;
-		        if path:find('.lua') then
-		            	res = '--This watermark is used to delete the file if cached.\n'..res;
-		        end;
-		        writefile(path, res);
-	    end;
-	    return (func or readfile)(path);
+local function downloadFile(path: string, func: any)
+		if not isfile(path) then
+				local suc: boolean, res: string? = pcall(function()
+						return game:HttpGet('https://raw.githubusercontent.com/Copiums/Velocity/'..readfile('velo/profiles/commit.txt')..'/'..select(1, path:gsub('velo/', '')), true);
+				end);
+				if not suc or res == '404: Not Found' then
+						error(res);
+				end;
+				if path:find('.lua') then
+						res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after velocity updates.\n'..res;
+				end;
+				writefile(path, res);
+		end;
+		return (func or readfile)(path);
 end;
 
 local function finishLoading(): nil
