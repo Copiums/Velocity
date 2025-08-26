@@ -31,12 +31,12 @@
 ]]--
 
 
-local velo: table = {};
+local veloc: table = {};
 local function HoverText(Text: string): void
 	return Text .. " "
 end
 local run = function(func) func() end
-velo.run = function(x : Function)
+veloc.run = function(x : Function)
 		return x();
 end;
 local cloneref: any = cloneref or function(obj) 
@@ -67,7 +67,7 @@ local function GetItems(item: string): table
 	return Items;
 end;
 
-velo.run(function()
+veloc.run(function()
 	local function dumpRemote(tab)
 		local ind: any = table.find(tab, 'Client');
 		return ind and tab[ind + 1] or '';
@@ -114,7 +114,7 @@ for _: any, v: any in vape.Modules do
 	end;
 end;
 
-velo.run(function()
+veloc.run(function()
 	task.spawn(function()
 		repeat task.wait(0.03)
 			for i: any, v: Player in next, playersService:GetPlayers() do
@@ -141,7 +141,7 @@ velo.run(function()
 	end);
 end);
 	
-velo.run(function()
+veloc.run(function()
 	local Sprint: table = {["Enabled"] = false};
 	local old: any;
 	
@@ -178,7 +178,7 @@ velo.run(function()
 	});
 end)
 
-velo.run(function()
+veloc.run(function()
 	local AutoGamble: table = {["Enabled"] = false};
 	AutoGamble = vape.Categories.Minigames:CreateModule({
 		["Name"] = 'AutoGamble',
@@ -214,7 +214,7 @@ velo.run(function()
 	})
 end)
 	
-velo.run(function()
+veloc.run(function()
 	local Card: table = {["Enabled"] = false};
 	local CardGradient: table = {["Enabled"] = false};
 	local Highlight: table = {};
@@ -354,7 +354,7 @@ velo.run(function()
 	});
 end);
 
-velo.run(function()
+veloc.run(function()
 	local HotbarVisuals: table = {}
 	local HotbarRounding: table  = {}
 	local HotbarHighlight: table  = {}
@@ -543,5 +543,6 @@ velo.run(function()
 	HotbarRoundRadius.Object.Visible = false;
 	HotbarHighlightColor.Object.Visible = false;
 end);
+
 
 
