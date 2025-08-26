@@ -848,7 +848,7 @@ veloc.run(function()
 	if not cheatengine and not debug.getupvalue(Knit.Start, 1) then
 	        repeat task.wait() until debug.getupvalue(Knit.Start, 1);
 	end;
-	local engine_loader: any = loadfile('velo/libraries/constructor.lua')() :: table;
+	local engine_loader: any; --= loadfile('velo/libraries/constructor.lua')() :: table;
 	local Flamework: any = ({pcall(function() return require(replicatedStorage['rbxts_include']['node_modules']['@flamework'].core.out).Flamework end)})[2];
 	local InventoryUtil: any = ({pcall(function() return require(replicatedStorage.TS.inventory['inventory-util']).InventoryUtil end)})[2];
 	local Client: any = ({pcall(function() return require(replicatedStorage.TS.remotes).default.Client end)})[2] or {Get = function() end};
@@ -10719,5 +10719,6 @@ veloc.run(function()
         ["Function"] = function() end
     })
 end)
+
 
 
