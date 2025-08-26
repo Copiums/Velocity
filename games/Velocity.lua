@@ -1,32 +1,32 @@
 --[[
 
-    ____   ____     .__                .__  __          
-    \   \ /   /____ |  |   ____   ____ |__|/  |_ ___.__.
-     \   Y   // __ \|  |  /  _ \_/ ___\|  \   __<   |  |
-      \     /\  ___/|  |_(  <_> )  \___|  ||  |  \___  |
-       \___/  \___  >____/\____/ \___  >__||__|  / ____|
-                  \/                 \/          \/      
-
-       The #1 Roblox Bedwars Vape Config on the market.
-
-        - luc - modules / organizer
-	- null.wtf - modules 
-	- copium - modules
-	- xzxkw - modules
-	- lr - modules
-        - blanked - modules
-        - gamesense - modules
-        - sown - modules
-        - relevant - modules
-        - nick - first UI
-
-
-
-       _  _                       _                 __ _  _       _                     _    _          
-     _| |<_> ___ ___  ___  _ _  _| |    ___  ___   / /| |<_>._ _ | |__ _ _  ___  _ _  _| |_ <_> ___ ___ 
-    / . || |<_-</ | '/ . \| '_>/ . | _ / . |/ . | / / | || || ' || / /| | |/ ._>| '_>  | |  | |<_-</ ._>
-    \___||_|/__/\_|_.\___/|_|  \___|<_>\_. |\_. |/_/  |_||_||_|_||_\_\|__/ \___.|_|    |_|  |_|/__/\___.
-                                       <___'<___'                                                       
+		    ____   ____     .__                .__  __          
+		    \   \ /   /____ |  |   ____   ____ |__|/  |_ ___.__.
+		     \   Y   // __ \|  |  /  _ \_/ ___\|  \   __<   |  |
+		      \     /\  ___/|  |_(  <_> )  \___|  ||  |  \___  |
+		       \___/  \___  >____/\____/ \___  >__||__|  / ____|
+		                  \/                 \/          \/      
+		
+		       The #1 Roblox Bedwars Vape Config on the market.
+		
+		        - luc - modules / organizer
+				- null.wtf - modules 
+				- copium - modules
+				- xzxkw - modules
+				- lr - modules
+		        - blanked - modules
+		        - gamesense - modules
+		        - sown - modules
+		        - relevant - modules
+		        - nick - first UI
+		
+		
+		
+		       _  _                       _                 __ _  _       _                     _    _          
+		     _| |<_> ___ ___  ___  _ _  _| |    ___  ___   / /| |<_>._ _ | |__ _ _  ___  _ _  _| |_ <_> ___ ___ 
+		    / . || |<_-</ | '/ . \| '_>/ . | _ / . |/ . | / / | || || ' || / /| | |/ ._>| '_>  | |  | |<_-</ ._>
+		    \___||_|/__/\_|_.\___/|_|  \___|<_>\_. |\_. |/_/  |_||_||_|_||_\_\|__/ \___.|_|    |_|  |_|/__/\___.
+		                                       <___'<___'                                                       
 
 ]]--
 
@@ -39,12 +39,12 @@ local Vec3: Vector3 = Vector3.new;
 local CFr: CFrame = CFrame.new;
 
 local function HoverText(Text: string): void
-	return Text .. " ";
+		return Text .. " ";
 end;
 
 local queue_on_teleport: () -> () = queue_on_teleport or function() end
 local cloneref: (obj: any) -> any = cloneref or function(obj)
-    return obj;
+    	return obj;
 end;
 
 local playersService: Players = cloneref(game:GetService('Players'))
@@ -62,21 +62,21 @@ local contextActionService: ContextActionService = cloneref(game:GetService('Con
 local coreGui: CoreGui = cloneref(game:GetService('CoreGui'))
 local starterGui: StarterGui = cloneref(game:GetService('StarterGui'))
 local vapeEvents: { [string]: BindableEvent } = setmetatable({}, {
-    __index = function(self, index: any): BindableEvent
-        self[index] = Instance.new("BindableEvent");
-        return self[index];
-    end;
+	    __index = function(self, index: any): BindableEvent
+	        	self[index] = Instance.new("BindableEvent");
+	        	return self[index];
+	    end;
 });
 
 local isnetworkowner: (part: Instance?) -> boolean = identifyexecutor and table.find({'AWP', 'Nihon'}, ({identifyexecutor()})[1]) and isnetworkowner or function()
-	return true;
+		return true;
 end;
 
 local gameCamera: Camera = workspace.CurrentCamera;
 local lplr: Player = playersService.LocalPlayer;
 local assetfunction: any = getcustomasset;
 
-local vape: table = shared.vape;
+local vape: table = shared.velo;
 local entitylib: any = vape.Libraries.entity;
 local targetinfo: any = vape.Libraries.targetinfo;
 local sessioninfo: any = vape.Libraries.sessioninfo;
@@ -120,26 +120,26 @@ local vapeInjected: boolean = true;
 local bedwars: table, remotes: table, sides: table, oldinvrender: table = {}, {}, {};
 local synapsev3: string = syn and syn.toast_notification and "V3" or "";
 local worldtoscreenpoint: (pos: Vector3) -> (Vector3, boolean) = function(pos: Vector3): (Vector3, boolean)
-	if synapsev3 == "V3" then
-		local scr: { Vector3 } = worldtoscreen({pos});
-		return scr[1] - Vector3.new(0, 36, 0), scr[1].Z > 0;
-	end;
-	return gameCamera.WorldToScreenPoint(gameCamera, pos);
+		if synapsev3 == "V3" then
+				local scr: { Vector3 } = worldtoscreen({pos});
+				return scr[1] - Vector3.new(0, 36, 0), scr[1].Z > 0;
+		end;
+		return gameCamera.WorldToScreenPoint(gameCamera, pos);
 end;
 local run = function(func : Function)
-	func();
+		func();
 end;
 
 velo.run = function(x : Function)
-	return x();
+		return x();
 end;
 
 local function isAlive(plr: Player): boolean
-    local suc: boolean, res: boolean = pcall(function()
-        plr = plr or lplr;
-        return plr["Character"] and plr["Character"]["Humanoid"] and plr["Character"]["Humanoid"]["Health"] > 0;
-    end);
-    return suc and res or suc;
+	    local suc: boolean, res: boolean = pcall(function()
+	        	plr = plr or lplr;
+	        	return plr["Character"] and plr["Character"]["Humanoid"] and plr["Character"]["Humanoid"]["Health"] > 0;
+	    end);
+	    return suc and res or suc;
 end;
 
 local function GetItems(item: string): table
@@ -10719,3 +10719,4 @@ velo.run(function()
         ["Function"] = function() end
     })
 end)
+
