@@ -9,9 +9,9 @@ local isfile = isfile or function(file)
 end
 local function downloadFile(path, func)
 	if not isfile(path) then
-		local suc, res = pcall(function() return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true) end)
+		local suc, res = pcall(function() return game:HttpGet('https://raw.githubusercontent.com/Copiums/Velocity/'..readfile('velo/profiles/commit.txt')..'/'..select(1, path:gsub('velo/', '')), true) end)
 		if not suc or res == '404: Not Found' then error(res) end
-		if path:find('.lua') then res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res end
+		if path:find('.lua') then res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after velocity updates.\n'..res end
 		writefile(path, res)
 	end
 	return (func or readfile)(path)
@@ -32,13 +32,13 @@ local contextService = cloneref(game:GetService('ContextActionService'))
 local gameCamera = workspace.CurrentCamera
 local lplr = playersService.LocalPlayer
 
-local vape = shared.vape
+local vape = shared.velo
 local entitylib = vape.Libraries.entity
 local whitelist = vape.Libraries.whitelist
 local prediction = vape.Libraries.prediction
 local targetinfo = vape.Libraries.targetinfo
 local sessioninfo = vape.Libraries.sessioninfo
-local vm = loadstring(downloadFile('newvape/libraries/vm.lua'), 'vm')()
+local vm = loadstring(downloadFile('velo/libraries/vm.lua'), 'vm')()
 
 local jb = {}
 local InfNitro = {Enabled = false}
