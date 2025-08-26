@@ -30,7 +30,7 @@
 
 ]]--
 
-local velo: table = {};
+local veloc: table = {};
 local LoadTime: tick = tick()
 local VelocityVersion: string = "V1.0"
 local function HoverText(Text: string): void
@@ -11568,6 +11568,7 @@ veloc.run(function()
                 ["TempText"] = "phrase (to report)"
         });
 end)
+
 
 
 
