@@ -232,6 +232,16 @@ end;
 velo = loadstring(downloadFile('velo/guis/'..gui..'.lua'), 'gui')();
 shared.velo = velo;
 
+print("shared.velo =", shared.velo)
+if shared.velo then
+    print("Keys in shared.velo:")
+    for k, v in next, shared.velo do
+        print(k, v)
+    end
+else
+    warn("shared.velo is NIL!")
+end
+
 if not shared.VeloIndependent then
 	    downloadFile('velo/games/VelocityUniversal.lua')
 		downloadFile('velo/games/antiban.luau')
