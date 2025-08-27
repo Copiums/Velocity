@@ -33,7 +33,7 @@
 
 local veloc: table = {};
 local function HoverText(Text: string): void
-	return Text .. " "
+		return Text .. " "
 end
 local run = function(func) func() end
 veloc.run = function(x : Function)
@@ -56,56 +56,55 @@ local whitelist: any = vape.Libraries.whitelist;
 local bedwars: table = {};
 
 local function notif(...)
-	return vape:CreateNotification(...);
+		return vape:CreateNotification(...);
 end;
 
 local function GetItems(item: string): table
-	local Items: table = {};
-	for _, v in next, Enum[item]:GetEnumItems() do 
-		table.insert(Items, v["Name"]); 
-	end;
-	return Items;
+		local Items: table = {};
+		for _, v in next, Enum[item]:GetEnumItems() do 
+				table.insert(Items, v["Name"]); 
+		end;
+		return Items;
 end;
 
 veloc.run(function()
-	local function dumpRemote(tab)
-		local ind: any = table.find(tab, 'Client');
-		return ind and tab[ind + 1] or '';
-	end;
-
-	local KnitInit: any, Knit: any;
-	repeat
-		KnitInit, Knit = pcall(function() return debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 9) end);
-		if KnitInit then 
-			break;
+		local function dumpRemote(tab)
+				local ind: any = table.find(tab, 'Client');
+				return ind and tab[ind + 1] or '';
 		end;
-		task.wait();
-	until KnitInit;
-	if not debug.getupvalue(Knit.Start, 1) then
-		repeat task.wait() until debug.getupvalue(Knit.Start, 1);
-	end;
-	local Flamework: any = require(replicatedStorage['rbxts_include']['node_modules']['@flamework'].core.out).Flamework
-	local Client: any = require(replicatedStorage.TS.remotes).default.Client
-
-	bedwars = setmetatable({
-		Client = Client,
-		CrateItemMeta = debug.getupvalue(Flamework.resolveDependency('client/controllers/global/reward-crate/crate-controller@CrateController').onStart, 3),
-		Store = require(lplr.PlayerScripts.TS.ui.store).ClientStore
-	}, {
-		__index = function(self, ind)
-			rawset(self, ind, Knit.Controllers[ind]);
-			return rawget(self, ind);
+	
+		local KnitInit: any, Knit: any;
+		repeat
+				KnitInit, Knit = pcall(function() return debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 9) end);
+				if KnitInit then 
+						break;
+				end;
+				task.wait();
+		until KnitInit;
+		if not debug.getupvalue(Knit.Start, 1) then
+				repeat task.wait() until debug.getupvalue(Knit.Start, 1);
 		end;
-	});
-
-	local kills: any = sessioninfo:AddItem('Kills');
-	local beds: any = sessioninfo:AddItem('Beds');
-	local wins: any = sessioninfo:AddItem('Wins');
-	local games: any = sessioninfo:AddItem('Games');
-
-	vape:Clean(function()
-		table.clear(bedwars);
-	end);
+		local Flamework: any = require(replicatedStorage['rbxts_include']['node_modules']['@flamework'].core.out).Flamework
+		local Client: any = require(replicatedStorage.TS.remotes).default.Client
+	
+		bedwars = setmetatable({
+				Client = Client,
+				CrateItemMeta = debug.getupvalue(Flamework.resolveDependency('client/controllers/global/reward-crate/crate-controller@CrateController').onStart, 3),
+				Store = require(lplr.PlayerScripts.TS.ui.store).ClientStore
+		}, {
+				__index = function(self, ind)
+						rawset(self, ind, Knit.Controllers[ind]);
+						return rawget(self, ind);
+				end;
+		});
+		local kills: any = sessioninfo:AddItem('Kills');
+		local beds: any = sessioninfo:AddItem('Beds');
+		local wins: any = sessioninfo:AddItem('Wins');
+		local games: any = sessioninfo:AddItem('Games');
+	
+		vape:Clean(function()
+				table.clear(bedwars);
+		end);
 end);
 
 for _: any, v: any in vape.Modules do
@@ -115,30 +114,29 @@ for _: any, v: any in vape.Modules do
 end;
 
 veloc.run(function()
-	task.spawn(function()
-		repeat task.wait(0.03)
-			for i: any, v: Player in next, playersService:GetPlayers() do
-				local tags: string? = select(3, whitelist:get(v)) or whitelist.customtags[v.Name] or {}
-				local tagData: table? = tags[1]
-				if v.Character and v.Character:FindFirstChild("Head") then
-					local displayNameGui: Nametag? = v.Character.Head:FindFirstChild("Nametag");
-					if displayNameGui and displayNameGui.DisplayNameContainer and displayNameGui.DisplayNameContainer:FindFirstChild("DisplayName") then
-						if tagData then
-							local hexColor: any = string.format("%02X%02X%02X",
-								math.floor(tagData.color.R * 255),
-								math.floor(tagData.color.G * 255),
-								math.floor(tagData.color.B * 255))
-		
-							local tagText: string? = string.format('<font color="#%s">[%s] </font>', hexColor, tagData.text);
-							displayNameGui.DisplayNameContainer.DisplayName.Text = tagText .. v.DisplayName;
-						else
-							displayNameGui.DisplayNameContainer.DisplayName.Text = v.DisplayName;
+		task.spawn(function()
+				repeat task.wait(0.03)
+						for i: any, v: Player in next, playersService:GetPlayers() do
+								local tags: string? = select(3, whitelist:get(v)) or whitelist.customtags[v.Name] or {}
+								local tagData: table? = tags[1]
+								if v.Character and v.Character:FindFirstChild("Head") then
+										local displayNameGui: Nametag? = v.Character.Head:FindFirstChild("Nametag");
+										if displayNameGui and displayNameGui.DisplayNameContainer and displayNameGui.DisplayNameContainer:FindFirstChild("DisplayName") then
+												if tagData then
+														local hexColor: any = string.format("%02X%02X%02X",
+																math.floor(tagData.color.R * 255),
+																math.floor(tagData.color.G * 255),
+																math.floor(tagData.color.B * 255))
+														local tagText: string? = string.format('<font color="#%s">[%s] </font>', hexColor, tagData.text);
+														displayNameGui.DisplayNameContainer.DisplayName.Text = tagText .. v.DisplayName;
+												else
+														displayNameGui.DisplayNameContainer.DisplayName.Text = v.DisplayName;
+												end;
+										end;
+								end;
 						end;
-					end;
-				end;
-			end;
-		until false;
-	end);
+				until false;
+		end);
 end);
 	
 veloc.run(function()
@@ -543,6 +541,7 @@ veloc.run(function()
 	HotbarRoundRadius.Object.Visible = false;
 	HotbarHighlightColor.Object.Visible = false;
 end);
+
 
 
 
