@@ -11,9 +11,9 @@ end;
 
 local downloadFile: (path: string, func: ((string) -> string)?) -> string = function(path: string, func: ((string) -> string)?)
         if not isfile(path) then
-		local suc: boolean, res: string? = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/Copiums/Velocity/'..readfile('velo/profiles/commit.txt')..'/'..select(1, path:gsub('velo/', '')), true);
-		end);
+				local suc: boolean, res: string? = pcall(function()
+					return game:HttpGet('https://raw.githubusercontent.com/Copiums/Velocity/'..readfile('velo/profiles/commit.txt')..'/'..select(1, path:gsub('velo/', '')), true);
+				end);
                 if not suc or res == '404: Not Found' then
                         error(res);
                 end;
