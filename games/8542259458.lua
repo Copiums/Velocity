@@ -13,7 +13,7 @@ local coreGui = cloneref(game:GetService('CoreGui'))
 local gameCamera = workspace.CurrentCamera
 local lplr = playersService.LocalPlayer
 
-local vape = shared.velo
+local vape = shared.veloc
 local sessioninfo = vape.Libraries.sessioninfo
 
 run(function()
