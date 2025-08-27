@@ -31,7 +31,7 @@
 ]]--
 
 
-local veloc: table = {};
+local velo: table = {};
 local function HoverText(Text: string): void
 		return Text .. " "
 end
@@ -49,7 +49,7 @@ local inputService: UserInputService = cloneref(game:GetService('UserInputServic
 local tweenService: TweenService = cloneref(game:GetService("TweenService"));
 local lplr: Player = playersService.LocalPlayer;
 
-local vape: any = shared.velo;
+local vape: any = shared.veloc;
 local entitylib: any = vape.Libraries.entity;
 local sessioninfo: any = vape.Libraries.sessioninfo;
 local whitelist: any = vape.Libraries.whitelist;
@@ -67,7 +67,7 @@ local function GetItems(item: string): table
 		return Items;
 end;
 
-veloc.run(function()
+velo.run(function()
 		local function dumpRemote(tab)
 				local ind: any = table.find(tab, 'Client');
 				return ind and tab[ind + 1] or '';
@@ -113,7 +113,7 @@ for _: any, v: any in vape.Modules do
 	end;
 end;
 
-veloc.run(function()
+velo.run(function()
 		task.spawn(function()
 				repeat task.wait(0.03)
 						for i: any, v: Player in next, playersService:GetPlayers() do
@@ -139,7 +139,7 @@ veloc.run(function()
 		end);
 end);
 	
-veloc.run(function()
+velo.run(function()
 	local Sprint: table = {["Enabled"] = false};
 	local old: any;
 	
@@ -176,7 +176,7 @@ veloc.run(function()
 	});
 end)
 
-veloc.run(function()
+velo.run(function()
 	local AutoGamble: table = {["Enabled"] = false};
 	AutoGamble = vape.Categories.Minigames:CreateModule({
 		["Name"] = 'AutoGamble',
@@ -212,7 +212,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Card: table = {["Enabled"] = false};
 	local CardGradient: table = {["Enabled"] = false};
 	local Highlight: table = {};
@@ -352,7 +352,7 @@ veloc.run(function()
 	});
 end);
 
-veloc.run(function()
+velo.run(function()
 	local HotbarVisuals: table = {}
 	local HotbarRounding: table  = {}
 	local HotbarHighlight: table  = {}
@@ -541,6 +541,7 @@ veloc.run(function()
 	HotbarRoundRadius.Object.Visible = false;
 	HotbarHighlightColor.Object.Visible = false;
 end);
+
 
 
 
