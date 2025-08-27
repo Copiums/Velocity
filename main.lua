@@ -59,8 +59,8 @@ repeat
 	task.wait() 
 until game:IsLoaded();
 
-if shared.velo then 
-	shared.velo:Uninject();
+if shared.veloc then 
+	shared.veloc:Uninject();
 end;
 
 local copied: boolean = false;
@@ -88,11 +88,11 @@ if identifyexecutor then
 	      end;
 end;
 
-local velo: any;
+local veloc: any;
 local loadstring: any = function(...)
         local res: any, err: string? = loadstring(...);
-	      if err and velo then
-		            velo:CreateNotification('Vape', 'Failed to load : '..err, 30, 'alert');
+	      if err and veloc then
+		            veloc:CreateNotification('Vape', 'Failed to load : '..err, 30, 'alert');
 	      end;
 	      return res;
 end;
@@ -155,16 +155,16 @@ local function downloadFile(path: string, func: any)
 end;
 
 local function finishLoading(): nil
-        velo.Init = nil;
-	    velo:Load();
+        veloc.Init = nil;
+	    veloc:Load();
         task.spawn(function()
 		            repeat
-			                  velo:Save();
+			                  veloc:Save();
 			                  task.wait(10);
-		            until not velo.Loaded;
+		            until not veloc.Loaded;
 	      end);
 	      local teleportedServers: boolean;
-	      velo:Clean(playersService.LocalPlayer.OnTeleport:Connect(function()
+	      veloc:Clean(playersService.LocalPlayer.OnTeleport:Connect(function()
 		            if (not teleportedServers) and (not shared.VeloIndependent) then
 			                  teleportedServers = true;
                   			local teleportScript = [[
@@ -181,17 +181,17 @@ local function finishLoading(): nil
 			                  if shared.VeloCustomProfile then
 				                        teleportScript = 'shared.VeloCustomProfile = "'..shared.VeloCustomProfile..'"\n'..teleportScript;
 			                  end;
-			                  velo:Save();
+			                  veloc:Save();
 			                  queue_on_teleport(teleportScript);
 		            end;
 	      end));
 
         if not shared.veloreload then
-		            if not velo.Categories then 
+		            if not veloc.Categories then 
 			                  return;
 		            end;
-		            if velo.Categories.Main.Options['GUI bind indicator'].Enabled then
-			                  velo:CreateNotification('Finished Loading', velo.VapeButton and 'Press the button in the top right to open GUI' or 'Press '..table.concat(velo.Keybind, ' + '):upper()..' to open GUI', 5);
+		            if veloc.Categories.Main.Options['GUI bind indicator'].Enabled then
+			                  veloc:CreateNotification('Finished Loading', veloc.VapeButton and 'Press the button in the top right to open GUI' or 'Press '..table.concat(veloc.Keybind, ' + '):upper()..' to open GUI', 5);
 		            end;
 	      end;
 end;
@@ -229,13 +229,13 @@ if not isfolder("velo/profiles") then
 		makefolder("velo/profiles");
 end;
 
-velo = loadstring(downloadFile('velo/guis/'..gui..'.lua'), 'gui')();
-shared.velo = velo;
+veloc = loadstring(downloadFile('velo/guis/'..gui..'.lua'), 'gui')();
+shared.veloc = veloc;
 
-print("shared.velo =", shared.velo)
-if shared.velo then
+print("shared.velo =", shared.veloc)
+if shared.veloc then
     print("Keys in shared.velo:")
-    for k, v in next, shared.velo do
+    for k, v in next, shared.veloc do
         print(k, v)
     end
 else
@@ -263,6 +263,6 @@ if not shared.VeloIndependent then
 		end;
 		finishLoading();
 else
-		velo.Init = finishLoading;
-		return velo;
+		veloc.Init = finishLoading;
+		return veloc;
 end;
