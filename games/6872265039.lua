@@ -32,7 +32,7 @@
 ]]--
 
 local velo: table = {};
-local vape: table = shared.velo
+local vape: table = shared.veloc
 local function notif(...: any): void
         return vape:CreateNotification(...);
 end;
