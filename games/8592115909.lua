@@ -1,4 +1,4 @@
-local velo = shared.velo
+local velo = shared.vape
 local loadstring = function(...)
     local res, err = loadstring(...)
     if err and velo then 
