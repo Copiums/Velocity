@@ -69,7 +69,7 @@ local gameCamera: Camera = workspace.CurrentCamera or workspace:FindFirstChildWh
 local lplr: Player = playersService.LocalPlayer;
 local Debris: Debris = cloneref(game.GetService(game, 'Debris')); 
 
-local vape: table = shared.velo;
+local vape: table = shared.veloc;
 local tween: any = vape.Libraries.tween;
 local targetinfo: any = vape.Libraries.targetinfo;
 local getfontsize: any = vape.Libraries.getfontsize;
