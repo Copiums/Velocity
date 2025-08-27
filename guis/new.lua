@@ -5651,7 +5651,7 @@ function mainapi:Uninject()
 	mainapi.gui:Destroy()
 	table.clear(mainapi.Libraries)
 	loopClean(mainapi)
-	shared.velo = nil
+	shared.veloc = nil
 	shared.veloreload = nil
 	shared.VeloIndependent = nil
 end
