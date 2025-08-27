@@ -109,6 +109,35 @@ local playersService: Players = cloneref(game:GetService('Players'));
 local lplr: Player = playersService.LocalPlayer
 local httpService: HttpService = cloneref(game:GetService("HttpService"));
 
+local bedwars: table = {
+        [6872274481] = true,
+        [8560631822] = true,
+		[8444591321] = true
+};
+
+if bedwars[game.PlaceId] then
+		local knit = lplr.PlayerScripts:FindFirstChild('TS') and lplr.PlayerScripts.TS:FindFirstChild('knit') :: ModuleScript?
+		if knit and identifyexecutor() == 'Delta' and game.PlaceId ~= 6872265039 then
+			    local Success: boolean, Main: any;
+			    local FakeFunc = function() end;
+			    repeat
+			        	Success, Main = pcall(function()
+			          			return debug.getupvalue(require(knit).setup, 9);
+			        	end);
+			        	task.wait();
+			    until Success;
+			    
+			    local old; old = hookfunction(debug.getproto, function(func, proto)
+				        if func == Main.Controllers.PiggyBankController.KnitStart or func == Main.Controllers.CropController.KnitStart then
+				        		return FakeFunc;
+				        elseif func == FakeFunc then
+				        		return FakeFunc;
+				        end;
+				        return old(func, proto);
+			    end);
+		end;
+end;
+
 local function downloadFile(path: string, func: any)
 		if not isfile(path) then
 				local suc: boolean, res: string? = pcall(function()
