@@ -30,7 +30,7 @@
 
 ]]--
 
-local veloc: table = {};
+local velo: table = {};
 local LoadTime: tick = tick()
 local VelocityVersion: string = "V1.0"
 local function HoverText(Text: string): void
@@ -69,11 +69,11 @@ local function downloadFile(path: string, func: any)
 end;
 
 local run = function(func : Function?)
-	func();
+		func();
 end;
 
-veloc.run = function(x : Function)
-	return x();
+velo.run = function(x : Function)
+		return x();
 end;
 
 local queue_on_teleport: () -> () = queue_on_teleport or function() end
@@ -104,7 +104,7 @@ local vapeInjected: boolean = true;
 local vapeStore: any = {Bindable = {}, raycast = RaycastParams.new(), MessageReceived = Instance.new('BindableEvent'), platform = inputService:GetPlatform()}
 getgenv().vapeStore = vapeStore
 
-local vape: table = shared.velo
+local vape: any = shared.veloc
 local tween: any = vape.Libraries.tween
 local targetinfo: any = vape.Libraries.targetinfo
 local getfontsize: any = vape.Libraries.getfontsize
@@ -1419,7 +1419,7 @@ for name in SpeedMethods do
 	end;
 end;
 
-veloc.run(function()
+velo.run(function()
 	entitylib.getUpdateConnections = function(ent: any): {RBXScriptConnection}
 		local hum: Humanoid? = ent.Humanoid;
 		return {
@@ -1474,7 +1474,7 @@ veloc.run(function()
 	end));
 end);
 
-veloc.run(function()
+velo.run(function()
 	function whitelist:get(plr: Player)
 		local plrstr: any = self.hashes[plr.Name..plr.UserId];
 		for _, v in self.data.WhitelistedUsers do
@@ -1852,7 +1852,7 @@ veloc.run(function()
 	end));
 end);
 
-veloc.run(function()
+velo.run(function()
 	repeat 
 		task.wait();
 	until whitelist.loaded;
@@ -2478,7 +2478,7 @@ end;
 whitelistFunction(lplr);
 
 entitylib.start()
-veloc.run(function()
+velo.run(function()
 	local AimAssist: table = {}
 	local Targets: any;
 	local Part: any;
@@ -2646,7 +2646,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local AutoClicker: table = {}
 	local Mode: table = {}
 	local CPS: table = {}
@@ -2687,7 +2687,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Reach: table = {};
 	local Targets: any;
 	local Mode: table = {};
@@ -2774,7 +2774,7 @@ veloc.run(function()
 end)
 	
 local mouseClicked
-veloc.run(function()
+velo.run(function()
 	local SilentAim
 	local Target
 	local Mode
@@ -3156,7 +3156,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local TriggerBot
 	local Targets
 	local ShootDelay
@@ -3239,7 +3239,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local AntiFall
 	local Method
 	local Mode
@@ -3363,7 +3363,7 @@ end)
 	
 local Fly
 local LongJump
-veloc.run(function()
+velo.run(function()
 	local Options = {TPTiming = tick()}
 	local Mode
 	local FloatMode
@@ -3695,7 +3695,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local HighJump
 	local Mode
 	local Value
@@ -3761,7 +3761,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local HitBoxes
 	local Targets
 	local TargetPart
@@ -3811,7 +3811,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Invisible
 	local clone, oldroot, hip, valid
 	local animtrack
@@ -3971,7 +3971,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Killaura
 	local Targets
 	local CPS
@@ -4254,7 +4254,7 @@ veloc.run(function()
 	Face = Killaura:CreateToggle({["Name"] = 'Face target'})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Mode
 	local Value
 	local AutoDisable
@@ -4311,7 +4311,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local MouseTP
 	local Mode
 	local MovementMode
@@ -4426,7 +4426,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local Mode
 	local StudLimit = {Object = {}}
 	local rayCheck = RaycastParams.new()
@@ -4561,7 +4561,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Speed
 	local Mode
 	local Options
@@ -4729,7 +4729,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Mode: table = {}
 	local Value: table = {}
 	local State: table = {["Enabled"] = false}
@@ -4828,7 +4828,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local SpinBot: table = {["Enabled"] = false}
 	local Mode
 	local XToggle
@@ -4894,7 +4894,7 @@ veloc.run(function()
 	ZToggle = SpinBot:CreateToggle({["Name"] = 'Spin Z'})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Swim: table = {["Enabled"] = false}
 	local terrain = cloneref(workspace:FindFirstChildWhichIsA('Terrain'))
 	local lastpos = Region3.new(Vector3.zero, Vector3.zero)
@@ -4930,7 +4930,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local TargetStrafe: table = {["Enabled"] = false}
 	local Targets
 	local SearchRange
@@ -5051,7 +5051,7 @@ end)
 
 setfflag("SimEnableStepPhysics", "True")
 setfflag("SimEnableStepPhysicsSelective", "True")
-veloc.run(function()
+velo.run(function()
 	local Timer
 	local Value
 	Timer = vape.Categories.Blatant:CreateModule({
@@ -5077,7 +5077,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Arrows: table = {["Enabled"] = false}
 	local Targets
 	local Color
@@ -5215,7 +5215,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Chams: table = {["Enabled"] = false}
 	local Targets
 	local Mode
@@ -5426,7 +5426,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local ESP: table = {["Enabled"] = false}
 	local Targets
 	local Color
@@ -5964,7 +5964,7 @@ veloc.run(function()
 	})
 end)
 --[[
-veloc.run(function()
+velo.run(function()
 	local GamingChair: table = {["Enabled"] = false}
 	local GamingChairSounds: table = {["Enabled"] = false};
 	local Color
@@ -6237,7 +6237,7 @@ veloc.run(function()
 end)
 	]]--
 
-veloc.run(function()
+velo.run(function()
 	local Health: table = {["Enabled"] = false};
 	Health = vape.Categories.Render:CreateModule({
 		["Name"] = 'Health',
@@ -6265,7 +6265,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local NameTags: table = {["Enabled"] = false};
 	local Targets: any
 	local Color
@@ -6678,7 +6678,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local PlayerModel: table = {["Enabled"] = false}
 	local Scale
 	local Local
@@ -6799,7 +6799,7 @@ veloc.run(function()
 	
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Radar: table = {["Enabled"] = false}
 	local Targets
 	local DotStyle
@@ -6973,7 +6973,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Search: table = {["Enabled"] = false}
 	local List
 	local Color
@@ -7049,7 +7049,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local SessionInfo: table = {["Enabled"] = false}
 	local FontOption
 	local TextSize
@@ -7205,7 +7205,7 @@ veloc.run(function()
 	end)
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Tracers: table = {["Enabled"] = false}
 	local Targets
 	local Color
@@ -7406,7 +7406,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Waypoints: table = {["Enabled"] = false}
 	local FontOption
 	local List
@@ -7513,7 +7513,7 @@ veloc.run(function()
 	
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local AnimationPlayer: table = {["Enabled"] = false}
 	local IDBox
 	local Priority
@@ -7607,7 +7607,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local AntiRagdoll: table = {["Enabled"] = false}
 	
 	AntiRagdoll = vape.Categories.Utility:CreateModule({
@@ -7626,7 +7626,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local AutoRejoin: table = {["Enabled"] = false}
 	local Sort
 	
@@ -7652,7 +7652,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Blink: table = {["Enabled"] = false}
 	local Type
 	local AutoSend
@@ -7719,7 +7719,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local ChatSpammer: table = {["Enabled"] = false}
 	local Lines
 	local Mode
@@ -7803,7 +7803,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Disabler: table = {["Enabled"] = false}
 	
 	local function characterAdded(char: Model?)
@@ -7829,7 +7829,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	vape.Categories.Utility:CreateModule({
 		["Name"] = 'Panic',
 		["Function"] = function(callback: boolean): void
@@ -7845,7 +7845,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Rejoin: table = {["Enabled"] = false}
 	Rejoin = vape.Categories.Utility:CreateModule({
 		["Name"] = 'Rejoin',
@@ -7864,7 +7864,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local ServerHop: table = {["Enabled"] = false}
 	local Sort: any;
 	ServerHop = vape.Categories.Utility:CreateModule({
@@ -7893,7 +7893,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local StaffDetector: table = {["Enabled"] = false}
 	local Mode: table = {}
 	local Profile: table = {}
@@ -8035,7 +8035,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local connections: table? = {}
 	vape.Categories.World:CreateModule({
 		["Name"] = 'Anti-AFK',
@@ -8056,7 +8056,7 @@ veloc.run(function()
 	});
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Freecam: table = {["Enabled"] = false};
 	local Value: table = {};
 	local randomkey: any, module: any, old: any = httpService:GenerateGUID(false);
@@ -8127,7 +8127,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Gravity: table = {["Enabled"] = false};
 	local Mode: table = {};
 	local Value: table = {};
@@ -8182,7 +8182,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Parkour: table = {["Enabled"] = false};
 	Parkour = vape.Categories.World:CreateModule({
 		["Name"] = 'Parkour',
@@ -8204,7 +8204,7 @@ veloc.run(function()
 	});
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local rayCheck: RayCastParams? = RaycastParams.new();
 	rayCheck.RespectCanCollide = true;
 	local module: any, old: any;
@@ -8246,7 +8246,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Xray: table = {["Enabled"] = false}
 	local List: table = {}
 	local modified: table = {}
@@ -8286,7 +8286,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local MurderMystery: table = {["Enabled"] = false}
 	local murderer: any, sheriff: any, oldtargetable: any, oldgetcolor: any
 	
@@ -8358,7 +8358,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local Atmosphere: table = {["Enabled"] = false};
 	local Toggles: table = {}
 	local themeName: any;
@@ -8913,7 +8913,7 @@ veloc.run(function()
 	end;
 end)
 
-veloc.run(function()
+velo.run(function()
 	local Breadcrumbs: table = {["Enabled"] = false}
 	local Texture: table = {}
 	local Lifetime: table = {}
@@ -9019,7 +9019,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local ChinaHat: table = {["Enabled"] = false}
 	local Material: table = {["Value"] = "ForceField"}
 	local Color: table = {}
@@ -9098,7 +9098,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Clock: table = {["Enabled"] = false} 
 	local TwentyFourHour: table = {["Enabled"] = false} 
 	local label: any;
@@ -9148,7 +9148,7 @@ veloc.run(function()
 	corner.Parent = label;
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Disguise: table = {["Enabled"] = false} 
 	local Mode: table = {["Value"] = 'Character'} 
 	local IDBox: any;
@@ -9319,7 +9319,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local FOV: table = {["Enabled"] = false} 
 	local Value: table = {["Value"] = 120} 
 	local oldfov: any;
@@ -9345,7 +9345,7 @@ veloc.run(function()
 	});
 end)
 	
-veloc.run(function()
+velo.run(function()
 	--[[
 		Grabbing an accurate count of the current framerate
 		Source: https://devforum.roblox.com/t/get-client-FPS-trough-a-script/282631
@@ -9405,7 +9405,7 @@ veloc.run(function()
 	corner.Parent = label;
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Keystrokes: table = {["Enabled"] = false} 
 	local Style: table = {} 
 	local Color: table = {}
@@ -9541,7 +9541,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Memory: table = {["Enabled"] = false} 
 	local label: any;
 	Memory = vape.Legit:CreateModule({
@@ -9587,7 +9587,7 @@ veloc.run(function()
 	corner.Parent = label;
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Ping: table = {["Enabled"] = false} 
 	local label: any;
 	Ping = vape.Legit:CreateModule({
@@ -9633,7 +9633,7 @@ veloc.run(function()
 	corner.Parent = label;
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local SongBeats: table = {["Enabled"] = false}
 	local List: table = {};
 	local FOV: table = {["Enabled"] = false}
@@ -9759,7 +9759,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Speedmeter: table = {["Enabled"] = false};
 	local label: any;
 	Speedmeter = vape.Legit:CreateModule({
@@ -9807,7 +9807,7 @@ veloc.run(function()
 	corner.Parent = label;
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local TimeChanger: table = {["Enabled"] = false};
 	local Value: table = {["Value"] = 12};
 	local old: any;
@@ -9851,7 +9851,7 @@ end)
 	- reformatted and fixed by: Copium
 ]]
 
-veloc.run(function()
+velo.run(function()
     local Envision: table = {["Enabled"] = false};
     local color: () -> {Hue: number, Sat: number, Value: number} = function()
 		return {Hue = 0, Sat = 0, Value = 0};
@@ -10098,7 +10098,7 @@ veloc.run(function()
     })
 end)
 
-veloc.run(function()
+velo.run(function()
 	local custom_char: table = {["Enabled"] = false};
 	local custom_char_headless: table = {["Enabled"] = false};
 	local custom_char_fc: table = {};
@@ -10336,7 +10336,7 @@ veloc.run(function()
 	});
 end)
 
-veloc.run(function()
+velo.run(function()
 	local Cape: table = {["Enabled"] = false};
 	local Texture: any;
 	local part: any, motor: any
@@ -10448,7 +10448,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	    local SkidRoaster: table = {["Enabled"] = false}
 	    local Mode: table = {["Value"] = "Custom"}
 	    local delay: table = {["Value"] = 3.3}
@@ -10504,7 +10504,7 @@ veloc.run(function()
 end)
 
 -- credits: Render
-veloc.run(function()
+velo.run(function()
 	local ChatMimic: table = {["Enabled"] = true}
 	local ChatShowSender: table = {["Enabled"] = true}
 	local customblocklist: table = {}
@@ -10589,7 +10589,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local playerattach: table = {["Enabled"] = false};
 	local playerattachrange: table = {["Value"] = 50}
 	local playerattachpersist: table = {};
@@ -10657,7 +10657,7 @@ veloc.run(function()
 	});
 end)
 
-veloc.run(function()
+velo.run(function()
     	local AirJump: table = {["Enabled"] = false}
 	local Mode: table = {["Value"] = "State"}
 	local Power: table = {["Value"] = 50}
@@ -10706,7 +10706,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local Loader: table = {["Enabled"] = false}
         local Font: table = {["Value"] = "FredokaOne"}
 	local Color: table = {
@@ -10803,7 +10803,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
     	local boost_jump: table = {["Enabled"] = false};
 	local boost_jump_m: table = {["Value"] = 'Toggle'};
 	local boost_jump_b: table = {["Value"] = 'Velocity'};
@@ -10988,7 +10988,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local CustomCursor: table = {["Enabled"] = false}
 	local Icon: table = {["Value"] = "Triangle"}
     	local Image: table = {["Value"] = ""}
@@ -11058,7 +11058,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local ZoomUnlocker: table = {["Enabled"] = false}
 	local ZoomUnlockerMode: table = {["Value"] = 'Infinite'}
 	local ZoomUnlockerZoom: table = {["Value"] = 500}
@@ -11107,7 +11107,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local ScriptHub: table = {["Enabled"] = false};
 	local Script: table = {["Value"] = "Dex"};
 	ScriptHub = vape.Categories.Velocity:CreateModule({
@@ -11140,7 +11140,7 @@ veloc.run(function()
 	});	
 end)
 
-veloc.run(function()
+velo.run(function()
 	local GameWeather: table = {["Enabled"] = false}
 	local GameWeatherMode: table = {["Value"] = "Snow"}
 	local SnowflakesSpread: table = {["Value"] = 35}
@@ -11301,7 +11301,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local WaterMark: table = {["Enabled"] = false}
 	local WaterMarkBGT: table = {["Value"] = 1}
 	local WaterMarkZI: table = {["Value"] = 10}
@@ -11387,7 +11387,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local instaprompt: table = {
 		Enabled = false,
 		Connections = {}
@@ -11404,7 +11404,7 @@ veloc.run(function()
 	});
 end)
 
-veloc.run(function()
+velo.run(function()
     local og: table = {}                                                        
     local function default()
         og = {
@@ -11475,7 +11475,7 @@ veloc.run(function()
     })
 end)
 
-veloc.run(function()
+velo.run(function()
         local AutoReport: table = {["Enabled"] = false}
         local AutoReportList: any = {}
         local AutoReportNotify: table = {["Enabled"] = false}
@@ -11568,6 +11568,7 @@ veloc.run(function()
                 ["TempText"] = "phrase (to report)"
         });
 end)
+
 
 
 
