@@ -31,7 +31,7 @@
 ]]--
 
 
-local veloc: table = {};
+local velo: table = {};
 shared.nuker_range = 30;
 shared.velocity_client = true;
 local Vec2: Vector2 = Vector2.new;
@@ -76,7 +76,7 @@ local gameCamera: Camera = workspace.CurrentCamera;
 local lplr: Player = playersService.LocalPlayer;
 local assetfunction: any = getcustomasset;
 
-local vape: table = shared.velo;
+local vape: table = shared.veloc;
 local entitylib: any = vape.Libraries.entity;
 local targetinfo: any = vape.Libraries.targetinfo;
 local sessioninfo: any = vape.Libraries.sessioninfo;
@@ -130,7 +130,7 @@ local run = function(func : Function)
 		func();
 end;
 
-veloc.run = function(x : Function)
+velo.run = function(x : Function)
 		return x();
 end;
 
@@ -594,7 +594,7 @@ local sortmethods: table = {
 	end;
 };
 
-veloc.run(function()
+velo.run(function()
 	local oldstart: any = entitylib.start;
 	local function customEntity(ent: Instance?)
 		if ent:HasTag('inventory-entity') and not ent:HasTag('Monster') then
@@ -800,7 +800,7 @@ entitylib.start();
 
 local Disabler: any;
 
-veloc.run(function()
+velo.run(function()
 	local function Instances(name: string?, Type: string?): any
 		for i: any, v: any in next, game:GetDescendants() do
 			if v.Name:lower() == name:lower() and v.ClassName:lower() == Type:lower() then
@@ -816,19 +816,19 @@ veloc.run(function()
 	}
 end)
 
-veloc.run(function()
+velo.run(function()
 	local KnitInit: boolean;
 	local Knit: any;
 	local knitModule: table = require(lplr.PlayerScripts.TS.knit);
 	local findKnitIndex: () -> number? = function()
-		for i: number = 1, 20 do
-	        	local success: boolean, value: any = pcall(function()
+			for i: number = 1, 20 do
+	        		local success: boolean, value: any = pcall(function()
 	                	return debug.getupvalue(knitModule.setup, i)
 	            	end)
 	            	if success and type(value) == "table" then
-	                	if value.Controllers and type(value.Controllers) == "table" and value.Start then
-	                    		return i;
-	                	end;
+							if value.Controllers and type(value.Controllers) == "table" and value.Start then
+									return i;
+							end;
 	            	end;
 	        end;
 	        return nil;
@@ -1416,7 +1416,7 @@ for _, v in {'AntiRagdoll', 'TriggerBot', 'SilentAim', 'AutoRejoin', 'Rejoin', '
 	vape:Remove(v);
 end;
 
-veloc.run(function()
+velo.run(function()
         local old: any;
         AutoCharge = vape.Categories.Combat:CreateModule({
                 ["Name"] = 'AutoCharge',
@@ -1467,7 +1467,7 @@ veloc.run(function()
         })
 end)
 
-		veloc.run(function()
+		velo.run(function()
         local AimAssist: table = {["Enabled"] = false}
         local Targets: table = {Players = {["Enabled"] = false}};
         local Sort: table = {["Value"] = "Damage"}
@@ -1550,7 +1550,7 @@ end)
         StrafeIncrease = AimAssist:CreateToggle({["Name"] = 'Strafe increase'})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local AutoClicker: table = {["Enabled"] = false}
 	local CPS: table = {["Value"] = 9}
 	local BlockCPS: table = {}
@@ -1641,7 +1641,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local old: any;
 	vape.Categories.Combat:CreateModule({
 		["Name"] = 'NoClickDelay',
@@ -1660,7 +1660,7 @@ veloc.run(function()
 	});
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Length: table = {["Value"] = 14.4}
 	Reach = vape.Categories.Combat:CreateModule({
 		["Name"] = 'Reach',
@@ -1684,7 +1684,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Sprint: table =  {["Enabled"] = false};
 	local old: any;
 	Sprint = vape.Categories.Combat:CreateModule({
@@ -1722,7 +1722,7 @@ veloc.run(function()
 	});
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local TriggerBot: table = {["Enabled"] = false};
 	local CPS: table = {["Value"] = 7};
 	local rayParams: any = RaycastParams.new();
@@ -1772,7 +1772,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local Velocity: table = {["Enabled"] = false};
 	local Horizontal: table = {["Value"] = 100};
 	local Vertical: table = {["Value"] = 100};
@@ -1830,7 +1830,7 @@ veloc.run(function()
 end)
 
 local AntiFallDirection: any;
-veloc.run(function()
+velo.run(function()
 	local AntiFall: table = {["Enabled"] = false};
 	local Mode: table = {["Value"] = "Velocity"};
 	local Material: table = {["Value"] = "Plastic"};
@@ -2134,7 +2134,7 @@ local namecall; namecall = hookmetamethod(game, '__namecall', function(self, ...
 	return namecall(self, ...)
 end)
 
-veloc.run(function()
+velo.run(function()
 	local Mode: table = {};
 	local Expand: table = {};
 	local objects: any, set: any = {}
@@ -2239,7 +2239,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	vape.Categories.Blatant:CreateModule({
 		["Name"] = 'KeepSprint',
 		["Function"] = function(callback: boolean): void
@@ -2252,7 +2252,7 @@ end)
 
 local Fly: any;
 local LongJump: any;
-veloc.run(function()
+velo.run(function()
         local Value: table = {}
         local VerticalValue: table = {}
         local WallCheck: table? = {}
@@ -2955,7 +2955,7 @@ run(function()
 	})]]
 end)
 											
-veloc.run(function()
+velo.run(function()
 	local Value: table = {["Value"] = 38}
 	local start: any;
 	local JumpTick: number?, JumpSpeed: number?, Extend: any, Direction: any = tick(), 0, false;
@@ -3161,7 +3161,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local old: any;
 	vape.Categories.Blatant:CreateModule({
 		["Name"] = 'NoSlowdown',
@@ -3190,7 +3190,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local SpinBot: table = {["Enabled"] = false}
 	local Mode: table = {}
 	local XToggle: table = {}
@@ -3255,7 +3255,7 @@ veloc.run(function()
 	ZToggle = SpinBot:CreateToggle({["Name"] = 'Spin Z'})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local TargetPart: table = {}
 	local Targets: table = {}
 	local FOV: table = {["Value"] = 1000}
@@ -3342,7 +3342,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local ProjectileAura: table = {["Enabled"] = false}; 
 	local Targets: table = {}
 	local Range: table = {["Value"] = 1000};
@@ -3455,7 +3455,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local Speed: table = {["Enabled"] = false};
 	local Value: table = {["Value"] = 23};
 	local WallCheck: table = {["Enabled"] = false};
@@ -3531,7 +3531,7 @@ veloc.run(function()
 	})
 end)
 				
-veloc.run(function()
+velo.run(function()
 	local BedESP: table ={["Enabled"] = false}
 	local Reference: table = {};
 	local Folder: Folder = Instance.new('Folder');
@@ -3593,7 +3593,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local KitESP: table = {["Enabled"] = false}
 	local Background: table = {["Enabled"] = false}
 	local Color: table = {}
@@ -3694,7 +3694,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local NameTags: table = {["Enabled"] = false};
 	local Targets: table = {Players = {["Enabled"] = false}};
 	local Color: table = {["Value"] = 0.44};
@@ -4134,7 +4134,7 @@ veloc.run(function()
 	});
 end);
 
-veloc.run(function()
+velo.run(function()
 	local StorageESP: table = {["Enabled"] = false}
 	local List: table = {};
 	local Background: table = {["Enabled"] = false}
@@ -4273,7 +4273,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local AutoBalloon: table = {["Enabled"] = false}
 	AutoBalloon = vape.Categories.Utility:CreateModule({
 		["Name"] = 'AutoBalloon',
@@ -4308,7 +4308,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local AutoKit: table = {["Enabled"] = false}
 	local Legit: table = {}
 	local Toggles: table = {}
@@ -4581,7 +4581,7 @@ veloc.run(function()
 	end;
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local AutoPlay: table = {["Enabled"] = false}
 	local Random: table = {["Enabled"] = false}
 	local function isEveryoneDead(): (any, any)
@@ -4623,7 +4623,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local AutoShoot: table = {["Enabled"] = false}
 	local shooting: boolean, old: any = false;
 	local function getCrossbows(): (any, any)
@@ -4669,7 +4669,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local AutoVoidDrop: table = {["Enabled"] = false}
 	AutoVoidDrop = vape.Categories.Utility:CreateModule({
 		["Name"] = 'AutoVoidDrop',
@@ -4709,7 +4709,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local MissileTP: table = {["Enabled"] = false}
 	MissileTP = vape.Categories.Utility:CreateModule({
 		["Name"] = 'MissileTP',
@@ -4750,7 +4750,7 @@ veloc.run(function()
 end)
 
 local sv2: table = {}
-veloc.run(function()
+velo.run(function()
 	local PickupRange: table = {["Enabled"] = false};
 	local Range: table = {["Value"] = 10};
 	local Network: table = {["Enabled"] = false};
@@ -4807,7 +4807,7 @@ veloc.run(function()
 	Lower = PickupRange:CreateToggle({["Name"] = 'Feet Check'})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local RavenTP: table = {["Enabled"] = false}
 	RavenTP = vape.Categories.Utility:CreateModule({
 		["Name"] = 'RavenTP',
@@ -4848,7 +4848,7 @@ veloc.run(function()
 end)
 
 
-veloc.run(function()
+velo.run(function()
 	local Scaffold: table = {["Enabled"] = false};
 	local Expand: table = {["Enabled"] = false};
 	local Tower: table = {["Enabled"] = false};
@@ -4974,7 +4974,7 @@ veloc.run(function()
 	Mouse = Scaffold:CreateToggle({["Name"] = 'Require mouse down'})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local tiered: table, nexttier: table = {}, {}
 	local ShopTierBypass: table = {["Enabled"] = false};
 	ShopTierBypass = vape.Categories.Utility:CreateModule({
@@ -5005,7 +5005,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local ArmorSwitch: table = {["Enabled"] = false};
 	local Mode: table = {}
 	local Targets: table = {};
@@ -5071,7 +5071,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local StaffDetector: table = {["Enabled"] = false}
 	local Mode: table = {};
 	local Clans: table = {};
@@ -5229,21 +5229,21 @@ veloc.run(function()
 	end);
 end)
 
-veloc.run(function()
+velo.run(function()
 	StoreDamage = vape.Categories.Utility:CreateModule({
 		["Name"] = 'StoreDamage',
 		["Tooltip"] = 'Store damage knockback packets for certain modules.'
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	TrapDisabler = vape.Categories.Utility:CreateModule({
 		["Name"] = 'TrapDisabler',
 		["Tooltip"] = 'Disables Snap Traps'
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	vape.Categories.World:CreateModule({
 		["Name"] = 'Anti-AFK',
 		["Function"] = function(callback: boolean): void
@@ -5265,7 +5265,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local AutoTool: table = {["Enabled"] = false}
 	local old: any, event: any;
 	
@@ -5311,7 +5311,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local BedProtector: table = {["Enabled"] = false}
 	local function getBedNear(): (any, any)
 		local localPosition: Vector3? = entitylib.isAlive and entitylib.character.RootPart.Position or Vector3.zero;
@@ -5376,7 +5376,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local ChestSteal: table = {["Enabled"] = false}
 	local Range: table = {["Value"] = 22}
 	local Open: table = {["Enabled"] = false}
@@ -5453,7 +5453,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local Schematica: table = {["Enabled"] = false}
 	local File: table = {};
 	local Mode: table = {};
@@ -5678,7 +5678,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local AutoBuy: table = {["Enabled"] = false}
 	local Sword: table = {["Enabled"] = false}
 	local Armor: table = {["Enabled"] = false}
@@ -6002,7 +6002,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local AutoConsume: table = {["Enabled"] = false}
 	local Health: table = {}
 	local SpeedPotion: table = {["Enabled"] = false}
@@ -6080,7 +6080,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local Value: table = {}
 	local oldclickhold: (...any) -> any
 	local oldshowprogress: (...any) -> any
@@ -6150,7 +6150,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local AutoToxic: table = {["Enabled"] = false}
 	local GG: table = {["Enabled"] = false}
 	local Toggles: table?, Lists: table?, said: table?, dead: table? = {}, {}, {}, {}
@@ -6356,7 +6356,7 @@ veloc.run(function()
 	})
 end)
 	
-veloc.run(function()
+velo.run(function()
 	local FastDrop: table = {["Enabled"] = false}
 	FastDrop = vape.Categories.Inventory:CreateModule({
 		["Name"] = 'FastDrop',
@@ -6376,7 +6376,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local BedPlates: table = {["Enabled"] = false}
 	local Background: table = {["Enabled"] = false}
 	local Color: table = {}
@@ -6513,7 +6513,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local Breaker: table = {["Enabled"] = false}
 	local Range: table = {["Value"] = 40}
 	local UpdateRate: table = {["Value"] = 540}
@@ -6789,7 +6789,7 @@ veloc.run(function()
 end)
 
  -- done
-veloc.run(function()
+velo.run(function()
 	vape.Legit:CreateModule({
 		["Name"] = 'Clean Kit',
 		["Function"] = function(callback: boolean): void
@@ -6805,7 +6805,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local FOV: table = {["Enabled"] = false};
 	local Value: table = {["Value"] = 120};
 	local old: any, old2: any;
@@ -6837,7 +6837,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local KillEffect: table = {["Enabled"] = false}
 	local Mode: table = {};
 	local List: table = {};
@@ -7002,7 +7002,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local SoundChanger: table = {["Enabled"] = false}
 	local List: table = {["Enabled"] = false}
 	local soundlist: table = {}
@@ -7041,7 +7041,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local FPSBoost: table = {["Enabled"] = false}
 	local Kill: table = {["Enabled"] = false}
 	local Visualizer: table = {["Enabled"] = false}
@@ -7118,7 +7118,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local old: any;
 	local Image: any;
 	local Crosshair = vape.Legit:CreateModule({
@@ -7152,7 +7152,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local DamageIndicator: table = {};
 	local colorTog: table = {}; 
 	local color: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 0};
@@ -7254,7 +7254,7 @@ veloc.run(function()
 	});
 end);
 
-veloc.run(function()
+velo.run(function()
 	local HitColor: table = {["Enabled"] = false}
 	local Color: any;
 	local done: any = {}
@@ -7291,7 +7291,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local Interface: table = {["Enabled"] = false}
 	local Health: table = {["Enabled"] = false}
 	local HotBar: table = {["Enabled"] = false}
@@ -7397,7 +7397,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local ReachDisplay: table = {["Enabled"] = false}
 	local label: any;
 	ReachDisplay = vape.Legit:CreateModule({
@@ -7442,7 +7442,7 @@ veloc.run(function()
 	corner.Parent = label;
 end)
 	
-veloc.run(function()
+velo.run(function()
 	vape.Legit:CreateModule({
 		["Name"] = 'HitFix',
 		["Function"] = function(callback: boolean): void
@@ -7453,7 +7453,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local UICleanup: table = {["Enabled"] = false}
 	local OpenInv: table = {["Enabled"] = false}
 	local KillFeed: table = {["Enabled"] = false}
@@ -7606,7 +7606,7 @@ veloc.run(function()
 end)
 
 
-veloc.run(function()
+velo.run(function()
 	local SongBeats: table = {["Enabled"] = false}
 	local List: table = {};
 	local FOV: table = {["Enabled"] = false}
@@ -7727,7 +7727,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local AutoHotbar: table = {["Enabled"] = false}
 	local Mode: table = {};
 	local Clear: table = {};
@@ -8295,7 +8295,7 @@ veloc.run(function()
 	List = AutoHotbar:CreateHotbarList({})
 end)
 
-veloc.run(function()
+velo.run(function()
     local anim: Animation?;
     local asset: Model?;
     local lastPos: Vector3?;
@@ -8362,7 +8362,7 @@ veloc.run(function()
     })
 end)
 
-veloc.run(function()
+velo.run(function()
     local Viewmodel: table = {["Enabled"] = false}
     local Depth: table = {["Value"] = 0.8}
     local Horizontal: table = {["Value"] = 0.8}
@@ -8596,7 +8596,7 @@ end)
 	- reformatted and fixed by: Copium
 ]]
 
-veloc.run(function()
+velo.run(function()
         local custom_armour: table = {};
         local custom_armour_c: table = {};
         local custom_armour_b: table = {};
@@ -8787,7 +8787,7 @@ veloc.run(function()
         });
 end);
 
-veloc.run(function()
+velo.run(function()
 	local RemotesConnect: table = {["Enabled"] = false}
 	local RemotesConnectDelay: table = {["Value"] = 10}
 	local RemotesConnectParty: table = {["Enabled"] = true}
@@ -8883,7 +8883,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
     	local shaders: table = {};
 	local shaders_m: table = {};
 	local shaders_l: table = {};
@@ -9016,7 +9016,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local CustomClouds: table = {["Enabled"] = false}
     	local Material: table = {["Value"] = "Neon"}
 	local Color: table = {
@@ -9109,7 +9109,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local NoNameTag: table = {["Enabled"] = false};
 	NoNameTag = vape.Categories.Velocity:CreateModule({
 		["Name"] ='NoNameTag',
@@ -9129,7 +9129,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
     	local FeedRemover: table = {["Enabled"] = false};
 	local function SetFeed(Boolean: boolean): void
 		local suc: boolean, res: string? = pcall(function()
@@ -9154,7 +9154,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	do
 		nan = function(x)
 			return x == x;
@@ -9522,7 +9522,7 @@ veloc.run(function()
 	})
 end)
 
-veloc.run(function()
+velo.run(function()
 	local Card: table = {["Enabled"] = false};
 	local CardGradient: table = {["Enabled"] = false};
 	local Highlight: table = {};
@@ -9665,7 +9665,7 @@ end);
 
 -- credits to catvape + render + snoopy + lunar + lunarvape
 -- IF YOU WANT THEM REMOVED, TELL ME AND I WILL REMOVE
-veloc.run(function()
+velo.run(function()
     local texture_pack: table = {["Enabled"] = false};
     local texture_pack_color: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 0};
     local texture_pack_m: table = {};
@@ -10720,7 +10720,7 @@ veloc.run(function()
     })
 end)
 
-veloc.run(function()
+velo.run(function()
 	    local Disabler: table = {["Enabled"] = false}
 		Disabler = vape.Categories.Utility:CreateModule({
 		        ["Name"] = "AnticheatDisabler",
@@ -10728,8 +10728,8 @@ veloc.run(function()
 			            if callback then
 				                task.spawn(function()
 					                    while Disabler["Enabled"] do
+					                        	task.wait(0.25);
 					                        	bedwars.AbilityController:useAbility("jade_hammer_jump");
-					                        	task.wait();
 					                    end;
 				                end);
 			            end;
@@ -10737,5 +10737,6 @@ veloc.run(function()
 		        ["Tooltip"] = "Disables anticheat"
 	    });
 end)
+
 
 
