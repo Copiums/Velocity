@@ -98,7 +98,6 @@ local proximitypromptService: ProximityPromptService = cloneref(game:GetService(
 local coreGui: CoreGui = cloneref(game:GetService('CoreGui'));
 local gameCamera: Camera = workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera')
 local lplr: Player = playersService.LocalPlayer
-local assetfunction: any = getcustomasset
 local vapeConnections: any = {}
 local vapeInjected: boolean = true;
 local vapeStore: any = {Bindable = {}, raycast = RaycastParams.new(), MessageReceived = Instance.new('BindableEvent'), platform = inputService:GetPlatform()}
@@ -121,6 +120,7 @@ local tween: any = libs.tween
 local targetinfo: any = libs.targetinfo
 local getfontsize: any = libs.getfontsize
 local getcustomasset: any = libs.getcustomasset
+local assetfunction: any = getcustomasset		
 
 local TargetStrafeVector: any, SpiderShift: any, WaypointFolder: any
 local Spider: table = {["Enabled"] = false}
@@ -11579,6 +11579,7 @@ velo.run(function()
                 ["TempText"] = "phrase (to report)"
         });
 end)
+
 
 
 
