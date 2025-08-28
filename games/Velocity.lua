@@ -74,19 +74,36 @@ end;
 
 local gameCamera: Camera = workspace.CurrentCamera;
 local lplr: Player = playersService.LocalPlayer;
-local assetfunction: any = getcustomasset;
 
-local vape: table = shared.veloc;
-local entitylib: any = vape.Libraries.entity;
-local targetinfo: any = vape.Libraries.targetinfo;
-local sessioninfo: any = vape.Libraries.sessioninfo;
-local uipallet: any = vape.Libraries.uipallet;
-local tween: any = vape.Libraries.tween;
-local color: any = vape.Libraries.color;
-local whitelist: any = vape.Libraries.whitelist;
-local prediction: any = vape.Libraries.prediction;
-local getfontsize: any = vape.Libraries.getfontsize;
-local getcustomasset: any = vape.Libraries.getcustomasset;
+local vape: any = shared.veloc
+local libs: table? = {
+    entitylib = vape and vape.Libraries and vape.Libraries.entity,
+    targetinfo = vape and vape.Libraries and vape.Libraries.targetinfo,
+    sessioninfo = vape and vape.Libraries and vape.Libraries.sessioninfo,
+    uipallet = vape and vape.Libraries and vape.Libraries.uipallet,
+    tween = vape and vape.Libraries and vape.Libraries.tween,
+    color = vape and vape.Libraries and vape.Libraries.color,
+    whitelist = vape and vape.Libraries and vape.Libraries.whitelist,
+    prediction = vape and vape.Libraries and vape.Libraries.prediction,
+    getfontsize = vape and vape.Libraries and vape.Libraries.getfontsize,
+    getcustomasset = vape and vape.Libraries and vape.Libraries.getcustomasset,
+}
+
+for name, lib in next, libs do
+    print(name, "exists:", lib ~= nil)
+end
+
+local entitylib: any = libs.entitylib
+local targetinfo: any = libs.targetinfo
+local sessioninfo: any = libs.sessioninfo
+local uipallet: any = libs.uipallet
+local tween: any = libs.tween
+local color: any = libs.color
+local whitelist: any = libs.whitelist
+local prediction: any = libs.prediction
+local getfontsize: any = libs.getfontsize
+local getcustomasset: any = libs.getcustomasset
+local assetfunction: any = getcustomasset;
 
 local cheatengine: boolean = false;
 local store: table = {
@@ -10737,6 +10754,7 @@ velo.run(function()
 		        ["Tooltip"] = "Disables anticheat"
 	    });
 end)
+
 
 
 
