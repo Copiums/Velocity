@@ -30,6 +30,7 @@
 
 ]]--
 
+local vape = shared.veloc
 local velo: table = {};
 local LoadTime: tick = tick()
 local VelocityVersion: string = "V1.0"
@@ -104,7 +105,6 @@ local vapeStore: any = {Bindable = {}, raycast = RaycastParams.new(), MessageRec
 getgenv().vapeStore = vapeStore
 
 local assetfunction = getcustomasset
-local vape = shared.veloc
 local tween = vape.Libraries.tween
 local targetinfo = vape.Libraries.targetinfo
 local getfontsize = vape.Libraries.getfontsize
@@ -11573,6 +11573,7 @@ velo.run(function()
                 ["TempText"] = "phrase (to report)"
         });
 end)
+
 
 
 
