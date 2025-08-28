@@ -30,7 +30,7 @@
 
 ]]--
 
-
+local vape: any = shared.veloc
 local velo: table = {};
 shared.nuker_range = 30;
 shared.velocity_client = true;
@@ -76,7 +76,6 @@ local gameCamera: Camera = workspace.CurrentCamera;
 local lplr: Player = playersService.LocalPlayer;
 local assetfunction: any = getcustomasset
 
-local vape: any = shared.veloc
 local entitylib: any = vape.Libraries.entity
 local targetinfo: any = vape.Libraries.targetinfo
 local sessioninfo: any = vape.Libraries.sessioninfo
@@ -10749,6 +10748,7 @@ velo.run(function()
 		        ["Tooltip"] = "Disables anticheat"
 	    });
 end)
+
 
 
 
