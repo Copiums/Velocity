@@ -105,11 +105,22 @@ local vapeStore: any = {Bindable = {}, raycast = RaycastParams.new(), MessageRec
 getgenv().vapeStore = vapeStore
 
 local vape: any = shared.veloc
-local tween: any = vape.Libraries.tween
-local targetinfo: any = vape.Libraries.targetinfo
-local getfontsize: any = vape.Libraries.getfontsize
-local getcustomasset: any = vape.Libraries.getcustomasset
 
+local libs: { [string]: any } = {
+    tween: any = vape and vape.Libraries and vape.Libraries.tween,
+    targetinfo: any = vape and vape.Libraries and vape.Libraries.targetinfo,
+    getfontsize: any = vape and vape.Libraries and vape.Libraries.getfontsize,
+    getcustomasset: any = vape and vape.Libraries and vape.Libraries.getcustomasset,
+}
+
+for name: string, lib: any in next, libs do
+    	print(name, "exists:", lib ~= nil);
+end;
+
+local tween: any = libs.tween
+local targetinfo: any = libs.targetinfo
+local getfontsize: any = libs.getfontsize
+local getcustomasset: any = libs.getcustomasset
 
 local TargetStrafeVector: any, SpiderShift: any, WaypointFolder: any
 local Spider: table = {["Enabled"] = false}
@@ -11568,6 +11579,7 @@ velo.run(function()
                 ["TempText"] = "phrase (to report)"
         });
 end)
+
 
 
 
