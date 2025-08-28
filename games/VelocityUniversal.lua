@@ -103,24 +103,18 @@ local vapeInjected: boolean = true;
 local vapeStore: any = {Bindable = {}, raycast = RaycastParams.new(), MessageReceived = Instance.new('BindableEvent'), platform = inputService:GetPlatform()}
 getgenv().vapeStore = vapeStore
 
-local vape: any = shared.veloc
+local assetfunction = getcustomasset
+local vape = shared.veloc
+local tween = vape.Libraries.tween
+local targetinfo = vape.Libraries.targetinfo
+local getfontsize = vape.Libraries.getfontsize
+local getcustomasset = vape.Libraries.getcustomasset	
 
-local libs: { [string]: any } = {
-    tween: any = vape and vape.Libraries and vape.Libraries.tween,
-    targetinfo: any = vape and vape.Libraries and vape.Libraries.targetinfo,
-    getfontsize: any = vape and vape.Libraries and vape.Libraries.getfontsize,
-    getcustomasset: any = vape and vape.Libraries and vape.Libraries.getcustomasset,
-}
-
-for name: string, lib: any in next, libs do
-    	print(name, "exists:", lib ~= nil);
-end;
-
-local tween: any = libs.tween
-local targetinfo: any = libs.targetinfo
-local getfontsize: any = libs.getfontsize
-local getcustomasset: any = libs.getcustomasset
-local assetfunction: any = getcustomasset		
+print("vape exists:", vape ~= nil)
+print("tween exists:", tween ~= nil)
+print("targetinfo exists:", targetinfo ~= nil)
+print("getfontsize exists:", getfontsize ~= nil)
+print("getcustomasset exists:", getcustomasset ~= nil)
 
 local TargetStrafeVector: any, SpiderShift: any, WaypointFolder: any
 local Spider: table = {["Enabled"] = false}
@@ -11579,6 +11573,7 @@ velo.run(function()
                 ["TempText"] = "phrase (to report)"
         });
 end)
+
 
 
 
