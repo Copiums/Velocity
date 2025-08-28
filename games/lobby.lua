@@ -36,7 +36,7 @@ local function HoverText(Text: string): void
 		return Text .. " "
 end
 local run = function(func) func() end
-veloc.run = function(x : Function)
+velo.run = function(x : Function)
 		return x();
 end;
 local cloneref: any = cloneref or function(obj) 
@@ -541,6 +541,7 @@ velo.run(function()
 	HotbarRoundRadius.Object.Visible = false;
 	HotbarHighlightColor.Object.Visible = false;
 end);
+
 
 
 
