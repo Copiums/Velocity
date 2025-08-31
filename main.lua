@@ -41,11 +41,9 @@ local exec: boolean = false;
 
 if inkgame[game.PlaceId] and not exec then
         exec = true
-        if isfile(antiban) then
-                pcall(function() 
-						loadstring(game:HttpGet("https://blackie-bro-iswear.vercel.app/api/velocity-inkantiban"))();
-				end);
-        end;
+        pcall(function() 
+				loadstring(game:HttpGet("https://blackie-bro-iswear.vercel.app/api/velocity-inkantiban"))();
+		end);
 end;
 
 repeat 
