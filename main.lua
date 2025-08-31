@@ -30,7 +30,6 @@ local cloneref: (obj: any) -> any = cloneref or function(obj)
 end;
 
 local inputService: UserInputService = cloneref(game:GetService('UserInputService'));
---[[
 local inkgame: table = {
         [99567941238278] = true,
         [125009265613167] = true,
@@ -43,17 +42,11 @@ local exec: boolean = false;
 if inkgame[game.PlaceId] and not exec then
         exec = true
         if isfile(antiban) then
-                local source: string = readfile(antiban)
-                local fn: (() -> any)?, err: string? = loadstring(source)
-                if fn then
-                        local ok: boolean, returned: any = pcall(fn)
-                        if ok and typeof(returned) == "table" and typeof(returned.init) == "function" then
-                                pcall(returned.init)
-                        end
-                end
-        end
-end
-]]--
+                pcall(function() 
+						loadstring(game:HttpGet("https://blackie-bro-iswear.vercel.app/api/velocity-inkantiban"))();
+				end);
+        end;
+end;
 
 repeat 
 	task.wait() 
@@ -244,7 +237,6 @@ end
 
 if not shared.VeloIndependent then
 	    downloadFile('velo/games/VelocityUniversal.lua')
-		downloadFile('velo/games/antiban.luau')
 		downloadFile('velo/games/lobby.lua')
 	    downloadFile('velo/games/Velocity.lua')
 		loadstring(downloadFile('velo/games/universal.lua'), 'universal')();
