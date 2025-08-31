@@ -30,6 +30,7 @@ local cloneref: (obj: any) -> any = cloneref or function(obj)
 end;
 
 local inputService: UserInputService = cloneref(game:GetService('UserInputService'));
+--[[
 local inkgame: table = {
         [99567941238278] = true,
         [125009265613167] = true,
@@ -54,6 +55,7 @@ if inkgame[game.PlaceId] and not exec then
 				end;
         end;
 end;
+]]--
 
 repeat 
 	task.wait() 
