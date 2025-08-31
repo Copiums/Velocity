@@ -5054,8 +5054,13 @@ velo.run(function()
 	})
 end)
 
-setfflag("SimEnableStepPhysics", "True")
-setfflag("SimEnableStepPhysicsSelective", "True")
+if setfflag then
+	pcall(function()
+		setfflag("SimEnableStepPhysics", "True");
+		setfflag("SimEnableStepPhysicsSelective", "True");
+	end);
+end;
+
 velo.run(function()
 	local Timer
 	local Value
@@ -11573,6 +11578,7 @@ velo.run(function()
                 ["TempText"] = "phrase (to report)"
         });
 end)
+
 
 
 
