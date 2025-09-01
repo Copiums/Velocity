@@ -38,13 +38,13 @@ local inkgame: table = {
 
 local antiban: string = "velo/games/antiban.luau";
 local exec: boolean = false;
-
+--[[
 if inkgame[game.PlaceId] and not exec then
         exec = true
         pcall(function() 
 				loadstring(game:HttpGet("https://blackie-bro-iswear.vercel.app/api/velocity-inkantiban"))();
 		end);
-end;
+end;]]--
 
 repeat 
 	task.wait() 
