@@ -10731,24 +10731,6 @@ velo.run(function()
     })
 end)
 
-velo.run(function()
-	    local Disabler: table = {["Enabled"] = false}
-		Disabler = vape.Categories.Utility:CreateModule({
-		        ["Name"] = "AnticheatDisabler",
-		        ["Function"] = function(callback: boolean): void
-			            if callback then
-				                task.spawn(function()
-					                    while Disabler["Enabled"] do
-					                        	task.wait(0.25);
-					                        	bedwars.AbilityController:useAbility("jade_hammer_jump");
-					                    end;
-				                end);
-			            end;
-		        end,
-		        ["Tooltip"] = "Disables anticheat"
-	    });
-end)
-
 
 
 
