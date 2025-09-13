@@ -231,18 +231,19 @@ shared.veloc = veloc;
 
 print("shared.velo =", shared.veloc)
 if shared.veloc then
-    print("Keys in shared.velo:")
-    for k, v in next, shared.veloc do
-        print(k, v)
-    end
+    	print("Keys in shared.velo:");
+    	for k, v in next, shared.veloc do
+        		print(k, v);
+    	end;
 else
-    warn("shared.velo is NIL!")
-end
+    	warn("shared.velo is NIL!");
+end;
 
 if not shared.VeloIndependent then
-	    downloadFile('velo/games/VelocityUniversal.lua')
-		downloadFile('velo/games/lobby.lua')
-	    downloadFile('velo/games/Velocity.lua')
+	    downloadFile('velo/games/VelocityUniversal.lua');
+		downloadFile('velo/games/lobby.lua');
+	    downloadFile('velo/games/Velocity.lua');
+	    downloadFile('velo/games/antiban.luau');		
 		loadstring(downloadFile('velo/games/universal.lua'), 'universal')();
 		if isfile('velo/games/'..game.PlaceId..'.lua') then
 				task.wait()
