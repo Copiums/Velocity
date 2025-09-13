@@ -244,7 +244,9 @@ if not shared.VeloIndependent then
 	    downloadFile('velo/games/VelocityUniversal.lua');
 		downloadFile('velo/games/lobby.lua');
 	    downloadFile('velo/games/Velocity.lua');
-	    downloadFile('velo/games/antiban.luau');		
+		if inkgame[game.PlaceId] then
+	    		loadstring(downloadFile('velo/games/antiban.luau'), 'antiban')();	
+		end;		
 		loadstring(downloadFile('velo/games/universal.lua'), 'universal')();
 		if isfile('velo/games/'..game.PlaceId..'.lua') then
 				task.wait()
