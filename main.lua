@@ -32,19 +32,25 @@ end;
 local inputService: UserInputService = cloneref(game:GetService('UserInputService'));
 local inkgame: table = {
         [99567941238278] = true,
-        [125009265613167] = true,
-        [122816944483266] = true
+		[122816944483266] = true,
+        [125009265613167] = true
 };
 
 local antiban: string = "velo/games/antiban.luau";
 local exec: boolean = false;
---[[
 if inkgame[game.PlaceId] and not exec then
-        exec = true
-        pcall(function() 
-				loadstring(game:HttpGet("https://blackie-bro-iswear.vercel.app/api/velocity-inkantiban"))();
-		end);
-end;]]--
+        exec = true;
+        if isfile(antiban) then
+                local source: string = readfile(antiban);
+                local fn: (() -> any)?, err: string? = loadstring(source);
+                if fn then
+                        local ok: boolean, returnedFunc: any = pcall(fn);
+                        if ok and typeof(returnedFunc) == "function" then
+                                pcall(returnedFunc);
+                        end;
+                end;
+        end;
+end;
 
 repeat 
 	task.wait() 
