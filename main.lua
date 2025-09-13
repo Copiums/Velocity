@@ -229,6 +229,7 @@ end;
 veloc = loadstring(downloadFile('velo/guis/'..gui..'.lua'), 'gui')();
 shared.veloc = veloc;
 
+--[[
 print("shared.velo =", shared.veloc)
 if shared.veloc then
     	print("Keys in shared.velo:");
@@ -237,7 +238,7 @@ if shared.veloc then
     	end;
 else
     	warn("shared.velo is NIL!");
-end;
+end;]]--
 
 if not shared.VeloIndependent then
 	    downloadFile('velo/games/VelocityUniversal.lua');
