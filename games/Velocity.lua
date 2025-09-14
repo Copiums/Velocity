@@ -2656,8 +2656,6 @@ run(function()
 						local vec: Vector3? = attacked[1].Entity.RootPart.Position * Vector3.new(1, 0, 1);
 						entitylib.character.RootPart.CFrame = CFrame.lookAt(entitylib.character.RootPart.Position, Vector3.new(vec.X, entitylib.character.RootPart.Position.Y + 0.001, vec.Z));
 					end;
-
-					--#attacked > 0 and #attacked * 0.02 or
 					task.wait(1 / UpdateRate.Value);
 				until not Killaura.Enabled;
 			else
@@ -10730,6 +10728,7 @@ velo.run(function()
         ["Function"] = function() end
     })
 end)
+
 
 
 
