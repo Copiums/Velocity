@@ -37,9 +37,8 @@ local inkgame: table = {
 };
 
 local antiban: string = "velo/games/antiban.luau";
-local exec: boolean = false;
-if inkgame[game.PlaceId] and not exec then
-        exec = true;
+if inkgame[game.PlaceId] and not getgenv().antibanned then
+        getgenv().antibanned = true
         if isfile(antiban) then
                 local source: string = readfile(antiban);
                 local fn: (() -> any)?, err: string? = loadstring(source);
@@ -244,7 +243,8 @@ if not shared.VeloIndependent then
 	    downloadFile('velo/games/VelocityUniversal.lua');
 		downloadFile('velo/games/lobby.lua');
 	    downloadFile('velo/games/Velocity.lua');
-		if inkgame[game.PlaceId] then
+		if inkgame[game.PlaceId] and not getgenv().antibanned then
+		    	getgenv().antibanned = true;
 	    		loadstring(downloadFile('velo/games/antiban.luau'), 'antiban')();	
 		end;		
 		loadstring(downloadFile('velo/games/universal.lua'), 'universal')();
