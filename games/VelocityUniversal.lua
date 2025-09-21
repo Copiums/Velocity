@@ -110,12 +110,6 @@ local targetinfo = vape.Libraries.targetinfo
 local getfontsize = vape.Libraries.getfontsize
 local getcustomasset = vape.Libraries.getcustomasset	
 
-print("vape exists:", vape ~= nil)
-print("tween exists:", tween ~= nil)
-print("targetinfo exists:", targetinfo ~= nil)
-print("getfontsize exists:", getfontsize ~= nil)
-print("getcustomasset exists:", getcustomasset ~= nil)
-
 local TargetStrafeVector: any, SpiderShift: any, WaypointFolder: any
 local Spider: table = {["Enabled"] = false}
 local Phase: tbale = {["Enabled"] = false}
@@ -11578,6 +11572,7 @@ velo.run(function()
                 ["TempText"] = "phrase (to report)"
         });
 end)
+
 
 
 
