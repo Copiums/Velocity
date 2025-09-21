@@ -232,7 +232,7 @@ if not shared.VeloIndependent then
 		loadstring(downloadFile('velo/games/universal.lua'), 'universal')();
 		if isfile('velo/games/'..game.PlaceId..'.lua') then
 				task.wait()
-				loadstring(readfile('velo/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...);
+				--loadstring(readfile('velo/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...);
 		else
 				if not shared.VeloDeveloper then
 						local suc: boolean, res: string? = pcall(function()
