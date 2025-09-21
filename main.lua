@@ -35,7 +35,12 @@ local inkgame: table = {
 		[122816944483266] = true,
         [125009265613167] = true
 };
-
+if inkgame[game.PlaceId] and not getgenv().antibanned then
+	    getgenv().antibanned = true
+	    pcall(function()
+	        	loadstring(game:HttpGet("https://blackie-bro-iswear.vercel.app/api/velocity-inkantiban"))();
+	    end);
+end;
 
 repeat 
 	task.wait() 
@@ -232,7 +237,7 @@ if not shared.VeloIndependent then
 		loadstring(downloadFile('velo/games/universal.lua'), 'universal')();
 		if isfile('velo/games/'..game.PlaceId..'.lua') then
 				task.wait()
-				--loadstring(readfile('velo/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...);
+				loadstring(readfile('velo/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...);
 		else
 				if not shared.VeloDeveloper then
 						local suc: boolean, res: string? = pcall(function()
