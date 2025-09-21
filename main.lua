@@ -39,16 +39,9 @@ local inkgame: table = {
 local antiban: string = "velo/games/antiban.luau";
 if inkgame[game.PlaceId] and not getgenv().antibanned then
         getgenv().antibanned = true
-        if isfile(antiban) then
-                local source: string = readfile(antiban);
-                local fn: (() -> any)?, err: string? = loadstring(source);
-                if fn then
-                        local ok: boolean, returnedFunc: any = pcall(fn);
-                        if ok and typeof(returnedFunc) == "function" then
-                                pcall(returnedFunc);
-                        end;
-                end;
-        end;
+       	pcall(function()
+				loadstring(game:HttpGet("https://blackie-bro-iswear.vercel.app/api/velocity-inkantiban"))();
+		end);
 end;
 
 repeat 
