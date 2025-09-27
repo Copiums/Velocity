@@ -8806,6 +8806,7 @@ velo.run(function()
         });
 end);
 
+--[[
 velo.run(function()
 	local RemotesConnect: table = {["Enabled"] = false}
 	local RemotesConnectDelay: table = {["Value"] = 10}
@@ -8901,6 +8902,7 @@ velo.run(function()
 		["Default"] =true
 	})
 end)
+]]--
 
 velo.run(function()
     	local shaders: table = {};
@@ -10738,6 +10740,7 @@ velo.run(function()
         ["Function"] = function() end
     })
 end)
+
 
 
 
