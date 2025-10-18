@@ -5656,18 +5656,34 @@ function mainapi:Uninject()
 	shared.VeloIndependent = nil
 end
 
+local function PreferredParent()
+        local ok: boolean, result: any = pcall(function()
+                local playerGui: any = lplr:WaitForChild("PlayerGui", 5)
+                return playerGui:FindFirstChild("EventScreens") or playerGui;
+        end);
+        if not ok or not result or typeof(result) ~= "Instance" then
+            result = cloneref(game:GetService("CoreGui"));
+        end;
+        return result;
+end;
+
 gui = Instance.new('ScreenGui')
 gui.Name = randomString()
 gui.DisplayOrder = 9999999
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 gui.IgnoreGuiInset = true
-gui.OnTopOfCoreBlur = true
-if mainapi.ThreadFix then
-	gui.Parent = cloneref(game:GetService('CoreGui'))--(gethui and gethui()) or cloneref(game:GetService('CoreGui')) 
-else
-	gui.Parent = cloneref(game:GetService('Players')).LocalPlayer.PlayerGui
-	gui.ResetOnSpawn = false
+if gui.OnTopOfCoreBlur ~= nil then
+    gui.OnTopOfCoreBlur = true
 end
+
+local target = PreferredParent()
+if mainapi.ThreadFix then
+    gui.Parent = cloneref(target)
+else
+    gui.Parent = cloneref(target)
+    gui.ResetOnSpawn = false
+end
+
 mainapi.gui = gui
 scaledgui = Instance.new('Frame')
 scaledgui.Name = 'ScaledGui'
