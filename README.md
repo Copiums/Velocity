@@ -2,7 +2,7 @@
   <img src="https://i.imgur.com/rtV5lC8.png" width="300"/>
 </p>
 <h2 align="center">
-  Velocity: The ultimate vape mod for Roblox.
+  Velocity: The ultimate tool for Roblox.
   <br/>
   Ascend to the peak while staying entirely out of reach.
 </h2>
