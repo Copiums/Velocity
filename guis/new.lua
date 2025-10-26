@@ -5656,15 +5656,21 @@ function mainapi:Uninject()
 	shared.VeloIndependent = nil
 end
 
-local function PreferredParent()
-        local ok: boolean, result: any = pcall(function()
-                local playerGui: any = lplr:WaitForChild("PlayerGui", 5)
-                return playerGui:FindFirstChild("EventScreens") or playerGui;
-        end);
-        if not ok or not result or typeof(result) ~= "Instance" then
-            result = cloneref(game:GetService("CoreGui"));
-        end;
-        return result;
+local PreferredParent: () -> Instance = function(): Instance;
+	local core: CoreGui = cloneref(game:GetService("CoreGui"));
+	local robloxGui: Instance? = core:FindFirstChild("RobloxGui");
+	if not robloxGui then
+		return core;
+	end;
+	local screenGui: Instance? = robloxGui:FindFirstChild("ScreenGui");
+	if not screenGui then
+		return robloxGui;
+	end;
+	local textButton: Instance? = screenGui:FindFirstChild("TextButton");
+	if textButton then
+		return textButton;
+	end;
+	return screenGui;
 end;
 
 gui = Instance.new('ScreenGui')
@@ -5673,18 +5679,13 @@ gui.DisplayOrder = 9999999
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 gui.IgnoreGuiInset = true
 if gui.OnTopOfCoreBlur ~= nil then
-    gui.OnTopOfCoreBlur = true
+    	gui.OnTopOfCoreBlur = true
 end
-
-local target = PreferredParent()
-if mainapi.ThreadFix then
-    gui.Parent = cloneref(target)
-else
-    gui.Parent = cloneref(target)
-    gui.ResetOnSpawn = false
-end
-
+gui.ResetOnSpawn = false
+local target: Instance = PreferredParent();
+gui.Parent = cloneref(target)
 mainapi.gui = gui
+
 scaledgui = Instance.new('Frame')
 scaledgui.Name = 'ScaledGui'
 scaledgui.Size = UDim2.fromScale(1, 1)
