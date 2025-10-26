@@ -5656,7 +5656,7 @@ function mainapi:Uninject()
 	shared.VeloIndependent = nil
 end
 
-local PreferredParent: () -> Instance = function(): Instance;
+local PreferredParent: () -> Instance = function(): Instance
 	local core: CoreGui = cloneref(game:GetService("CoreGui"));
 	local robloxGui: Instance? = core:FindFirstChild("RobloxGui");
 	if not robloxGui then
