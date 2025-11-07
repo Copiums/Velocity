@@ -50,8 +50,8 @@ if shared.veloc then
 	shared.veloc:Uninject();
 end;
 
+--[[
 local copied: boolean = false;
-
 local function copy_discord(): (any, any)
         if not copied then
 		            pcall(setclipboard, "https://discord.gg/EQyxeZhcsE");
@@ -59,6 +59,7 @@ local function copy_discord(): (any, any)
 	      end;
 end;
 copy_discord()
+]]--
 
 if identifyexecutor then
           local execName: string? = ({identifyexecutor()})[1]
