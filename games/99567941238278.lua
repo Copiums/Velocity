@@ -1,3 +1,4 @@
+--This watermark is used to delete the file if its cached, remove it to make the file persist after velocity updates.
 --[[
 
 		    ____   ____     .__                .__  __          
@@ -93,7 +94,7 @@ if vape.ThreadFix then
 	    setthreadidentity(8);
 end;
 
-for _: any, v: string? in {'ScriptHub', 'ChatBypass', 'Invisible', 'Timer', 'MurderMystery', 'SilentAim'} do
+for _: any, v: string? in {'Speed', 'Fly', 'Phase', 'LongJump', 'ChatBypass', 'Invisible', 'Timer', 'MurderMystery', 'SilentAim'} do
       	vape:Remove(v);
 end;
 
