@@ -11121,7 +11121,7 @@ velo.run(function()
 			if callback then
 				if Script["Value"] == "Dex" then
 					task.spawn(function()
-						loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
+						loadstring(game:HttpGet("https://github.com/AZYsGithub/DexPlusPlus/releases/latest/download/out.lua"))()
 					end);
 				elseif Script["Value"] == "InfiniteYield" then
 					task.spawn(function()
