@@ -112,33 +112,30 @@ export type CrosshairAPI = {
         Destroy: () -> (),
 };
 
-
 --=========================================================
 --  SERVICES
 --=========================================================
 local cloneref: (obj: any) -> any = cloneref or function(obj)
     	return obj;
 end;
-
 local UIS: UserInputService = cloneref(game:GetService("UserInputService"));
 local RunService: RunService = cloneref(game:GetService("RunService"));
 local Players: Players = cloneref(game:GetService("Players"));
 local MAX_LAYERS: number = 16;
 local GUI_NAME: string = "Crosshair_Gui";
 local ENV_KEY: string = "CROSSHAIR";
+
 local ENV: { [string]: any } = _G;
 pcall(function(): ()
         if typeof(getgenv) == "function" then
                 ENV = getgenv();
         end;
 end);
-
 local previous: any = ENV[ENV_KEY];
 if type(previous) == "table" and type(previous.Destroy) == "function" then
         pcall(previous.Destroy);
 end;
 ENV[ENV_KEY] = nil;
-
 pcall(function(): ()
         local roots: { Instance } = {};
 
@@ -160,7 +157,6 @@ pcall(function(): ()
                 end;
         end;
 end);
-
 local HARD_RESET: boolean = false;
 if HARD_RESET then
         pcall(function(): ()
@@ -240,9 +236,6 @@ local Settings: CrosshairSettings = {
         YOffset = 0,
 };
 
---=========================================================
---  BUILD  -  crosshair (Drawing)
---=========================================================
 local newLine: (zindex: number) -> DrawingLine = function(zindex: number): DrawingLine
         local l: DrawingLine = Drawing.new("Line") :: DrawingLine;
         l.Thickness = 1;
@@ -255,7 +248,6 @@ end;
 local Glows: { { DrawingLine } } = {};
 local Outlines: { DrawingLine } = {};
 local Fills: { DrawingLine } = {};
-
 for layer: number = 1, MAX_LAYERS do
         local set: { DrawingLine } = {};
         for i: number = 1, 4 do
@@ -269,7 +261,6 @@ end;
 for i: number = 1, 4 do
         Fills[i] = newLine(MAX_LAYERS + 2);
 end;
-
 local parentGui: Instance? = nil;
 pcall(function(): ()
         parentGui = (typeof(gethui) == "function" and gethui()) or game:GetService("CoreGui");
@@ -280,7 +271,7 @@ end;
 
 local Screen: ScreenGui = Instance.new("ScreenGui");
 Screen.Name = GUI_NAME;
-Screen.IgnoreGuiInset = true; 
+Screen.IgnoreGuiInset = true;
 Screen.ResetOnSpawn = false;
 Screen.DisplayOrder = 2147483647;
 Screen.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
@@ -290,12 +281,11 @@ pcall(function(): ()
         end;
 end);
 Screen.Parent = parentGui;
-
 local newLabel: (zindex: number) -> (TextLabel, UIStroke) = function(zindex: number): (TextLabel, UIStroke)
         local lbl: TextLabel = Instance.new("TextLabel");
         lbl.AnchorPoint = Vector2.new(0.5, 0);
         lbl.BackgroundTransparency = 1;
-        lbl.AutomaticSize = Enum.AutomaticSize.XY; 
+        lbl.AutomaticSize = Enum.AutomaticSize.XY;
         lbl.Size = UDim2.fromOffset(0, 0);
         lbl.TextXAlignment = Enum.TextXAlignment.Center;
         lbl.TextYAlignment = Enum.TextYAlignment.Top;
@@ -306,6 +296,7 @@ local newLabel: (zindex: number) -> (TextLabel, UIStroke) = function(zindex: num
         stroke.LineJoinMode = Enum.LineJoinMode.Round;
         stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual;
         stroke.Parent = lbl;
+
         return lbl, stroke;
 end;
 
@@ -316,6 +307,24 @@ for layer: number = 1, MAX_LAYERS do
 end;
 
 local Label: TextLabel, Stroke: UIStroke = newLabel(MAX_LAYERS + 1);
+local cursorHiddenByUs: boolean = false;
+local applyCursor: () -> () = function(): ()
+        local shouldHide: boolean = Settings.Enabled and Settings.HideCursor;
+        if shouldHide then
+                if UIS.MouseIconEnabled then
+                        pcall(function(): ()
+                                UIS.MouseIconEnabled = false;
+                        end);
+                end;
+                cursorHiddenByUs = true;
+        elseif cursorHiddenByUs then
+                cursorHiddenByUs = false;
+                pcall(function(): ()
+                        UIS.MouseIconEnabled = true;
+                end);
+        end;
+end;
+
 local fillHalf: number = 0;
 local outlineHalf: number = 0;
 local outerTip: number = 0;
@@ -327,22 +336,19 @@ local falloff: (layer: number, count: number, intensity: number, curve: number) 
 end;
 
 local Apply: () -> () = function(): ()
-        if Settings.HideCursor then
-                local want: boolean = not Settings.Enabled;
-                if UIS.MouseIconEnabled ~= want then
-                        pcall(function(): ()
-                                UIS.MouseIconEnabled = want;
-                        end);
-                end;
-        end;
+        applyCursor();
+
         local t: number = Settings.Thickness;
         local outlineT: number = t + Settings.OutlineWidth * 2;
+
         fillHalf = Settings.Length / 2;
         outlineHalf = fillHalf + Settings.OutlineWidth;
+
         outerTip = Settings.Radius + fillHalf + Settings.OutlineWidth;
         if Settings.Glow then
                 outerTip += Settings.GlowSpread;
         end;
+
         for i: number = 1, 4 do
                 local fill: DrawingLine = Fills[i];
                 fill.Thickness = t;
@@ -356,11 +362,13 @@ local Apply: () -> () = function(): ()
                 outline.Transparency = Settings.OutlineTransparency;
                 outline.Visible = Settings.Enabled and Settings.Outline;
         end;
+
         local n: number = math.clamp(Settings.GlowLayers, 1, MAX_LAYERS);
         for layer: number = 1, MAX_LAYERS do
                 local active: boolean = Settings.Enabled and Settings.Glow and layer <= n;
                 local spread: number = Settings.GlowSpread * (layer / n);
                 glowHalf[layer] = outlineHalf + spread;
+
                 for i: number = 1, 4 do
                         local g: DrawingLine = Glows[layer][i];
                         g.Visible = active;
@@ -371,9 +379,11 @@ local Apply: () -> () = function(): ()
                         end;
                 end;
         end;
+
         local T: TextSettings = Settings.Text;
         local face: Font? = if typeof(T.FontFace) == "Font" then T.FontFace else nil;
         local font: Enum.Font = Enum.Font.GothamBold;
+
         if not face then
                 local ok: boolean, resolved: any = pcall(function(): any
                         return (Enum.Font :: any)[T.Font];
@@ -384,6 +394,7 @@ local Apply: () -> () = function(): ()
                         warn("[Crosshair] unknown font: " .. tostring(T.Font) .. " - using GothamBold");
                 end;
         end;
+
         local applyFont: (lbl: TextLabel) -> () = function(lbl: TextLabel): ()
                 if face then
                         lbl.FontFace = face;
@@ -391,28 +402,34 @@ local Apply: () -> () = function(): ()
                         lbl.Font = font;
                 end;
         end;
+
         Label.Text = T.Content;
         applyFont(Label);
         Label.TextSize = T.Size;
         Label.TextColor3 = T.Color;
         Label.TextTransparency = T.Transparency;
         Label.Visible = Settings.Enabled and T.Enabled;
+
         Stroke.Thickness = if T.Outline then T.OutlineThickness else 0;
         Stroke.Color = T.OutlineColor;
         Stroke.Transparency = T.OutlineTransparency;
+
         local tn: number = math.clamp(T.GlowLayers, 1, MAX_LAYERS);
         for layer: number = 1, MAX_LAYERS do
                 local g: GlowLabel = TextGlows[layer];
                 local active: boolean = Settings.Enabled and T.Enabled and T.Glow and layer <= tn;
                 g.Label.Visible = active;
+
                 if active then
                         local alpha: number = falloff(layer, tn, T.GlowIntensity, T.GlowFalloff);
                         local baseStroke: number = if T.Outline then T.OutlineThickness else 0;
+
                         g.Label.Text = T.Content;
                         applyFont(g.Label);
                         g.Label.TextSize = T.Size;
                         g.Label.TextColor3 = T.GlowColor;
                         g.Label.TextTransparency = 1 - alpha;
+
                         g.Stroke.Color = T.GlowColor;
                         g.Stroke.Thickness = baseStroke + T.GlowSpread * (layer / tn);
                         g.Stroke.Transparency = 1 - alpha;
@@ -426,20 +443,22 @@ local angle: number = 0;
 local clock: number = 0;
 local conn: RBXScriptConnection? = nil;
 conn = RunService.RenderStepped:Connect(function(dt: number): ()
+        applyCursor();
+
         if not Settings.Enabled then
                 return;
         end;
-        if Settings.HideCursor and UIS.MouseIconEnabled then
-                UIS.MouseIconEnabled = false;
-        end;
+
         if Settings.Rotate then
                 local dir: number = if Settings.RotationDirection >= 0 then 1 else -1;
                 angle = (angle + Settings.RotationSpeed * dir * dt) % 360;
         end;
         clock += dt;
+
         local mouse: Vector2 = UIS:GetMouseLocation();
         local mx: number = mouse.X;
         local my: number = mouse.Y + Settings.YOffset;
+
         local radius: number = Settings.Radius;
         if Settings.Pulse then
                 radius += math.sin(clock * Settings.PulseSpeed) * Settings.PulseAmount;
@@ -449,8 +468,10 @@ conn = RunService.RenderStepped:Connect(function(dt: number): ()
                 local base: number = math.rad(angle + 45 + ((i - 1) * 90));
                 local dirX: number = math.cos(base);
                 local dirY: number = math.sin(base);
+
                 local cx: number = mx + dirX * radius;
                 local cy: number = my + dirY * radius;
+
                 if Settings.Glow then
                         for layer: number = 1, n do
                                 local h: number = glowHalf[layer];
@@ -459,18 +480,21 @@ conn = RunService.RenderStepped:Connect(function(dt: number): ()
                                 g.To = Vector2.new(cx + dirX * h, cy + dirY * h);
                         end;
                 end;
+
                 if Settings.Outline then
                         local o: DrawingLine = Outlines[i];
                         o.From = Vector2.new(cx - dirX * outlineHalf, cy - dirY * outlineHalf);
                         o.To = Vector2.new(cx + dirX * outlineHalf, cy + dirY * outlineHalf);
                 end;
+
                 local f: DrawingLine = Fills[i];
                 f.From = Vector2.new(cx - dirX * fillHalf, cy - dirY * fillHalf);
                 f.To = Vector2.new(cx + dirX * fillHalf, cy + dirY * fillHalf);
         end;
+
         local T: TextSettings = Settings.Text;
         if T.Enabled then
-                local reach: number = outerTip + (radius - Settings.Radius); 
+                local reach: number = outerTip + (radius - Settings.Radius);
                 local pos: UDim2 = UDim2.fromOffset(mx, my + reach + T.Offset);
                 Label.Position = pos;
 
@@ -493,17 +517,12 @@ Crosshair.Refresh = Apply;
 Crosshair.Toggle = function(state: boolean?): ()
         local value: boolean = if state == nil then not Settings.Enabled else state :: boolean;
         Settings.Enabled = value;
-        Apply();
+        Apply(); 
 end;
 
 Crosshair.SetHideCursor = function(state: boolean?): ()
         Settings.HideCursor = if state == nil then not Settings.HideCursor else state :: boolean;
-        if not Settings.HideCursor then
-                pcall(function(): ()
-                        UIS.MouseIconEnabled = true;
-                end);
-        end;
-        Apply();
+        Apply(); 
 end;
 
 Crosshair.SetGlow = function(state: boolean?): ()
@@ -574,7 +593,7 @@ Crosshair.SetFont = function(fontName: string): ()
         Settings.Text.FontFace = nil;
         Apply();
 end;
-                                                                                        
+
 Crosshair.SetFontFace = function(face: Font?): ()
         Settings.Text.FontFace = face;
         Apply();
@@ -651,9 +670,13 @@ Crosshair.Destroy = function(): ()
         pcall(function(): ()
                 Screen:Destroy();
         end);
-        pcall(function(): ()
-                UIS.MouseIconEnabled = true;
-        end);
+
+        if cursorHiddenByUs then
+                cursorHiddenByUs = false;
+                pcall(function(): ()
+                        UIS.MouseIconEnabled = true;
+                end);
+        end;
 
         if ENV[ENV_KEY] == Crosshair then
                 ENV[ENV_KEY] = nil;
