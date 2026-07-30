@@ -78,6 +78,7 @@ export type CrosshairSettings = {
 
         Text: TextSettings,
 
+        HideCursor: boolean,
         YOffset: number,
 };
 
@@ -86,6 +87,7 @@ export type CrosshairAPI = {
         Refresh: () -> (),
 
         Toggle: (state: boolean?) -> (),
+        SetHideCursor: (state: boolean?) -> (),
         SetGlow: (state: boolean?) -> (),
         SetGlowStrength: (intensity: number?, spread: number?, falloffCurve: number?) -> (),
         SetOutline: (state: boolean?) -> (),
@@ -121,11 +123,10 @@ end;
 
 local UIS: UserInputService = cloneref(game:GetService("UserInputService"));
 local RunService: RunService = cloneref(game:GetService("RunService"));
-local Players: Players = cloneref(game:GetService("Players"));
+local Players: Players = cloneref(game:GetService("Players"));;
 local MAX_LAYERS: number = 16;
 local GUI_NAME: string = "Crosshair_Gui";
 local ENV_KEY: string = "CROSSHAIR";
-
 local ENV: { [string]: any } = _G;
 pcall(function(): ()
         if typeof(getgenv) == "function" then
@@ -169,10 +170,6 @@ if HARD_RESET then
                 end;
         end);
 end;
-
-pcall(function(): ()
-        UIS.MouseIconEnabled = false;
-end);
 
 --=========================================================
 --  SETTINGS
@@ -234,6 +231,10 @@ local Settings: CrosshairSettings = {
                 GlowFalloff = 2.0,
                 GlowColor = Color3.fromRGB(255, 255, 255),
         },
+
+        -- Hide the system cursor while the crosshair is on. Turn off if you
+        -- want both, or if a game manages the cursor itself.
+        HideCursor = true,
 
         -- Vertical nudge for BOTH crosshair and text. Leave at 0 unless the
         -- whole thing drifts off the cursor together.
@@ -302,12 +303,10 @@ local newLabel: (zindex: number) -> (TextLabel, UIStroke) = function(zindex: num
         lbl.ZIndex = zindex;
         lbl.Visible = false;
         lbl.Parent = Screen;
-
         local stroke: UIStroke = Instance.new("UIStroke");
         stroke.LineJoinMode = Enum.LineJoinMode.Round;
         stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual;
         stroke.Parent = lbl;
-
         return lbl, stroke;
 end;
 
@@ -318,7 +317,6 @@ for layer: number = 1, MAX_LAYERS do
 end;
 
 local Label: TextLabel, Stroke: UIStroke = newLabel(MAX_LAYERS + 1);
-
 local fillHalf: number = 0;
 local outlineHalf: number = 0;
 local outerTip: number = 0;
@@ -330,9 +328,16 @@ local falloff: (layer: number, count: number, intensity: number, curve: number) 
 end;
 
 local Apply: () -> () = function(): ()
+        if Settings.HideCursor then
+                local want: boolean = not Settings.Enabled;
+                if UIS.MouseIconEnabled ~= want then
+                        pcall(function(): ()
+                                UIS.MouseIconEnabled = want;
+                        end);
+                end;
+        end;
         local t: number = Settings.Thickness;
         local outlineT: number = t + Settings.OutlineWidth * 2;
-
         fillHalf = Settings.Length / 2;
         outlineHalf = fillHalf + Settings.OutlineWidth;
         outerTip = Settings.Radius + fillHalf + Settings.OutlineWidth;
@@ -401,11 +406,9 @@ local Apply: () -> () = function(): ()
                 local g: GlowLabel = TextGlows[layer];
                 local active: boolean = Settings.Enabled and T.Enabled and T.Glow and layer <= tn;
                 g.Label.Visible = active;
-
                 if active then
                         local alpha: number = falloff(layer, tn, T.GlowIntensity, T.GlowFalloff);
                         local baseStroke: number = if T.Outline then T.OutlineThickness else 0;
-
                         g.Label.Text = T.Content;
                         applyFont(g.Label);
                         g.Label.TextSize = T.Size;
@@ -423,10 +426,12 @@ Apply();
 local angle: number = 0;
 local clock: number = 0;
 local conn: RBXScriptConnection? = nil;
-
 conn = RunService.RenderStepped:Connect(function(dt: number): ()
         if not Settings.Enabled then
                 return;
+        end;
+        if Settings.HideCursor and UIS.MouseIconEnabled then
+                UIS.MouseIconEnabled = false;
         end;
         if Settings.Rotate then
                 local dir: number = if Settings.RotationDirection >= 0 then 1 else -1;
@@ -455,20 +460,18 @@ conn = RunService.RenderStepped:Connect(function(dt: number): ()
                                 g.To = Vector2.new(cx + dirX * h, cy + dirY * h);
                         end;
                 end;
-
                 if Settings.Outline then
                         local o: DrawingLine = Outlines[i];
                         o.From = Vector2.new(cx - dirX * outlineHalf, cy - dirY * outlineHalf);
                         o.To = Vector2.new(cx + dirX * outlineHalf, cy + dirY * outlineHalf);
                 end;
-
                 local f: DrawingLine = Fills[i];
                 f.From = Vector2.new(cx - dirX * fillHalf, cy - dirY * fillHalf);
                 f.To = Vector2.new(cx + dirX * fillHalf, cy + dirY * fillHalf);
         end;
         local T: TextSettings = Settings.Text;
         if T.Enabled then
-                local reach: number = outerTip + (radius - Settings.Radius);
+                local reach: number = outerTip + (radius - Settings.Radius); 
                 local pos: UDim2 = UDim2.fromOffset(mx, my + reach + T.Offset);
                 Label.Position = pos;
 
@@ -491,9 +494,16 @@ Crosshair.Refresh = Apply;
 Crosshair.Toggle = function(state: boolean?): ()
         local value: boolean = if state == nil then not Settings.Enabled else state :: boolean;
         Settings.Enabled = value;
-        pcall(function(): ()
-                UIS.MouseIconEnabled = not value;
-        end);
+        Apply();
+end;
+
+Crosshair.SetHideCursor = function(state: boolean?): ()
+        Settings.HideCursor = if state == nil then not Settings.HideCursor else state :: boolean;
+        if not Settings.HideCursor then
+                pcall(function(): ()
+                        UIS.MouseIconEnabled = true;
+                end);
+        end;
         Apply();
 end;
 
@@ -565,8 +575,7 @@ Crosshair.SetFont = function(fontName: string): ()
         Settings.Text.FontFace = nil;
         Apply();
 end;
-
--- Takes a Font object, e.g. what vape's CreateFont option gives you in .Value
+                                                                                        
 Crosshair.SetFontFace = function(face: Font?): ()
         Settings.Text.FontFace = face;
         Apply();
