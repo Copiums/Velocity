@@ -1,3 +1,4 @@
+--This watermark is used to delete the file if its cached, remove it to make the file persist after velocity updates.
 --[[
 
     ____   ____     .__                .__  __          
@@ -11656,12 +11657,541 @@ velo.run(function()
 		});
 end)
 
+velo.run(function()
+        local Crosshair: table? = nil;
+        local Crosshairr: table = {["Enabled"] = false};
+        local ENV_KEY: string = "CROSSHAIR";
+        local Crosshair: table? = nil;
+        local Crosshairr: table = {["Enabled"] = false};
+        local HideCursor: table = {["Enabled"] = true, ["Object"] = {["Visible"] = true}};
+        local Gap: table = {["Value"] = 15, ["Object"] = {["Visible"] = true}};
+        local Length: table = {["Value"] = 5, ["Object"] = {["Visible"] = true}};
+        local Thickness: table = {["Value"] = 1, ["Object"] = {["Visible"] = true}};
+        local FillColor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 1, ["Object"] = {["Visible"] = true}};
+        local Outline: table = {["Enabled"] = false, ["Object"] = {["Visible"] = true}};
+        local OutlineWidth: table = {["Value"] = 1, ["Object"] = {["Visible"] = false}};
+        local OutlineColor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 1, ["Object"] = {["Visible"] = false}};
+        local Glow: table = {["Enabled"] = true, ["Object"] = {["Visible"] = true}};
+        local GlowSpread: table = {["Value"] = 7, ["Object"] = {["Visible"] = true}};
+        local GlowLayers: table = {["Value"] = 5, ["Object"] = {["Visible"] = true}};
+        local GlowIntensity: table = {["Value"] = 0.35, ["Object"] = {["Visible"] = true}};
+        local GlowFalloff: table = {["Value"] = 2.2, ["Object"] = {["Visible"] = true}};
+        local GlowColor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 1, ["Object"] = {["Visible"] = true}};
+        local Rotate: table = {["Enabled"] = true, ["Object"] = {["Visible"] = true}};
+        local RotationSpeed: table = {["Value"] = 180, ["Object"] = {["Visible"] = true}};
+        local RotationDirection: table = {["Value"] = "Clockwise", ["Object"] = {["Visible"] = true}};
+        local Pulse: table = {["Enabled"] = false, ["Object"] = {["Visible"] = true}};
+        local PulseAmount: table = {["Value"] = 2.5, ["Object"] = {["Visible"] = false}};
+        local PulseSpeed: table = {["Value"] = 8, ["Object"] = {["Visible"] = false}};
+        local TextEnabled: table = {["Enabled"] = true, ["Object"] = {["Visible"] = true}};
+        local TextContent: table = {["Value"] = "veloc", ["Object"] = {["Visible"] = true}};
+        local TextFont: table = {["Value"] = Font.fromEnum(Enum.Font.GothamBold), ["Object"] = {["Visible"] = true}};
+        local TextSize: table = {["Value"] = 12, ["Object"] = {["Visible"] = true}};
+        local TextOffset: table = {["Value"] = 7, ["Object"] = {["Visible"] = true}};
+        local TextColor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 1, ["Object"] = {["Visible"] = true}};
+        local TextOutline: table = {["Enabled"] = false, ["Object"] = {["Visible"] = true}};
+        local TextOutlineThickness: table = {["Value"] = 2, ["Object"] = {["Visible"] = false}};
+        local TextOutlineColor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 1, ["Object"] = {["Visible"] = false}};
+        local TextGlow: table = {["Enabled"] = true, ["Object"] = {["Visible"] = true}};
+        local TextGlowSpread: table = {["Value"] = 4, ["Object"] = {["Visible"] = true}};
+        local TextGlowIntensity: table = {["Value"] = 0.4, ["Object"] = {["Visible"] = true}};
+        local TextGlowColor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 1, ["Object"] = {["Visible"] = true}};
+		local CROSSHAIR_URL: string = "https://raw.githubusercontent.com/Copiums/Velocity/refs/heads/main/libraries/crosshair.lua";
+        --=========================================================
+        --  CONFIG MIRROR
+        --
+        --  mainapi:Load() runs LoadOptions() on a module BEFORE it calls
+        --  Toggle(), and every option's Load() ends in SetValue(), which
+        --  fires that option's Function. So on profile load all of these
+        --  callbacks run while the renderer does not exist yet. Same story
+        --  any time a slider moves with the module off. Everything lands
+        --  here first; Push() flushes it.
+        --=========================================================
+        local Config: table = {
+                ["HideCursor"] = true,
+                ["Radius"] = 15,
+                ["Length"] = 5,
+                ["Thickness"] = 1,
+                ["FillColor"] = Color3.fromRGB(255, 255, 255),
+                ["FillTransparency"] = 1,
 
+                ["Outline"] = false,
+                ["OutlineWidth"] = 1,
+                ["OutlineColor"] = Color3.fromRGB(240, 240, 240),
+                ["OutlineTransparency"] = 1,
 
+                ["Glow"] = true,
+                ["GlowSpread"] = 7,
+                ["GlowLayers"] = 5,
+                ["GlowIntensity"] = 0.35,
+                ["GlowFalloff"] = 2.2,
+                ["GlowColor"] = Color3.fromRGB(255, 255, 255),
 
+                ["Rotate"] = true,
+                ["RotationSpeed"] = 180,
+                ["RotationDirection"] = 1,
 
+                ["Pulse"] = false,
+                ["PulseAmount"] = 2.5,
+                ["PulseSpeed"] = 8,
 
+                ["Text"] = {
+                        ["Enabled"] = true,
+                        ["Content"] = "veloc",
+                        ["FontFace"] = nil,
+                        ["Size"] = 12,
+                        ["Offset"] = 7,
+                        ["Color"] = Color3.fromRGB(255, 255, 255),
+                        ["Transparency"] = 0,
 
+                        ["Outline"] = false,
+                        ["OutlineThickness"] = 2,
+                        ["OutlineColor"] = Color3.fromRGB(240, 240, 240),
+                        ["OutlineTransparency"] = 0,
 
+                        ["Glow"] = true,
+                        ["GlowSpread"] = 4,
+                        ["GlowIntensity"] = 0.4,
+                        ["GlowColor"] = Color3.fromRGB(255, 255, 255),
+                },
+        };
+        local getEnv: () -> table = function(): table
+                if typeof(getgenv) == "function" then
+                        return getgenv();
+                end;
+                return _G;
+        end;
+        local resolve: () -> table? = function(): table?
+                local live: any = getEnv()[ENV_KEY];
+                if type(live) == "table" and type(live.Settings) == "table" then
+                        Crosshair = live;
+                        return live;
+                end;
+                return nil;
+        end;
+        local ensureLoaded: () -> boolean = function(): boolean
+                if resolve() then
+                        return true;
+                end;
 
+                if vape.ThreadFix then
+                        setthreadidentity(8);
+                end;
 
+                local suc: boolean, res: any = pcall(function(): any
+                        return loadstring(game:HttpGet(CROSSHAIR_URL, true))();
+                end);
+
+                if suc and type(res) == "table" and type(res.Settings) == "table" then
+                        Crosshair = res;
+                        return true;
+                end;
+                notif("Custom Crosshair", "Failed to load the renderer.", 8, "alert");
+                warn("[Crosshair] " .. tostring(res));
+                return false;
+        end;
+        local Push: () -> () = function(): ()
+                local C: table? = resolve();
+                if not C then
+                        return;
+                end;
+
+                local S: table = C.Settings;
+                local T: table = S.Text;
+                S.HideCursor = Config.HideCursor;
+                S.Radius = Config.Radius;
+                S.Length = Config.Length;
+                S.Thickness = Config.Thickness;
+                S.FillColor = Config.FillColor;
+                S.FillTransparency = Config.FillTransparency;
+                S.Outline = Config.Outline;
+                S.OutlineWidth = Config.OutlineWidth;
+                S.OutlineColor = Config.OutlineColor;
+                S.OutlineTransparency = Config.OutlineTransparency;
+                S.Glow = Config.Glow;
+                S.GlowSpread = Config.GlowSpread;
+                S.GlowLayers = Config.GlowLayers;
+                S.GlowIntensity = Config.GlowIntensity;
+                S.GlowFalloff = Config.GlowFalloff;
+                S.GlowColor = Config.GlowColor;
+                S.Rotate = Config.Rotate;
+                S.RotationSpeed = Config.RotationSpeed;
+                S.RotationDirection = Config.RotationDirection;
+                S.Pulse = Config.Pulse;
+                S.PulseAmount = Config.PulseAmount;
+                S.PulseSpeed = Config.PulseSpeed;
+                T.Enabled = Config.Text.Enabled;
+                T.Content = Config.Text.Content;
+                T.FontFace = Config.Text.FontFace;
+                T.Size = Config.Text.Size;
+                T.Offset = Config.Text.Offset;
+                T.Color = Config.Text.Color;
+                T.Transparency = Config.Text.Transparency;
+                T.Outline = Config.Text.Outline;
+                T.OutlineThickness = Config.Text.OutlineThickness;
+                T.OutlineColor = Config.Text.OutlineColor;
+                T.OutlineTransparency = Config.Text.OutlineTransparency;
+                T.Glow = Config.Text.Glow;
+                T.GlowSpread = Config.Text.GlowSpread;
+                T.GlowIntensity = Config.Text.GlowIntensity;
+                T.GlowColor = Config.Text.GlowColor;
+                S.Enabled = Crosshairr.Enabled;
+                C.Refresh();
+        end;
+
+        local Set: (key: string, value: any) -> () = function(key: string, value: any): ()
+                Config[key] = value;
+                Push();
+        end;
+
+        local SetText: (key: string, value: any) -> () = function(key: string, value: any): ()
+                Config.Text[key] = value;
+                Push();
+        end;
+
+        local Show: (state: boolean, ...table) -> () = function(state: boolean, ...: table): ()
+                for _: number, control: table in {...} do
+                        control.Object.Visible = state;
+                end;
+        end;
+        Crosshairr = vape.Categories.Render:CreateModule({
+                ["Name"] = "CustomCrosshair",
+                ["Function"] = function(callback: boolean): ()
+                        if callback then
+                                if not ensureLoaded() then
+                                        Crosshairr:Toggle();
+                                        return;
+                                end;
+                                Push();
+                                Crosshairr:Clean(function(): ()
+                                        local C: table? = resolve();
+                                        if C then
+                                                C.Toggle(false);
+                                        end;
+                                end);
+                        end;
+                end,
+                ["Tooltip"] = "Replaces the mouse cursor with an animated crosshair.",
+        });
+        HideCursor = Crosshairr:CreateToggle({
+                ["Name"] = "Hide Cursor",
+                ["Default"] = true,
+                ["Function"] = function(callback: boolean): ()
+                        Set("HideCursor", callback);
+                end,
+                ["Tooltip"] = "Hides the system mouse pointer while the crosshair is on."
+        });
+        Gap = Crosshairr:CreateSlider({
+                ["Name"] = "Gap",
+                ["Min"] = 0,
+                ["Max"] = 60,
+                ["Default"] = 15,
+                ["Function"] = function(val: number): ()
+                        Set("Radius", val);
+                end,
+                ["Tooltip"] = "Distance from the cursor to the middle of each dash.",
+                ["Suffix"] = "px"
+        });
+        Length = Crosshairr:CreateSlider({
+                ["Name"] = "Length",
+                ["Min"] = 1,
+                ["Max"] = 40,
+                ["Default"] = 5,
+                ["Function"] = function(val: number): ()
+                        Set("Length", val);
+                end,
+                ["Suffix"] = "px"
+        });
+        Thickness = Crosshairr:CreateSlider({
+                ["Name"] = "Thickness",
+                ["Min"] = 1,
+                ["Max"] = 10,
+                ["Default"] = 1,
+                ["Function"] = function(val: number): ()
+                        Set("Thickness", val);
+                end,
+                ["Suffix"] = "px"
+        });
+        FillColor = Crosshairr:CreateColorSlider({
+                ["Name"] = "Crosshair Color",
+                ["Function"] = function(hue: number, sat: number, val: number, opacity: number?): ()
+                        Config.FillColor = Color3.fromHSV(hue, sat, val);
+                        Config.FillTransparency = opacity or 1;
+                        Push();
+                end
+        });
+        Outline = Crosshairr:CreateToggle({
+                ["Name"] = "Outline",
+                ["Function"] = function(callback: boolean): ()
+                        Show(callback, OutlineWidth, OutlineColor);
+                        Set("Outline", callback);
+                end
+        });
+        OutlineWidth = Crosshairr:CreateSlider({
+                ["Name"] = "Outline Width",
+                ["Min"] = 1,
+                ["Max"] = 6,
+                ["Default"] = 1,
+                ["Function"] = function(val: number): ()
+                        Set("OutlineWidth", val);
+                end,
+                ["Tooltip"] = "Border thickness per side.",
+                ["Suffix"] = "px",
+                ["Darker"] = true,
+                ["Visible"] = false
+        });
+        OutlineColor = Crosshairr:CreateColorSlider({
+                ["Name"] = "Outline Color",
+                ["Function"] = function(hue: number, sat: number, val: number, opacity: number?): ()
+                        Config.OutlineColor = Color3.fromHSV(hue, sat, val);
+                        Config.OutlineTransparency = opacity or 1;
+                        Push();
+                end,
+                ["Darker"] = true,
+                ["Visible"] = false
+        });
+        Glow = Crosshairr:CreateToggle({
+                ["Name"] = "Glow",
+                ["Default"] = true,
+                ["Function"] = function(callback: boolean): ()
+                        Show(callback, GlowSpread, GlowIntensity, GlowFalloff, GlowLayers, GlowColor);
+                        Set("Glow", callback);
+                end
+        });
+        GlowSpread = Crosshairr:CreateSlider({
+                ["Name"] = "Glow Spread",
+                ["Min"] = 1,
+                ["Max"] = 30,
+                ["Default"] = 7,
+                ["Function"] = function(val: number): ()
+                        Set("GlowSpread", val);
+                end,
+                ["Suffix"] = "px",
+                ["Darker"] = true
+        });
+        GlowIntensity = Crosshairr:CreateSlider({
+                ["Name"] = "Glow Intensity",
+                ["Min"] = 0,
+                ["Max"] = 1,
+                ["Default"] = 0.35,
+                ["Decimal"] = 100,
+                ["Function"] = function(val: number): ()
+                        Set("GlowIntensity", val);
+                end,
+                ["Darker"] = true
+        });
+        GlowFalloff = Crosshairr:CreateSlider({
+                ["Name"] = "Glow Falloff",
+                ["Min"] = 1,
+                ["Max"] = 4,
+                ["Default"] = 2.2,
+                ["Decimal"] = 10,
+                ["Function"] = function(val: number): ()
+                        Set("GlowFalloff", val);
+                end,
+                ["Tooltip"] = "Higher = softer halo. Below 1.5 it starts to look like an outline.",
+                ["Darker"] = true
+        });
+        GlowLayers = Crosshairr:CreateSlider({
+                ["Name"] = "Glow Quality",
+                ["Min"] = 1,
+                ["Max"] = 16,
+                ["Default"] = 5,
+                ["Function"] = function(val: number): ()
+                        Set("GlowLayers", val);
+                end,
+                ["Tooltip"] = "Stacked bands used to fake the falloff. Costs a little performance.",
+                ["Darker"] = true
+        });
+        GlowColor = Crosshairr:CreateColorSlider({
+                ["Name"] = "Glow Color",
+                ["Function"] = function(hue: number, sat: number, val: number): ()
+                        Set("GlowColor", Color3.fromHSV(hue, sat, val));
+                end,
+                ["Darker"] = true
+        });
+        Rotate = Crosshairr:CreateToggle({
+                ["Name"] = "Rotate",
+                ["Default"] = true,
+                ["Function"] = function(callback: boolean): ()
+                        Show(callback, RotationSpeed, RotationDirection);
+                        Set("Rotate", callback);
+                end
+        });
+        RotationSpeed = Crosshairr:CreateSlider({
+                ["Name"] = "Rotation Speed",
+                ["Min"] = 0,
+                ["Max"] = 720,
+                ["Default"] = 180,
+                ["Function"] = function(val: number): ()
+                        Set("RotationSpeed", val);
+                end,
+                ["Tooltip"] = "Degrees per second.",
+                ["Darker"] = true
+        });
+        RotationDirection = Crosshairr:CreateDropdown({
+                ["Name"] = "Direction",
+                ["List"] = {"Clockwise", "Counter-Clockwise"},
+                ["Function"] = function(val: string): ()
+                        Set("RotationDirection", (if val == "Counter-Clockwise" then -1 else 1));
+                end,
+                ["Darker"] = true
+        });
+        Pulse = Crosshairr:CreateToggle({
+                ["Name"] = "Pulse",
+                ["Function"] = function(callback: boolean): ()
+                        Show(callback, PulseAmount, PulseSpeed);
+                        Set("Pulse", callback);
+                end
+        });
+        PulseAmount = Crosshairr:CreateSlider({
+                ["Name"] = "Pulse Amount",
+                ["Min"] = 0,
+                ["Max"] = 20,
+                ["Default"] = 2.5,
+                ["Decimal"] = 10,
+                ["Function"] = function(val: number): ()
+                        Set("PulseAmount", val);
+                end,
+                ["Suffix"] = "px",
+                ["Darker"] = true,
+                ["Visible"] = false
+        });
+        PulseSpeed = Crosshairr:CreateSlider({
+                ["Name"] = "Pulse Speed",
+                ["Min"] = 1,
+                ["Max"] = 20,
+                ["Default"] = 8,
+                ["Decimal"] = 10,
+                ["Function"] = function(val: number): ()
+                        Set("PulseSpeed", val);
+                end,
+                ["Darker"] = true,
+                ["Visible"] = false
+        });
+        TextEnabled = Crosshairr:CreateToggle({
+                ["Name"] = "Text",
+                ["Default"] = true,
+                ["Function"] = function(callback: boolean): ()
+                        Show(callback, TextContent, TextFont, TextSize, TextOffset, TextColor, TextOutline, TextGlow);
+                        Show(callback and TextOutline.Enabled, TextOutlineThickness, TextOutlineColor);
+                        Show(callback and TextGlow.Enabled, TextGlowSpread, TextGlowIntensity, TextGlowColor);
+                        SetText("Enabled", callback);
+                end
+        });
+        TextContent = Crosshairr:CreateTextBox({
+                ["Name"] = "Text",
+                ["Function"] = function(): ()
+                        SetText("Content", TextContent.Value);
+                end,
+                ["Darker"] = true
+        });
+        TextFont = Crosshairr:CreateFont({
+                ["Name"] = "Font",
+                ["Function"] = function(val: Font): ()
+                        -- CreateFont hands back a Font object, not an Enum.Font
+                        SetText("FontFace", val);
+                end,
+                ["Darker"] = true
+        });
+        TextSize = Crosshairr:CreateSlider({
+                ["Name"] = "Text Size",
+                ["Min"] = 6,
+                ["Max"] = 40,
+                ["Default"] = 12,
+                ["Function"] = function(val: number): ()
+                        SetText("Size", val);
+                end,
+                ["Darker"] = true
+        });
+        TextOffset = Crosshairr:CreateSlider({
+                ["Name"] = "Text Offset",
+                ["Min"] = -40,
+                ["Max"] = 60,
+                ["Default"] = 7,
+                ["Function"] = function(val: number): ()
+                        SetText("Offset", val);
+                end,
+                ["Tooltip"] = "Gap between the crosshair's outer tip and the text.",
+                ["Suffix"] = "px",
+                ["Darker"] = true
+        });
+        TextColor = Crosshairr:CreateColorSlider({
+                ["Name"] = "Text Color",
+                ["Function"] = function(hue: number, sat: number, val: number, opacity: number?): ()
+                        Config.Text.Color = Color3.fromHSV(hue, sat, val);
+                        -- TextLabel transparency is the normal way round: 0 = solid
+                        Config.Text.Transparency = 1 - (opacity or 1);
+                        Push();
+                end,
+                ["Darker"] = true
+        });
+        TextOutline = Crosshairr:CreateToggle({
+                ["Name"] = "Text Outline",
+                ["Function"] = function(callback: boolean): ()
+                        Show(callback, TextOutlineThickness, TextOutlineColor);
+                        SetText("Outline", callback);
+                end,
+                ["Darker"] = true
+        });
+        TextOutlineThickness = Crosshairr:CreateSlider({
+                ["Name"] = "Outline Thickness",
+                ["Min"] = 1,
+                ["Max"] = 8,
+                ["Default"] = 2,
+                ["Function"] = function(val: number): ()
+                        SetText("OutlineThickness", val);
+                end,
+                ["Suffix"] = "px",
+                ["Darker"] = true,
+                ["Visible"] = false
+        });
+        TextOutlineColor = Crosshairr:CreateColorSlider({
+                ["Name"] = "Text Outline Color",
+                ["Function"] = function(hue: number, sat: number, val: number, opacity: number?): ()
+                        Config.Text.OutlineColor = Color3.fromHSV(hue, sat, val);
+                        Config.Text.OutlineTransparency = 1 - (opacity or 1);
+                        Push();
+                end,
+                ["Darker"] = true,
+                ["Visible"] = false
+        });
+        TextGlow = Crosshairr:CreateToggle({
+                ["Name"] = "Text Glow",
+                ["Default"] = true,
+                ["Function"] = function(callback: boolean): ()
+                        Show(callback, TextGlowSpread, TextGlowIntensity, TextGlowColor);
+                        SetText("Glow", callback);
+                end,
+                ["Darker"] = true
+        });
+        TextGlowSpread = Crosshairr:CreateSlider({
+                ["Name"] = "Text Glow Spread",
+                ["Min"] = 1,
+                ["Max"] = 20,
+                ["Default"] = 4,
+                ["Function"] = function(val: number): ()
+                        SetText("GlowSpread", val);
+                end,
+                ["Suffix"] = "px",
+                ["Darker"] = true
+        });
+        TextGlowIntensity = Crosshairr:CreateSlider({
+                ["Name"] = "Text Glow Intensity",
+                ["Min"] = 0,
+                ["Max"] = 1,
+                ["Default"] = 0.4,
+                ["Decimal"] = 100,
+                ["Function"] = function(val: number): ()
+                        SetText("GlowIntensity", val);
+                end,
+                ["Darker"] = true
+        });
+        TextGlowColor = Crosshairr:CreateColorSlider({
+                ["Name"] = "Text Glow Color",
+                ["Function"] = function(hue: number, sat: number, val: number): ()
+                        SetText("GlowColor", Color3.fromHSV(hue, sat, val));
+                end,
+                ["Darker"] = true
+        });
+end);
