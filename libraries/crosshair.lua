@@ -1,4 +1,3 @@
---!nonstrict
 --// Custom Crosshair - renderer
 --
 -- Standalone. Host this file and point the vape module's CROSSHAIR_URL at it.
