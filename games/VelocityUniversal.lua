@@ -11696,7 +11696,7 @@ velo.run(function()
         local TextGlowSpread: table = {["Value"] = 4, ["Object"] = {["Visible"] = true}};
         local TextGlowIntensity: table = {["Value"] = 0.4, ["Object"] = {["Visible"] = true}};
         local TextGlowColor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 1, ["Object"] = {["Visible"] = true}};
-		local CROSSHAIR_URL: string = "https://raw.githubusercontent.com/YOURNAME/YOURREPO/main/crosshair.lua";
+		local CROSSHAIR_URL: string = "https://raw.githubusercontent.com/Copiums/Velocity/refs/heads/main/libraries/crosshair.lua";
         --=========================================================
         --  CONFIG MIRROR
         --
