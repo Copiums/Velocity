@@ -11696,7 +11696,7 @@ velo.run(function()
         local TextGlowSpread: table = {["Value"] = 4, ["Object"] = {["Visible"] = true}};
         local TextGlowIntensity: table = {["Value"] = 0.4, ["Object"] = {["Visible"] = true}};
         local TextGlowColor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 1, ["Object"] = {["Visible"] = true}};
-		local CROSSHAIR_URL: string = "https://raw.githubusercontent.com/Copiums/Velocity/refs/heads/main/libraries/crosshair.lua";
+		local CROSSHAIR_URL: string = "https://raw.githubusercontent.com/YOURNAME/YOURREPO/main/crosshair.lua";
         --=========================================================
         --  CONFIG MIRROR
         --
@@ -11755,6 +11755,10 @@ velo.run(function()
                         ["GlowColor"] = Color3.fromRGB(255, 255, 255),
                 },
         };
+
+        --=========================================================
+        --  RENDERER HANDLE
+        --=========================================================
         local getEnv: () -> table = function(): table
                 if typeof(getgenv) == "function" then
                         return getgenv();
@@ -11777,17 +11781,34 @@ velo.run(function()
                 if vape.ThreadFix then
                         setthreadidentity(8);
                 end;
-
                 local suc: boolean, res: any = pcall(function(): any
-                        return loadstring(game:HttpGet(CROSSHAIR_URL, true))();
+                        local body: string = game:HttpGet(CROSSHAIR_URL, true);
+                        if type(body) ~= "string" or #body < 32 then
+                                error("empty response (" .. tostring(#tostring(body)) .. " bytes)", 0);
+                        end;
+                        if body:sub(1, 1) == "<" then
+                                error("got HTML, not Lua - check the raw URL / repo is public", 0);
+                        end;
+
+                        local chunk: any, err: any = loadstring(body);
+                        if not chunk then
+                                error("compile error: " .. tostring(err), 0);
+                        end;
+
+                        return chunk();
                 end);
 
                 if suc and type(res) == "table" and type(res.Settings) == "table" then
                         Crosshair = res;
                         return true;
                 end;
-                notif("Custom Crosshair", "Failed to load the renderer.", 8, "alert");
-                warn("[Crosshair] " .. tostring(res));
+                pcall(function(): ()
+                        if typeof(notif) == "function" then
+                                notif("Custom Crosshair", "Renderer failed to load, see console.", 8, "alert");
+                        elseif vape and vape.CreateNotification then
+                                vape:CreateNotification("Custom Crosshair", "Renderer failed to load, see console.", 8, "alert");
+                        end;
+                end);
                 return false;
         end;
         local Push: () -> () = function(): ()
@@ -11798,28 +11819,34 @@ velo.run(function()
 
                 local S: table = C.Settings;
                 local T: table = S.Text;
+
                 S.HideCursor = Config.HideCursor;
                 S.Radius = Config.Radius;
                 S.Length = Config.Length;
                 S.Thickness = Config.Thickness;
                 S.FillColor = Config.FillColor;
                 S.FillTransparency = Config.FillTransparency;
+
                 S.Outline = Config.Outline;
                 S.OutlineWidth = Config.OutlineWidth;
                 S.OutlineColor = Config.OutlineColor;
                 S.OutlineTransparency = Config.OutlineTransparency;
+
                 S.Glow = Config.Glow;
                 S.GlowSpread = Config.GlowSpread;
                 S.GlowLayers = Config.GlowLayers;
                 S.GlowIntensity = Config.GlowIntensity;
                 S.GlowFalloff = Config.GlowFalloff;
                 S.GlowColor = Config.GlowColor;
+
                 S.Rotate = Config.Rotate;
                 S.RotationSpeed = Config.RotationSpeed;
                 S.RotationDirection = Config.RotationDirection;
+
                 S.Pulse = Config.Pulse;
                 S.PulseAmount = Config.PulseAmount;
                 S.PulseSpeed = Config.PulseSpeed;
+
                 T.Enabled = Config.Text.Enabled;
                 T.Content = Config.Text.Content;
                 T.FontFace = Config.Text.FontFace;
@@ -11827,14 +11854,17 @@ velo.run(function()
                 T.Offset = Config.Text.Offset;
                 T.Color = Config.Text.Color;
                 T.Transparency = Config.Text.Transparency;
+
                 T.Outline = Config.Text.Outline;
                 T.OutlineThickness = Config.Text.OutlineThickness;
                 T.OutlineColor = Config.Text.OutlineColor;
                 T.OutlineTransparency = Config.Text.OutlineTransparency;
+
                 T.Glow = Config.Text.Glow;
                 T.GlowSpread = Config.Text.GlowSpread;
                 T.GlowIntensity = Config.Text.GlowIntensity;
                 T.GlowColor = Config.Text.GlowColor;
+
                 S.Enabled = Crosshairr.Enabled;
                 C.Refresh();
         end;
@@ -11863,12 +11893,11 @@ velo.run(function()
                                         return;
                                 end;
                                 Push();
-                                Crosshairr:Clean(function(): ()
-                                        local C: table? = resolve();
-                                        if C then
-                                                C.Toggle(false);
-                                        end;
-                                end);
+                        else
+                                local C: table? = resolve() or Crosshair;
+                                if C then
+                                        C.Toggle(false);
+                                end;
                         end;
                 end,
                 ["Tooltip"] = "Replaces the mouse cursor with an animated crosshair.",
@@ -12089,7 +12118,6 @@ velo.run(function()
         TextFont = Crosshairr:CreateFont({
                 ["Name"] = "Font",
                 ["Function"] = function(val: Font): ()
-                        -- CreateFont hands back a Font object, not an Enum.Font
                         SetText("FontFace", val);
                 end,
                 ["Darker"] = true
@@ -12120,7 +12148,6 @@ velo.run(function()
                 ["Name"] = "Text Color",
                 ["Function"] = function(hue: number, sat: number, val: number, opacity: number?): ()
                         Config.Text.Color = Color3.fromHSV(hue, sat, val);
-                        -- TextLabel transparency is the normal way round: 0 = solid
                         Config.Text.Transparency = 1 - (opacity or 1);
                         Push();
                 end,
