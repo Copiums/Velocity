@@ -123,7 +123,7 @@ end;
 
 local UIS: UserInputService = cloneref(game:GetService("UserInputService"));
 local RunService: RunService = cloneref(game:GetService("RunService"));
-local Players: Players = cloneref(game:GetService("Players"));;
+local Players: Players = cloneref(game:GetService("Players"));
 local MAX_LAYERS: number = 16;
 local GUI_NAME: string = "Crosshair_Gui";
 local ENV_KEY: string = "CROSSHAIR";
