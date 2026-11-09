@@ -12305,7 +12305,7 @@ velo.run(function()
 
         Spotify = vape:CreateOverlay({
                 ["Name"] = 'Spotify',
-                ["Icon"] = getvapeasset('velo/assets/new/spotify.png'),
+                ["Icon"] = vape["Libraries"]["getvapeasset"]('velo/assets/new/spotify.png'),
                 ["Size"] = UDim2["fromOffset"](16, 16),
                 ["Position"] = UDim2["fromOffset"](12, 13),
                 ["Function"] = function(callback: boolean): ()
@@ -12843,17 +12843,17 @@ velo.run(function()
                 end;
 
                 SpotifyHandler["Start"] = function(self: SpotifyHandlerT): ()
-                        if not isfile('newvape/profiles/spotify.txt') then
+                        if not isfile('velo/profiles/spotify.txt') then
                                 notif('Spotify', 'Missing cookie! (dump sp_dc from the browser and write to profiles/spotify.txt)', 30, 'warning');
                                 return;
                         end;
 
                         self["Headers"] = {
-                                ["Cookie"] = 'sp_dc='..readfile('newvape/profiles/spotify.txt')..';',
+                                ["Cookie"] = 'sp_dc='..readfile('velo/profiles/spotify.txt')..';',
                                 ['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:158.0) Gecko/20100101 Firefox/158.0';
                         };
 
-                        local data: any = isfile('newvape/profiles/spotifydata.txt') and httpService:JSONDecode(readfile('newvape/profiles/spotifydata.txt')) or {["expireTime"] = 0};
+                        local data: any = isfile('velo/profiles/spotifydata.txt') and httpService:JSONDecode(readfile('velo/profiles/spotifydata.txt')) or {["expireTime"] = 0};
                         if data["expireTime"] > os["time"]() then
                                 self["Data"] = data;
                         else
@@ -12866,7 +12866,7 @@ velo.run(function()
 
                                 if success then
                                         notif('Spotify', 'Logged in!', 10, 'info');
-                                        writefile('newvape/profiles/spotifydata.txt', httpService:JSONEncode(data));
+                                        writefile('velo/profiles/spotifydata.txt', httpService:JSONEncode(data));
                                         self["Data"] = data;
                                 else
                                         notif('Spotify', data, 10, 'alert');
