@@ -1586,76 +1586,86 @@ velo.run(function()
     	end;
 
 	function whitelist:hook()
-	        if self.hooked then return; end;
-		self.hooked = true;
+		if self.hooked then return end
+		self.hooked = true
+
 		if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
 			if getcallbackvalue and restorefunction and hookfunction then
 				local old: any
+
 				task.spawn(function()
 					vape:Clean(function()
 						if old then
-							restorefunction(old);
-							old = nil;
-						end;
-					end);
+							restorefunction(old)
+							old = nil
+						end
+					end)
+
 					repeat
-						local current: any = getcallbackvalue(textChatService, 'OnIncomingMessage')
+						local current: any = getcallbackvalue(textChatService, "OnIncomingMessage")
 
 						if old ~= current and current then
 							if old then
-								restorefunction(old);
-							end;
-							local hook: any;
+								restorefunction(old)
+							end
+
+							local hook: any
 							hook = hookfunction(current, function(...)
-								local msg: string? = ...;
-								local data: function? = hook(...);
-								local plr: any = msg.TextSource and playersService:GetPlayerByUserId(msg.TextSource.UserId);
-
+								local msg: TextChatMessage? = ...
+								local data: any = hook(...)
+	
+								local plr = msg and msg.TextSource
+									and playersService:GetPlayerByUserId(msg.TextSource.UserId)
+	
 								if plr then
-									if not (data and data:IsA('TextChatMessageProperties') and data.PrefixText ~= '') then
-										data = Instance.new('TextChatMessageProperties');
-										data.PrefixText = msg.PrefixText;
-										data.Text = msg.Text;
-									end;
-
-									self:newchat(data, plr, msg.Status ~= Enum.TextChatMessageStatus.Success);
-								end;
-
-								return data;
-							end);
-
-							old = current;
-						end;
-
-						task.wait(0.1);
-					until vape.Loaded == nil;
-				end);
-			end;
-		elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
-            		pcall(function()
-                		local message: any = replicatedStorageService.DefaultChatSystemChatEvents.OnNewMessage
-                		if message and message.OnClientEvent then
-                    			for i: any, v: any in next, message.OnClientEvent:GetConnections() do
-                        			local updated: any = v.Function and tostring(v.Function):find('UpdateMessagePostedInChannel')
-                        			if updated then
-                            				whitelist:oldchat(v.Function)
-                            				break
-                        			end
-                    			end
-                		end
-                		local filter: any = replicatedStorageService.DefaultChatSystemChatEvents.OnMessageDoneFiltering
-                		if filter and filter.OnClientEvent then
-                    			for i: any, v: any in next, filter.OnClientEvent:GetConnections() do
-                        			local updated: any  = v.Function and tostring(v.Function):find('UpdateMessageFiltered')
-                        			if updated then
-                            				whitelist:oldchat(v.Function)
-                            				break;
-                        			end;
-                    			end;
-                		end;
-            		end);
-        	end;
-
+									if not (data and data:IsA("TextChatMessageProperties") and data.PrefixText ~= "") then
+										data = Instance.new("TextChatMessageProperties")
+										data.PrefixText = msg.PrefixText
+										data.Text = msg.Text
+									end
+	
+									self:newchat(data, plr, msg.Status ~= Enum.TextChatMessageStatus.Success)
+								end
+	
+								return data
+							end)
+	
+							old = current
+						end
+						task.wait(0.1)
+					until vape.Loaded == nil
+				end)
+			end
+		elseif replicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") then
+			pcall(function()
+				local events = replicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+				local message = events and events:FindFirstChild("OnNewMessage")
+	
+				if message and message.OnClientEvent then
+					for _, v in next, message.OnClientEvent:GetConnections() do
+						local updated = v.Function and tostring(v.Function):find("UpdateMessagePostedInChannel")
+	
+						if updated then
+							whitelist:oldchat(v.Function)
+							break
+						end
+					end
+				end
+	
+				local filter = events and events:FindFirstChild("OnMessageDoneFiltering")
+	
+				if filter and filter.OnClientEvent then
+					for _, v in next, filter.OnClientEvent:GetConnections() do
+						local updated = v.Function and tostring(v.Function):find("UpdateMessageFiltered")
+	
+						if updated then
+							whitelist:oldchat(v.Function)
+							break
+						end
+					end
+				end
+			end)
+		end
 		if exp then
 			local bubblechat: any = exp:WaitForChild('bubbleChat', 5)
 			if bubblechat then
