@@ -165,6 +165,7 @@ do
 		['velo/assets/new/range.png'] = 'rbxassetid://107794917650053',
 		['velo/assets/new/rangeindicator.png'] = 'rbxassetid://107038094175283',
 		['velo/assets/new/render.png'] = 'rbxassetid://125472576898654',
+		['velo/assets/new/spotify.png'] = 'rbxassetid://13956951038630',
 		['velo/assets/new/search.png'] = 'rbxassetid://115611852955611',
 		['velo/assets/new/settingdots.png'] = 'rbxassetid://130896840048276',
 		['velo/assets/new/settings.png'] = 'rbxassetid://73820177347303',
