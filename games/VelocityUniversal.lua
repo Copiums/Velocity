@@ -12228,7 +12228,7 @@ velo.run(function()
         });
 end);
 
-velo.run(function()
+velo["run"](function(): ()
         --[[
                 Lua OTP Library https://github.com/tilkinsc/LuaOTP/
                 SpotAPI https://github.com/Aran404/SpotAPI
@@ -12256,7 +12256,7 @@ velo.run(function()
                 SOFTWARE.
         ]]
 
-        type CacheEntry = {Artists: {string}, Title: string};
+        type CacheEntry = {Artists: {string}, Title: string, Cover: string?};
         type AuthData = {
                 clientId: string,
                 clientVersion: string,
@@ -12267,6 +12267,26 @@ velo.run(function()
         };
         type DealerInfo = {Dealer: string, Client: string};
         type Response = {Success: boolean, Body: string};
+        type VeloTheme = {Background: Color3, Title: Color3, Artist: Color3, Time: Color3, BarBack: Color3};
+        type VeloConfig = {
+                Width: number,
+                Height: number,
+                Padding: number,
+                Corner: number,
+                CoverCorner: number,
+                TitleSize: number,
+                TextSize: number,
+                BarThickness: number,
+                Transparency: number,
+                Scale: number,
+                ShowCover: boolean,
+                ShowTimes: boolean,
+                ShowBar: boolean,
+                ByPrefix: boolean,
+                RoundBar: boolean,
+                Shadow: boolean,
+                Border: boolean;
+        };
         type SpotifyHandlerT = {
                 Cache: {[string]: CacheEntry},
                 Socket: any,
@@ -12277,6 +12297,7 @@ velo.run(function()
                 connectionId: string?,
                 syncTime: number?,
                 track: string?,
+                coverUrl: string?,
                 playPosition: number?,
                 playRate: number,
                 playDuration: number,
@@ -12291,9 +12312,53 @@ velo.run(function()
 
         local Spotify: any;
         local SpotifyHandler: SpotifyHandlerT = {["Cache"] = {}} :: any;
-        local BorderColor: any = {};
-        local holder: Frame;
-        local stroke: UIStroke;
+        local currentStyle: string = 'Vape';
+        local currentTheme: string = 'Dark';
+        local lastTitle: string = 'Not playing';
+        local lastArtists: {string} = {};
+        local cfg: VeloConfig = {
+                ["Width"] = 229,
+                ["Height"] = 82,
+                ["Padding"] = 10,
+                ["Corner"] = 6,
+                ["CoverCorner"] = 4,
+                ["TitleSize"] = 14,
+                ["TextSize"] = 11,
+                ["BarThickness"] = 2,
+                ["Transparency"] = 0,
+                ["Scale"] = 1,
+                ["ShowCover"] = true,
+                ["ShowTimes"] = true,
+                ["ShowBar"] = true,
+                ["ByPrefix"] = true,
+                ["RoundBar"] = true,
+                ["Shadow"] = false,
+                ["Border"] = false;
+        };
+        local veloThemes: {[string]: VeloTheme} = {
+                ["Dark"] = {
+                        ["Background"] = Color3["fromRGB"](15, 15, 15),
+                        ["Title"] = Color3["fromRGB"](255, 255, 255),
+                        ["Artist"] = Color3["fromRGB"](200, 200, 200),
+                        ["Time"] = Color3["fromRGB"](170, 170, 170),
+                        ["BarBack"] = Color3["fromRGB"](60, 60, 60);
+                },
+                ["Light"] = {
+                        ["Background"] = Color3["fromRGB"](255, 255, 255),
+                        ["Title"] = Color3["fromRGB"](0, 0, 0),
+                        ["Artist"] = Color3["fromRGB"](60, 60, 60),
+                        ["Time"] = Color3["fromRGB"](90, 90, 90),
+                        ["BarBack"] = Color3["fromRGB"](200, 200, 200);
+                },
+                ["Nightly"] = {
+                        ["Background"] = Color3["fromRGB"](0, 0, 0),
+                        ["Title"] = Color3["fromRGB"](255, 255, 255),
+                        ["Artist"] = Color3["fromRGB"](200, 200, 200),
+                        ["Time"] = Color3["fromRGB"](170, 170, 170),
+                        ["BarBack"] = Color3["fromRGB"](40, 40, 40);
+                };
+        };
+        local customTheme: VeloTheme = table["clone"](veloThemes["Dark"]);
 
         local addCorner: (parent: GuiObject, radius: UDim?) -> UICorner = function(parent: GuiObject, radius: UDim?): UICorner
                 local corner: UICorner = Instance["new"]('UICorner');
@@ -12303,9 +12368,14 @@ velo.run(function()
                 return corner;
         end;
 
+        local formatTime: (sec: number) -> string = function(sec: number): string
+                local total: number = math["max"](math["floor"](sec), 0);
+                return string["format"]('%d:%02d', total // 60, total % 60);
+        end;
+
         Spotify = vape:CreateOverlay({
                 ["Name"] = 'Spotify',
-                ["Icon"] = vape["Libraries"]["getvapeasset"]('velo/assets/new/spotify.png'),
+                ["Icon"] = getcustomasset('velo/assets/new/spotify.png'),
                 ["Size"] = UDim2["fromOffset"](16, 16),
                 ["Position"] = UDim2["fromOffset"](12, 13),
                 ["Function"] = function(callback: boolean): ()
@@ -12321,7 +12391,299 @@ velo.run(function()
                         end;
                 end;
         });
-        Spotify:CreateColorSlider({
+
+        --[[
+                Vape style
+        ]]
+
+        local holder: Frame = Instance["new"]('Frame');
+        holder["BackgroundColor3"] = Color3["new"]();
+        holder["BackgroundTransparency"] = 0.5;
+        holder["Size"] = UDim2["fromOffset"](180, 55);
+        holder["Parent"] = Spotify["Children"];
+        addBlur(holder);
+        addCorner(holder);
+        local title: TextLabel = Instance["new"]('TextLabel');
+        title["BackgroundTransparency"] = 1;
+        title["Font"] = Enum["Font"]["Arial"];
+        title["Position"] = UDim2["fromOffset"](6, 6);
+        title["Size"] = UDim2["new"](1, -6, 0, 16);
+        title["Text"] = lastTitle;
+        title["TextColor3"] = Color3["new"](1, 1, 1);
+        title["TextSize"] = 16;
+        title["TextTruncate"] = Enum["TextTruncate"]["AtEnd"];
+        title["TextXAlignment"] = Enum["TextXAlignment"]["Left"];
+        title["Parent"] = holder;
+        local artist: TextLabel = Instance["new"]('TextLabel');
+        artist["BackgroundTransparency"] = 1;
+        artist["Font"] = Enum["Font"]["Arial"];
+        artist["Position"] = UDim2["fromOffset"](7, 24);
+        artist["Size"] = UDim2["new"](1, -7, 0, 14);
+        artist["Text"] = '';
+        artist["TextColor3"] = Color3["new"](0.7, 0.7, 0.7);
+        artist["TextSize"] = 14;
+        artist["TextTruncate"] = Enum["TextTruncate"]["AtEnd"];
+        artist["TextXAlignment"] = Enum["TextXAlignment"]["Left"];
+        artist["Parent"] = holder;
+        local progress: Frame = Instance["new"]('Frame');
+        progress["BackgroundColor3"] = Color3["fromRGB"](26, 25, 26);
+        progress["Position"] = UDim2["fromOffset"](6, 43);
+        progress["Size"] = UDim2["new"](1, -46, 0, 4);
+        progress["Parent"] = holder;
+        addCorner(progress);
+        local fill: Frame = Instance["new"]('Frame');
+        fill["BackgroundColor3"] = Color3["fromHSV"](0.46, 0.96, 0.52);
+        fill["Size"] = UDim2["fromScale"](0, 1);
+        fill["Parent"] = progress;
+        addCorner(fill);
+        local duration: TextLabel = Instance["new"]('TextLabel');
+        duration["BackgroundColor3"] = Color3["new"](1, 1, 1);
+        duration["BackgroundTransparency"] = 1;
+        duration["BorderColor3"] = Color3["new"]();
+        duration["BorderSizePixel"] = 0;
+        duration["Font"] = Enum["Font"]["Arial"];
+        duration["Position"] = UDim2["new"](1, -32, 0, 37);
+        duration["Size"] = UDim2["fromOffset"](40, 13);
+        duration["Text"] = '0:00';
+        duration["TextColor3"] = Color3["fromRGB"](170, 170, 170);
+        duration["TextSize"] = 13;
+        duration["TextXAlignment"] = Enum["TextXAlignment"]["Left"];
+        duration["Parent"] = holder;
+        local stroke: UIStroke = Instance["new"]('UIStroke');
+        stroke["Enabled"] = false;
+        stroke["Color"] = Color3["fromHSV"](0.44, 1, 1);
+        stroke["Parent"] = holder;
+
+        --[[
+                Velocity style
+        ]]
+
+        local card: Frame = Instance["new"]('Frame');
+        card["BackgroundColor3"] = customTheme["Background"];
+        card["BorderSizePixel"] = 0;
+        card["Size"] = UDim2["fromOffset"](cfg["Width"], cfg["Height"]);
+        card["Visible"] = false;
+        card["Parent"] = Spotify["Children"];
+        local cardCorner: UICorner = addCorner(card, UDim["new"](0, cfg["Corner"]));
+        local cardScale: UIScale = Instance["new"]('UIScale');
+        cardScale["Scale"] = cfg["Scale"];
+        cardScale["Parent"] = card;
+        local cardShadow: any = addBlur(card);
+        cardShadow["Visible"] = cfg["Shadow"];
+        local cardStroke: UIStroke = Instance["new"]('UIStroke');
+        cardStroke["ApplyStrokeMode"] = Enum["ApplyStrokeMode"]["Border"];
+        cardStroke["Color"] = Color3["fromRGB"](251, 142, 142);
+        cardStroke["Enabled"] = cfg["Border"];
+        cardStroke["Thickness"] = 1;
+        cardStroke["Parent"] = card;
+        local cover: ImageLabel = Instance["new"]('ImageLabel');
+        cover["BackgroundColor3"] = Color3["fromRGB"](40, 40, 40);
+        cover["BackgroundTransparency"] = 0;
+        cover["BorderSizePixel"] = 0;
+        cover["Image"] = '';
+        cover["ScaleType"] = Enum["ScaleType"]["Crop"];
+        cover["Parent"] = card;
+        local coverCorner: UICorner = addCorner(cover, UDim["new"](0, cfg["CoverCorner"]));
+        local vTitle: TextLabel = Instance["new"]('TextLabel');
+        vTitle["BackgroundTransparency"] = 1;
+        vTitle["Font"] = Enum["Font"]["ArimoBold"];
+        vTitle["Text"] = lastTitle;
+        vTitle["TextTruncate"] = Enum["TextTruncate"]["AtEnd"];
+        vTitle["TextXAlignment"] = Enum["TextXAlignment"]["Left"];
+        vTitle["TextYAlignment"] = Enum["TextYAlignment"]["Top"];
+        vTitle["Parent"] = card;
+        local vArtist: TextLabel = Instance["new"]('TextLabel');
+        vArtist["BackgroundTransparency"] = 1;
+        vArtist["Font"] = Enum["Font"]["Arimo"];
+        vArtist["Text"] = '';
+        vArtist["TextTruncate"] = Enum["TextTruncate"]["AtEnd"];
+        vArtist["TextXAlignment"] = Enum["TextXAlignment"]["Left"];
+        vArtist["TextYAlignment"] = Enum["TextYAlignment"]["Top"];
+        vArtist["Parent"] = card;
+        local vCurrent: TextLabel = Instance["new"]('TextLabel');
+        vCurrent["BackgroundTransparency"] = 1;
+        vCurrent["Font"] = Enum["Font"]["Arimo"];
+        vCurrent["Text"] = '0:00';
+        vCurrent["TextXAlignment"] = Enum["TextXAlignment"]["Left"];
+        vCurrent["Parent"] = card;
+        local vMax: TextLabel = Instance["new"]('TextLabel');
+        vMax["BackgroundTransparency"] = 1;
+        vMax["Font"] = Enum["Font"]["Arimo"];
+        vMax["Text"] = '0:00';
+        vMax["TextXAlignment"] = Enum["TextXAlignment"]["Right"];
+        vMax["Parent"] = card;
+        local vBar: Frame = Instance["new"]('Frame');
+        vBar["BorderSizePixel"] = 0;
+        vBar["Parent"] = card;
+        local vBarCorner: UICorner = addCorner(vBar, UDim["new"](1, 0));
+        local vBarFill: Frame = Instance["new"]('Frame');
+        vBarFill["BackgroundColor3"] = Color3["fromRGB"](251, 142, 142);
+        vBarFill["BorderSizePixel"] = 0;
+        vBarFill["Size"] = UDim2["fromScale"](0, 1);
+        vBarFill["Parent"] = vBar;
+        local vBarFillCorner: UICorner = addCorner(vBarFill, UDim["new"](1, 0));
+
+        local layoutCard: () -> () = function(): ()
+                local w: number = cfg["Width"];
+                local h: number = cfg["Height"];
+                local pad: number = cfg["Padding"];
+                local coverSize: number = math["max"](h - pad * 2, 0);
+                local textX: number = cfg["ShowCover"] and (pad + coverSize + 10) or (pad + 2);
+                local textW: number = math["max"](w - textX - pad, 0);
+                local lineH: number = cfg["TextSize"] + 2;
+                local rowY: number = h - pad - lineH;
+                local timeW: number = cfg["ShowTimes"] and math["ceil"](cfg["TextSize"] * 3.2) or 0;
+                local gap: number = cfg["ShowTimes"] and 6 or 0;
+                local barX: number = textX + timeW + gap;
+                local barW: number = math["max"](w - pad - timeW - gap - barX, 0);
+
+                card["Size"] = UDim2["fromOffset"](w, h);
+                card["BackgroundTransparency"] = cfg["Transparency"];
+                cardCorner["CornerRadius"] = UDim["new"](0, cfg["Corner"]);
+                cardScale["Scale"] = cfg["Scale"];
+                cardShadow["Visible"] = cfg["Shadow"];
+                cardStroke["Enabled"] = cfg["Border"];
+
+                cover["Visible"] = cfg["ShowCover"];
+                cover["Position"] = UDim2["fromOffset"](pad, pad);
+                cover["Size"] = UDim2["fromOffset"](coverSize, coverSize);
+                coverCorner["CornerRadius"] = UDim["new"](0, cfg["CoverCorner"]);
+
+                vTitle["Position"] = UDim2["fromOffset"](textX, pad + 2);
+                vTitle["Size"] = UDim2["fromOffset"](textW, cfg["TitleSize"] + 2);
+                vTitle["TextSize"] = cfg["TitleSize"];
+                vArtist["Position"] = UDim2["fromOffset"](textX, pad + cfg["TitleSize"] + 6);
+                vArtist["Size"] = UDim2["fromOffset"](textW, lineH);
+                vArtist["TextSize"] = cfg["TextSize"];
+
+                vCurrent["Visible"] = cfg["ShowTimes"];
+                vCurrent["Position"] = UDim2["fromOffset"](textX, rowY);
+                vCurrent["Size"] = UDim2["fromOffset"](timeW, lineH);
+                vCurrent["TextSize"] = cfg["TextSize"];
+                vMax["Visible"] = cfg["ShowTimes"];
+                vMax["Position"] = UDim2["fromOffset"](w - pad - timeW, rowY);
+                vMax["Size"] = UDim2["fromOffset"](timeW, lineH);
+                vMax["TextSize"] = cfg["TextSize"];
+
+                vBar["Visible"] = cfg["ShowBar"];
+                vBar["Position"] = UDim2["fromOffset"](barX, rowY + math["floor"]((lineH - cfg["BarThickness"]) / 2));
+                vBar["Size"] = UDim2["fromOffset"](barW, cfg["BarThickness"]);
+                vBarCorner["CornerRadius"] = cfg["RoundBar"] and UDim["new"](1, 0) or UDim["new"]();
+                vBarFillCorner["CornerRadius"] = vBarCorner["CornerRadius"];
+        end;
+
+        local applyTheme: () -> () = function(): ()
+                local theme: VeloTheme = currentTheme == 'Custom' and customTheme or veloThemes[currentTheme] or veloThemes["Dark"];
+                card["BackgroundColor3"] = theme["Background"];
+                vTitle["TextColor3"] = theme["Title"];
+                vArtist["TextColor3"] = theme["Artist"];
+                vCurrent["TextColor3"] = theme["Time"];
+                vMax["TextColor3"] = theme["Time"];
+                vBar["BackgroundColor3"] = theme["BarBack"];
+        end;
+
+        local setTrackText: (titleText: string, artists: {string}) -> () = function(titleText: string, artists: {string}): ()
+                lastTitle = titleText;
+                lastArtists = artists;
+                local artistText: string = table["concat"](artists, ', ');
+                title["Text"] = titleText;
+                artist["Text"] = artistText;
+                vTitle["Text"] = titleText;
+                vArtist["Text"] = (cfg["ByPrefix"] and artistText ~= '') and ('By '..artistText) or artistText;
+        end;
+
+        --[[
+                Options
+        ]]
+
+        local Style: any;
+        local BackgroundColor: any;
+        local BorderColor: any;
+        local Border: any;
+        local Theme: any;
+        local CardBackground: any;
+        local TitleColor: any;
+        local ArtistColor: any;
+        local TimeColor: any;
+        local BarBackground: any;
+        local BarColor: any;
+        local Transparency: any;
+        local Scale: any;
+        local Width: any;
+        local Height: any;
+        local Padding: any;
+        local CardCorner: any;
+        local CoverCorner: any;
+        local TitleSize: any;
+        local TextSize: any;
+        local BarThickness: any;
+        local TitleFont: any;
+        local ArtistFont: any;
+        local TimeFont: any;
+        local ShowCover: any;
+        local ShowTimes: any;
+        local ShowProgress: any;
+        local RoundBar: any;
+        local ByPrefix: any;
+        local Shadow: any;
+        local CardBorder: any;
+        local CardBorderColor: any;
+        local BorderThickness: any;
+
+        local updateVisibility: () -> () = function(): ()
+                local isVape: boolean = currentStyle == 'Vape';
+                local isVelo: boolean = currentStyle == 'Velocity';
+                local isCustom: boolean = isVelo and currentTheme == 'Custom';
+
+                holder["Visible"] = isVape;
+                card["Visible"] = isVelo;
+
+                BackgroundColor["Object"]["Visible"] = isVape;
+                Border["Object"]["Visible"] = isVape;
+                BorderColor["Object"]["Visible"] = isVape and Border["Enabled"];
+
+                Theme["Object"]["Visible"] = isVelo;
+                CardBackground["Object"]["Visible"] = isCustom;
+                TitleColor["Object"]["Visible"] = isCustom;
+                ArtistColor["Object"]["Visible"] = isCustom;
+                TimeColor["Object"]["Visible"] = isCustom;
+                BarBackground["Object"]["Visible"] = isCustom;
+                BarColor["Object"]["Visible"] = isVelo;
+                Transparency["Object"]["Visible"] = isVelo;
+                Scale["Object"]["Visible"] = isVelo;
+                Width["Object"]["Visible"] = isVelo;
+                Height["Object"]["Visible"] = isVelo;
+                Padding["Object"]["Visible"] = isVelo;
+                CardCorner["Object"]["Visible"] = isVelo;
+                CoverCorner["Object"]["Visible"] = isVelo;
+                TitleSize["Object"]["Visible"] = isVelo;
+                TextSize["Object"]["Visible"] = isVelo;
+                BarThickness["Object"]["Visible"] = isVelo;
+                TitleFont["Object"]["Visible"] = isVelo;
+                ArtistFont["Object"]["Visible"] = isVelo;
+                TimeFont["Object"]["Visible"] = isVelo;
+                ShowCover["Object"]["Visible"] = isVelo;
+                ShowTimes["Object"]["Visible"] = isVelo;
+                ShowProgress["Object"]["Visible"] = isVelo;
+                RoundBar["Object"]["Visible"] = isVelo;
+                ByPrefix["Object"]["Visible"] = isVelo;
+                Shadow["Object"]["Visible"] = isVelo;
+                CardBorder["Object"]["Visible"] = isVelo;
+                CardBorderColor["Object"]["Visible"] = isVelo and CardBorder["Enabled"];
+                BorderThickness["Object"]["Visible"] = isVelo and CardBorder["Enabled"];
+        end;
+
+        Style = Spotify:CreateDropdown({
+                ["Name"] = 'Style',
+                ["List"] = {'Vape', 'Velocity'},
+                ["Function"] = function(value: string): ()
+                        currentStyle = value;
+                        updateVisibility();
+                end;
+        });
+
+        -- Vape style (same as the original overlay)
+        BackgroundColor = Spotify:CreateColorSlider({
                 ["Name"] = 'Background Color',
                 ["DefaultValue"] = 0,
                 ["DefaultOpacity"] = 0.5,
@@ -12339,69 +12701,322 @@ velo.run(function()
                 ["Darker"] = true,
                 ["Visible"] = false;
         });
-        Spotify:CreateToggle({
+        Border = Spotify:CreateToggle({
                 ["Name"] = 'Border',
                 ["Function"] = function(callback: boolean): ()
                         stroke["Enabled"] = callback;
-                        BorderColor["Object"]["Visible"] = callback;
+                        BorderColor["Object"]["Visible"] = callback and currentStyle == 'Vape';
                 end;
         });
 
-        holder = Instance["new"]('Frame');
-        holder["BackgroundColor3"] = Color3["new"]();
-        holder["BackgroundTransparency"] = 0.5;
-        holder["Size"] = UDim2["fromOffset"](180, 55);
-        holder["Parent"] = Spotify["Children"];
-        addBlur(holder);
-        addCorner(holder);
-        local title: TextLabel = Instance["new"]('TextLabel');
-        title["BackgroundTransparency"] = 1;
-        title["Font"] = Enum["Font"]["Arial"];
-        title["Position"] = UDim2["fromOffset"](6, 6);
-        title["Size"] = UDim2["new"](1, -6, 0, 16);
-        title["TextColor3"] = Color3["new"](1, 1, 1);
-        title["TextSize"] = 16;
-        title["TextTruncate"] = Enum["TextTruncate"]["AtEnd"];
-        title["TextXAlignment"] = Enum["TextXAlignment"]["Left"];
-        title["Parent"] = holder;
-        local artist: TextLabel = Instance["new"]('TextLabel');
-        artist["BackgroundTransparency"] = 1;
-        artist["Font"] = Enum["Font"]["Arial"];
-        artist["Position"] = UDim2["fromOffset"](7, 24);
-        artist["Size"] = UDim2["new"](1, -7, 0, 14);
-        artist["TextColor3"] = Color3["new"](0.7, 0.7, 0.7);
-        artist["TextSize"] = 14;
-        artist["TextTruncate"] = Enum["TextTruncate"]["AtEnd"];
-        artist["TextXAlignment"] = Enum["TextXAlignment"]["Left"];
-        artist["Parent"] = holder;
-        local progress: Frame = Instance["new"]('Frame');
-        progress["BackgroundColor3"] = Color3["fromRGB"](26, 25, 26);
-        progress["Position"] = UDim2["fromOffset"](6, 43);
-        progress["Size"] = UDim2["new"](1, -46, 0, 4);
-        progress["Parent"] = holder;
-        addCorner(progress);
-        local fill: Frame = Instance["new"]('Frame');
-        fill["BackgroundColor3"] = Color3["fromHSV"](0.46, 0.96, 0.52);
-        fill["Size"] = UDim2["fromScale"](0.4, 1);
-        fill["Parent"] = progress;
-        addCorner(fill);
-        local duration: TextLabel = Instance["new"]('TextLabel');
-        duration["BackgroundColor3"] = Color3["new"](1, 1, 1);
-        duration["BackgroundTransparency"] = 1;
-        duration["BorderColor3"] = Color3["new"]();
-        duration["BorderSizePixel"] = 0;
-        duration["Font"] = Enum["Font"]["Arial"];
-        duration["Position"] = UDim2["new"](1, -32, 0, 37);
-        duration["Size"] = UDim2["fromOffset"](40, 13);
-        duration["Text"] = '0:00';
-        duration["TextColor3"] = Color3["fromRGB"](170, 170, 170);
-        duration["TextSize"] = 13;
-        duration["TextXAlignment"] = Enum["TextXAlignment"]["Left"];
-        duration["Parent"] = holder;
-        stroke = Instance["new"]('UIStroke');
-        stroke["Enabled"] = false;
-        stroke["Color"] = Color3["fromHSV"](0.44, 1, 1);
-        stroke["Parent"] = holder;
+        -- Velocity style
+        Theme = Spotify:CreateDropdown({
+                ["Name"] = 'Theme',
+                ["List"] = {'Dark', 'Light', 'Nightly', 'Custom'},
+                ["Function"] = function(value: string): ()
+                        currentTheme = value;
+                        applyTheme();
+                        updateVisibility();
+                end;
+        });
+        CardBackground = Spotify:CreateColorSlider({
+                ["Name"] = 'Card Background',
+                ["DefaultHue"] = 0,
+                ["DefaultSat"] = 0,
+                ["DefaultValue"] = 15 / 255,
+                ["Function"] = function(hue: number, sat: number, val: number): ()
+                        customTheme["Background"] = Color3["fromHSV"](hue, sat, val);
+                        applyTheme();
+                end,
+                ["Darker"] = true,
+                ["Visible"] = false;
+        });
+        TitleColor = Spotify:CreateColorSlider({
+                ["Name"] = 'Title Color',
+                ["DefaultHue"] = 0,
+                ["DefaultSat"] = 0,
+                ["DefaultValue"] = 1,
+                ["Function"] = function(hue: number, sat: number, val: number): ()
+                        customTheme["Title"] = Color3["fromHSV"](hue, sat, val);
+                        applyTheme();
+                end,
+                ["Darker"] = true,
+                ["Visible"] = false;
+        });
+        ArtistColor = Spotify:CreateColorSlider({
+                ["Name"] = 'Artist Color',
+                ["DefaultHue"] = 0,
+                ["DefaultSat"] = 0,
+                ["DefaultValue"] = 200 / 255,
+                ["Function"] = function(hue: number, sat: number, val: number): ()
+                        customTheme["Artist"] = Color3["fromHSV"](hue, sat, val);
+                        applyTheme();
+                end,
+                ["Darker"] = true,
+                ["Visible"] = false;
+        });
+        TimeColor = Spotify:CreateColorSlider({
+                ["Name"] = 'Time Color',
+                ["DefaultHue"] = 0,
+                ["DefaultSat"] = 0,
+                ["DefaultValue"] = 170 / 255,
+                ["Function"] = function(hue: number, sat: number, val: number): ()
+                        customTheme["Time"] = Color3["fromHSV"](hue, sat, val);
+                        applyTheme();
+                end,
+                ["Darker"] = true,
+                ["Visible"] = false;
+        });
+        BarBackground = Spotify:CreateColorSlider({
+                ["Name"] = 'Bar Background',
+                ["DefaultHue"] = 0,
+                ["DefaultSat"] = 0,
+                ["DefaultValue"] = 60 / 255,
+                ["Function"] = function(hue: number, sat: number, val: number): ()
+                        customTheme["BarBack"] = Color3["fromHSV"](hue, sat, val);
+                        applyTheme();
+                end,
+                ["Darker"] = true,
+                ["Visible"] = false;
+        });
+        BarColor = Spotify:CreateColorSlider({
+                ["Name"] = 'Bar Color',
+                ["DefaultHue"] = 0,
+                ["DefaultSat"] = 109 / 251,
+                ["DefaultValue"] = 251 / 255,
+                ["Function"] = function(hue: number, sat: number, val: number, opacity: number): ()
+                        vBarFill["BackgroundColor3"] = Color3["fromHSV"](hue, sat, val);
+                        vBarFill["BackgroundTransparency"] = 1 - opacity;
+                end,
+                ["Visible"] = false;
+        });
+        Transparency = Spotify:CreateSlider({
+                ["Name"] = 'Transparency',
+                ["Min"] = 0,
+                ["Max"] = 1,
+                ["Decimal"] = 100,
+                ["Default"] = cfg["Transparency"],
+                ["Function"] = function(val: number): ()
+                        cfg["Transparency"] = val;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        Scale = Spotify:CreateSlider({
+                ["Name"] = 'Scale',
+                ["Min"] = 0.5,
+                ["Max"] = 2,
+                ["Decimal"] = 100,
+                ["Default"] = cfg["Scale"],
+                ["Function"] = function(val: number): ()
+                        cfg["Scale"] = val;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        Width = Spotify:CreateSlider({
+                ["Name"] = 'Width',
+                ["Min"] = 150,
+                ["Max"] = 400,
+                ["Default"] = cfg["Width"],
+                ["Function"] = function(val: number): ()
+                        cfg["Width"] = val;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        Height = Spotify:CreateSlider({
+                ["Name"] = 'Height',
+                ["Min"] = 50,
+                ["Max"] = 150,
+                ["Default"] = cfg["Height"],
+                ["Function"] = function(val: number): ()
+                        cfg["Height"] = val;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        Padding = Spotify:CreateSlider({
+                ["Name"] = 'Padding',
+                ["Min"] = 2,
+                ["Max"] = 20,
+                ["Default"] = cfg["Padding"],
+                ["Function"] = function(val: number): ()
+                        cfg["Padding"] = val;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        CardCorner = Spotify:CreateSlider({
+                ["Name"] = 'Card Corner',
+                ["Min"] = 0,
+                ["Max"] = 30,
+                ["Default"] = cfg["Corner"],
+                ["Function"] = function(val: number): ()
+                        cfg["Corner"] = val;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        CoverCorner = Spotify:CreateSlider({
+                ["Name"] = 'Cover Corner',
+                ["Min"] = 0,
+                ["Max"] = 30,
+                ["Default"] = cfg["CoverCorner"],
+                ["Function"] = function(val: number): ()
+                        cfg["CoverCorner"] = val;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        TitleSize = Spotify:CreateSlider({
+                ["Name"] = 'Title Size',
+                ["Min"] = 8,
+                ["Max"] = 28,
+                ["Default"] = cfg["TitleSize"],
+                ["Function"] = function(val: number): ()
+                        cfg["TitleSize"] = val;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        TextSize = Spotify:CreateSlider({
+                ["Name"] = 'Text Size',
+                ["Min"] = 6,
+                ["Max"] = 22,
+                ["Default"] = cfg["TextSize"],
+                ["Function"] = function(val: number): ()
+                        cfg["TextSize"] = val;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        BarThickness = Spotify:CreateSlider({
+                ["Name"] = 'Bar Thickness',
+                ["Min"] = 1,
+                ["Max"] = 10,
+                ["Default"] = cfg["BarThickness"],
+                ["Function"] = function(val: number): ()
+                        cfg["BarThickness"] = val;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        TitleFont = Spotify:CreateFont({
+                ["Name"] = 'Title Font',
+                ["Default"] = 'ArimoBold',
+                ["Function"] = function(font: Font): ()
+                        vTitle["FontFace"] = font;
+                end,
+                ["Visible"] = false;
+        });
+        ArtistFont = Spotify:CreateFont({
+                ["Name"] = 'Artist Font',
+                ["Default"] = 'Arimo',
+                ["Function"] = function(font: Font): ()
+                        vArtist["FontFace"] = font;
+                end,
+                ["Visible"] = false;
+        });
+        TimeFont = Spotify:CreateFont({
+                ["Name"] = 'Time Font',
+                ["Default"] = 'Arimo',
+                ["Function"] = function(font: Font): ()
+                        vCurrent["FontFace"] = font;
+                        vMax["FontFace"] = font;
+                end,
+                ["Visible"] = false;
+        });
+        ShowCover = Spotify:CreateToggle({
+                ["Name"] = 'Show Cover',
+                ["Default"] = cfg["ShowCover"],
+                ["Function"] = function(callback: boolean): ()
+                        cfg["ShowCover"] = callback;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        ShowTimes = Spotify:CreateToggle({
+                ["Name"] = 'Show Times',
+                ["Default"] = cfg["ShowTimes"],
+                ["Function"] = function(callback: boolean): ()
+                        cfg["ShowTimes"] = callback;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        ShowProgress = Spotify:CreateToggle({
+                ["Name"] = 'Show Progress',
+                ["Default"] = cfg["ShowBar"],
+                ["Function"] = function(callback: boolean): ()
+                        cfg["ShowBar"] = callback;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        RoundBar = Spotify:CreateToggle({
+                ["Name"] = 'Round Bar',
+                ["Default"] = cfg["RoundBar"],
+                ["Function"] = function(callback: boolean): ()
+                        cfg["RoundBar"] = callback;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        ByPrefix = Spotify:CreateToggle({
+                ["Name"] = 'By Prefix',
+                ["Default"] = cfg["ByPrefix"],
+                ["Function"] = function(callback: boolean): ()
+                        cfg["ByPrefix"] = callback;
+                        setTrackText(lastTitle, lastArtists);
+                end,
+                ["Visible"] = false;
+        });
+        Shadow = Spotify:CreateToggle({
+                ["Name"] = 'Shadow',
+                ["Function"] = function(callback: boolean): ()
+                        cfg["Shadow"] = callback;
+                        layoutCard();
+                end,
+                ["Visible"] = false;
+        });
+        CardBorder = Spotify:CreateToggle({
+                ["Name"] = 'Card Border',
+                ["Function"] = function(callback: boolean): ()
+                        cfg["Border"] = callback;
+                        layoutCard();
+                        CardBorderColor["Object"]["Visible"] = callback and currentStyle == 'Velocity';
+                        BorderThickness["Object"]["Visible"] = callback and currentStyle == 'Velocity';
+                end,
+                ["Visible"] = false;
+        });
+        CardBorderColor = Spotify:CreateColorSlider({
+                ["Name"] = 'Card Border Color',
+                ["DefaultHue"] = 0,
+                ["DefaultSat"] = 109 / 251,
+                ["DefaultValue"] = 251 / 255,
+                ["Function"] = function(hue: number, sat: number, val: number, opacity: number): ()
+                        cardStroke["Color"] = Color3["fromHSV"](hue, sat, val);
+                        cardStroke["Transparency"] = 1 - opacity;
+                end,
+                ["Darker"] = true,
+                ["Visible"] = false;
+        });
+        BorderThickness = Spotify:CreateSlider({
+                ["Name"] = 'Border Thickness',
+                ["Min"] = 1,
+                ["Max"] = 6,
+                ["Default"] = 1,
+                ["Function"] = function(val: number): ()
+                        cardStroke["Thickness"] = val;
+                end,
+                ["Darker"] = true,
+                ["Visible"] = false;
+        });
+
+        applyTheme();
+        layoutCard();
+        updateVisibility();
 
         do
                 local BLOCK_SIZE: number = 64;
@@ -12450,7 +13065,7 @@ velo.run(function()
 
                 local readURLAndConfig: (code: string) -> (string?, any) = function(code: string): (string?, any)
                         local appCfg: number? = code:find('appServerConfig\" type=\"text\/plain\">');
-                        return code:match('(https://[^"\']+/web%-player%.[0-9a-f]+%.js)'), appCfg and httpService:JSONDecode(base64decode(code:sub(appCfg + 35, code:find('<', appCfg + 1) - 1))) or nil;
+                        return code:match('(https://[^"\']+/web%-player%.[0-9a-f]+%.js)'), appCfg and httpService:JSONDecode((base64decode or (crypt and crypt["base64decode"]) or base64_decode)(code:sub(appCfg + 35, code:find('<', appCfg + 1) - 1))) or nil;
                 end;
 
                 local readOTPCodes: (code: string) -> (string?, number?) = function(code: string): (string?, number?)
@@ -12510,20 +13125,86 @@ velo.run(function()
                         return str_code;
                 end;
 
-                SpotifyHandler["Callback"] = function(self: SpotifyHandlerT, data: any): ()
-                        if data["player_state"] then
-                                local currentTime: number = (data["timestamp"] / 1000);
-                                local posAsTime: number = tonumber(data["player_state"]["position_as_of_timestamp"]) / 1000;
-                                local diff: number = currentTime - (tonumber(data["player_state"]["timestamp"]) / 1000);
-                                self["playPosition"] = posAsTime + (data["player_state"]["is_paused"] and 0 or diff);
-                                self["playRate"] = data["player_state"]["playback_speed"];
-                                self["playDuration"] = tonumber(data["player_state"]["duration"] or 1000) / 1000;
+                local toImageUrl: (uri: string?) -> string? = function(uri: string?): string?
+                        if not uri or uri == '' then
+                                return nil;
+                        end;
 
-                                if data["player_state"]["track"] then
-                                        self:RequestCache(data["player_state"]["track"]["uri"], data["player_state"]["track"]);
-                                        self["track"] = data["player_state"]["track"]["uri"];
-                                        title["Text"] = data["player_state"]["track"]["metadata"]["title"] or self["Cache"][self["track"]]["Title"];
-                                        artist["Text"] = table["concat"](self["Cache"][self["track"]]["Artists"], ', ');
+                        local imageId: string? = uri:match('^spotify:image:(%w+)$');
+                        if imageId then
+                                return 'https://i.scdn.co/image/' .. imageId;
+                        end;
+
+                        return if uri:find('^https?://') then uri else nil;
+                end;
+
+                local coverToken: number = 0;
+                local lastCoverPath: string? = nil;
+                local setCover: (url: string?) -> () = function(url: string?): ()
+                        coverToken += 1;
+                        local token: number = coverToken;
+
+                        if not url then
+                                cover["Image"] = '';
+                                return;
+                        end;
+
+                        local path: string = 'velo/cache/spotify_' .. (url:match('(%w+)$') or tostring(token)) .. '.png';
+                        task["spawn"](function(): ()
+                                if not isfile(path) then
+                                        local res: Response = safeRequest({
+                                                ["Url"] = url,
+                                                ["Method"] = 'GET';
+                                        });
+
+                                        if not res["Success"] or token ~= coverToken then
+                                                return;
+                                        end;
+
+                                        writefile(path, res["Body"]);
+                                end;
+
+                                if token ~= coverToken then
+                                        return;
+                                end;
+
+                                local ok: boolean, asset: any = pcall(assetfunction, path);
+                                if ok and type(asset) == 'string' then
+                                        cover["Image"] = asset;
+                                end;
+
+                                if lastCoverPath and lastCoverPath ~= path and delfile and isfile(lastCoverPath) then
+                                        pcall(delfile, lastCoverPath);
+                                end;
+
+                                lastCoverPath = path;
+                        end);
+                end;
+
+                SpotifyHandler["Callback"] = function(self: SpotifyHandlerT, data: any): ()
+                        local state: any = data["player_state"];
+                        if state then
+                                local currentTime: number = (data["timestamp"] / 1000);
+                                local posAsTime: number = tonumber(state["position_as_of_timestamp"]) / 1000;
+                                local diff: number = currentTime - (tonumber(state["timestamp"]) / 1000);
+                                self["playPosition"] = posAsTime + (state["is_paused"] and 0 or diff);
+                                self["playRate"] = state["playback_speed"];
+                                self["playDuration"] = tonumber(state["duration"] or 1000) / 1000;
+
+                                local track: any = state["track"];
+                                if track then
+                                        self:RequestCache(track["uri"], track);
+                                        self["track"] = track["uri"];
+
+                                        local entry: CacheEntry = self["Cache"][self["track"]];
+                                        local meta: any = track["metadata"] or {};
+                                        setTrackText(meta["title"] or entry["Title"], entry["Artists"]);
+
+                                        local coverUrl: string? = toImageUrl(meta["image_large_url"] or meta["image_url"] or meta["image_xlarge_url"] or meta["image_small_url"]) or entry["Cover"];
+                                        if coverUrl ~= self["coverUrl"] then
+                                                self["coverUrl"] = coverUrl;
+                                                setCover(coverUrl);
+                                        end;
                                 end;
                         end;
                 end;
@@ -12628,7 +13309,6 @@ velo.run(function()
                                 if id:find('spotify:local') then
                                         local lArtist: string = data["metadata"]["artist_uri"]:sub(15);
                                         self["Cache"][id]["Artists"] = {lArtist ~= '' and lArtist or 'None'};
-                                        artist["Text"] = table["concat"](self["Cache"][id]["Artists"], ', ');
                                         return;
                                 end;
 
@@ -12676,9 +13356,22 @@ velo.run(function()
                                                                         table["insert"](self["Cache"][id]["Artists"], track["data"]["podcastV2"]["data"]["publisher"]["name"]);
                                                                 end;
 
+                                                                local foundCover: boolean, coverSource: any = pcall(function(): any
+                                                                        local art: any = track["data"]["albumOfTrack"] and track["data"]["albumOfTrack"]["coverArt"] or track["data"]["coverArt"];
+                                                                        return art and art["sources"] and art["sources"][1] and art["sources"][1]["url"];
+                                                                end);
+
+                                                                if foundCover and type(coverSource) == 'string' then
+                                                                        self["Cache"][id]["Cover"] = coverSource;
+                                                                end;
+
                                                                 if self["track"] == id then
-                                                                        title["Text"] = self["Cache"][id]["Title"];
-                                                                        artist["Text"] = table["concat"](self["Cache"][id]["Artists"], ', ');
+                                                                        setTrackText(self["Cache"][id]["Title"], self["Cache"][id]["Artists"]);
+
+                                                                        if not self["coverUrl"] and self["Cache"][id]["Cover"] then
+                                                                                self["coverUrl"] = self["Cache"][id]["Cover"];
+                                                                                setCover(self["coverUrl"]);
+                                                                        end;
                                                                 end;
                                                         end;
                                                 end;
@@ -12843,13 +13536,23 @@ velo.run(function()
                 end;
 
                 SpotifyHandler["Start"] = function(self: SpotifyHandlerT): ()
-                        if not isfile('velo/profiles/spotify.txt') then
-                                notif('Spotify', 'Missing cookie! (dump sp_dc from the browser and write to profiles/spotify.txt)', 30, 'warning');
+                        local cookiePath: string = 'velo/profiles/spotify.txt';
+                        if not isfile(cookiePath) then
+                                writefile(cookiePath, '');
+                        end;
+
+                        local cookie: string = (readfile(cookiePath) or ''):gsub('%s+', ''):gsub('^sp_dc=', ''):gsub(';$', '');
+                        if cookie == '' then
+                                notif('Spotify', 'Paste your sp_dc cookie into velo/profiles/spotify.txt, then toggle Spotify again.', 30, 'warning');
                                 return;
                         end;
 
+                        if isfolder and makefolder and not isfolder('velo/cache') then
+                                makefolder('velo/cache');
+                        end;
+
                         self["Headers"] = {
-                                ["Cookie"] = 'sp_dc='..readfile('velo/profiles/spotify.txt')..';',
+                                ["Cookie"] = 'sp_dc='..cookie..';',
                                 ['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:158.0) Gecko/20100101 Firefox/158.0';
                         };
 
@@ -12907,12 +13610,15 @@ velo.run(function()
 
                                         if self["playPosition"] then
                                                 self["playPosition"] = math["clamp"](self["playPosition"] + (delta * self["playRate"]), 0.01, self["playDuration"]);
-                                                duration["Text"] = (self["playPosition"] // 60)..':'..string["format"]('%02i', self["playPosition"] % 60);
-                                                fill["Size"] = UDim2["fromScale"](self["playPosition"] / self["playDuration"], 1);
+                                                local percent: number = self["playPosition"] / self["playDuration"];
+                                                duration["Text"] = formatTime(self["playPosition"]);
+                                                fill["Size"] = UDim2["fromScale"](percent, 1);
+                                                vCurrent["Text"] = formatTime(self["playPosition"]);
+                                                vMax["Text"] = formatTime(self["playDuration"]);
+                                                vBarFill["Size"] = UDim2["fromScale"](percent, 1);
                                         end;
                                 end;
                         until false;
                 end;
         end;
 end);
-
