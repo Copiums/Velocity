@@ -698,7 +698,7 @@ function vape:CreateNotification(title, text, duration, type)
 		local progress = Instance.new('Frame')
 		progress.BackgroundColor3 =
 			type == 'alert' and Color3.fromRGB(250, 50, 56)
-			or type == 'warning' and Color3.fromRGB(236, 129, 44)
+			or type == 'warning' and Color3.fromRGB(108, 110, 237)
 			or Color3.new(1, 1, 1)
 		progress.BorderSizePixel = 0
 		progress.Position = UDim2.new(0, 3, 1, -4)
