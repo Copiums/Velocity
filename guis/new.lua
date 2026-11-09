@@ -17,7 +17,7 @@ local vape = {
 	SettingToggleNotifications = {},
 	ThreadFix = setthreadidentity and true or false,
 	ToggleNotifications = {},
-	Version = '4.22',
+	Version = '4.24',
 	Windows = {}
 }
 
@@ -324,6 +324,25 @@ do
 	end
 
 	fontsize.Font = uipallet.Font
+end
+
+-- vape lines text up by putting hair spaces (U+200A) in front of it, counting each one as
+-- about 1px. A hair space's real width depends on the font (about 1.3px in Gotham at size 14),
+-- so measure it once and turn pixel offsets into the right number of hair spaces.
+local hairWidth = 1
+do
+	local success, width = pcall(function()
+		local hairs = string.rep('\u{200A}', 100)
+		return (getfontbounds('|'..hairs..'|', 14, uipallet.Font).X - getfontbounds('||', 14, uipallet.Font).X) / 100
+	end)
+
+	if success and width > 0 and width < 10 then
+		hairWidth = width
+	end
+end
+
+local function indent(px)
+	return string.rep('\u{200A}', math.round(px / hairWidth))
 end
 
 vape.Libraries = {
@@ -4672,11 +4691,6 @@ components = {
 			end
 		
 			window.Size = UDim2.fromOffset(220, 42 + windowlist.AbsoluteContentSize.Y / scale.Scale)
-			for _, button in component.Buttons do
-				if button.Icon then
-					button.Object.Text = string.rep(' ', 39 * scale.Scale)..button.Name
-				end
-			end
 		end)
 		
 		vape.Categories.Main = component
@@ -4697,7 +4711,7 @@ components = {
 		button.FontFace = uipallet.Font
 		button.Name = props.Name
 		button.Size = UDim2.fromOffset(220, 40)
-		button.Text = (props.Icon and string.rep(' ', 39) or props.Window and string.rep(' ', 17) or string.rep(' ', 10))..props.Name
+		button.Text = indent(props.Icon and 39 or props.Window and 17 or 10)..props.Name
 		button.TextColor3 = color.Dark(uipallet.Text, 0.16)
 		button.TextSize = 14
 		button.TextXAlignment = Enum.TextXAlignment.Left
@@ -5282,7 +5296,7 @@ components = {
 		toggle.BorderSizePixel = 0
 		toggle.FontFace = uipallet.Font
 		toggle.Size = UDim2.new(1, 0, 0, 40)
-		toggle.Text = string.rep(' ', 33 * scale.Scale)..props.Name
+		toggle.Text = indent(33)..props.Name
 		toggle.TextColor3 = color.Dark(uipallet.Text, 0.16)
 		toggle.TextSize = 14
 		toggle.TextXAlignment = Enum.TextXAlignment.Left
@@ -5333,10 +5347,6 @@ components = {
 		
 			props.Function(self.Enabled)
 		end
-		
-		scale:GetPropertyChangedSignal('Scale'):Connect(function()
-			toggle.Text = string.rep(' ', 33 * scale.Scale)..props.Name
-		end)
 		
 		toggle.MouseEnter:Connect(function()
 			isHover = true
