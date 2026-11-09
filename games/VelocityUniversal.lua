@@ -12305,7 +12305,7 @@ velo.run(function()
 
         Spotify = vape:CreateOverlay({
                 ["Name"] = 'Spotify',
-                ["Icon"] = getvapeasset('newvape/assets/new/spotify.png'),
+                ["Icon"] = getvapeasset('velo/assets/new/spotify.png'),
                 ["Size"] = UDim2["fromOffset"](16, 16),
                 ["Position"] = UDim2["fromOffset"](12, 13),
                 ["Function"] = function(callback: boolean): ()
