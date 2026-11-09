@@ -1588,54 +1588,49 @@ velo.run(function()
 	function whitelist:hook()
 	        if self.hooked then return; end;
 		self.hooked = true;
-		local exp: ExperienceChat? = coreGui:FindFirstChild('ExperienceChat');
-		if not exp then
-		        return;
-		end;
 		if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-		        if exp:FindFirstChild('appLayout', 5) then
-		        	local scrollView: RCTScrollContentView? = exp:FindFirstChild('RCTScrollContentView', true)
-		            	if not scrollView then
-		                	return;
-		            	end;
-		            	table.insert(vapeConnections, scrollView.ChildAdded:Connect(function(obj)
-		                	local userId: number? = tonumber(obj.Name:split('-')[1]);
-		                	if not userId then 
-						return; 
-					end;
-		                	local plr: Player? = game:GetService("Players"):GetPlayerByUserId(userId);
-		                	if not plr then 
-						return; 
-					end;
-		                	local textMessage: string? = obj:FindFirstChild('TextMessage', true);
-		                	if not textMessage or not textMessage:IsA("Frame") then 
-						return; 
-					end;
-		                	local prefix: any = textMessage:FindFirstChild("PrefixText")
-		                	local body: any = textMessage:FindFirstChild("BodyText")
-		                	if prefix and prefix:IsA("TextLabel") then
-		                    		local tagText: any = self:tag(plr, true, true)
-		                    		if tagText:sub(-1) ~= " " then
-		                        		tagText = tagText .. " ";
-		                    		end;
-						prefix.Text = prefix.Text:gsub(":?%s*$", " ") .. ": ";
-						if not prefix.Text:match(": $") then
-						        prefix.Text = prefix.Text:gsub(":?$", " ") .. ":  ";
+			if getcallbackvalue and restorefunction and hookfunction then
+				local old: any
+				task.spawn(function()
+					vape:Clean(function()
+						if old then
+							restorefunction(old);
+							old = nil;
 						end;
-		                    		prefix.Text = tagText .. prefix.Text;
-		                	end;
-		                	if body and body:IsA("TextLabel") then
-		                    		self:newchat(body, plr, true);
-		                	else
-		                    		local fallback: any = textMessage:FindFirstChildWhichIsA("TextLabel")
-		                        		or textMessage:FindFirstChildWhichIsA("TextButton")
-		                        		or textMessage:FindFirstChildWhichIsA("TextBox");
-		                    		if fallback then
-		                        		whitelist:newchat(fallback, plr, true);
-		                    		end;
-		                	end;
-		            	end));
-		        end;
+					end);
+					repeat
+						local current: any = getcallbackvalue(textChatService, 'OnIncomingMessage')
+
+						if old ~= current and current then
+							if old then
+								restorefunction(old);
+							end;
+							local hook: any;
+							hook = hookfunction(current, function(...)
+								local msg: string? = ...;
+								local data: function? = hook(...);
+								local plr: any = msg.TextSource and playersService:GetPlayerByUserId(msg.TextSource.UserId);
+
+								if plr then
+									if not (data and data:IsA('TextChatMessageProperties') and data.PrefixText ~= '') then
+										data = Instance.new('TextChatMessageProperties');
+										data.PrefixText = msg.PrefixText;
+										data.Text = msg.Text;
+									end;
+
+									self:newchat(data, plr, msg.Status ~= Enum.TextChatMessageStatus.Success);
+								end;
+
+								return data;
+							end);
+
+							old = current;
+						end;
+
+						task.wait(0.1);
+					until vape.Loaded == nil;
+				end);
+			end;
 		elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
             		pcall(function()
                 		local message: any = replicatedStorageService.DefaultChatSystemChatEvents.OnNewMessage
