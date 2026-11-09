@@ -183,14 +183,29 @@ do
 	}
 
 	-- Velocity's own icons. These download from Copiums/Velocity; every other icon
-	-- downloads from 7GrandDadPGN/VapeCompiled at vapeAssetCommit.
+	-- downloads from 7GrandDadPGN/VapeCompiled at its latest commit.
 	-- ['icon the UI asks for'] = 'file in Copiums/Velocity/assets/new'
 	local veloAssets = {
 		['velo/assets/new/noti_warning.png'] = 'warning.png',
 		['velo/assets/new/radaricon.png'] = 'radaricon.png',
 		['velo/assets/new/warn.png'] = 'warn.png'
 	}
-	local vapeAssetCommit = '3969f32714480c57086b4cf35d71360de42b1c7e'
+
+	-- Latest VapeCompiled commit, read off its GitHub page the same way loader.lua gets
+	-- commit.txt. Only fetched when an icon actually needs downloading, once per session.
+	local vapeAssetCommit
+	local function getVapeAssetCommit()
+		if not vapeAssetCommit then
+			local _, page = pcall(function()
+				return game:HttpGet('https://github.com/7GrandDadPGN/VapeCompiled')
+			end)
+
+			local commit = type(page) == 'string' and page:match('"currentOid":"(%x+)"')
+			vapeAssetCommit = commit and #commit == 40 and commit or 'main'
+		end
+
+		return vapeAssetCommit
+	end
 
 	local function createDownloader(text)
 		if vape.Loaded ~= true then
@@ -221,7 +236,7 @@ do
 			createDownloader(path)
 
 			local success, data = pcall(function()
-				local repo = custom and 'Copiums/Velocity/'..readfile('velo/profiles/commit.txt') or '7GrandDadPGN/VapeCompiled/'..vapeAssetCommit
+				local repo = custom and 'Copiums/Velocity/'..readfile('velo/profiles/commit.txt') or '7GrandDadPGN/VapeCompiled/'..getVapeAssetCommit()
 				return game:HttpGet('https://raw.githubusercontent.com/'..repo..'/'..select(1, path:gsub('velo/', '')), true)
 			end)
 
@@ -3016,12 +3031,33 @@ components = {
 		
 		function component:Color(hue, sat, val, isRainbow) end
 		
+		-- Slides open/closed like the old UI instead of snapping
 		function component:Expand()
 			self.Expanded = not self.Expanded
-			children.Visible = self.Expanded
 			arrow.Rotation = self.Expanded and 0 or 180
-			window.Size = UDim2.fromOffset(220, self.Expanded and math.min(41 + windowlist.AbsoluteContentSize.Y / scale.Scale, 601) or 41)
-			divider.Visible = children.CanvasPosition.Y > 10 and children.Visible
+
+			if self.Expanded then
+				if not children.Visible then
+					children.Size = UDim2.new(1, 0, 0, 0)
+					children.Visible = true
+				end
+
+				divider.Visible = children.CanvasPosition.Y > 10
+			else
+				divider.Visible = false
+				task.delay(0.3, function()
+					if not self.Expanded then
+						children.Visible = false
+					end
+				end)
+			end
+
+			tween:Tween(children, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {
+				Size = self.Expanded and UDim2.new(1, 0, 1, -41) or UDim2.new(1, 0, 0, 0)
+			})
+			tween:Tween(window, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {
+				Size = UDim2.fromOffset(220, self.Expanded and math.min(41 + windowlist.AbsoluteContentSize.Y / scale.Scale, 601) or 41)
+			})
 		end
 		
 		function component:Load(data)
@@ -5828,6 +5864,7 @@ components = {
 		local modulechildren = Instance.new('Frame')
 		modulechildren.BackgroundColor3 = color.Dark(uipallet.Main, 0.02)
 		modulechildren.BorderSizePixel = 0
+		modulechildren.ClipsDescendants = true
 		modulechildren.Name = props.Name..'Children'
 		modulechildren.Size = UDim2.new(1, 0, 0, 0)
 		modulechildren.Visible = false
@@ -6030,17 +6067,46 @@ components = {
 			component:Toggle()
 		end)
 		
-		button.MouseButton2Click:Connect(function()
-			modulechildren.Visible = not modulechildren.Visible
-		end)
+		-- Slides the settings open/closed like the old UI instead of popping in
+		local settingsOpen = false
+		local settingsTween
+		local function toggleSettings()
+			settingsOpen = not settingsOpen
+			if settingsTween then
+				settingsTween:Cancel()
+			end
+
+			if settingsOpen and not modulechildren.Visible then
+				modulechildren.Size = UDim2.new(1, 0, 0, 0)
+				modulechildren.Visible = true
+			end
+
+			settingsTween = tweenService:Create(modulechildren, TweenInfo.new(settingsOpen and 0.5 or 0.4, Enum.EasingStyle.Exponential), {
+				Size = UDim2.new(1, 0, 0, settingsOpen and windowlist.AbsoluteContentSize.Y / scale.Scale or 0)
+			})
+			settingsTween.Completed:Once(function(state)
+				if state ~= Enum.PlaybackState.Completed then
+					return
+				end
+
+				if vape.ThreadFix then
+					setthreadidentity(8)
+				end
+
+				if not settingsOpen then
+					modulechildren.Visible = false
+				end
+
+				modulechildren.Size = UDim2.new(1, 0, 0, windowlist.AbsoluteContentSize.Y / scale.Scale)
+			end)
+			settingsTween:Play()
+		end
+
+		button.MouseButton2Click:Connect(toggleSettings)
 		
-		dotsbutton.MouseButton1Click:Connect(function()
-			modulechildren.Visible = not modulechildren.Visible
-		end)
+		dotsbutton.MouseButton1Click:Connect(toggleSettings)
 		
-		dotsbutton.MouseButton2Click:Connect(function()
-			modulechildren.Visible = not modulechildren.Visible
-		end)
+		dotsbutton.MouseButton2Click:Connect(toggleSettings)
 		
 		dotsbutton.MouseEnter:Connect(function()
 			if not component.Enabled then
