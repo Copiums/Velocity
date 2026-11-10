@@ -1480,16 +1480,13 @@ velo.run(function()
 	local cachedModules: {[string]: any} = {};
 	local function findCoreModule(name: string): any
 		if cachedModules[name] then return cachedModules[name]; end;
-		local found: any = corePackages:FindFirstChild(name, true);
-		if not found then return nil; end;
-		if found:IsA('ModuleScript') then
-			cachedModules[name] = found;
-			return found;
-		end;
-		for _, desc: Instance in found:GetDescendants() do
+		for _, desc: Instance in corePackages:GetDescendants() do
 			if desc.Name == name and desc:IsA('ModuleScript') then
-				cachedModules[name] = desc;
-				return desc;
+				local ok: boolean = pcall(getrenv().require, desc);
+				if ok then
+					cachedModules[name] = desc;
+					return desc;
+				end;
 			end;
 		end;
 		return nil;
