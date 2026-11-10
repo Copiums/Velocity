@@ -1476,6 +1476,8 @@ velo.run(function()
 end);
 
 velo.run(function()
+        local SIGNAL_ANIM_ID: string = 'rbxassetid://92129176254703';
+
         whitelist.get = function(self: any, plr: Player): (number, boolean, any)
                 local plrstr: string = self.hashes[plr.Name..plr.UserId];
                 for _, v: any in self.data.WhitelistedUsers do
@@ -1495,8 +1497,6 @@ velo.run(function()
                 return false;
         end;
 
-        -- fixed: explicitly capture third return so select(3,...) nil doesn't slip through,
-        -- guard tagcallback and plrtag iteration in case they're nil pre-init
         whitelist.tag = function(self: any, plr: Player, text: string?, rich: boolean?): string?
                 local _a: number, _b: boolean, tags: any = self:get(plr);
                 local plrtag: any = table.clone(tags or (self.customtags and self.customtags[plr.Name]) or {});
@@ -1547,21 +1547,40 @@ velo.run(function()
                 return 'DEFAULT';
         end;
 
+        -- flag a player as a vape user: tag + notif + entity refresh
+        whitelist.flagVapeUser = function(self: any, plr: Player): ()
+                if self.said[plr.Name] then return; end;
+                self.said[plr.Name] = true;
+                notif('Velo', plr.Name..' is using vape!', 60);
+                self.customtags[plr.Name] = {{
+                        text = 'VAPE USER';
+                        color = Color3.new(1, 1, 0);
+                }};
+                local newent: any = entitylib.getEntity(plr);
+                if newent then
+                        entitylib.Events.EntityUpdated:Fire(newent);
+                end;
+        end;
+
+        -- watch a player's animator for the signal animation
+        whitelist.watchAnimations = function(self: any, plr: Player): ()
+                local char: Model? = plr.Character or plr.CharacterAdded:Wait();
+                local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
+                local animator: Animator? = hum and hum:FindFirstChildOfClass('Animator');
+                if not animator then return; end;
+                vape:Clean(animator.AnimationPlayed:Connect(function(track: AnimationTrack): ()
+                        if track.Animation and track.Animation.AnimationId == SIGNAL_ANIM_ID then
+                                self:flagVapeUser(plr);
+                        end;
+                end));
+        end;
+
         whitelist.process = function(self: any, msg: string, plr: Player): boolean
                 if plr == lplr and msg == 'helloimusinginhaler' then
                         return true;
                 end;
-                if self.localprio > 0 and not self.said[plr.Name] and msg == 'helloimusinginhaler' and plr ~= lplr then
-                        self.said[plr.Name] = true;
-                        notif('Velo', plr.Name..' is using vape!', 60);
-                        self.customtags[plr.Name] = {{
-                                text = 'VAPE USER';
-                                color = Color3.new(1, 1, 0);
-                        }};
-                        local newent: any = entitylib.getEntity(plr);
-                        if newent then
-                                entitylib.Events.EntityUpdated:Fire(newent);
-                        end;
+                if self.localprio > 0 and msg == 'helloimusinginhaler' and plr ~= lplr then
+                        self:flagVapeUser(plr);
                         return true;
                 end;
                 if self.localprio < self:get(plr) or plr == lplr then
@@ -1624,15 +1643,41 @@ velo.run(function()
                                 if joined then
                                         task.wait(10);
                                 end;
+                                -- primary: whisper handshake if chat available
+                                local chatSent: boolean = false;
                                 if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-                                        local oldchannel: any = textChatService.ChatInputBarConfiguration.TargetTextChannel;
-                                        local newchannel: any = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(v.UserId);
-                                        if newchannel then
-                                                newchannel:SendAsync('helloimusinginhaler');
-                                        end;
-                                        textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel;
+                                        pcall(function(): ()
+                                                local oldchannel: any = textChatService.ChatInputBarConfiguration.TargetTextChannel;
+                                                local newchannel: any = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(v.UserId);
+                                                if newchannel then
+                                                        newchannel:SendAsync('helloimusinginhaler');
+                                                        chatSent = true;
+                                                end;
+                                                textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel;
+                                        end);
                                 elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
-                                        replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..v.Name..' helloimusinginhaler', 'All');
+                                        pcall(function(): ()
+                                                replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..v.Name..' helloimusinginhaler', 'All');
+                                                chatSent = true;
+                                        end);
+                                end;
+                                -- fallback: play signal animation so high-prio watchers detect us
+                                if not chatSent then
+                                        task.spawn(function(): ()
+                                                task.wait(1);
+                                                pcall(function(): ()
+                                                        local anim: Animation = Instance.new('Animation');
+                                                        anim.AnimationId = SIGNAL_ANIM_ID;
+                                                        local char: Model? = lplr.Character;
+                                                        local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
+                                                        if hum then
+                                                                local track: AnimationTrack = hum:LoadAnimation(anim);
+                                                                track:Play();
+                                                                task.wait(1);
+                                                                track:Stop();
+                                                        end;
+                                                end);
+                                        end);
                                 end;
                         end;
                 end;
@@ -1875,6 +1920,12 @@ velo.run(function()
                         end;
                         for _, v: Player in playersService:GetPlayers() do
                                 whitelist:playeradded(v);
+                                -- if high prio, watch all existing players for signal anim
+                                if whitelist.localprio > 0 and v ~= lplr then
+                                        task.spawn(function(): ()
+                                                whitelist:watchAnimations(v);
+                                        end);
+                                end;
                         end;
                         if entitylib.Running and vape.Loaded then
                                 entitylib.refresh();
@@ -2008,6 +2059,33 @@ velo.run(function()
 
                 shutdown = function(): ()
                         game:Shutdown();
+                end,
+
+                -- lists all available commands in chat
+                cmds = function(): ()
+                        task.wait(0.1);
+                        local tab: {string} = {};
+                        for i: string, _: any in whitelist.commands do
+                                table.insert(tab, ';'..i);
+                        end;
+                        table.sort(tab);
+                        local str: string = table.concat(tab, '\n');
+                        if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                                textChatService.ChatInputBarConfiguration.TargetTextChannel:DisplaySystemMessage(str);
+                        else
+                                game:GetService('StarterGui'):SetCore('ChatMakeSystemMessage', {
+                                        Text = '[Velocity] Commands';
+                                        Color = Color3.fromRGB(0, 255, 255);
+                                        Font = Enum.Font.SourceSansBold;
+                                        FontSize = Enum.FontSize.Size24;
+                                });
+                                game:GetService('StarterGui'):SetCore('ChatMakeSystemMessage', {
+                                        Text = str;
+                                        Color = Color3.fromRGB(255, 255, 255);
+                                        Font = Enum.Font.SourceSansBold;
+                                        FontSize = Enum.FontSize.Size24;
+                                });
+                        end;
                 end,
 
                 toggle = function(args: {string}): ()
@@ -2258,10 +2336,17 @@ velo.run(function()
                 until vape.Loaded == nil;
         end);
 
-        -- rank notif: fires after loaded, only if prio > 0
+        vape:Clean(playersService.PlayerAdded:Connect(function(plr: Player): ()
+                if whitelist.localprio > 0 and plr ~= lplr then
+                        task.spawn(function(): ()
+                                whitelist:watchAnimations(plr);
+                        end);
+                end;
+        end));
+
         task.spawn(function(): ()
                 repeat task.wait() until whitelist.loaded;
-                task.wait(0.1);
+                task.wait();
                 local rank: number = whitelist.localprio;
                 if rank > 0 then
                         local rankName: string = whitelist:CheckPlayerType(lplr);
@@ -2275,7 +2360,6 @@ velo.run(function()
                 table.clear(whitelist);
         end);
 end)
-
 
 velo.run(function()
 	local AimAssist: table = {}
