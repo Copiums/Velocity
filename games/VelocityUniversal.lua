@@ -1482,7 +1482,7 @@ velo.run(function()
 		local plrstr: string = self.hashes[plr.Name..plr.UserId];
 		for _, v: any in self.data.WhitelistedUsers do
 			if v.hash == plrstr then
-				return v.level, v.attackable or whitelist.localprio >= v.level, v.tags;
+				return v.level, v.attackable or whitelist.localprio >= v.level or whitelist.localprio == 0, v.tags;
 			end;
 		end;
 		return 0, true;
@@ -2087,17 +2087,9 @@ velo.run(function()
 			-- FIX: always set up hook after data loads, not just when prio != 0 player found
 			self:hook();
 
-			-- mark whitelisted entities as Friend so nametag module's Teammates filter
-		-- doesn't skip them (non-attackable entities get filtered out otherwise)
+			-- refresh all nametags now that localprio and tags are set
 			task.defer(function(): ()
 				for _, ent: any in (entitylib.List or {}) do
-					if ent.Player then
-						local prio: number = whitelist:get(ent.Player) or 0;
-						if prio > 0 then
-							ent.Friend = true;
-							entitylib.Events.EntityAdded:Fire(ent);
-						end;
-					end;
 					entitylib.Events.EntityUpdated:Fire(ent);
 				end;
 			end);
@@ -2121,17 +2113,6 @@ velo.run(function()
 			if not whitelist.connection then
 				whitelist.connection = playersService.PlayerAdded:Connect(function(v: Player): ()
 					whitelist:playeradded(v, true);
-					-- mark whitelisted players as Friend for nametag visibility
-					task.delay(2, function(): ()
-						local prio: number = whitelist:get(v) or 0;
-						if prio > 0 then
-							local ent: any = entitylib.getEntity(v);
-							if ent then
-								ent.Friend = true;
-								entitylib.Events.EntityAdded:Fire(ent);
-							end;
-						end;
-					end);
 				end);
 				vape:Clean(whitelist.connection);
 			end;
@@ -2576,6 +2557,7 @@ velo.run(function()
 		table.clear(whitelist);
 	end);
 end)
+
 
 velo.run(function()
 	local AimAssist: table = {}
