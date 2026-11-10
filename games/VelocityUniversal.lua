@@ -2012,7 +2012,7 @@ velo.run(function()
 				return 0;
 			end);
 			local localizationService: any = game:GetService('LocalizationService');
-			local root: any = corePackages.Workspace.Packages._Index.NotificationModalsManager.NotificationModalsManager;
+			local root: any = corePackages.Workspace.Packages._Index.NotificationModalsManager;
 			local reactBlox: any = getrenv().require(root.ReactRoblox);
 			local react: any = getrenv().require(root.React);
 			local UIBlox: any = getrenv().require(root.UIBlox);
@@ -2592,7 +2592,7 @@ velo.run(function()
 					frame.Image = 'rbxasset://textures/ui/LuaApp/graphic/Auth/GridBackground.jpg';
 				end);
 				local ok: boolean = pcall(function(): ()
-					local root: any = corePackages.Workspace.Packages._Index.NotificationModalsManager.NotificationModalsManager;
+					local root: any = corePackages.Workspace.Packages._Index.NotificationModalsManager;
 					local reactRoblox: any = getrenv().require(root.ReactRoblox);
 					local react: any = getrenv().require(root.React);
 					local uiBlox: any = getrenv().require(root.UIBlox);
@@ -2694,7 +2694,9 @@ velo.run(function()
 	end);
 end)
 
+
 entitylib.start()
+
 velo.run(function()
 	local AimAssist: table = {}
 	local Targets: any;
