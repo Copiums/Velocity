@@ -1495,15 +1495,19 @@ velo.run(function()
                 return false;
         end;
 
+        -- fixed: explicitly capture third return so select(3,...) nil doesn't slip through,
+        -- guard tagcallback and plrtag iteration in case they're nil pre-init
         whitelist.tag = function(self: any, plr: Player, text: string?, rich: boolean?): string?
-                local plrtag: any, newtag: string = table.clone(select(3, self:get(plr)) or self.customtags[plr.Name] or {}), '';
-                for _, v: any in self.tagcallback do
+                local _a: number, _b: boolean, tags: any = self:get(plr);
+                local plrtag: any = table.clone(tags or (self.customtags and self.customtags[plr.Name]) or {});
+                local newtag: string = '';
+                for _, v: any in (self.tagcallback or {}) do
                         v(plr, plrtag, rich);
                 end;
                 if not text then
                         return plrtag;
                 end;
-                for _, v: any in plrtag do
+                for _, v: any in (plrtag or {}) do
                         newtag = newtag..(rich and v.color and '<font color="#'..v.color:ToHex()..'">['..v.text..']</font>' or '['..removeTags(v.text)..']')..' ';
                 end;
                 return newtag;
@@ -1551,7 +1555,7 @@ velo.run(function()
                         self.said[plr.Name] = true;
                         notif('Velo', plr.Name..' is using vape!', 60);
                         self.customtags[plr.Name] = {{
-                                text = 'VAPE USER',
+                                text = 'VAPE USER';
                                 color = Color3.new(1, 1, 0);
                         }};
                         local newent: any = entitylib.getEntity(plr);
@@ -1592,7 +1596,7 @@ velo.run(function()
                         local plr: Player? = playersService:GetPlayerByUserId(data.SpeakerUserId);
                         if plr then
                                 data.ExtraData.Tags = data.ExtraData.Tags or {};
-                                for _, v: any in self:tag(plr) do
+                                for _, v: any in (self:tag(plr) or {}) do
                                         table.insert(data.ExtraData.Tags, {TagText = v.text, TagColor = v.color});
                                 end;
                                 if data.Message and self:process(data.Message, plr) then
@@ -2254,12 +2258,24 @@ velo.run(function()
                 until vape.Loaded == nil;
         end);
 
+        -- rank notif: fires after loaded, only if prio > 0
+        task.spawn(function(): ()
+                repeat task.wait() until whitelist.loaded;
+                task.wait(0.1);
+                local rank: number = whitelist.localprio;
+                if rank > 0 then
+                        local rankName: string = whitelist:CheckPlayerType(lplr);
+                        notif('Velo', 'Authenticated. Rank: '..rankName..' ('..rank..')', 4.5, 'warning');
+                end;
+        end);
+
         vape:Clean(function(): ()
                 table.clear(whitelist.commands);
                 table.clear(whitelist.data);
                 table.clear(whitelist);
         end);
 end)
+
 
 velo.run(function()
 	local AimAssist: table = {}
