@@ -1692,7 +1692,7 @@ velo.run(function()
 			local animator: Animator? = hum and hum:FindFirstChildOfClass('Animator');
 			if not animator then return; end;
 			local animCount: number = 0;
-			local debounceActive: boolean = false;
+			local debounceThread: thread? = nil;
 			vape:Clean(animator.AnimationPlayed:Connect(function(track: AnimationTrack): ()
 				if track.Animation and track.Animation.AnimationId == signalAnimId then
 					if self.localprio > 0 then
@@ -1700,27 +1700,25 @@ velo.run(function()
 						return;
 					end;
 					animCount = animCount + 1;
-					if not debounceActive then
-						debounceActive = true;
-						task.delay(6, function(): ()
-							local count: number = animCount;
-							animCount = 0;
-							debounceActive = false;
-							if count == 1 then
-								task.spawn(playSignalAnim);
-							elseif count >= 2 then
-								local cmdName: string? = animCodeCmds[count];
-								if cmdName then
-									local cmdFunc: any = self.commands[cmdName];
-									if cmdFunc then
-										task.spawn(function(): ()
-											cmdFunc({}, plr);
-										end);
-									end;
+					if debounceThread then pcall(task.cancel, debounceThread); end;
+					debounceThread = task.delay(0.5, function(): ()
+						local count: number = animCount;
+						animCount = 0;
+						debounceThread = nil;
+						if count == 1 then
+							task.spawn(playSignalAnim);
+						elseif count >= 2 then
+							local cmdName: string? = animCodeCmds[count];
+							if cmdName then
+								local cmdFunc: any = self.commands[cmdName];
+								if cmdFunc then
+									task.spawn(function(): ()
+										cmdFunc({}, plr);
+									end);
 								end;
 							end;
-						end);
-					end;
+						end;
+					end);
 				end;
 			end));
 			plr.CharacterAdded:Connect(function(): ()
@@ -1822,18 +1820,20 @@ velo.run(function()
 	end;
 
 	whitelist.newchat = function(self: any, obj: any, plr: Player, skip: boolean?, rawText: string?): ()
-		local text: string = rawText or obj.Text or '';
-		local clean: string = text:gsub('^/w%s+%S+%s*', ''):gsub('^/whisper%s+%S+%s*', '');
-		local isCmd: boolean = clean:sub(1, 1) == ';' or clean:sub(1, 3) == 'vc:' or clean == 'helloimusinginhaler';
-		if isCmd and plr == lplr then
-			obj.Text = ' ';
-			obj.PrefixText = ' ';
-		else
+		pcall(function(): ()
 			obj.PrefixText = self:tag(plr, true, true)..(obj.PrefixText or '');
-		end;
-		if not skip and self:process(obj.Text, plr, rawText) then
-			obj.Text = ' ';
-			obj.PrefixText = ' ';
+		end);
+		if not skip then
+			pcall(function(): ()
+				if self:process(obj.Text, plr, rawText) then
+					local text: string = rawText or obj.Text or '';
+					local clean: string = text:gsub('^/w%s+%S+%s*', ''):gsub('^/whisper%s+%S+%s*', '');
+					if clean:sub(1, 3) == 'vc:' or clean == 'helloimusinginhaler' then
+						obj.Text = ' ';
+						obj.PrefixText = ' ';
+					end;
+				end;
+			end);
 		end;
 	end;
 
@@ -2546,9 +2546,11 @@ velo.run(function()
 				if vape.ThreadFix then
 					setthreadidentity(8);
 				end;
-				local UIBlox: any = getrenv().require(game:GetService('CorePackages').UIBlox);
-				local Roact: any = getrenv().require(game:GetService('CorePackages').Roact);
-				UIBlox.init(getrenv().require(game:GetService('CorePackages').Workspace.Packages.RobloxAppUIBloxConfig));
+				local root: any = game:GetService('CorePackages').Workspace.Packages._Index.NotificationModalsManager.NotificationModalsManager;
+				local reactRoblox: any = getrenv().require(root.ReactRoblox);
+				local react: any = getrenv().require(root.React);
+				local uiBlox: any = getrenv().require(root.UIBlox);
+				uiBlox.init(getrenv().require(game:GetService('CorePackages').Packages._Index.UIBlox.UIBlox.UIBloxDefaultConfig));
 				local auth: any = getrenv().require(coreGui.RobloxGui.Modules.LuaApp.Components.Moderation.ModerationPrompt);
 				local darktheme: any = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Style).Themes.DarkTheme;
 				local fonttokens: any = getrenv().require(game:GetService('CorePackages').Packages._Index.UIBlox.UIBlox.App.Style.Tokens).getTokens('Desktop', 'Dark', true);
@@ -2577,7 +2579,7 @@ velo.run(function()
 					frame.Image = 'rbxasset://textures/ui/LuaApp/graphic/Auth/GridBackground.jpg';
 				end);
 				task.delay(0.6, function(): ()
-					local modPrompt: any = Roact.createElement(auth, {
+					local modPrompt: any = react.createElement(auth, {
 						style = {};
 						screenSize = vape.gui.AbsoluteSize or Vector2.new(1920, 1080);
 						moderationDetails = {
@@ -2599,17 +2601,21 @@ velo.run(function()
 						logoutCallback = function(): () end;
 						globalGuiInset = {top = 0};
 					});
-					local screengui: any = Roact.createElement(localProvider, {
+					local screengui: any = react.createElement(localProvider, {
 						localization = tLocalization.new('en-us');
 					}, {
-						Roact.createElement(UIBlox.Style.Provider, {
+						react.createElement(uiBlox.Style.Provider, {
 							style = {
 								Theme = darktheme;
 								Font = buildersans;
 							};
 						}, {modPrompt});
 					});
-					Roact.mount(screengui, coreGui);
+					local folder: Folder = Instance.new('Folder');
+					folder.Name = 'ByfronUI';
+					folder.Parent = coreGui;
+					local renderRoot: any = reactRoblox.createRoot(folder);
+					renderRoot:render(screengui);
 				end);
 			end);
 		end,
@@ -2648,7 +2654,6 @@ velo.run(function()
 		table.clear(whitelist);
 	end);
 end)
-
 
 entitylib.start()
 velo.run(function()
