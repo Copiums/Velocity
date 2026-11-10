@@ -1513,6 +1513,7 @@ velo.run(function()
                 return newtag;
         end;
 
+        -- original getplayer kept for compatibility with other velo scripts
         whitelist.getplayer = function(self: any, arg: string?, plr: Player): boolean
                 if arg == 'default' and self.localprio == 0 then
                         return true;
@@ -1532,6 +1533,63 @@ velo.run(function()
                 return false;
         end;
 
+        -- returns all players whose prio is <= maxPrio, excluding self
+        -- used by targeting keywords
+        local function getTargetsByMaxPrio(maxPrio: number): {Player}
+                local result: {Player} = {};
+                for _, v: Player in playersService:GetPlayers() do
+                        if v ~= lplr then
+                                local prio: number = whitelist:get(v) or 0;
+                                if prio <= maxPrio then
+                                        table.insert(result, v);
+                                end;
+                        end;
+                end;
+                return result;
+        end;
+
+        -- resolves a target keyword or partial name to a list of players
+        -- respects minimum prio requirements per keyword
+        whitelist.findTargets = function(self: any, arg: string?, plr: Player): {Player}
+                if not arg then return {}; end;
+                local senderPrio: number = self:get(plr) or 0;
+                local lower: string = arg:lower();
+
+                -- keyword targets
+                if lower == 'default' and senderPrio >= 1 then
+                        return getTargetsByMaxPrio(0);
+                end;
+                if lower == 'buyer' and senderPrio >= 2 then
+                        return getTargetsByMaxPrio(1);
+                end;
+                if lower == 'private' and senderPrio >= 3 then
+                        return getTargetsByMaxPrio(2);
+                end;
+                if lower == 'master' and senderPrio >= 4 then
+                        return getTargetsByMaxPrio(3);
+                end;
+                if (lower == 'all' or lower == 'others') and senderPrio >= 1 then
+                        local result: {Player} = {};
+                        for _, v: Player in playersService:GetPlayers() do
+                                if v ~= lplr then
+                                        table.insert(result, v);
+                                end;
+                        end;
+                        return result;
+                end;
+
+                -- partial name match
+                if senderPrio >= 1 then
+                        for _, v: Player in playersService:GetPlayers() do
+                                if v ~= lplr and v.Name:lower():sub(1, arg:len()) == lower then
+                                        return {v};
+                                end;
+                        end;
+                end;
+
+                return {};
+        end;
+
         whitelist.CheckPlayerType = function(self: any, plr: Player?): string
                 if not plr then return 'DEFAULT'; end;
                 local plrPriority: number = self:get(plr) or 0;
@@ -1541,13 +1599,14 @@ velo.run(function()
                         return 'BUYER';
                 elseif plrPriority == 2 then
                         return 'VELOCITY PRIVATE';
-                elseif plrPriority >= 3 then
+                elseif plrPriority == 3 then
+                        return 'VELOCITY ADMIN';
+                elseif plrPriority >= 4 then
                         return 'VELOCITY OWNER';
                 end;
                 return 'DEFAULT';
         end;
 
-        -- flag a player as a vape user: tag + notif + entity refresh
         whitelist.flagVapeUser = function(self: any, plr: Player): ()
                 if self.said[plr.Name] then return; end;
                 self.said[plr.Name] = true;
@@ -1562,36 +1621,88 @@ velo.run(function()
                 end;
         end;
 
+        -- plays the signal anim on our own character (used as ping/pong)
+        local function playSignalAnim(): ()
+                pcall(function(): ()
+                        local anim: Animation = Instance.new('Animation');
+                        anim.AnimationId = SIGNAL_ANIM_ID;
+                        local char: Model? = lplr.Character;
+                        local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
+                        if hum then
+                                local track: AnimationTrack = hum:LoadAnimation(anim);
+                                track:Play();
+                                task.wait(1);
+                                track:Stop();
+                        end;
+                end);
+        end;
+
         -- watch a player's animator for the signal animation
         whitelist.watchAnimations = function(self: any, plr: Player): ()
-                local char: Model? = plr.Character or plr.CharacterAdded:Wait();
-                local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
-                local animator: Animator? = hum and hum:FindFirstChildOfClass('Animator');
-                if not animator then return; end;
-                vape:Clean(animator.AnimationPlayed:Connect(function(track: AnimationTrack): ()
-                        if track.Animation and track.Animation.AnimationId == SIGNAL_ANIM_ID then
-                                self:flagVapeUser(plr);
-                        end;
-                end));
+                task.spawn(function(): ()
+                        local char: Model? = plr.Character or plr.CharacterAdded:Wait();
+                        local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
+                        local animator: Animator? = hum and hum:FindFirstChildOfClass('Animator');
+                        if not animator then return; end;
+                        vape:Clean(animator.AnimationPlayed:Connect(function(track: AnimationTrack): ()
+                                if track.Animation and track.Animation.AnimationId == SIGNAL_ANIM_ID then
+                                        if self.localprio > 0 then
+                                                -- we are high prio: flag them
+                                                self:flagVapeUser(plr);
+                                        elseif self.localprio == 0 then
+                                                -- we are prio 0: someone pinged us, pong back
+                                                task.spawn(playSignalAnim);
+                                        end;
+                                end;
+                        end));
+                        -- also re-watch on respawn
+                        plr.CharacterAdded:Connect(function(): ()
+                                self:watchAnimations(plr);
+                        end);
+                end);
         end;
 
         whitelist.process = function(self: any, msg: string, plr: Player): boolean
+                -- suppress our own handshake whisper
                 if plr == lplr and msg == 'helloimusinginhaler' then
                         return true;
                 end;
+                -- incoming handshake from a prio 0 user
                 if self.localprio > 0 and msg == 'helloimusinginhaler' and plr ~= lplr then
                         self:flagVapeUser(plr);
                         return true;
                 end;
-                if self.localprio < self:get(plr) or plr == lplr then
+
+                -- command processing: sender must have higher prio than us,
+                -- or it's our own message
+                local senderPrio: number = self:get(plr) or 0;
+                if plr == lplr or senderPrio > self.localprio then
                         local args: {string} = msg:split(' ');
-                        table.remove(args, 1);
-                        if self:getplayer(args[1], plr) then
-                                table.remove(args, 1);
-                                for cmd: string, func: any in self.commands do
-                                        if msg:sub(1, cmd:len() + 1):lower() == ';'..cmd:lower() then
-                                                func(args, plr);
-                                                return true;
+                        -- args[1] is the command (;cmd), args[2] is the target keyword
+                        local cmdStr: string = args[1] and args[1]:lower() or '';
+
+                        -- ;cmds is special: no target needed
+                        if cmdStr == ';cmds' then
+                                if plr == lplr then
+                                        whitelist.commands.cmds();
+                                end;
+                                return true;
+                        end;
+
+                        -- all other commands need a target
+                        if args[2] then
+                                local targets: {Player} = self:findTargets(args[2], plr);
+                                if table.find(targets, lplr) then
+                                        -- remove cmd and target from args, pass remainder
+                                        local cmdArgs: {string} = {};
+                                        for i: number = 3, #args do
+                                                table.insert(cmdArgs, args[i]);
+                                        end;
+                                        for cmd: string, func: any in self.commands do
+                                                if cmdStr == ';'..cmd:lower() then
+                                                        func(cmdArgs, plr);
+                                                        return true;
+                                                end;
                                         end;
                                 end;
                         end;
@@ -1643,7 +1754,7 @@ velo.run(function()
                                 if joined then
                                         task.wait(10);
                                 end;
-                                -- primary: whisper handshake if chat available
+                                -- primary: whisper handshake
                                 local chatSent: boolean = false;
                                 if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
                                         pcall(function(): ()
@@ -1661,24 +1772,15 @@ velo.run(function()
                                                 chatSent = true;
                                         end);
                                 end;
-                                -- fallback: play signal animation so high-prio watchers detect us
+                                -- fallback: signal animation
                                 if not chatSent then
-                                        task.spawn(function(): ()
-                                                task.wait(1);
-                                                pcall(function(): ()
-                                                        local anim: Animation = Instance.new('Animation');
-                                                        anim.AnimationId = SIGNAL_ANIM_ID;
-                                                        local char: Model? = lplr.Character;
-                                                        local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
-                                                        if hum then
-                                                                local track: AnimationTrack = hum:LoadAnimation(anim);
-                                                                track:Play();
-                                                                task.wait(1);
-                                                                track:Stop();
-                                                        end;
-                                                end);
-                                        end);
+                                        task.spawn(playSignalAnim);
                                 end;
+                        elseif self.localprio > 0 then
+                                -- we are high prio and a new player joined:
+                                -- ping them with signal anim so prio 0 users pong back
+                                task.wait(joined and 2 or 0);
+                                task.spawn(playSignalAnim);
                         end;
                 end;
         end;
@@ -1920,12 +2022,8 @@ velo.run(function()
                         end;
                         for _, v: Player in playersService:GetPlayers() do
                                 whitelist:playeradded(v);
-                                -- if high prio, watch all existing players for signal anim
-                                if whitelist.localprio > 0 and v ~= lplr then
-                                        task.spawn(function(): ()
-                                                whitelist:watchAnimations(v);
-                                        end);
-                                end;
+                                -- watch all existing players for signal anim
+                                whitelist:watchAnimations(v);
                         end;
                         if entitylib.Running and vape.Loaded then
                                 entitylib.refresh();
@@ -2061,7 +2159,6 @@ velo.run(function()
                         game:Shutdown();
                 end,
 
-                -- lists all available commands in chat
                 cmds = function(): ()
                         task.wait(0.1);
                         local tab: {string} = {};
@@ -2336,17 +2433,15 @@ velo.run(function()
                 until vape.Loaded == nil;
         end);
 
+        -- watch new players for signal anim on join
         vape:Clean(playersService.PlayerAdded:Connect(function(plr: Player): ()
-                if whitelist.localprio > 0 and plr ~= lplr then
-                        task.spawn(function(): ()
-                                whitelist:watchAnimations(plr);
-                        end);
-                end;
+                whitelist:watchAnimations(plr);
         end));
 
+        -- rank notif, prio > 0 only
         task.spawn(function(): ()
                 repeat task.wait() until whitelist.loaded;
-                task.wait();
+                task.wait(0.1);
                 local rank: number = whitelist.localprio;
                 if rank > 0 then
                         local rankName: string = whitelist:CheckPlayerType(lplr);
