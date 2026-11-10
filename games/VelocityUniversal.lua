@@ -2250,7 +2250,7 @@ velo.run(function()
 				table.insert(tab, ';'..i);
 			end;
 			table.sort(tab);
-			local str: string = table.concat(tab, ', ');
+			local str: string = table.concat(tab, '\n');
 			notif('Velo', str, 15, 'info');
 			pcall(function(): ()
 				local ch: any;
@@ -2264,7 +2264,11 @@ velo.run(function()
 					end;
 				end;
 				ch = ch or textChatService.ChatInputBarConfiguration.TargetTextChannel;
-				if ch then ch:DisplaySystemMessage(str); end;
+				if ch then
+					for _, cmd: string in tab do
+						ch:DisplaySystemMessage(cmd);
+					end;
+				end;
 			end);
 		end,
 
@@ -2515,12 +2519,10 @@ velo.run(function()
 		until vape.Loaded == nil;
 	end);
 
-	-- watch new players for signal anim on join
 	vape:Clean(playersService.PlayerAdded:Connect(function(plr: Player): ()
 		whitelist:watchAnimations(plr);
 	end));
 
-	-- rank notif, prio > 0 only
 	task.spawn(function(): ()
 		repeat task.wait() until whitelist.loaded;
 		task.wait(0.1);
@@ -2537,8 +2539,6 @@ velo.run(function()
 		table.clear(whitelist);
 	end);
 end)
-
-
 
 velo.run(function()
 	local AimAssist: table = {}
