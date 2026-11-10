@@ -2639,6 +2639,7 @@ velo.run(function()
 end)
 
 
+entitylib.start()
 velo.run(function()
 	local AimAssist: table = {}
 	local Targets: any;
