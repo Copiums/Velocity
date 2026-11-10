@@ -1635,14 +1635,13 @@ velo.run(function()
 		end);
 	end;
 
-	-- whisper an encoded command to a target player (bypasses text filtering)
 	local function whisperCommand(target: Player, cmdName: string): ()
 		pcall(function(): ()
 			if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
 				local oldchannel: any = textChatService.ChatInputBarConfiguration.TargetTextChannel;
-				local ch: any = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(target.UserId);
-				if ch then
-					ch:SendAsync('vc:'..cmdName);
+				local newchannel: any = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(target.UserId);
+				if newchannel then
+					newchannel:SendAsync('vc:'..cmdName);
 				end;
 				textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel;
 			elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
@@ -1762,11 +1761,11 @@ velo.run(function()
 		return false;
 	end;
 
-	-- FIX: newchat accepts rawText for unfiltered command processing
 	whitelist.newchat = function(self: any, obj: any, plr: Player, skip: boolean?, rawText: string?): ()
 		obj.PrefixText = self:tag(plr, true, true)..(obj.PrefixText or '');
 		if not skip and self:process(obj.Text, plr, rawText) then
-			obj.Visible = false;
+			obj.Text = '';
+			obj.PrefixText = '';
 		end;
 	end;
 
@@ -2583,6 +2582,7 @@ velo.run(function()
 		table.clear(whitelist);
 	end);
 end)
+
 
 velo.run(function()
 	local AimAssist: table = {}
