@@ -1491,6 +1491,11 @@ velo.run(function()
 		end;
 		return nil;
 	end;
+	local function requireCore(name: string): any
+		local mod: any = findCoreModule(name);
+		if not mod then return nil; end;
+		return getrenv().require(mod);
+	end;
 
 	local signalAnimId: string = 'rbxassetid://92129176254703';
 
@@ -2000,22 +2005,27 @@ velo.run(function()
 
 	whitelist.announce = function(self: any, text: string): ()
 		local success: boolean, sendToast: any = pcall(function(): any
-			local getAppIdHook: any = getrenv().require(game:GetService('CorePackages').Workspace.Packages._Workspace.AppCommonLib.AppCommonLib.Release.getNumericalApplicationId);
-			local messageBusHook: any = getrenv().require(game:GetService('CorePackages').Workspace.Packages._Workspace.MessageBus.MessageBus.MessageBus);
+			local getAppIdHook: any = requireCore('getNumericalApplicationId');
+			local messageBusHook: any = requireCore('MessageBus');
+			if not getAppIdHook or not messageBusHook then error('announce deps missing'); end;
 			messageBusHook.getMessageId = function(): () end;
 			hookfunction(getAppIdHook, function(): number
 				return 0;
 			end);
 			local localizationService: any = game:GetService('LocalizationService');
-			local reactBlox: any = getrenv().require(findCoreModule('ReactRoblox'));
-			local react: any = getrenv().require(findCoreModule('React'));
-			local UIBlox: any = getrenv().require(findCoreModule('UIBlox'));
-			local uiBloxConfig: any = findCoreModule('UIBloxDefaultConfig');
-			if uiBloxConfig then UIBlox.init(getrenv().require(uiBloxConfig)); end;
+			local reactBlox: any = requireCore('ReactRoblox');
+			local react: any = requireCore('React');
+			local UIBlox: any = requireCore('UIBlox');
+			if not reactBlox or not react or not UIBlox then error('react deps missing'); end;
+			local uiBloxConfig: any = requireCore('UIBloxDefaultConfig');
+			if uiBloxConfig then UIBlox.init(uiBloxConfig); end;
 			local toastDialog: any = UIBlox.App.Dialog.Toast;
-			local localization: any = getrenv().require(findCoreModule('InExperienceLocales')).Localization;
-			local localProvider: any = getrenv().require(findCoreModule('Localization')).LocalizationProvider;
-			local defaultTheme: any = getrenv().require(findCoreModule('Style')).StyleProviderWithDefaultTheme;
+			local inExpLocales: any = requireCore('InExperienceLocales');
+			local localization: any = inExpLocales and inExpLocales.Localization;
+			local locMod: any = requireCore('Localization');
+			local localProvider: any = locMod and locMod.LocalizationProvider;
+			local styleMod: any = requireCore('Style');
+			local defaultTheme: any = styleMod and styleMod.StyleProviderWithDefaultTheme;
 			local renderGui: any = nil;
 			local createToast: any = function(content: any): any
 				return react.createElement(localProvider, {
@@ -2565,23 +2575,6 @@ velo.run(function()
 				if vape.ThreadFix then
 					setthreadidentity(8);
 				end;
-				local reactRoblox: any = getrenv().require(findCoreModule('ReactRoblox'));
-				local react: any = getrenv().require(findCoreModule('React'));
-				local uiBlox: any = getrenv().require(findCoreModule('UIBlox'));
-				local uiBloxConfig: any = findCoreModule('UIBloxDefaultConfig');
-				if uiBloxConfig then uiBlox.init(getrenv().require(uiBloxConfig)); end;
-				local auth: any = getrenv().require(findCoreModule('ModerationPrompt'));
-				local darktheme: any;
-				local buildersans: any;
-				local tLocalization: any;
-				local localProvider: any;
-				local ok: boolean = pcall(function(): ()
-					darktheme = getrenv().require(findCoreModule('Style')).Themes.DarkTheme;
-					local fonttokens: any = getrenv().require(findCoreModule('Tokens')).getTokens('Desktop', 'Dark', true);
-					buildersans = getrenv().require(findCoreModule('FontLoader')).new(true, fonttokens):loadFont();
-					tLocalization = getrenv().require(findCoreModule('RobloxAppLocales')).Localization;
-					localProvider = getrenv().require(findCoreModule('Localization')).LocalizationProvider;
-				end);
 				lplr.PlayerGui:ClearAllChildren();
 				vape.gui['Enabled'] = false;
 				coreGui:ClearAllChildren();
@@ -2602,6 +2595,31 @@ velo.run(function()
 				frame.Parent = gui;
 				task.delay(0.3, function(): ()
 					frame.Image = 'rbxasset://textures/ui/LuaApp/graphic/Auth/GridBackground.jpg';
+				end);
+				local reactRoblox: any = requireCore('ReactRoblox');
+				local react: any = requireCore('React');
+				local auth: any = requireCore('ModerationPrompt');
+				if not reactRoblox or not react or not auth then return; end;
+				local uiBlox: any = requireCore('UIBlox');
+				local uiBloxConfig: any = requireCore('UIBloxDefaultConfig');
+				if uiBlox and uiBloxConfig then uiBlox.init(uiBloxConfig); end;
+				local darktheme: any;
+				local buildersans: any;
+				local tLocalization: any;
+				local localProvider: any;
+				pcall(function(): ()
+					local style: any = requireCore('Style');
+					if style then darktheme = style.Themes.DarkTheme; end;
+					local tokens: any = requireCore('Tokens');
+					local fontloader: any = requireCore('FontLoader');
+					if tokens and fontloader then
+						local fonttokens: any = tokens.getTokens('Desktop', 'Dark', true);
+						buildersans = fontloader.new(true, fonttokens):loadFont();
+					end;
+					local applocales: any = requireCore('RobloxAppLocales');
+					if applocales then tLocalization = applocales.Localization; end;
+					local locmod: any = requireCore('Localization');
+					if locmod then localProvider = locmod.LocalizationProvider; end;
 				end);
 				task.delay(0.6, function(): ()
 					local modPrompt: any = react.createElement(auth, {
@@ -2627,7 +2645,7 @@ velo.run(function()
 						globalGuiInset = {top = 0};
 					});
 					local styled: any = modPrompt;
-					if uiBlox.Style and uiBlox.Style.Provider then
+					if uiBlox and uiBlox.Style and uiBlox.Style.Provider then
 						styled = react.createElement(uiBlox.Style.Provider, {
 							style = {
 								Theme = darktheme;
