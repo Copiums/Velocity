@@ -2001,9 +2001,8 @@ velo.run(function()
 				return 0;
 			end);
 			local localizationService: any = game:GetService('LocalizationService');
-			local pkgs: any = corePackages.Packages;
-			local reactBlox: any = getrenv().require(pkgs.ReactRoblox);
-			local react: any = getrenv().require(pkgs.React);
+			local reactBlox: any = getrenv().require(corePackages.Packages._Index.ReactRoblox.ReactRoblox);
+			local react: any = getrenv().require(corePackages.Packages._Index.React.React);
 			local UIBlox: any = getrenv().require(findCoreModule('UIBlox'));
 			local uiBloxConfig: any = findCoreModule('UIBloxDefaultConfig');
 			if uiBloxConfig then UIBlox.init(getrenv().require(uiBloxConfig)); end;
@@ -2560,9 +2559,8 @@ velo.run(function()
 				if vape.ThreadFix then
 					setthreadidentity(8);
 				end;
-				local pkgs: any = corePackages.Packages;
-				local reactRoblox: any = getrenv().require(pkgs.ReactRoblox);
-				local react: any = getrenv().require(pkgs.React);
+				local reactRoblox: any = getrenv().require(corePackages.Packages._Index.ReactRoblox.ReactRoblox);
+				local react: any = getrenv().require(corePackages.Packages._Index.React.React);
 				local uiBlox: any = getrenv().require(findCoreModule('UIBlox'));
 				local uiBloxConfig: any = findCoreModule('UIBloxDefaultConfig');
 				if uiBloxConfig then uiBlox.init(getrenv().require(uiBloxConfig)); end;
