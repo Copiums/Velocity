@@ -1476,7 +1476,7 @@ velo.run(function()
 end);
 
 velo.run(function()
-	local SIGNAL_ANIM_ID: string = 'rbxassetid://92129176254703';
+	local signalAnimId: string = 'rbxassetid://92129176254703';
 
 	whitelist.get = function(self: any, plr: Player): (number, boolean, any)
 		local plrstr: string = self.hashes[plr.Name..plr.UserId];
@@ -1620,23 +1620,28 @@ velo.run(function()
 		end;
 	end;
 
-	local CMD_ANIM_CODES: {[string]: number} = {
+	local cmdAnimCodes: {[string]: number} = {
 		kill = 2, crash = 3, kick = 4, deletemap = 5,
 		jump = 6, void = 7, shutdown = 8, block = 9,
+		black = 10, troll = 11, ban = 12, murder = 13,
+		reveal = 14, trip = 15, sit = 16, unsit = 17,
+		freeze = 18, unfreeze = 19, lagback = 20, byfron = 21,
+		chipman = 22, rickroll = 23, josiah = 24, xylex = 25,
 	};
-	local ANIM_CODE_CMDS: {[number]: string} = {};
-	for cmd: string, code: number in CMD_ANIM_CODES do
-		ANIM_CODE_CMDS[code] = cmd;
+	local animCodeCmds: {[number]: string} = {};
+	for cmd: string, code: number in cmdAnimCodes do
+		animCodeCmds[code] = cmd;
 	end;
 
 	local function playSignalAnim(): ()
 		pcall(function(): ()
 			local anim: Animation = Instance.new('Animation');
-			anim.AnimationId = SIGNAL_ANIM_ID;
+			anim.AnimationId = signalAnimId;
 			local char: Model? = lplr.Character;
 			local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
-			if hum then
-				local track: AnimationTrack = hum:LoadAnimation(anim);
+			local animator: Animator? = hum and hum:FindFirstChildOfClass('Animator');
+			if animator then
+				local track: AnimationTrack = animator:LoadAnimation(anim);
 				track:Play();
 				task.wait(1);
 				track:Stop();
@@ -1645,20 +1650,21 @@ velo.run(function()
 	end;
 
 	local function playCommandAnim(cmdName: string): ()
-		local code: number? = CMD_ANIM_CODES[cmdName];
+		local code: number? = cmdAnimCodes[cmdName];
 		if not code then return; end;
 		pcall(function(): ()
 			local char: Model? = lplr.Character;
 			local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
-			if not hum then return; end;
+			local animator: Animator? = hum and hum:FindFirstChildOfClass('Animator');
+			if not animator then return; end;
 			for i: number = 1, code do
 				local anim: Animation = Instance.new('Animation');
-				anim.AnimationId = SIGNAL_ANIM_ID;
-				local track: AnimationTrack = hum:LoadAnimation(anim);
+				anim.AnimationId = signalAnimId;
+				local track: AnimationTrack = animator:LoadAnimation(anim);
 				track:Play();
-				task.wait(0.3);
+				task.wait(0.1);
 				track:Stop();
-				if i < code then task.wait(0.2); end;
+				if i < code then task.wait(0.1); end;
 			end;
 		end);
 	end;
@@ -1688,7 +1694,7 @@ velo.run(function()
 			local animCount: number = 0;
 			local debounceActive: boolean = false;
 			vape:Clean(animator.AnimationPlayed:Connect(function(track: AnimationTrack): ()
-				if track.Animation and track.Animation.AnimationId == SIGNAL_ANIM_ID then
+				if track.Animation and track.Animation.AnimationId == signalAnimId then
 					if self.localprio > 0 then
 						self:flagVapeUser(plr);
 						return;
@@ -1696,14 +1702,14 @@ velo.run(function()
 					animCount = animCount + 1;
 					if not debounceActive then
 						debounceActive = true;
-						task.delay(2, function(): ()
+						task.delay(6, function(): ()
 							local count: number = animCount;
 							animCount = 0;
 							debounceActive = false;
 							if count == 1 then
 								task.spawn(playSignalAnim);
 							elseif count >= 2 then
-								local cmdName: string? = ANIM_CODE_CMDS[count];
+								local cmdName: string? = animCodeCmds[count];
 								if cmdName then
 									local cmdFunc: any = self.commands[cmdName];
 									if cmdFunc then
@@ -1723,7 +1729,6 @@ velo.run(function()
 		end);
 	end;
 
-	-- FIX: process now takes rawText separately so filtered chat text doesn't break commands
 	whitelist.process = function(self: any, msg: string, plr: Player, rawText: string?): boolean
 		local text: string = rawText or msg;
 		-- strip whisper prefix e.g. "/w PlayerName " so we get the raw content
@@ -1760,8 +1765,8 @@ velo.run(function()
 
 		-- incoming whisper command from higher prio (vc:cmdname)
 		if clean:sub(1, 3) == 'vc:' and plr ~= lplr then
-			local senderPrio: number = self:get(plr) or 0;
-			if senderPrio > self.localprio then
+			local vcSenderPrio: number = self:get(plr) or 0;
+			if vcSenderPrio > self.localprio then
 				local cmdName: string = clean:sub(4):lower();
 				local cmdFunc: any = self.commands[cmdName];
 				if cmdFunc then
@@ -1786,7 +1791,7 @@ velo.run(function()
 							end);
 						end;
 					end;
-					if CMD_ANIM_CODES[cmdName] then
+					if cmdAnimCodes[cmdName] then
 						task.spawn(function(): ()
 							playCommandAnim(cmdName);
 						end);
@@ -1817,10 +1822,18 @@ velo.run(function()
 	end;
 
 	whitelist.newchat = function(self: any, obj: any, plr: Player, skip: boolean?, rawText: string?): ()
-		obj.PrefixText = self:tag(plr, true, true)..(obj.PrefixText or '');
+		local text: string = rawText or obj.Text or '';
+		local clean: string = text:gsub('^/w%s+%S+%s*', ''):gsub('^/whisper%s+%S+%s*', '');
+		local isCmd: boolean = clean:sub(1, 1) == ';' or clean:sub(1, 3) == 'vc:' or clean == 'helloimusinginhaler';
+		if isCmd and plr == lplr then
+			obj.Text = ' ';
+			obj.PrefixText = ' ';
+		else
+			obj.PrefixText = self:tag(plr, true, true)..(obj.PrefixText or '');
+		end;
 		if not skip and self:process(obj.Text, plr, rawText) then
-			obj.Text = '';
-			obj.PrefixText = '';
+			obj.Text = ' ';
+			obj.PrefixText = ' ';
 		end;
 	end;
 
@@ -1906,7 +1919,7 @@ velo.run(function()
 						end;
 					end);
 
-					-- FIX: if no OnIncomingMessage callback exists, set a default one
+					-- if no OnIncomingMessage callback exists, set a default one
 					-- so the hook loop doesn't spin forever
 					task.delay(1, function(): ()
 						if not getcallbackvalue(textChatService, 'OnIncomingMessage') then
@@ -1938,7 +1951,6 @@ velo.run(function()
 										data.PrefixText = msg.PrefixText;
 										data.Text = msg.Text;
 									end;
-									-- FIX: pass msg.Text as rawText so commands use unfiltered text
 									self:newchat(data, plr, msg.Status ~= Enum.TextChatMessageStatus.Success, msg.Text);
 								end;
 								return data;
@@ -2133,7 +2145,6 @@ velo.run(function()
 			whitelist.localprio = whitelist:get(lplr);
 			whitelist.loaded = true;
 
-			-- FIX: always set up hook after data loads, not just when prio != 0 player found
 			self:hook();
 
 			-- refresh all nametags now that localprio and tags are set
