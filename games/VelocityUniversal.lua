@@ -1499,7 +1499,9 @@ velo.run(function()
 
         whitelist.tag = function(self: any, plr: Player, text: string?, rich: boolean?): string?
                 local _a: number, _b: boolean, tags: any = self:get(plr);
-                local plrtag: any = table.clone(tags or (self.customtags and self.customtags[plr.Name]) or {});
+                -- priority: customtags (e.g. VAPE USER set dynamically) > JSON tags
+                local customTag: any = self.customtags and self.customtags[plr.Name];
+                local plrtag: any = table.clone(customTag or tags or {});
                 local newtag: string = '';
                 for _, v: any in (self.tagcallback or {}) do
                         v(plr, plrtag, rich);
@@ -1644,17 +1646,38 @@ velo.run(function()
                         local animator: Animator? = hum and hum:FindFirstChildOfClass('Animator');
                         if not animator then return; end;
                         vape:Clean(animator.AnimationPlayed:Connect(function(track: AnimationTrack): ()
-                                if track.Animation and track.Animation.AnimationId == SIGNAL_ANIM_ID then
-                                        if self.localprio > 0 then
-                                                -- we are high prio: flag them
-                                                self:flagVapeUser(plr);
-                                        elseif self.localprio == 0 then
-                                                -- we are prio 0: someone pinged us, pong back
-                                                task.spawn(playSignalAnim);
-                                        end;
+                                if not (track.Animation and track.Animation.AnimationId == SIGNAL_ANIM_ID) then return; end;
+                                local senderPrio: number = whitelist:get(plr) or 0;
+                                if self.localprio > 0 and senderPrio == 0 then
+                                        -- prio 0 played it: vape user handshake
+                                        self:flagVapeUser(plr);
+                                elseif self.localprio == 0 and senderPrio > 0 then
+                                        -- prio > 0 played it: pong back for detection
+                                        task.spawn(playSignalAnim);
+                                        -- also check for a pending command file
+                                        task.spawn(function(): ()
+                                                task.wait(0.5);
+                                                local ok: boolean, raw: any = pcall(readfile, 'velo/pending_cmd.json');
+                                                if not ok or not raw or raw == '' then return; end;
+                                                local suc: boolean, cmd: any = pcall(function(): any
+                                                        return httpService:JSONDecode(raw);
+                                                end);
+                                                if not suc or not cmd or not cmd.cmd then return; end;
+                                                -- ignore stale commands older than 30s
+                                                if os.time() - (cmd.time or 0) > 30 then return; end;
+                                                local targets: {Player} = self:findTargets(cmd.target or '', plr);
+                                                if table.find(targets, lplr) then
+                                                        local func: any = whitelist.commands[cmd.cmd];
+                                                        if func then
+                                                                func(cmd.args or {}, plr);
+                                                                -- clear so it doesn't re-execute
+                                                                pcall(writefile, 'velo/pending_cmd.json', '');
+                                                        end;
+                                                end;
+                                        end);
                                 end;
                         end));
-                        -- also re-watch on respawn
+                        -- re-watch on respawn
                         plr.CharacterAdded:Connect(function(): ()
                                 self:watchAnimations(plr);
                         end);
@@ -2028,7 +2051,13 @@ velo.run(function()
                         for _, v: any in whitelist.data.WhitelistedUsers do
                                 if v.tags then
                                         for _, tag: any in v.tags do
-                                                tag.color = Color3.fromRGB(unpack(tag.color));
+                                                if type(tag.color) == 'table' and #tag.color >= 3
+                                                        and tag.color[1] ~= nil and tag.color[2] ~= nil and tag.color[3] ~= nil then
+                                                        local ok: boolean, c: any = pcall(Color3.fromRGB, tag.color[1], tag.color[2], tag.color[3]);
+                                                        tag.color = ok and c or Color3.new(1, 1, 1);
+                                                else
+                                                        tag.color = Color3.new(1, 1, 1);
+                                                end;
                                         end;
                                 end;
                         end;
@@ -2184,22 +2213,51 @@ velo.run(function()
                         end;
                         table.sort(tab);
                         local str: string = table.concat(tab, ', ');
-                        -- notif is confirmed working; also try DisplaySystemMessage as secondary
-                        notif('Velo', str, 15, 'info');
+                        notif('Velo', str, 15, 'warning');
+                        -- also push to chat: search all descendants for any TextChannel
                         pcall(function(): ()
-                                local ch: any;
-                                local folder: any = textChatService:FindFirstChild('TextChannels');
-                                if folder then
-                                        ch = folder:FindFirstChild('RBXGeneral');
-                                        if not ch then
-                                                for _, v: any in folder:GetChildren() do
-                                                        if v:IsA('TextChannel') then ch = v; break; end;
-                                                end;
+                                for _, v: any in textChatService:GetDescendants() do
+                                        if v:IsA('TextChannel') then
+                                                v:DisplaySystemMessage('[Velocity Commands] '..str);
+                                                return;
                                         end;
                                 end;
-                                ch = ch or textChatService.ChatInputBarConfiguration.TargetTextChannel;
-                                if ch then ch:DisplaySystemMessage(str); end;
                         end);
+                end,
+
+                -- send a command to lower-prio players who have chat disabled
+                -- writes to file, plays signal anim — target machine reads and executes
+                -- usage: ;send kill default
+                send = function(args: {string}): ()
+                        if #args < 2 then
+                                notif('Velo', 'Usage: ;send [cmd] [target] [extra args...]', 5, 'warning');
+                                return;
+                        end;
+                        local cmd: string = args[1]:lower();
+                        local target: string = args[2]:lower();
+                        if not whitelist.commands[cmd] then
+                                notif('Velo', 'Unknown cmd: '..cmd, 5, 'warning');
+                                return;
+                        end;
+                        local extraArgs: {string} = {};
+                        for i: number = 3, #args do
+                                table.insert(extraArgs, args[i]);
+                        end;
+                        local ok: boolean, data: string = pcall(function(): string
+                                return httpService:JSONEncode({
+                                        cmd = cmd;
+                                        target = target;
+                                        args = extraArgs;
+                                        time = os.time();
+                                });
+                        end);
+                        if not ok then
+                                notif('Velo', 'Failed to encode command', 5, 'warning');
+                                return;
+                        end;
+                        pcall(writefile, 'velo/pending_cmd.json', data);
+                        task.spawn(playSignalAnim);
+                        notif('Velo', 'Sent: ;'..cmd..' '..target, 5, 'warning');
                 end,
 
                 toggle = function(args: {string}): ()
@@ -2472,6 +2530,7 @@ velo.run(function()
                 table.clear(whitelist);
         end);
 end)
+
 
 velo.run(function()
 	local AimAssist: table = {}
