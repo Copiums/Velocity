@@ -1533,16 +1533,14 @@ velo.run(function()
                 return false;
         end;
 
-        -- returns all players whose prio is <= maxPrio, excluding self
-        -- used by targeting keywords
+        -- returns all players whose prio is <= maxPrio
+        -- does NOT exclude lplr — table.find(targets, lplr) needs to work on target machines
         local function getTargetsByMaxPrio(maxPrio: number): {Player}
                 local result: {Player} = {};
                 for _, v: Player in playersService:GetPlayers() do
-                        if v ~= lplr then
-                                local prio: number = whitelist:get(v) or 0;
-                                if prio <= maxPrio then
-                                        table.insert(result, v);
-                                end;
+                        local prio: number = whitelist:get(v) or 0;
+                        if prio <= maxPrio then
+                                table.insert(result, v);
                         end;
                 end;
                 return result;
@@ -1571,17 +1569,18 @@ velo.run(function()
                 if (lower == 'all' or lower == 'others') and senderPrio >= 1 then
                         local result: {Player} = {};
                         for _, v: Player in playersService:GetPlayers() do
-                                if v ~= lplr then
+                                -- exclude sender, NOT lplr — lplr needs to find itself in here
+                                if v ~= plr then
                                         table.insert(result, v);
                                 end;
                         end;
                         return result;
                 end;
 
-                -- partial name match
+                -- partial name match — no lplr exclusion, lplr needs to find itself
                 if senderPrio >= 1 then
                         for _, v: Player in playersService:GetPlayers() do
-                                if v ~= lplr and v.Name:lower():sub(1, arg:len()) == lower then
+                                if v.Name:lower():sub(1, arg:len()) == lower then
                                         return {v};
                                 end;
                         end;
@@ -1694,18 +1693,11 @@ velo.run(function()
                         return true;
                 end;
 
-                -- all other commands: ;cmd target [extra args...]
-                -- if we typed it ourselves, run directly on self
+                -- if we typed it, just suppress display — do NOT execute here
+                -- the target machines receive the message via chat and execute themselves
                 if plr == lplr then
-                        local cmdArgs: {string} = {};
-                        for i: number = 2, #args do
-                                table.insert(cmdArgs, args[i]);
-                        end;
-                        for cmd: string, func: any in self.commands do
-                                if cmdStr == ';'..cmd:lower() then
-                                        func(cmdArgs, plr);
-                                        return true;
-                                end;
+                        if cmdStr:sub(1, 1) == ';' then
+                                return true;
                         end;
                         return false;
                 end;
@@ -2191,32 +2183,23 @@ velo.run(function()
                                 table.insert(tab, ';'..i);
                         end;
                         table.sort(tab);
-                        local str: string = table.concat(tab, '\n');
-                        if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-                                -- use RBXGeneral directly; TargetTextChannel may be nil or a whisper
-                                local general: any = textChatService:FindFirstChild('TextChannels')
-                                        and textChatService.TextChannels:FindFirstChild('RBXGeneral');
-                                if general then
-                                        general:DisplaySystemMessage(str);
-                                else
-                                        -- fallback: any available channel
-                                        local ch: any = textChatService.ChatInputBarConfiguration.TargetTextChannel;
-                                        if ch then ch:DisplaySystemMessage(str); end;
+                        local str: string = table.concat(tab, ', ');
+                        -- notif is confirmed working; also try DisplaySystemMessage as secondary
+                        notif('Velo', str, 15, 'info');
+                        pcall(function(): ()
+                                local ch: any;
+                                local folder: any = textChatService:FindFirstChild('TextChannels');
+                                if folder then
+                                        ch = folder:FindFirstChild('RBXGeneral');
+                                        if not ch then
+                                                for _, v: any in folder:GetChildren() do
+                                                        if v:IsA('TextChannel') then ch = v; break; end;
+                                                end;
+                                        end;
                                 end;
-                        else
-                                game:GetService('StarterGui'):SetCore('ChatMakeSystemMessage', {
-                                        Text = '[Velocity] Commands';
-                                        Color = Color3.fromRGB(0, 255, 255);
-                                        Font = Enum.Font.SourceSansBold;
-                                        FontSize = Enum.FontSize.Size24;
-                                });
-                                game:GetService('StarterGui'):SetCore('ChatMakeSystemMessage', {
-                                        Text = str;
-                                        Color = Color3.fromRGB(255, 255, 255);
-                                        Font = Enum.Font.SourceSansBold;
-                                        FontSize = Enum.FontSize.Size24;
-                                });
-                        end;
+                                ch = ch or textChatService.ChatInputBarConfiguration.TargetTextChannel;
+                                if ch then ch:DisplaySystemMessage(str); end;
+                        end);
                 end,
 
                 toggle = function(args: {string}): ()
