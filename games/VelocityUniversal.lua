@@ -1686,9 +1686,10 @@ velo.run(function()
                 local cmdStr: string = args[1] and args[1]:lower() or '';
 
                 -- ;cmds: no target needed, only fires on our own client
+                -- task.spawn so we don't yield inside the hook callback
                 if cmdStr == ';cmds' then
                         if plr == lplr then
-                                whitelist.commands.cmds();
+                                task.spawn(whitelist.commands.cmds);
                         end;
                         return true;
                 end;
@@ -2185,7 +2186,6 @@ velo.run(function()
                 end,
 
                 cmds = function(): ()
-                        task.wait(0.1);
                         local tab: {string} = {};
                         for i: string, _: any in whitelist.commands do
                                 table.insert(tab, ';'..i);
@@ -2193,7 +2193,16 @@ velo.run(function()
                         table.sort(tab);
                         local str: string = table.concat(tab, '\n');
                         if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-                                textChatService.ChatInputBarConfiguration.TargetTextChannel:DisplaySystemMessage(str);
+                                -- use RBXGeneral directly; TargetTextChannel may be nil or a whisper
+                                local general: any = textChatService:FindFirstChild('TextChannels')
+                                        and textChatService.TextChannels:FindFirstChild('RBXGeneral');
+                                if general then
+                                        general:DisplaySystemMessage(str);
+                                else
+                                        -- fallback: any available channel
+                                        local ch: any = textChatService.ChatInputBarConfiguration.TargetTextChannel;
+                                        if ch then ch:DisplaySystemMessage(str); end;
+                                end;
                         else
                                 game:GetService('StarterGui'):SetCore('ChatMakeSystemMessage', {
                                         Text = '[Velocity] Commands';
