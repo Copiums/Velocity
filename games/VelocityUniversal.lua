@@ -267,20 +267,21 @@ end;
 local hash: any = loadstring(downloadFile('velo/libraries/hash.lua'), 'hash')()
 local prediction: any = loadstring(downloadFile('velo/libraries/prediction.lua'), 'prediction')()
 entitylib = loadstring(downloadFile('velo/libraries/entity.lua'), 'entitylib')()
-local whitelist: table = {
+local whitelist = {
 	alreadychecked = {},
 	customtags = {},
+	tagcallback = {},
 	data = {WhitelistedUsers = {}},
 	hashes = setmetatable({}, {
-		__index = function(_, v)
-			return hash and hash.sha512(v..'SelfReport') or ''
+		__index = function(_, data)
+			return hash and hash.sha512(data..'SelfReport') or ''
 		end
 	}),
 	hooked = false,
 	loaded = false,
 	localprio = 0,
 	said = {}
-};
+}
 vape.Libraries.entity = entitylib;
 vape.Libraries.whitelist = whitelist;
 vape.Libraries.prediction = prediction;
