@@ -2005,27 +2005,22 @@ velo.run(function()
 
 	whitelist.announce = function(self: any, text: string): ()
 		local success: boolean, sendToast: any = pcall(function(): any
-			local getAppIdHook: any = requireCore('getNumericalApplicationId');
-			local messageBusHook: any = requireCore('MessageBus');
-			if not getAppIdHook or not messageBusHook then error('announce deps missing'); end;
+			local getAppIdHook: any = getrenv().require(corePackages.Workspace.Packages._Workspace.AppCommonLib.AppCommonLib.Release.getNumericalApplicationId);
+			local messageBusHook: any = getrenv().require(corePackages.Workspace.Packages._Workspace.MessageBus.MessageBus.MessageBus);
 			messageBusHook.getMessageId = function(): () end;
 			hookfunction(getAppIdHook, function(): number
 				return 0;
 			end);
 			local localizationService: any = game:GetService('LocalizationService');
-			local reactBlox: any = requireCore('ReactRoblox');
-			local react: any = requireCore('React');
-			local UIBlox: any = requireCore('UIBlox');
-			if not reactBlox or not react or not UIBlox then error('react deps missing'); end;
-			local uiBloxConfig: any = requireCore('UIBloxDefaultConfig');
-			if uiBloxConfig then UIBlox.init(uiBloxConfig); end;
+			local root: any = corePackages.Workspace.Packages._Index.NotificationModalsManager.NotificationModalsManager;
+			local reactBlox: any = getrenv().require(root.ReactRoblox);
+			local react: any = getrenv().require(root.React);
+			local UIBlox: any = getrenv().require(root.UIBlox);
+			UIBlox.init(getrenv().require(corePackages.Packages._Index.UIBlox.UIBlox.UIBloxDefaultConfig));
 			local toastDialog: any = UIBlox.App.Dialog.Toast;
-			local inExpLocales: any = requireCore('InExperienceLocales');
-			local localization: any = inExpLocales and inExpLocales.Localization;
-			local locMod: any = requireCore('Localization');
-			local localProvider: any = locMod and locMod.LocalizationProvider;
-			local styleMod: any = requireCore('Style');
-			local defaultTheme: any = styleMod and styleMod.StyleProviderWithDefaultTheme;
+			local localization: any = getrenv().require(root.InExperienceLocales).Localization;
+			local localProvider: any = getrenv().require(root.Localization).LocalizationProvider;
+			local defaultTheme: any = getrenv().require(root.Style).StyleProviderWithDefaultTheme;
 			local renderGui: any = nil;
 			local createToast: any = function(content: any): any
 				return react.createElement(localProvider, {
@@ -2596,76 +2591,70 @@ velo.run(function()
 				task.delay(0.3, function(): ()
 					frame.Image = 'rbxasset://textures/ui/LuaApp/graphic/Auth/GridBackground.jpg';
 				end);
-				local reactRoblox: any = requireCore('ReactRoblox');
-				local react: any = requireCore('React');
-				local auth: any = requireCore('ModerationPrompt');
-				if not reactRoblox or not react or not auth then return; end;
-				local uiBlox: any = requireCore('UIBlox');
-				local uiBloxConfig: any = requireCore('UIBloxDefaultConfig');
-				if uiBlox and uiBloxConfig then uiBlox.init(uiBloxConfig); end;
-				local darktheme: any;
-				local buildersans: any;
-				local tLocalization: any;
-				local localProvider: any;
-				pcall(function(): ()
-					local style: any = requireCore('Style');
-					if style then darktheme = style.Themes.DarkTheme; end;
-					local tokens: any = requireCore('Tokens');
-					local fontloader: any = requireCore('FontLoader');
-					if tokens and fontloader then
-						local fonttokens: any = tokens.getTokens('Desktop', 'Dark', true);
-						buildersans = fontloader.new(true, fonttokens):loadFont();
-					end;
-					local applocales: any = requireCore('RobloxAppLocales');
-					if applocales then tLocalization = applocales.Localization; end;
-					local locmod: any = requireCore('Localization');
-					if locmod then localProvider = locmod.LocalizationProvider; end;
-				end);
-				task.delay(0.6, function(): ()
-					local modPrompt: any = react.createElement(auth, {
-						style = {};
-						screenSize = vape.gui.AbsoluteSize or Vector2.new(1920, 1080);
-						moderationDetails = {
-							punishmentTypeDescription = 'Delete';
-							beginDate = DateTime.fromUnixTimestampMillis(
-								DateTime.now().UnixTimestampMillis - ((60 * math.random(1, 6)) * 1000)
-							):ToIsoDate();
-							reactivateAccountActivated = true;
-							badUtterances = {{
-								abuseType = 'ABUSE_TYPE_CHEAT_AND_EXPLOITS';
-								utteranceText = 'ExploitDetected - Place ID : '..game.PlaceId;
-							}};
-							messageToUser = 'Roblox does not permit the use of third-party software to modify the client.';
-						};
-						termsActivated = function(): () end;
-						communityGuidelinesActivated = function(): () end;
-						supportFormActivated = function(): () end;
-						reactivateAccountActivated = function(): () end;
-						logoutCallback = function(): () end;
-						globalGuiInset = {top = 0};
-					});
-					local styled: any = modPrompt;
-					if uiBlox and uiBlox.Style and uiBlox.Style.Provider then
-						styled = react.createElement(uiBlox.Style.Provider, {
-							style = {
-								Theme = darktheme;
-								Font = buildersans;
+				local ok: boolean = pcall(function(): ()
+					local root: any = corePackages.Workspace.Packages._Index.NotificationModalsManager.NotificationModalsManager;
+					local reactRoblox: any = getrenv().require(root.ReactRoblox);
+					local react: any = getrenv().require(root.React);
+					local uiBlox: any = getrenv().require(root.UIBlox);
+					uiBlox.init(getrenv().require(corePackages.Packages._Index.UIBlox.UIBlox.UIBloxDefaultConfig));
+					local auth: any = getrenv().require(root.ModerationPrompt);
+					local darktheme: any;
+					local buildersans: any;
+					local tLocalization: any;
+					local localProvider: any;
+					pcall(function(): ()
+						darktheme = getrenv().require(root.Style).Themes.DarkTheme;
+						local fonttokens: any = getrenv().require(root.Tokens).getTokens('Desktop', 'Dark', true);
+						buildersans = getrenv().require(root.FontLoader).new(true, fonttokens):loadFont();
+						tLocalization = getrenv().require(root.RobloxAppLocales).Localization;
+						localProvider = getrenv().require(root.Localization).LocalizationProvider;
+					end);
+					task.delay(0.6, function(): ()
+						local modPrompt: any = react.createElement(auth, {
+							style = {};
+							screenSize = vape.gui.AbsoluteSize or Vector2.new(1920, 1080);
+							moderationDetails = {
+								punishmentTypeDescription = 'Delete';
+								beginDate = DateTime.fromUnixTimestampMillis(
+									DateTime.now().UnixTimestampMillis - ((60 * math.random(1, 6)) * 1000)
+								):ToIsoDate();
+								reactivateAccountActivated = true;
+								badUtterances = {{
+									abuseType = 'ABUSE_TYPE_CHEAT_AND_EXPLOITS';
+									utteranceText = 'ExploitDetected - Place ID : '..game.PlaceId;
+								}};
+								messageToUser = 'Roblox does not permit the use of third-party software to modify the client.';
 							};
-						}, {modPrompt});
-					end;
-					local screengui: any;
-					if localProvider and tLocalization then
-						screengui = react.createElement(localProvider, {
-							localization = tLocalization.new('en-us');
-						}, {styled});
-					else
-						screengui = react.createElement('Folder', {}, {styled});
-					end;
-					local folder: Folder = Instance.new('Folder');
-					folder.Name = 'ByfronUI';
-					folder.Parent = coreGui;
-					local renderRoot: any = reactRoblox.createRoot(folder);
-					renderRoot:render(screengui);
+							termsActivated = function(): () end;
+							communityGuidelinesActivated = function(): () end;
+							supportFormActivated = function(): () end;
+							reactivateAccountActivated = function(): () end;
+							logoutCallback = function(): () end;
+							globalGuiInset = {top = 0};
+						});
+						local styled: any = modPrompt;
+						if uiBlox.Style and uiBlox.Style.Provider then
+							styled = react.createElement(uiBlox.Style.Provider, {
+								style = {
+									Theme = darktheme;
+									Font = buildersans;
+								};
+							}, {modPrompt});
+						end;
+						local screengui: any;
+						if localProvider and tLocalization then
+							screengui = react.createElement(localProvider, {
+								localization = tLocalization.new('en-us');
+							}, {styled});
+						else
+							screengui = react.createElement('Folder', {}, {styled});
+						end;
+						local folder: Folder = Instance.new('Folder');
+						folder.Name = 'ByfronUI';
+						folder.Parent = coreGui;
+						local renderRoot: any = reactRoblox.createRoot(folder);
+						renderRoot:render(screengui);
+					end);
 				end);
 			end);
 		end,
