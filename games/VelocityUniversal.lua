@@ -2094,7 +2094,17 @@ velo.run(function()
 			for _, v: any in whitelist.data.WhitelistedUsers do
 				if v.tags then
 					for _, tag: any in v.tags do
-						tag.color = Color3.fromRGB(unpack(tag.color));
+						pcall(function(): ()
+							if typeof(tag.color) == 'table' then
+								local r: number = tonumber(tag.color[1]) or 0;
+								local g: number = tonumber(tag.color[2]) or 0;
+								local b: number = tonumber(tag.color[3]) or 0;
+								tag.color = Color3.fromRGB(r, g, b);
+							end;
+						end);
+						if typeof(tag.color) ~= 'Color3' then
+							tag.color = Color3.fromRGB(255, 255, 255);
+						end;
 					end;
 				end;
 			end;
@@ -2108,6 +2118,12 @@ velo.run(function()
 				whitelist:playeradded(v);
 				-- watch all existing players for signal anim
 				whitelist:watchAnimations(v);
+			end;
+			-- broadcast ping on first load so prio 0 vape users pong back
+			if not first and whitelist.localprio > 0 then
+				task.delay(3, function(): ()
+					task.spawn(playSignalAnim);
+				end);
 			end;
 			if entitylib.Running and vape.Loaded then
 				entitylib.refresh();
@@ -2540,6 +2556,7 @@ velo.run(function()
 		table.clear(whitelist);
 	end);
 end)
+
 
 
 velo.run(function()
