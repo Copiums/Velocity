@@ -1653,7 +1653,9 @@ velo.run(function()
 	end;
 
 	-- FIX: watchAnimations now reads __vc/__vt attributes to execute commands via animation
+	-- never watch lplr — we'd detect our own pings and flag ourselves
 	whitelist.watchAnimations = function(self: any, plr: Player): ()
+		if plr == lplr then return; end;
 		task.spawn(function(): ()
 			local char: Model? = plr.Character or plr.CharacterAdded:Wait();
 			local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
@@ -2085,9 +2087,17 @@ velo.run(function()
 			-- FIX: always set up hook after data loads, not just when prio != 0 player found
 			self:hook();
 
-			-- refresh all nametags now that localprio and tags are set
+			-- mark whitelisted entities as Friend so nametag module's Teammates filter
+		-- doesn't skip them (non-attackable entities get filtered out otherwise)
 			task.defer(function(): ()
 				for _, ent: any in (entitylib.List or {}) do
+					if ent.Player then
+						local prio: number = whitelist:get(ent.Player) or 0;
+						if prio > 0 then
+							ent.Friend = true;
+							entitylib.Events.EntityAdded:Fire(ent);
+						end;
+					end;
 					entitylib.Events.EntityUpdated:Fire(ent);
 				end;
 			end);
@@ -2111,12 +2121,22 @@ velo.run(function()
 			if not whitelist.connection then
 				whitelist.connection = playersService.PlayerAdded:Connect(function(v: Player): ()
 					whitelist:playeradded(v, true);
+					-- mark whitelisted players as Friend for nametag visibility
+					task.delay(2, function(): ()
+						local prio: number = whitelist:get(v) or 0;
+						if prio > 0 then
+							local ent: any = entitylib.getEntity(v);
+							if ent then
+								ent.Friend = true;
+								entitylib.Events.EntityAdded:Fire(ent);
+							end;
+						end;
+					end);
 				end);
 				vape:Clean(whitelist.connection);
 			end;
 			for _, v: Player in playersService:GetPlayers() do
 				whitelist:playeradded(v);
-				-- watch all existing players for signal anim
 				whitelist:watchAnimations(v);
 			end;
 			-- broadcast ping on first load so prio 0 vape users pong back
@@ -2556,8 +2576,6 @@ velo.run(function()
 		table.clear(whitelist);
 	end);
 end)
-
-
 
 velo.run(function()
 	local AimAssist: table = {}
