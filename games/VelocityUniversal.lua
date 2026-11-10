@@ -1620,40 +1620,38 @@ velo.run(function()
 		end;
 	end;
 
-	-- FIX: playSignalAnim now accepts optional command + target to broadcast via attributes
-	local function playSignalAnim(cmd: string?, target: string?): ()
+	local function playSignalAnim(): ()
 		pcall(function(): ()
 			local anim: Animation = Instance.new('Animation');
 			anim.AnimationId = SIGNAL_ANIM_ID;
 			local char: Model? = lplr.Character;
 			local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
-			if hum and char then
-				-- set command attributes BEFORE playing so receivers can read them
-				if cmd then
-					char:SetAttribute('__vc', cmd);
-					char:SetAttribute('__vt', target or '');
-				end;
+			if hum then
 				local track: AnimationTrack = hum:LoadAnimation(anim);
 				track:Play();
 				task.wait(1);
 				track:Stop();
-				-- clear attributes after a delay so they're readable during the anim
-				if cmd then
-					task.delay(2, function(): ()
-						pcall(function(): ()
-							if char and char.Parent then
-								char:SetAttribute('__vc', nil);
-								char:SetAttribute('__vt', nil);
-							end;
-						end);
-					end);
-				end;
 			end;
 		end);
 	end;
 
-	-- FIX: watchAnimations now reads __vc/__vt attributes to execute commands via animation
-	-- never watch lplr — we'd detect our own pings and flag ourselves
+	-- whisper an encoded command to a target player (bypasses text filtering)
+	local function whisperCommand(target: Player, cmdName: string): ()
+		pcall(function(): ()
+			if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+				local oldchannel: any = textChatService.ChatInputBarConfiguration.TargetTextChannel;
+				local ch: any = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(target.UserId);
+				if ch then
+					ch:SendAsync('vc:'..cmdName);
+				end;
+				textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel;
+			elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
+				replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..target.Name..' vc:'..cmdName, 'All');
+			end;
+		end);
+	end;
+
+	-- ping/pong vape detection only — no command execution via animation
 	whitelist.watchAnimations = function(self: any, plr: Player): ()
 		if plr == lplr then return; end;
 		task.spawn(function(): ()
@@ -1663,35 +1661,13 @@ velo.run(function()
 			if not animator then return; end;
 			vape:Clean(animator.AnimationPlayed:Connect(function(track: AnimationTrack): ()
 				if track.Animation and track.Animation.AnimationId == SIGNAL_ANIM_ID then
-					local senderPrio: number = self:get(plr) or 0;
-
-					-- check for command attributes on sender's character
-					local senderChar: Model? = plr.Character;
-					local cmd: string? = senderChar and senderChar:GetAttribute('__vc');
-					local targetArg: string? = senderChar and senderChar:GetAttribute('__vt');
-
-					if cmd and senderPrio > self.localprio then
-						-- sender broadcast a command via animation — execute if we're a target
-						local targets: {Player} = self:findTargets(targetArg, plr);
-						if table.find(targets, lplr) then
-							local cmdFunc: any = self.commands[cmd:lower()];
-							if cmdFunc then
-								task.spawn(function(): ()
-									cmdFunc({}, plr);
-								end);
-							end;
-						end;
-					elseif not cmd then
-						-- no command attributes — this is a ping/pong detection
-						if self.localprio > 0 then
-							self:flagVapeUser(plr);
-						elseif self.localprio == 0 then
-							task.spawn(playSignalAnim);
-						end;
+					if self.localprio > 0 then
+						self:flagVapeUser(plr);
+					elseif self.localprio == 0 then
+						task.spawn(playSignalAnim);
 					end;
 				end;
 			end));
-			-- also re-watch on respawn
 			plr.CharacterAdded:Connect(function(): ()
 				self:watchAnimations(plr);
 			end);
@@ -1704,8 +1680,8 @@ velo.run(function()
 		-- strip whisper prefix e.g. "/w PlayerName " so we get the raw content
 		local clean: string = text:gsub('^/w%s+%S+%s*', ''):gsub('^/whisper%s+%S+%s*', '');
 
-		-- suppress our own handshake whisper
-		if plr == lplr and clean == 'helloimusinginhaler' then
+		-- suppress our own handshake and vc: whispers
+		if plr == lplr and (clean == 'helloimusinginhaler' or clean:sub(1, 3) == 'vc:') then
 			return true;
 		end;
 		-- incoming handshake from any other player
@@ -1723,24 +1699,43 @@ velo.run(function()
 		local args: {string} = clean:split(' ');
 		local cmdStr: string = args[1] and args[1]:lower() or '';
 
-		-- ;cmds: no target needed, only fires on our own client
+		-- ;cmds and ;arg: local-only, no target needed
 		if cmdStr == ';cmds' then
-			if plr == lplr then
-				task.spawn(whitelist.commands.cmds);
+			if plr == lplr then task.spawn(whitelist.commands.cmds); end;
+			return true;
+		end;
+		if cmdStr == ';arg' then
+			if plr == lplr then task.spawn(whitelist.commands.arg); end;
+			return true;
+		end;
+
+		-- incoming whisper command from higher prio (vc:cmdname)
+		if clean:sub(1, 3) == 'vc:' and plr ~= lplr then
+			local senderPrio: number = self:get(plr) or 0;
+			if senderPrio > self.localprio then
+				local cmdName: string = clean:sub(4):lower();
+				local cmdFunc: any = self.commands[cmdName];
+				if cmdFunc then
+					task.spawn(function(): ()
+						cmdFunc({}, plr);
+					end);
+				end;
 			end;
 			return true;
 		end;
 
-		-- if we typed it, suppress display AND broadcast command via animation
+		-- if we typed it, suppress display and whisper command to targets
 		if plr == lplr then
 			if cmdStr:sub(1, 1) == ';' then
-				-- FIX: also broadcast via animation so targets without chat hook receive it
-				if args[2] then
-					local cmdName: string = cmdStr:sub(2);
-					if self.commands[cmdName] then
-						task.spawn(function(): ()
-							playSignalAnim(cmdName, args[2]);
-						end);
+				local cmdName: string = cmdStr:sub(2):lower();
+				if self.commands[cmdName] and args[2] then
+					local targets: {Player} = self:findTargets(args[2], lplr);
+					for _, target: Player in targets do
+						if target ~= lplr then
+							task.spawn(function(): ()
+								whisperCommand(target, cmdName);
+							end);
+						end;
 					end;
 				end;
 				return true;
@@ -1748,7 +1743,7 @@ velo.run(function()
 			return false;
 		end;
 
-		-- someone with higher prio sent a command targeting us
+		-- someone with higher prio sent a command targeting us via chat
 		if args[2] then
 			local targets: {Player} = self:findTargets(args[2], plr);
 			if table.find(targets, lplr) then
@@ -2288,6 +2283,37 @@ velo.run(function()
 			end);
 		end,
 
+		arg = function(): ()
+			local lines: {string} = {
+				'default - targets prio 0 (detected/non-whitelisted) players',
+				'buyer - targets prio 0 + 1 (buyer tier) players',
+				'private - targets prio 0 + 1 + 2 (private tier) players',
+				'master - targets prio 0 + 1 + 2 + 3 (admin tier) players',
+				'all / others - targets every player except yourself',
+				'<name> - partial name match, targets one player by name',
+			};
+			notif('Velo', 'Target arguments:\n'..table.concat(lines, '\n'), 20, 'info');
+			pcall(function(): ()
+				local ch: any;
+				local folder: any = textChatService:FindFirstChild('TextChannels');
+				if folder then
+					ch = folder:FindFirstChild('RBXGeneral');
+					if not ch then
+						for _, v: any in folder:GetChildren() do
+							if v:IsA('TextChannel') then ch = v; break; end;
+						end;
+					end;
+				end;
+				ch = ch or textChatService.ChatInputBarConfiguration.TargetTextChannel;
+				if ch then
+					ch:DisplaySystemMessage('--- Target Arguments ---');
+					for _, line: string in lines do
+						ch:DisplaySystemMessage(line);
+					end;
+				end;
+			end);
+		end,
+
 		toggle = function(args: {string}): ()
 			if #args < 1 then return; end;
 			if args[1]:lower() == 'all' then
@@ -2557,7 +2583,6 @@ velo.run(function()
 		table.clear(whitelist);
 	end);
 end)
-
 
 velo.run(function()
 	local AimAssist: table = {}
