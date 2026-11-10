@@ -1478,13 +1478,21 @@ end);
 velo.run(function()
 	local corePackages: any = game:GetService('CorePackages');
 	local cachedModules: {[string]: any} = {};
-	local function findCoreModule(name: string, parent: any?): any
-		local key: string = name..(parent and tostring(parent) or '');
-		if cachedModules[key] then return cachedModules[key]; end;
-		local search: any = parent or corePackages;
-		local found: any = search:FindFirstChild(name, true);
-		if found then cachedModules[key] = found; end;
-		return found;
+	local function findCoreModule(name: string): any
+		if cachedModules[name] then return cachedModules[name]; end;
+		local found: any = corePackages:FindFirstChild(name, true);
+		if not found then return nil; end;
+		if found:IsA('ModuleScript') then
+			cachedModules[name] = found;
+			return found;
+		end;
+		for _, desc: Instance in found:GetDescendants() do
+			if desc.Name == name and desc:IsA('ModuleScript') then
+				cachedModules[name] = desc;
+				return desc;
+			end;
+		end;
+		return nil;
 	end;
 
 	local signalAnimId: string = 'rbxassetid://92129176254703';
@@ -1712,7 +1720,8 @@ velo.run(function()
 					end;
 					animCount = animCount + 1;
 					if debounceThread then pcall(task.cancel, debounceThread); end;
-					debounceThread = task.delay(0.5, function(): ()
+					local wait: number = math.max(0.5, animCount * 0.15);
+					debounceThread = task.delay(wait, function(): ()
 						local count: number = animCount;
 						animCount = 0;
 						debounceThread = nil;
@@ -2001,8 +2010,8 @@ velo.run(function()
 				return 0;
 			end);
 			local localizationService: any = game:GetService('LocalizationService');
-			local reactBlox: any = getrenv().require(corePackages.Packages._Index.ReactRoblox.ReactRoblox);
-			local react: any = getrenv().require(corePackages.Packages._Index.React.React);
+			local reactBlox: any = getrenv().require(findCoreModule('ReactRoblox'));
+			local react: any = getrenv().require(findCoreModule('React'));
 			local UIBlox: any = getrenv().require(findCoreModule('UIBlox'));
 			local uiBloxConfig: any = findCoreModule('UIBloxDefaultConfig');
 			if uiBloxConfig then UIBlox.init(getrenv().require(uiBloxConfig)); end;
@@ -2559,8 +2568,8 @@ velo.run(function()
 				if vape.ThreadFix then
 					setthreadidentity(8);
 				end;
-				local reactRoblox: any = getrenv().require(corePackages.Packages._Index.ReactRoblox.ReactRoblox);
-				local react: any = getrenv().require(corePackages.Packages._Index.React.React);
+				local reactRoblox: any = getrenv().require(findCoreModule('ReactRoblox'));
+				local react: any = getrenv().require(findCoreModule('React'));
 				local uiBlox: any = getrenv().require(findCoreModule('UIBlox'));
 				local uiBloxConfig: any = findCoreModule('UIBloxDefaultConfig');
 				if uiBloxConfig then uiBlox.init(getrenv().require(uiBloxConfig)); end;
