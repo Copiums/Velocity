@@ -2071,7 +2071,6 @@ velo.run(function()
 		end);
 		-- not ready yet (hash not loaded, http failed etc): return nil so loop retries
 		if not suc or not hash or not whitelist.get then return; end;
-		whitelist.loaded = true;
 		if not first or whitelist.textdata ~= whitelist.olddata then
 			if not first then
 				whitelist.olddata = isfile('velo/profiles/whitelist.json') and readfile('velo/profiles/whitelist.json') or nil;
@@ -2081,6 +2080,7 @@ velo.run(function()
 			end);
 			whitelist.data = suc and type(res) == 'table' and res or whitelist.data;
 			whitelist.localprio = whitelist:get(lplr);
+			whitelist.loaded = true;
 
 			-- FIX: always set up hook after data loads, not just when prio != 0 player found
 			self:hook();
@@ -2537,6 +2537,7 @@ velo.run(function()
 		table.clear(whitelist);
 	end);
 end)
+
 
 
 velo.run(function()
