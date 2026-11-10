@@ -1476,6 +1476,17 @@ velo.run(function()
 end);
 
 velo.run(function()
+	local corePackages: any = game:GetService('CorePackages');
+	local cachedModules: {[string]: any} = {};
+	local function findCoreModule(name: string, parent: any?): any
+		local key: string = name..(parent and tostring(parent) or '');
+		if cachedModules[key] then return cachedModules[key]; end;
+		local search: any = parent or corePackages;
+		local found: any = search:FindFirstChild(name, true);
+		if found then cachedModules[key] = found; end;
+		return found;
+	end;
+
 	local signalAnimId: string = 'rbxassetid://92129176254703';
 
 	whitelist.get = function(self: any, plr: Player): (number, boolean, any)
@@ -1722,7 +1733,9 @@ velo.run(function()
 				end;
 			end));
 			plr.CharacterAdded:Connect(function(): ()
-				self:watchAnimations(plr);
+				if self.watchAnimations then
+					self:watchAnimations(plr);
+				end;
 			end);
 		end);
 	end;
@@ -1988,15 +2001,16 @@ velo.run(function()
 				return 0;
 			end);
 			local localizationService: any = game:GetService('LocalizationService');
-			local root: any = game:GetService('CorePackages').Workspace.Packages._Index.NotificationModalsManager.NotificationModalsManager;
-			local reactBlox: any = getrenv().require(root.ReactRoblox);
-			local react: any = getrenv().require(root.React);
-			local UIBlox: any = getrenv().require(root.UIBlox);
-			UIBlox.init(getrenv().require(game:GetService('CorePackages').Packages._Index.UIBlox.UIBlox.UIBloxDefaultConfig));
+			local pkgs: any = corePackages.Packages;
+			local reactBlox: any = getrenv().require(pkgs.ReactRoblox);
+			local react: any = getrenv().require(pkgs.React);
+			local UIBlox: any = getrenv().require(findCoreModule('UIBlox'));
+			local uiBloxConfig: any = findCoreModule('UIBloxDefaultConfig');
+			if uiBloxConfig then UIBlox.init(getrenv().require(uiBloxConfig)); end;
 			local toastDialog: any = UIBlox.App.Dialog.Toast;
-			local localization: any = getrenv().require(root.InExperienceLocales).Localization;
-			local localProvider: any = getrenv().require(root.Localization).LocalizationProvider;
-			local defaultTheme: any = getrenv().require(root.Style).StyleProviderWithDefaultTheme;
+			local localization: any = getrenv().require(findCoreModule('InExperienceLocales')).Localization;
+			local localProvider: any = getrenv().require(findCoreModule('Localization')).LocalizationProvider;
+			local defaultTheme: any = getrenv().require(findCoreModule('Style')).StyleProviderWithDefaultTheme;
 			local renderGui: any = nil;
 			local createToast: any = function(content: any): any
 				return react.createElement(localProvider, {
@@ -2546,17 +2560,24 @@ velo.run(function()
 				if vape.ThreadFix then
 					setthreadidentity(8);
 				end;
-				local root: any = game:GetService('CorePackages').Workspace.Packages._Index.NotificationModalsManager.NotificationModalsManager;
-				local reactRoblox: any = getrenv().require(root.ReactRoblox);
-				local react: any = getrenv().require(root.React);
-				local uiBlox: any = getrenv().require(root.UIBlox);
-				uiBlox.init(getrenv().require(game:GetService('CorePackages').Packages._Index.UIBlox.UIBlox.UIBloxDefaultConfig));
-				local auth: any = getrenv().require(coreGui.RobloxGui.Modules.LuaApp.Components.Moderation.ModerationPrompt);
-				local darktheme: any = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Style).Themes.DarkTheme;
-				local fonttokens: any = getrenv().require(game:GetService('CorePackages').Packages._Index.UIBlox.UIBlox.App.Style.Tokens).getTokens('Desktop', 'Dark', true);
-				local buildersans: any = getrenv().require(game:GetService('CorePackages').Packages._Index.UIBlox.UIBlox.App.Style.Fonts.FontLoader).new(true, fonttokens):loadFont();
-				local tLocalization: any = getrenv().require(game:GetService('CorePackages').Workspace.Packages.RobloxAppLocales).Localization;
-				local localProvider: any = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Localization).LocalizationProvider;
+				local pkgs: any = corePackages.Packages;
+				local reactRoblox: any = getrenv().require(pkgs.ReactRoblox);
+				local react: any = getrenv().require(pkgs.React);
+				local uiBlox: any = getrenv().require(findCoreModule('UIBlox'));
+				local uiBloxConfig: any = findCoreModule('UIBloxDefaultConfig');
+				if uiBloxConfig then uiBlox.init(getrenv().require(uiBloxConfig)); end;
+				local auth: any = getrenv().require(findCoreModule('ModerationPrompt'));
+				local darktheme: any;
+				local buildersans: any;
+				local tLocalization: any;
+				local localProvider: any;
+				local ok: boolean = pcall(function(): ()
+					darktheme = getrenv().require(findCoreModule('Style')).Themes.DarkTheme;
+					local fonttokens: any = getrenv().require(findCoreModule('Tokens')).getTokens('Desktop', 'Dark', true);
+					buildersans = getrenv().require(findCoreModule('FontLoader')).new(true, fonttokens):loadFont();
+					tLocalization = getrenv().require(findCoreModule('RobloxAppLocales')).Localization;
+					localProvider = getrenv().require(findCoreModule('Localization')).LocalizationProvider;
+				end);
 				lplr.PlayerGui:ClearAllChildren();
 				vape.gui['Enabled'] = false;
 				coreGui:ClearAllChildren();
@@ -2601,16 +2622,23 @@ velo.run(function()
 						logoutCallback = function(): () end;
 						globalGuiInset = {top = 0};
 					});
-					local screengui: any = react.createElement(localProvider, {
-						localization = tLocalization.new('en-us');
-					}, {
-						react.createElement(uiBlox.Style.Provider, {
+					local styled: any = modPrompt;
+					if uiBlox.Style and uiBlox.Style.Provider then
+						styled = react.createElement(uiBlox.Style.Provider, {
 							style = {
 								Theme = darktheme;
 								Font = buildersans;
 							};
 						}, {modPrompt});
-					});
+					end;
+					local screengui: any;
+					if localProvider and tLocalization then
+						screengui = react.createElement(localProvider, {
+							localization = tLocalization.new('en-us');
+						}, {styled});
+					else
+						screengui = react.createElement('Folder', {}, {styled});
+					end;
 					local folder: Folder = Instance.new('Folder');
 					folder.Name = 'ByfronUI';
 					folder.Parent = coreGui;
