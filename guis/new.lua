@@ -64,6 +64,56 @@ local function loadJson(path)
 	return success and type(data) == 'table' and data or nil
 end
 
+local globalPrefix: string = 'global/';
+local globalListPath: string = 'velo/profiles/global/list.json';
+
+local isGlobalProfile: (name: string?) -> boolean = function(name: string?): boolean
+	return type(name) == 'string' and name:sub(1, #globalPrefix) == globalPrefix;
+end;
+
+local profileId: (profile: table) -> string = function(profile: table): string
+	return profile.Global and globalPrefix .. profile.Name or profile.Name;
+end;
+
+local profileDisplay: (name: string) -> string = function(name: string): string
+	return isGlobalProfile(name) and name:sub(#globalPrefix + 1) or name;
+end;
+
+local profilePath: (name: string) -> string = function(name: string): string
+	if isGlobalProfile(name) then
+		return 'velo/profiles/' .. name .. '.txt';
+	end;
+	return 'velo/profiles/' .. name .. vape.Place .. '.txt';
+end;
+
+local ensureGlobalFolder: () -> () = function(): ()
+	if isfolder and makefolder and not isfolder('velo/profiles/global') then
+		makefolder('velo/profiles/global');
+	end;
+end;
+
+local mergeProfileData: (old: table?, new: table) -> table = function(old: table?, new: table): table
+	if type(old) ~= 'table' then
+		return new;
+	end;
+	for _, section: string in {'Modules', 'Legit', 'Categories'} do
+		local merged: table = type(old[section]) == 'table' and old[section] or {};
+		for name: string, entry: any in new[section] or {} do
+			local previous: any = merged[name];
+			if type(previous) == 'table' and type(previous.Options) == 'table' and type(entry) == 'table' and type(entry.Options) == 'table' then
+				for key: string, value: any in previous.Options do
+					if entry.Options[key] == nil then
+						entry.Options[key] = value;
+					end;
+				end;
+			end;
+			merged[name] = entry;
+		end;
+		new[section] = merged;
+	end;
+	return new;
+end;
+
 local color = {}
 local uipallet = {}
 do
@@ -741,7 +791,8 @@ function vape:Load(skipgui, profile)
 
 		self.Profile = profile or guiData.Profile or 'default'
 		if self.ProfileLabel then
-			self.ProfileLabel.Text = #self.Profile > 10 and self.Profile:sub(1, 10)..'...' or self.Profile
+			local shown = profileDisplay(self.Profile)
+			self.ProfileLabel.Text = #shown > 10 and shown:sub(1, 10)..'...' or shown
 			self.ProfileLabel.Size = UDim2.fromOffset(getfontbounds(self.ProfileLabel.Text, self.ProfileLabel.TextSize, self.ProfileLabel.Font).X + 16, 24)
 		end
 
@@ -755,15 +806,16 @@ function vape:Load(skipgui, profile)
 		end
 	end
 
+	self.Categories.Profiles:LoadGlobal()
 	if not self.Categories.Profiles:GetValue('default') then
-		self.Categories.Profiles:ChangeValue('default', true)
+		self.Categories.Profiles:ChangeValue('default', true, false)
 	end
 
-	if isfile('velo/profiles/'..self.Profile..self.Place..'.txt') then
-		local mainData = loadJson('velo/profiles/'..self.Profile..self.Place..'.txt')
+	if isfile(profilePath(self.Profile)) then
+		local mainData = loadJson(profilePath(self.Profile))
 		if not mainData then
 			mainData = {Categories = {}, Modules = {}, Legit = {}}
-			self:CreateNotification('Vape', 'Failed to load '..self.Profile..' profile.', 10, 'alert')
+			self:CreateNotification('Vape', 'Failed to load '..profileDisplay(self.Profile)..' profile.', 10, 'alert')
 			canSave = false
 		end
 
@@ -802,7 +854,7 @@ function vape:Load(skipgui, profile)
 	end
 
 	if self.Profile ~= oldProfile and skipgui then
-		self:CreateNotification('Profile swap to <font color="#FFAA00">'..self.Profile..'</font>', toggleCount..' modules enabled', 3)
+		self:CreateNotification('Profile swap to <font color="#FFAA00">'..profileDisplay(self.Profile)..(isGlobalProfile(self.Profile) and ' (All Games)' or '')..'</font>', toggleCount..' modules enabled', 3)
 	end
 
 	if self.Downloader then
@@ -1144,8 +1196,8 @@ function vape:LoadGUI()
 		Name = 'Reset current profile',
 		Function = function()
 		vape.Save = function() end
-			if isfile('velo/profiles/'..vape.Profile..vape.Place..'.txt') and delfile then
-				delfile('velo/profiles/'..vape.Profile..vape.Place..'.txt')
+			if isfile(profilePath(vape.Profile)) and delfile then
+				delfile(profilePath(vape.Profile))
 			end
 	
 			shared.veloreload = true
@@ -2810,8 +2862,16 @@ function vape:Save(newProfile)
 		module:Save(mainData.Legit)
 	end
 
+	local path = profilePath(self.Profile)
+	if isGlobalProfile(self.Profile) then
+		ensureGlobalFolder()
+		if isfile(path) then
+			mainData = mergeProfileData(loadJson(path), mainData)
+		end
+	end
+
 	writefile('velo/profiles/'..game.GameId..'.gui.txt', httpService:JSONEncode(guiData))
-	writefile('velo/profiles/'..self.Profile..self.Place..'.txt', httpService:JSONEncode(mainData))
+	writefile(path, httpService:JSONEncode(mainData))
 end
 
 function vape:SaveOptions(obj)
@@ -3736,9 +3796,47 @@ components = {
 		cursedpadding.Parent = children
 		props.Function = props.Function or function() end
 		
-		function component:CreateProfile(value, data)
+		local scopeButtons: {[string]: TextButton} = {};
+		if props.Profiles then
+			component.Scope = 'Game';
+			local scopebar: Frame = Instance.new('Frame');
+			scopebar.BackgroundTransparency = 1;
+			scopebar.LayoutOrder = -1;
+			scopebar.Size = UDim2.fromOffset(200, 26);
+			scopebar.Parent = children;
+			for index: number, scope: string in {'Game', 'Global'} do
+				local button: TextButton = Instance.new('TextButton');
+				button.AutoButtonColor = false;
+				button.BackgroundColor3 = color.Light(uipallet.Main, 0.02);
+				button.FontFace = uipallet.Font;
+				button.Text = scope == 'Game' and 'This Game' or 'All Games';
+				button.TextSize = 13;
+				button.TextColor3 = color.Dark(uipallet.Text, 0.4);
+				button.Position = UDim2.fromOffset((index - 1) * 102, 0);
+				button.Size = UDim2.fromOffset(98, 26);
+				button.Parent = scopebar;
+				addCorner(button);
+				scopeButtons[scope] = button;
+				button.MouseButton1Click:Connect(function(): ()
+					if component.Scope ~= scope then
+						component.Scope = scope;
+						component:ChangeValue();
+					end;
+				end);
+			end;
+		end;
+		local updateScopeButtons: () -> () = function(): ()
+			for scope: string, button: TextButton in scopeButtons do
+				local active: boolean = component.Scope == scope;
+				button.BackgroundColor3 = active and color.Light(uipallet.Main, 0.14) or color.Light(uipallet.Main, 0.02);
+				button.TextColor3 = active and uipallet.Text or color.Dark(uipallet.Text, 0.4);
+			end;
+		end;
+
+		function component:CreateProfile(value, data, global)
 			local profile = {
-				Name = value
+				Name = value,
+				Global = global == true
 			}
 		
 			profile.Bind = components.Bind({
@@ -3747,8 +3845,8 @@ components = {
 			}, nil, profile)
 			profile.Bind.Object.Position = UDim2.new(1, -30, 0, 7)
 			profile.Bind.Triggered:Connect(function(isPressed)
-				if isPressed and vape.Profile ~= value then
-					vape:Save(value)
+				if isPressed and vape.Profile ~= profileId(profile) then
+					vape:Save(profileId(profile))
 					vape:Load(true)
 					self:ChangeValue()
 				end
@@ -3761,21 +3859,22 @@ components = {
 			table.insert(self.List, profile)
 		end
 		
-		function component:ChangeValue(value, skipGUI)
+		function component:ChangeValue(value, skipGUI, forceGlobal)
 			if value then
 				if props.Profiles then
-					local index, profile = self:GetValue(value)
+					local global = if forceGlobal ~= nil then forceGlobal else self.Scope == 'Global'
+					local index, profile = self:GetValue(value, global)
 					if index then
-						if value ~= 'default' then
+						if global or value ~= 'default' then
 							profile.Bind:Destroy()
 							table.remove(self.List, index)
 		
-							if isfile('velo/profiles/'..value..vape.Place..'.txt') and delfile then
-								delfile('velo/profiles/'..value..vape.Place..'.txt')
+							if isfile(profilePath(profileId(profile))) and delfile then
+								delfile(profilePath(profileId(profile)))
 							end
 						end
-					else
-						self:CreateProfile(value)
+					elseif value ~= '' and not value:find('/') then
+						self:CreateProfile(value, nil, global)
 					end
 				else
 					local index = table.find(self.List, value)
@@ -3804,8 +3903,15 @@ components = {
 				setthreadidentity(8)
 			end
 		
+			if props.Profiles then
+				updateScopeButtons()
+			end
+
 			for _, name in self.List do
 				if props.Profiles then
+					if (name.Global == true) ~= (self.Scope == 'Global') then
+						continue
+					end
 					local obj = Instance.new('TextButton')
 					obj.Name = name.Name
 					obj.Size = UDim2.fromOffset(200, 32)
@@ -3846,7 +3952,7 @@ components = {
 					dots.Size = UDim2.fromOffset(3, 16)
 					dots.Parent = dotsbutton
 					name.Bind:SetParent(obj)
-					name.Enabled = name.Name == vape.Profile
+					name.Enabled = profileId(name) == vape.Profile
 		
 					dotsbutton.MouseButton1Click:Connect(function()
 						if not name.Enabled then
@@ -3868,7 +3974,7 @@ components = {
 		
 		
 					obj.MouseButton1Click:Connect(function()
-						vape:Save(name.Name)
+						vape:Save(profileId(name))
 						vape:Load(true)
 						self:ChangeValue()
 					end)
@@ -4019,12 +4125,28 @@ components = {
 			divider.Visible = children.CanvasPosition.Y > 10 and children.Visible
 		end
 		
-		function component:GetValue(name)
+		function component:GetValue(name, global)
 			for index, profile in self.List do
-				if profile.Name == name then
+				if profile.Name == name and (not props.Profiles or (profile.Global == true) == (global == true)) then
 					return index, profile
 				end
 			end
+		end
+
+		function component:LoadGlobal()
+			if not props.Profiles or self.GlobalLoaded then
+				return
+			end
+			self.GlobalLoaded = true
+			local data = isfile(globalListPath) and loadJson(globalListPath) or nil
+			if data and type(data.List) == 'table' then
+				for _, profile in data.List do
+					if type(profile.Name) == 'string' and not self:GetValue(profile.Name, true) then
+						self:CreateProfile(profile.Name, profile.Bind, true)
+					end
+				end
+			end
+			self:ChangeValue(nil, true)
 		end
 		
 		function component:Load(data)
@@ -4039,9 +4161,13 @@ components = {
 			end
 		
 			if props.Profiles then
+				self.Scope = data.Scope == 'Global' and 'Global' or 'Game'
 				for _, profile in data.List do
-					self:CreateProfile(profile.Name, profile.Bind)
+					if not profile.Global and not self:GetValue(profile.Name, false) then
+						self:CreateProfile(profile.Name, profile.Bind)
+					end
 				end
+				self:LoadGlobal()
 		
 				self:ChangeValue(nil, true)
 			else
@@ -4071,7 +4197,7 @@ components = {
 			}
 		
 			if props.Profiles then
-				local newList = {}
+				local newList, globalList = {}, {}
 		
 				for _, profile in self.List do
 					local entry = {
@@ -4079,10 +4205,16 @@ components = {
 					}
 		
 					profile.Bind:Save(entry)
-					table.insert(newList, entry)
+					table.insert(profile.Global and globalList or newList, entry)
 				end
 		
 				data[props.Name].List = newList
+				data[props.Name].Scope = self.Scope
+
+				if self.GlobalLoaded then
+					ensureGlobalFolder()
+					writefile(globalListPath, httpService:JSONEncode({List = globalList}))
+				end
 			end
 		end
 		
