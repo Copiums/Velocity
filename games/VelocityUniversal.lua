@@ -11621,7 +11621,7 @@ velo.run(function()
 						windsnow.Parent = snowpart
 						repeat task.wait(0)
 							if entitylib.isAlive then 
-								snowpart.Position = entitylib.character.HumanoidRootPart.Position + Vec3(0, SnowflakesHigh.Value, 0)
+								snowpart.Position = entitylib.character.HumanoidRootPart.Position + Vector3.new(0, SnowflakesHigh.Value, 0)
 							end
 						until not vapeInjected
 					else
