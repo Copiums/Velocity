@@ -17,7 +17,7 @@ local vape = {
 	SettingToggleNotifications = {},
 	ThreadFix = setthreadidentity and true or false,
 	ToggleNotifications = {},
-	Version = '4.22',
+	Version = '4.24.0',
 	Windows = {}
 }
 
@@ -680,7 +680,7 @@ function vape:CreateNotification(title, text, duration, type)
 		textlabel.RichText = true
 		textlabel.Text = text
 		textlabel.TextColor3 = Color3.fromRGB(170, 170, 170)
-		textlabel.TextTransparency = 0
+		textlabel.TextTransparency = 0 
 		textlabel.Parent = textshadow
 		local progress = Instance.new('Frame')
 		progress.BackgroundColor3 =
