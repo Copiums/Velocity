@@ -11586,21 +11586,21 @@ velo.run(function()
 end);
 
 velo.run(function()
-	    local SkidRoaster: table = {["Enabled"] = false};
-	    local Mode: table = {["Value"] = "Custom"};
-	    local Delay: table = {["Value"] = 3.3};
-		local SkidPhrases: table = {["ListEnabled"] = {}};
-	    local cope: table = {
-	            "Snoopy more like shitnoopy!", "Skidding = NN", "Moon on top!", 
-	            "Snoopy + Grass = skids", "Pisstonware", "Piston loves underaged girls and boys", 
-	            "Acronis = NN", "Vape private?? 💀🤡", "Mysticware? = Mysticshit", 
-	            "Tryna skid? KYS", "Imagine skidding and calling yourself a coder 🤡", 
-	            "Ercho and Abyss still pasting in 2026 💀", "Don't be like Snoopy...", 
-	            "Complexware = Skiddedware", "Skid Client & Nebulaware = shit", 
-	            "Keep pasting cocosploit/Aurora.", "Voidware = garbage paste", 
-	            "W zenith, W null.wtf, W Render", "Render on top - discord.gg/renderintents", 
-	            "Velocity & Night on top RAH"
-	    };
+	local SkidRoaster: table = {["Enabled"] = false};
+	local Mode: table = {["Value"] = "Custom"};
+	local Delay: table = {["Value"] = 3.3};
+	local SkidPhrases: table = {["ListEnabled"] = {}};
+	local cope: table = {
+	    "Snoopy more like shitnoopy!", "Skidding = NN", "Moon on top!", "UwuHub = skidding before GTA 6 LMFAO",
+	    "Snoopy + Grass = skids", "Pisstonware", "Piston loves underaged girls and boys", 
+	    "Acronis = NN", "Vape private?? 💀🤡", "Mysticware? = Mysticshit", 
+	    "Tryna skid? KYS", "Imagine skidding and calling yourself a coder 🤡", 
+	    "Ercho and Abyss still pasting in 2026 💀", "Don't be like Snoopy...", 
+	    "Complexware = Skiddedware", "Skid Client & Nebulaware = shit", 
+	    "Keep pasting cocosploit/Aurora.", "Voidware = garbage paste", 
+	    "W zenith, W null.wtf, W Render", "Render on top - discord.gg/renderintents", 
+	    "Velocity & Night on top RAH"
+	};
 	SkidRoaster = vape.Categories.Utility:CreateModule({
 		["Name"] = "🤡",
 		["Tooltip"] = "Roasts skids",
