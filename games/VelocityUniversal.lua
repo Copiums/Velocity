@@ -11589,7 +11589,7 @@ velo.run(function()
 	    local SkidRoaster: table = {["Enabled"] = false};
 	    local Mode: table = {["Value"] = "Custom"};
 	    local Delay: table = {["Value"] = 3.3};
-	local SkidPhrases: table = {["ListEnabled"] = {}};
+		local SkidPhrases: table = {["ListEnabled"] = {}};
 	    local cope: table = {
 	            "Snoopy more like shitnoopy!", "Skidding = NN", "Moon on top!", 
 	            "Snoopy + Grass = skids", "Pisstonware", "Piston loves underaged girls and boys", 
