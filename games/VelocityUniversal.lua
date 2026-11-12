@@ -4201,8 +4201,8 @@ velo.run(function()
 	Invisible = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'Invisible',
 		["Function"] = function(callback: boolean): void
+			if callback then
 				animationTrickery()
-	
 				oldcf = nil
 				local bindKey = httpService:GenerateGUID(true)
 				runService:BindToRenderStep(bindKey, 0, function()
