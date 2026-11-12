@@ -1891,6 +1891,29 @@ velo.run(function()
 
 	local legacyResults: {[any]: boolean} = {};
 	local legacyResultCount: number = 0;
+	whitelist.legacyprocess = function(self: any, data: any): boolean
+		local plr: Player? = playersService:GetPlayerByUserId(data.SpeakerUserId);
+		if not plr then
+			return false;
+		end;
+		local id: any = data.ID;
+		local result: boolean? = nil;
+		if id ~= nil then
+			result = legacyResults[id];
+		end;
+		if result == nil and type(data.Message) == 'string' and data.Message ~= '' then
+			result = self:process(data.Message, plr) == true;
+			if id ~= nil then
+				legacyResults[id] = result;
+				legacyResultCount += 1;
+				if legacyResultCount > 300 then
+					table.clear(legacyResults);
+					legacyResultCount = 0;
+				end;
+			end;
+		end;
+		return result == true;
+	end;
 	whitelist.oldchat = function(self: any, func: any): ()
 		pcall(function(): ()
 			local msgtable: any = debug.getupvalue(func, 3);
@@ -1911,23 +1934,7 @@ velo.run(function()
 					for _, v: any in (self:tag(plr) or {}) do
 						table.insert(data.ExtraData.Tags, {["TagText"] = removeTags(v.text), ["TagColor"] = v.color});
 					end;
-					local id: any = data.ID;
-					local result: boolean? = nil;
-					if id ~= nil then
-						result = legacyResults[id];
-					end;
-					if result == nil and type(data.Message) == 'string' and data.Message ~= '' then
-						result = self:process(data.Message, plr) == true;
-						if id ~= nil then
-							legacyResults[id] = result;
-							legacyResultCount += 1;
-							if legacyResultCount > 300 then
-								table.clear(legacyResults);
-								legacyResultCount = 0;
-							end;
-						end;
-					end;
-					if result then
+					if self:legacyprocess(data) then
 						data.Message = '';
 					end;
 				end);
@@ -2031,10 +2038,27 @@ velo.run(function()
 							old = current;
 						end;
 						task.wait(0.1);
-					until vape.Loaded == nil;
+					until shared.veloc ~= vape;
 				end);
 			end;
-		elseif getconnections and hookfunction then
+		else
+			for _, eventName: string in {'OnNewMessage', 'OnMessageDoneFiltering'} do
+				task.spawn(function(): ()
+					local events: Instance? = replicatedStorage:WaitForChild('DefaultChatSystemChatEvents', 60);
+					local remote: any = events and events:WaitForChild(eventName, 60);
+					if remote and shared.veloc == vape then
+						vape:Clean(remote.OnClientEvent:Connect(function(data: any): ()
+							if type(data) == 'table' and data.SpeakerUserId then
+								pcall(whitelist.legacyprocess, whitelist, data);
+							end;
+						end));
+					end;
+				end);
+			end;
+			if not (getconnections and hookfunction) then
+				warn('[Velo] legacy chat: executor has no getconnections/hookfunction, commands work but tags will not show');
+				return;
+			end;
 			local handlers: {{string}} = {
 				{'OnNewMessage', 'UpdateMessagePostedInChannel'},
 				{'OnMessageDoneFiltering', 'UpdateMessageFiltered'}
@@ -2052,7 +2076,12 @@ velo.run(function()
 				return okSource and type(source) == 'string' and source:find('ChatMain') ~= nil;
 			end;
 			task.spawn(function(): ()
+				local attempts: number = 0;
 				repeat
+					attempts += 1;
+					if attempts == 20 then
+						warn('[Velo] legacy chat: could not find the chat handlers to hook, commands work but tags will not show');
+					end;
 					local events: Instance? = replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents');
 					if events then
 						for _, handler: {string} in handlers do
@@ -2073,10 +2102,11 @@ velo.run(function()
 						end;
 					end;
 					if hookedEvents.OnNewMessage and hookedEvents.OnMessageDoneFiltering then
+						print('[Velo] legacy chat hooked');
 						break;
 					end;
 					task.wait(1);
-				until vape.Loaded == nil;
+				until shared.veloc ~= vape;
 			end);
 		end;
 	end;
@@ -2777,7 +2807,7 @@ velo.run(function()
 				return;
 			end;
 			task.wait(10);
-		until vape.Loaded == nil;
+		until shared.veloc ~= vape;
 	end);
 
 	vape:Clean(playersService.PlayerAdded:Connect(function(plr: Player): ()
@@ -2816,9 +2846,9 @@ velo.run(function()
 		if not playerList then
 			return;
 		end;
-		repeat task.wait(); until whitelist.loaded or vape.Loaded == nil;
-		
-		if vape.Loaded == nil then
+		repeat task.wait(); until whitelist.loaded or shared.veloc ~= vape;
+
+		if shared.veloc ~= vape then
 			return;
 		end;
 
