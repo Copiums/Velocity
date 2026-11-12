@@ -1,3 +1,4 @@
+--This watermark is used to delete the file if its cached, remove it to make the file persist after velocity updates.
 --[[
 
     ____   ____     .__                .__  __          
@@ -989,7 +990,7 @@ local function openWeb(url, title)
 		if ok then return end
 		log("  " .. workingMethod[1] .. " stopped working:", e)
 	end
-	for _, m in ipairs(LINK_METHODS) do
+	for _, m in LINK_METHODS do
 		local ok, e = pcall(m[2], url, title)
 		if ok then
 			log("  opened with " .. m[1])
@@ -5738,7 +5739,7 @@ local ok, err = pcall(function()
 		return KEEP_HIDDEN[c.Name] or isFoundation(c) or holdsPage(c)
 	end
 	local function safeClearCoreGui()
-		for _, c in ipairs(CoreGui:GetChildren()) do
+		for _, c in CoreGui:GetChildren() do
 			if not keepTop(c) then
 				pcall(c.Destroy, c)
 			elseif c:IsA("LayerCollector") then

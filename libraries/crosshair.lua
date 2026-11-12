@@ -2,10 +2,11 @@
 --
 -- Standalone. Host this file and point the vape module's CROSSHAIR_URL at it.
 -- Returns the API table and registers itself at getgenv().CROSSHAIR.
+-- Running it again cleanly destroys the previous instance first.
 --
 -- nonstrict rather than strict on purpose: executor globals (Drawing,
--- getgenv, gethui, syn, cleardrawcache) are not in Luau's type definitions,
--- so strict flags every one of them as an unknown global.
+-- getgenv, gethui, syn) are not in Luau's type definitions, so strict flags
+-- every one of them as an unknown global.
 
 export type DrawingLine = {
         Visible: boolean,
@@ -27,7 +28,7 @@ export type TextSettings = {
         Enabled: boolean,
         Content: string,
         Font: string,    -- Enum.Font name, used only when FontFace is nil
-        FontFace: Font?, -- a Font object, what vape's CreateFont gives you. Wins if set.
+        FontFace: Font?, -- a Font object (what vape's CreateFont gives you). Wins if set.
         Size: number,
         Offset: number,
         Color: Color3,
@@ -85,6 +86,10 @@ export type CrosshairAPI = {
         Settings: CrosshairSettings,
         Refresh: () -> (),
 
+        -- Optional predicate, checked every frame. While it returns true the crosshair
+        -- hides itself and hands the system cursor back (e.g. "a menu is open").
+        Suppress: (() -> boolean)?,
+
         Toggle: (state: boolean?) -> (),
         SetHideCursor: (state: boolean?) -> (),
         SetGlow: (state: boolean?) -> (),
@@ -113,14 +118,15 @@ export type CrosshairAPI = {
 };
 
 --=========================================================
---  SERVICES
+--  SERVICES / CONSTANTS
 --=========================================================
 local cloneref: (obj: any) -> any = cloneref or function(obj)
-    	return obj;
+        return obj;
 end;
 local UIS: UserInputService = cloneref(game:GetService("UserInputService"));
 local RunService: RunService = cloneref(game:GetService("RunService"));
 local Players: Players = cloneref(game:GetService("Players"));
+
 local MAX_LAYERS: number = 16;
 local GUI_NAME: string = "Crosshair_Gui";
 local ENV_KEY: string = "CROSSHAIR";
@@ -131,37 +137,35 @@ pcall(function(): ()
                 ENV = getgenv();
         end;
 end);
-local previous: any = ENV[ENV_KEY];
-if type(previous) == "table" and type(previous.Destroy) == "function" then
-        pcall(previous.Destroy);
-end;
-ENV[ENV_KEY] = nil;
-pcall(function(): ()
-        local roots: { Instance } = {};
 
-        if typeof(gethui) == "function" then
-                table.insert(roots, gethui());
+--=========================================================
+--  REPLACE ANY PREVIOUS INSTANCE
+--=========================================================
+do
+        local previous: any = ENV[ENV_KEY];
+        if type(previous) == "table" and type(previous.Destroy) == "function" then
+                pcall(previous.Destroy);
         end;
-        table.insert(roots, game:GetService("CoreGui"));
+        ENV[ENV_KEY] = nil;
 
-        local lplr: Player? = Players.LocalPlayer;
-        if lplr and lplr:FindFirstChild("PlayerGui") then
-                table.insert(roots, lplr.PlayerGui);
-        end;
-
-        for _: number, root: Instance in roots do
-                for _: number, child: Instance in root:GetChildren() do
-                        if child.Name == GUI_NAME then
-                                child:Destroy();
-                        end;
-                end;
-        end;
-end);
-local HARD_RESET: boolean = false;
-if HARD_RESET then
+        -- orphaned GUIs from a run that never got to clean up
         pcall(function(): ()
-                if typeof(cleardrawcache) == "function" then
-                        cleardrawcache();
+                local roots: { Instance } = {};
+                if typeof(gethui) == "function" then
+                        table.insert(roots, gethui());
+                end;
+                table.insert(roots, game:GetService("CoreGui"));
+                local lplr: Player? = Players.LocalPlayer;
+                local pg: Instance? = lplr and lplr:FindFirstChildOfClass("PlayerGui");
+                if pg then
+                        table.insert(roots, pg);
+                end;
+                for _: number, root: Instance in roots do
+                        for _: number, child: Instance in root:GetChildren() do
+                                if child.Name == GUI_NAME then
+                                        child:Destroy();
+                                end;
+                        end;
                 end;
         end);
 end;
@@ -227,8 +231,7 @@ local Settings: CrosshairSettings = {
                 GlowColor = Color3.fromRGB(255, 255, 255),
         },
 
-        -- Hide the system cursor while the crosshair is on. Turn off if you
-        -- want both, or if a game manages the cursor itself.
+        -- Hide the system cursor while the crosshair is showing.
         HideCursor = true,
 
         -- Vertical nudge for BOTH crosshair and text. Leave at 0 unless the
@@ -236,12 +239,18 @@ local Settings: CrosshairSettings = {
         YOffset = 0,
 };
 
+--=========================================================
+--  OBJECTS
+--=========================================================
+local allLines: { DrawingLine } = {}; -- every Drawing we own, for Destroy()
+
 local newLine: (zindex: number) -> DrawingLine = function(zindex: number): DrawingLine
         local l: DrawingLine = Drawing.new("Line") :: DrawingLine;
         l.Thickness = 1;
         l.Transparency = 1;
         l.ZIndex = zindex;
         l.Visible = false;
+        table.insert(allLines, l);
         return l;
 end;
 
@@ -257,10 +266,9 @@ for layer: number = 1, MAX_LAYERS do
 end;
 for i: number = 1, 4 do
         Outlines[i] = newLine(MAX_LAYERS + 1);
-end;
-for i: number = 1, 4 do
         Fills[i] = newLine(MAX_LAYERS + 2);
 end;
+
 local parentGui: Instance? = nil;
 pcall(function(): ()
         parentGui = (typeof(gethui) == "function" and gethui()) or game:GetService("CoreGui");
@@ -271,7 +279,7 @@ end;
 
 local Screen: ScreenGui = Instance.new("ScreenGui");
 Screen.Name = GUI_NAME;
-Screen.IgnoreGuiInset = true;
+Screen.IgnoreGuiInset = true; -- same space as GetMouseLocation()
 Screen.ResetOnSpawn = false;
 Screen.DisplayOrder = 2147483647;
 Screen.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
@@ -281,6 +289,7 @@ pcall(function(): ()
         end;
 end);
 Screen.Parent = parentGui;
+
 local newLabel: (zindex: number) -> (TextLabel, UIStroke) = function(zindex: number): (TextLabel, UIStroke)
         local lbl: TextLabel = Instance.new("TextLabel");
         lbl.AnchorPoint = Vector2.new(0.5, 0);
@@ -292,6 +301,7 @@ local newLabel: (zindex: number) -> (TextLabel, UIStroke) = function(zindex: num
         lbl.ZIndex = zindex;
         lbl.Visible = false;
         lbl.Parent = Screen;
+
         local stroke: UIStroke = Instance.new("UIStroke");
         stroke.LineJoinMode = Enum.LineJoinMode.Round;
         stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual;
@@ -305,26 +315,64 @@ for layer: number = 1, MAX_LAYERS do
         local lbl: TextLabel, stroke: UIStroke = newLabel(MAX_LAYERS - layer + 1);
         TextGlows[layer] = { Label = lbl, Stroke = stroke };
 end;
-
 local Label: TextLabel, Stroke: UIStroke = newLabel(MAX_LAYERS + 1);
+
+local Crosshair = {} :: CrosshairAPI;
+
+--=========================================================
+--  VISIBILITY / CURSOR
+--
+--  shown       = Enabled and not suppressed (menu open etc.)
+--  cursor      = hidden only while shown and HideCursor
+--
+--  The cursor is re-hidden the instant anything turns it back on (property
+--  signal), not just once per frame - a one-frame gap is enough to see the
+--  system cursor and the crosshair at the same time.
+--=========================================================
+local suppressed: boolean = false;
 local cursorHiddenByUs: boolean = false;
-local applyCursor: () -> () = function(): ()
-        local shouldHide: boolean = Settings.Enabled and Settings.HideCursor;
-        if shouldHide then
-                if UIS.MouseIconEnabled then
-                        pcall(function(): ()
-                                UIS.MouseIconEnabled = false;
-                        end);
-                end;
-                cursorHiddenByUs = true;
-        elseif cursorHiddenByUs then
-                cursorHiddenByUs = false;
+local destroyed: boolean = false;
+
+local isShown: () -> boolean = function(): boolean
+        return Settings.Enabled and not suppressed;
+end;
+
+local setMouseIcon: (on: boolean) -> () = function(on: boolean): ()
+        if UIS.MouseIconEnabled ~= on then
                 pcall(function(): ()
-                        UIS.MouseIconEnabled = true;
+                        UIS.MouseIconEnabled = on;
                 end);
         end;
 end;
 
+local applyCursor: () -> () = function(): ()
+        if isShown() and Settings.HideCursor then
+                cursorHiddenByUs = true;
+                setMouseIcon(false);
+        elseif cursorHiddenByUs then
+                cursorHiddenByUs = false;
+                setMouseIcon(true);
+        end;
+end;
+
+local cursorConn: RBXScriptConnection? = UIS:GetPropertyChangedSignal("MouseIconEnabled"):Connect(function(): ()
+        if not destroyed and cursorHiddenByUs and UIS.MouseIconEnabled then
+                setMouseIcon(false);
+        end;
+end);
+
+local readSuppress: () -> boolean = function(): boolean
+        local pred: any = Crosshair.Suppress;
+        if type(pred) ~= "function" then
+                return false;
+        end;
+        local ok: boolean, res: any = pcall(pred);
+        return ok and res == true;
+end;
+
+--=========================================================
+--  APPLY (style -> objects). Cheap enough to call on any change.
+--=========================================================
 local fillHalf: number = 0;
 local outlineHalf: number = 0;
 local outerTip: number = 0;
@@ -335,37 +383,51 @@ local falloff: (layer: number, count: number, intensity: number, curve: number) 
         return math.clamp(intensity * (1 - frac + (1 / count)) ^ curve, 0, 1);
 end;
 
+local resolveFont: (T: TextSettings) -> (Font?, Enum.Font) = function(T: TextSettings): (Font?, Enum.Font)
+        if typeof(T.FontFace) == "Font" then
+                return T.FontFace, Enum.Font.GothamBold;
+        end;
+        local ok: boolean, resolved: any = pcall(function(): any
+                return (Enum.Font :: any)[T.Font];
+        end);
+        if ok and resolved then
+                return nil, resolved :: Enum.Font;
+        end;
+        warn("[Crosshair] unknown font: " .. tostring(T.Font) .. " - using GothamBold");
+        return nil, Enum.Font.GothamBold;
+end;
+
 local Apply: () -> () = function(): ()
+        if destroyed then
+                return;
+        end;
         applyCursor();
 
+        local shown: boolean = isShown();
         local t: number = Settings.Thickness;
         local outlineT: number = t + Settings.OutlineWidth * 2;
 
         fillHalf = Settings.Length / 2;
         outlineHalf = fillHalf + Settings.OutlineWidth;
-
-        outerTip = Settings.Radius + fillHalf + Settings.OutlineWidth;
-        if Settings.Glow then
-                outerTip += Settings.GlowSpread;
-        end;
+        outerTip = Settings.Radius + fillHalf + Settings.OutlineWidth + (if Settings.Glow then Settings.GlowSpread else 0);
 
         for i: number = 1, 4 do
                 local fill: DrawingLine = Fills[i];
                 fill.Thickness = t;
                 fill.Color = Settings.FillColor;
                 fill.Transparency = Settings.FillTransparency;
-                fill.Visible = Settings.Enabled;
+                fill.Visible = shown;
 
                 local outline: DrawingLine = Outlines[i];
                 outline.Thickness = outlineT;
                 outline.Color = Settings.OutlineColor;
                 outline.Transparency = Settings.OutlineTransparency;
-                outline.Visible = Settings.Enabled and Settings.Outline;
+                outline.Visible = shown and Settings.Outline;
         end;
 
         local n: number = math.clamp(Settings.GlowLayers, 1, MAX_LAYERS);
         for layer: number = 1, MAX_LAYERS do
-                local active: boolean = Settings.Enabled and Settings.Glow and layer <= n;
+                local active: boolean = shown and Settings.Glow and layer <= n;
                 local spread: number = Settings.GlowSpread * (layer / n);
                 glowHalf[layer] = outlineHalf + spread;
 
@@ -381,20 +443,7 @@ local Apply: () -> () = function(): ()
         end;
 
         local T: TextSettings = Settings.Text;
-        local face: Font? = if typeof(T.FontFace) == "Font" then T.FontFace else nil;
-        local font: Enum.Font = Enum.Font.GothamBold;
-
-        if not face then
-                local ok: boolean, resolved: any = pcall(function(): any
-                        return (Enum.Font :: any)[T.Font];
-                end);
-                if ok and resolved then
-                        font = resolved :: Enum.Font;
-                else
-                        warn("[Crosshair] unknown font: " .. tostring(T.Font) .. " - using GothamBold");
-                end;
-        end;
-
+        local face: Font?, font: Enum.Font = resolveFont(T);
         local applyFont: (lbl: TextLabel) -> () = function(lbl: TextLabel): ()
                 if face then
                         lbl.FontFace = face;
@@ -403,27 +452,27 @@ local Apply: () -> () = function(): ()
                 end;
         end;
 
+        local textShown: boolean = shown and T.Enabled and T.Content ~= "";
         Label.Text = T.Content;
         applyFont(Label);
         Label.TextSize = T.Size;
         Label.TextColor3 = T.Color;
         Label.TextTransparency = T.Transparency;
-        Label.Visible = Settings.Enabled and T.Enabled;
+        Label.Visible = textShown;
 
         Stroke.Thickness = if T.Outline then T.OutlineThickness else 0;
         Stroke.Color = T.OutlineColor;
         Stroke.Transparency = T.OutlineTransparency;
 
         local tn: number = math.clamp(T.GlowLayers, 1, MAX_LAYERS);
+        local baseStroke: number = if T.Outline then T.OutlineThickness else 0;
         for layer: number = 1, MAX_LAYERS do
                 local g: GlowLabel = TextGlows[layer];
-                local active: boolean = Settings.Enabled and T.Enabled and T.Glow and layer <= tn;
+                local active: boolean = textShown and T.Glow and layer <= tn;
                 g.Label.Visible = active;
 
                 if active then
                         local alpha: number = falloff(layer, tn, T.GlowIntensity, T.GlowFalloff);
-                        local baseStroke: number = if T.Outline then T.OutlineThickness else 0;
-
                         g.Label.Text = T.Content;
                         applyFont(g.Label);
                         g.Label.TextSize = T.Size;
@@ -437,15 +486,23 @@ local Apply: () -> () = function(): ()
         end;
 end;
 
-Apply();
-
+--=========================================================
+--  RENDER (positions only; style lives in Apply)
+--=========================================================
 local angle: number = 0;
 local clock: number = 0;
-local conn: RBXScriptConnection? = nil;
-conn = RunService.RenderStepped:Connect(function(dt: number): ()
-        applyCursor();
 
-        if not Settings.Enabled then
+local Step: (dt: number) -> () = function(dt: number): ()
+        -- suppression changes visibility, so only re-Apply when it flips
+        local nowSuppressed: boolean = readSuppress();
+        if nowSuppressed ~= suppressed then
+                suppressed = nowSuppressed;
+                Apply();
+        else
+                applyCursor();
+        end;
+
+        if not isShown() then
                 return;
         end;
 
@@ -463,14 +520,12 @@ conn = RunService.RenderStepped:Connect(function(dt: number): ()
         if Settings.Pulse then
                 radius += math.sin(clock * Settings.PulseSpeed) * Settings.PulseAmount;
         end;
+
         local n: number = math.clamp(Settings.GlowLayers, 1, MAX_LAYERS);
         for i: number = 1, 4 do
-                local base: number = math.rad(angle + 45 + ((i - 1) * 90));
-                local dirX: number = math.cos(base);
-                local dirY: number = math.sin(base);
-
-                local cx: number = mx + dirX * radius;
-                local cy: number = my + dirY * radius;
+                local base: number = math.rad(angle + 45 + (i - 1) * 90);
+                local dirX: number, dirY: number = math.cos(base), math.sin(base);
+                local cx: number, cy: number = mx + dirX * radius, my + dirY * radius;
 
                 if Settings.Glow then
                         for layer: number = 1, n do
@@ -497,7 +552,6 @@ conn = RunService.RenderStepped:Connect(function(dt: number): ()
                 local reach: number = outerTip + (radius - Settings.Radius);
                 local pos: UDim2 = UDim2.fromOffset(mx, my + reach + T.Offset);
                 Label.Position = pos;
-
                 if T.Glow then
                         local tn: number = math.clamp(T.GlowLayers, 1, MAX_LAYERS);
                         for layer: number = 1, tn do
@@ -505,29 +559,38 @@ conn = RunService.RenderStepped:Connect(function(dt: number): ()
                         end;
                 end;
         end;
+end;
+
+Apply();
+local renderConn: RBXScriptConnection? = RunService.RenderStepped:Connect(function(dt: number): ()
+        if not destroyed then
+                Step(dt);
+        end;
 end);
 
 --=========================================================
 --  API
 --=========================================================
-local Crosshair = {} :: CrosshairAPI;
+-- flips a boolean setting (nil = toggle) and re-applies
+local flip: (tbl: { [string]: any }, key: string, state: boolean?) -> () = function(tbl, key, state): ()
+        tbl[key] = if state == nil then not tbl[key] else state;
+        Apply();
+end;
+
 Crosshair.Settings = Settings;
 Crosshair.Refresh = Apply;
+Crosshair.Suppress = nil;
 
 Crosshair.Toggle = function(state: boolean?): ()
-        local value: boolean = if state == nil then not Settings.Enabled else state :: boolean;
-        Settings.Enabled = value;
-        Apply(); 
+        flip(Settings, "Enabled", state);
 end;
 
 Crosshair.SetHideCursor = function(state: boolean?): ()
-        Settings.HideCursor = if state == nil then not Settings.HideCursor else state :: boolean;
-        Apply(); 
+        flip(Settings, "HideCursor", state);
 end;
 
 Crosshair.SetGlow = function(state: boolean?): ()
-        Settings.Glow = if state == nil then not Settings.Glow else state :: boolean;
-        Apply();
+        flip(Settings, "Glow", state);
 end;
 
 Crosshair.SetGlowStrength = function(intensity: number?, spread: number?, falloffCurve: number?): ()
@@ -538,8 +601,7 @@ Crosshair.SetGlowStrength = function(intensity: number?, spread: number?, fallof
 end;
 
 Crosshair.SetOutline = function(state: boolean?): ()
-        Settings.Outline = if state == nil then not Settings.Outline else state :: boolean;
-        Apply();
+        flip(Settings, "Outline", state);
 end;
 
 Crosshair.SetThickness = function(n: number): ()
@@ -554,7 +616,7 @@ Crosshair.SetSize = function(radius: number?, length: number?): ()
 end;
 
 Crosshair.SetRotation = function(state: boolean?): ()
-        Settings.Rotate = if state == nil then not Settings.Rotate else state :: boolean;
+        Settings.Rotate = if state == nil then not Settings.Rotate else state;
 end;
 
 Crosshair.SetRotationSpeed = function(n: number): ()
@@ -562,14 +624,7 @@ Crosshair.SetRotationSpeed = function(n: number): ()
 end;
 
 Crosshair.SetRotationDirection = function(dir: number | string): ()
-        local value: number;
-        if dir == "cw" then
-                value = 1;
-        elseif dir == "ccw" then
-                value = -1;
-        else
-                value = dir :: number;
-        end;
+        local value: number = if dir == "cw" then 1 elseif dir == "ccw" then -1 else tonumber(dir) or 1;
         Settings.RotationDirection = if value >= 0 then 1 else -1;
 end;
 
@@ -579,13 +634,12 @@ end;
 
 Crosshair.SetText = function(content: string?): ()
         Settings.Text.Content = content or "";
-        Settings.Text.Enabled = (content ~= nil and content ~= "");
+        Settings.Text.Enabled = content ~= nil and content ~= "";
         Apply();
 end;
 
 Crosshair.SetTextEnabled = function(state: boolean?): ()
-        Settings.Text.Enabled = if state == nil then not Settings.Text.Enabled else state :: boolean;
-        Apply();
+        flip(Settings.Text, "Enabled", state);
 end;
 
 Crosshair.SetFont = function(fontName: string): ()
@@ -611,7 +665,7 @@ end;
 Crosshair.SetTextOutline = function(thickness: number?, color: Color3?): ()
         local T: TextSettings = Settings.Text;
         T.OutlineThickness = thickness or T.OutlineThickness;
-        T.Outline = (T.OutlineThickness > 0);
+        T.Outline = T.OutlineThickness > 0;
         if color then
                 T.OutlineColor = color;
         end;
@@ -619,8 +673,7 @@ Crosshair.SetTextOutline = function(thickness: number?, color: Color3?): ()
 end;
 
 Crosshair.SetTextGlow = function(state: boolean?): ()
-        Settings.Text.Glow = if state == nil then not Settings.Text.Glow else state :: boolean;
-        Apply();
+        flip(Settings.Text, "Glow", state);
 end;
 
 Crosshair.SetTextGlowStrength = function(intensity: number?, spread: number?, falloffCurve: number?): ()
@@ -632,40 +685,34 @@ Crosshair.SetTextGlowStrength = function(intensity: number?, spread: number?, fa
 end;
 
 Crosshair.SetPulse = function(state: boolean?, amount: number?): ()
-        Settings.Pulse = if state == nil then not Settings.Pulse else state :: boolean;
+        Settings.Pulse = if state == nil then not Settings.Pulse else state;
         if amount then
                 Settings.PulseAmount = amount;
         end;
 end;
 
-local destroyed: boolean = false;
 Crosshair.Destroy = function(): ()
         if destroyed then
                 return;
         end;
         destroyed = true;
 
-        if conn then
-                conn:Disconnect();
-                conn = nil;
-        end;
-
-        for layer: number = 1, MAX_LAYERS do
-                for _: number, l: DrawingLine in Glows[layer] do
+        for _: number, c: RBXScriptConnection? in { renderConn, cursorConn } do
+                if c then
                         pcall(function(): ()
-                                l:Remove();
+                                c:Disconnect();
                         end);
                 end;
         end;
+        renderConn, cursorConn = nil, nil;
 
-        local sets: { { DrawingLine } } = { Outlines, Fills };
-        for _: number, set: { DrawingLine } in sets do
-                for _: number, l: DrawingLine in set do
-                        pcall(function(): ()
-                                l:Remove();
-                        end);
-                end;
+        for _: number, l: DrawingLine in allLines do
+                pcall(function(): ()
+                        l.Visible = false;
+                        l:Remove();
+                end);
         end;
+        table.clear(allLines);
 
         pcall(function(): ()
                 Screen:Destroy();
@@ -678,6 +725,7 @@ Crosshair.Destroy = function(): ()
                 end);
         end;
 
+        Crosshair.Suppress = nil;
         if ENV[ENV_KEY] == Crosshair then
                 ENV[ENV_KEY] = nil;
         end;
