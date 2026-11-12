@@ -680,103 +680,248 @@ function vape:CreateCategoryList(props)
 	return components.CategoryList(props)
 end
 
-function vape:CreateNotification(title, text, duration, type)
+local notifStyle: table = {
+	["Background"] = 'Default',
+	["Color"] = Color3.fromHSV(0, 0, 0.06),
+	["Opacity"] = 0.8,
+	["Image"] = '',
+	["Transparency"] = 0,
+	["Corner"] = 6,
+	["Icons"] = {["info"] = '', ["warning"] = '', ["alert"] = ''},
+	["IconSize"] = 20,
+	["TextSize"] = 14
+};
+
+local parseAsset: (value: any) -> string? = function(value: any): string?
+	if type(value) ~= 'string' then
+		return nil;
+	end;
+	local text: string = value:match('^%s*(.-)%s*$') or '';
+	if text == '' then
+		return nil;
+	end;
+	if text:match('^%d+$') then
+		return 'rbxassetid://' .. text;
+	end;
+	if text:match('^rbx') then
+		return text;
+	end;
+	if getcustomasset then
+		local success: boolean, asset: any = pcall(function(): any
+			return isfile(text) and getcustomasset(text) or nil;
+		end);
+		if success and type(asset) == 'string' and asset ~= '' then
+			return asset;
+		end;
+	end;
+	local id: string? = text:match('%d+');
+	return id and 'rbxassetid://' .. id or nil;
+end;
+
+local sameFont: (a: Font, b: Font) -> boolean = function(a: Font, b: Font): boolean
+	return a.Family == b.Family and a.Weight == b.Weight and a.Style == b.Style;
+end;
+
+function vape:CreateNotification(title: string, text: string, duration: number, kind: string?): ()
 	if not self.Notifications.Enabled then
-		return
-	end
+		return;
+	end;
 
-	task.delay(0, function()
+	task.delay(0, function(): ()
 		if self.ThreadFix then
-			setthreadidentity(8)
-		end
+			setthreadidentity(8);
+		end;
 
-		local index = #notifications:GetChildren() + 1
-		local notification = Instance.new('ImageLabel')
-		notification.BackgroundTransparency = 1
-		notification.Position = UDim2.new(1, 0, 1, -(29 + (78 * index)))
-		notification.Image = getvapeasset('velo/assets/new/notification.png')
-		notification.ScaleType = Enum.ScaleType.Slice
-		notification.SliceCenter = Rect.new(7, 7, 9, 9)
-		notification.ZIndex = 5
-		notification.Parent = notifications
-		addBlur(notification, true, true)
-		local iconshadow = Instance.new('ImageLabel')
-		iconshadow.BackgroundTransparency = 1
-		iconshadow.Image = getvapeasset('velo/assets/new/noti_'..(type or 'info')..'.png')
-		iconshadow.ImageColor3 = Color3.new()
-		iconshadow.ImageTransparency = 0.5
-		iconshadow.Position = UDim2.fromOffset(-5, -8)
-		iconshadow.Size = UDim2.fromOffset(60, 60)
-		iconshadow.ZIndex = 5
-		iconshadow.Parent = notification
-		local icon = iconshadow:Clone()
-		icon.ImageColor3 = Color3.new(1, 1, 1)
-		icon.ImageTransparency = 0
-		icon.Position = UDim2.fromOffset(-1, -1)
-		icon.Parent = iconshadow
-		local label = Instance.new('TextLabel')
-		label.BackgroundTransparency = 1
-		label.FontFace = uipallet.FontSemiBold
-		label.Position = UDim2.fromOffset(46, 16)
-		label.RichText = true
-		label.Size = UDim2.new(1, -56, 0, 20)
-		label.Text = "<stroke joins='round' thickness='0.3' transparency='0.5'>"..title..'</stroke>'
-		label.TextColor3 = type == 'alert' and Color3.fromRGB(250, 50, 56) or Color3.new(1, 1, 1)
-		label.TextSize = 14
-		label.TextXAlignment = Enum.TextXAlignment.Left
-		label.TextYAlignment = Enum.TextYAlignment.Top
-		label.ZIndex = 5
-		label.Parent = notification
-		local textshadow = label:Clone()
-		textshadow.FontFace = uipallet.Font
-		textshadow.Position = UDim2.fromOffset(47, 44)
-		textshadow.RichText = false
-		textshadow.Text = removeTags(text)
-		textshadow.TextColor3 = Color3.new()
-		textshadow.TextTransparency = 0.5
-		textshadow.Parent = notification
-		notification.Size = UDim2.fromOffset(math.max(getfontbounds(textshadow.Text, 14, uipallet.Font).X + 80, 266), 75)
-		local textlabel = textshadow:Clone()
-		textlabel.Position = UDim2.fromOffset(-1, -1)
-		textlabel.RichText = true
-		textlabel.Text = text
-		textlabel.TextColor3 = Color3.fromRGB(170, 170, 170)
-		textlabel.TextTransparency = 0 
-		textlabel.Parent = textshadow
-		local progress = Instance.new('Frame')
-		progress.BackgroundColor3 =
-			type == 'alert' and Color3.fromRGB(250, 50, 56)
-			or type == 'warning' and Color3.fromRGB(108, 110, 237) -- same color as Velocity's warning.png icon
-			or Color3.new(1, 1, 1)
-		progress.BorderSizePixel = 0
-		progress.Position = UDim2.new(0, 3, 1, -4)
-		progress.Size = UDim2.new(1, -13, 0, 1)
-		progress.ZIndex = 5
-		progress.Parent = notification
+		local style: table = notifStyle;
+		local kindName: string = kind or 'info';
+		local mode: string = style["Background"];
+		local textSize: number = style["TextSize"];
+		local iconSize: number = style["IconSize"];
+		local regularFont: Font = style["Font"] or uipallet.Font;
+		local boldFont: Font = style["Font"] and Font.new(style["Font"].Family, Enum.FontWeight.SemiBold, style["Font"].Style) or uipallet.FontSemiBold;
+		local textX: number = math.max(46, math.floor(36 + iconSize / 2));
+		local bodyY: number = 16 + math.floor(textSize * 2);
+		local height: number = bodyY + textSize + 17;
+		local plainText: string = removeTags(text);
+		local customImage: string? = mode == 'Image' and parseAsset(style["Image"]) or nil;
+		local customIcon: string? = parseAsset(style["Icons"][kindName]);
+		local rounded: boolean = mode == 'Color' or customImage ~= nil;
+		local light: boolean = mode == 'Color' and style["Opacity"] > 0.5 and vape:TextColor(style["Color"]:ToHSV()).R < 0.5;
+
+		local offset: number = 29 + height + 3;
+		for _, child: any in notifications:GetChildren() do
+			offset += child.Size.Y.Offset + 3;
+		end;
+
+		local notification: ImageLabel = Instance.new('ImageLabel');
+		notification.BackgroundTransparency = 1;
+		notification.Position = UDim2.new(1, 0, 1, -offset);
+		notification.Size = UDim2.fromOffset(266, height);
+		notification.ZIndex = 5;
+		if mode == 'Color' then
+			notification.BackgroundColor3 = style["Color"];
+			notification.BackgroundTransparency = 1 - style["Opacity"];
+		elseif customImage then
+			notification.Image = customImage;
+			notification.ImageTransparency = style["Transparency"];
+			notification.ScaleType = Enum.ScaleType.Crop;
+		else
+			notification.Image = getvapeasset('velo/assets/new/notification.png');
+			notification.ImageTransparency = style["Transparency"];
+			notification.ScaleType = Enum.ScaleType.Slice;
+			notification.SliceCenter = Rect.new(7, 7, 9, 9);
+		end;
+		if rounded then
+			addCorner(notification, UDim.new(0, style["Corner"]));
+		end;
+		notification.Parent = notifications;
+		local blur: ImageLabel = addBlur(notification, true, true);
+		blur.ImageTransparency = mode == 'Color' and 1 - style["Opacity"] or style["Transparency"];
+
+		local iconBox: number = customIcon and iconSize or iconSize * 3;
+		local iconY: number = 15 + math.floor(textSize / 2);
+		local iconshadow: ImageLabel = Instance.new('ImageLabel');
+		iconshadow.BackgroundTransparency = 1;
+		iconshadow.Image = customIcon or getvapeasset('velo/assets/new/noti_' .. kindName .. '.png');
+		iconshadow.ImageColor3 = Color3.new();
+		iconshadow.ImageTransparency = 0.5;
+		iconshadow.Position = UDim2.fromOffset(25 - math.floor(iconBox / 2), iconY - math.floor(iconBox / 2));
+		iconshadow.Size = UDim2.fromOffset(iconBox, iconBox);
+		iconshadow.ZIndex = 5;
+		iconshadow.Parent = notification;
+		local icon: ImageLabel = iconshadow:Clone();
+		icon.ImageColor3 = Color3.new(1, 1, 1);
+		icon.ImageTransparency = 0;
+		icon.Position = UDim2.fromOffset(-1, -1);
+		icon.Parent = iconshadow;
+
+		local label: TextLabel = Instance.new('TextLabel');
+		label.BackgroundTransparency = 1;
+		label.FontFace = boldFont;
+		label.Position = UDim2.fromOffset(textX, 16);
+		label.RichText = true;
+		label.Size = UDim2.new(1, -(textX + 10), 0, textSize + 6);
+		label.Text = "<stroke joins='round' thickness='0.3' transparency='0.5'>" .. title .. '</stroke>';
+		label.TextColor3 = kindName == 'alert' and Color3.fromRGB(250, 50, 56) or light and Color3.fromRGB(30, 30, 30) or Color3.new(1, 1, 1);
+		label.TextSize = textSize;
+		label.TextXAlignment = Enum.TextXAlignment.Left;
+		label.TextYAlignment = Enum.TextYAlignment.Top;
+		label.ZIndex = 5;
+		label.Parent = notification;
+		local textshadow: TextLabel = label:Clone();
+		textshadow.FontFace = regularFont;
+		textshadow.Position = UDim2.fromOffset(textX + 1, bodyY);
+		textshadow.RichText = false;
+		textshadow.Text = plainText;
+		textshadow.TextColor3 = Color3.new();
+		textshadow.TextTransparency = light and 0.85 or 0.5;
+		textshadow.Parent = notification;
+		local textlabel: TextLabel = textshadow:Clone();
+		textlabel.Position = UDim2.fromOffset(-1, -1);
+		textlabel.RichText = true;
+		textlabel.Text = text;
+		textlabel.TextColor3 = light and Color3.fromRGB(70, 70, 70) or Color3.fromRGB(170, 170, 170);
+		textlabel.TextTransparency = 0;
+		textlabel.Parent = textshadow;
+
+		local progress: Frame = Instance.new('Frame');
+		progress.BackgroundColor3 = kindName == 'alert' and Color3.fromRGB(250, 50, 56)
+			or kindName == 'warning' and Color3.fromRGB(108, 110, 237)
+			or light and Color3.fromRGB(40, 40, 40)
+			or Color3.new(1, 1, 1);
+		progress.BorderSizePixel = 0;
+		progress.Position = UDim2.new(0, 3, 1, -4);
+		progress.Size = UDim2.new(1, -13, 0, 1);
+		progress.ZIndex = 5;
+		if rounded then
+			local radius: number = math.min(style["Corner"], height / 2);
+			local inset: number = radius > 4 and math.max(3, math.ceil(radius - math.sqrt(radius * radius - (radius - 4) ^ 2))) or 3;
+			progress.Position = UDim2.new(0, inset, 1, -4);
+			progress.Size = UDim2.new(1, -inset * 2, 0, 1);
+		end;
+		progress.Parent = notification;
+
+		local bodyWidth: number = getfontbounds(plainText, textSize, regularFont).X;
+		local titleWidth: number = getfontbounds(removeTags(tostring(title)), textSize, boldFont).X;
+		notification.Size = UDim2.fromOffset(math.max(bodyWidth + textX + 34, titleWidth + textX + 16, 266), height);
 
 		if tween.Tween then
 			tween:Tween(notification, TweenInfo.new(0.326, Enum.EasingStyle.Exponential), {
-				AnchorPoint = Vector2.new(1, 0)
-			}, 'tweenstwo')
+				["AnchorPoint"] = Vector2.new(1, 0)
+			}, 'tweenstwo');
 
 			tween:Tween(progress, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
-				Size = UDim2.fromOffset(0, 1)
-			})
-		end
+				["Size"] = UDim2.fromOffset(0, 1)
+			});
+		end;
 
-		task.delay(duration, function()
+		task.delay(duration, function(): ()
 			if tween.Tween then
 				tween:Tween(notification, TweenInfo.new(0.326, Enum.EasingStyle.Exponential), {
-					AnchorPoint = Vector2.new(0, 0)
-				}, 'tweenstwo')
-			end
+					["AnchorPoint"] = Vector2.new(0, 0)
+				}, 'tweenstwo');
+			end;
 
-			task.wait(0.2)
-			notification:ClearAllChildren()
-			notification:Destroy()
-		end)
-	end)
-end
+			task.wait(0.2);
+			notification:ClearAllChildren();
+			notification:Destroy();
+		end);
+	end);
+end;
+
+function vape:SetFont(font: Font): ()
+	local oldRegular: Font = uipallet.Font;
+	local oldBold: Font = uipallet.FontSemiBold;
+	local heavy: boolean = font.Weight.Value >= Enum.FontWeight.SemiBold.Value;
+	local newRegular: Font = Font.new(font.Family, font.Weight, font.Style);
+	local newBold: Font = Font.new(font.Family, heavy and font.Weight or Enum.FontWeight.SemiBold, font.Style);
+	if sameFont(oldRegular, newRegular) and sameFont(oldBold, newBold) then
+		return;
+	end;
+	uipallet.Font = newRegular;
+	uipallet.FontSemiBold = newBold;
+	fontsize.Font = newRegular;
+	if not gui then
+		return;
+	end;
+
+	local skipped: {Instance} = {};
+	for _, category: table in self.Categories do
+		if category.Type == 'Overlay' and typeof(category.Children) == 'Instance' then
+			table.insert(skipped, category.Children);
+		end;
+	end;
+	if self.Legit then
+		for _, module: table in self.Legit.Modules do
+			if typeof(module.Children) == 'Instance' then
+				table.insert(skipped, module.Children);
+			end;
+		end;
+	end;
+
+	for _, obj: any in gui:GetDescendants() do
+		if obj:IsA('TextLabel') or obj:IsA('TextButton') or obj:IsA('TextBox') then
+			local face: Font = obj.FontFace;
+			local target: Font? = sameFont(face, oldRegular) and newRegular or sameFont(face, oldBold) and newBold or nil;
+			if target then
+				local inside: boolean = false;
+				for _, root: Instance in skipped do
+					if obj:IsDescendantOf(root) then
+						inside = true;
+						break;
+					end;
+				end;
+				if not inside then
+					obj.FontFace = target;
+				end;
+			end;
+		end;
+	end;
+
+	if self.ProfileLabel then
+		self.ProfileLabel.Size = UDim2.fromOffset(getfontbounds(self.ProfileLabel.Text, self.ProfileLabel.TextSize, newRegular).X + 16, 24);
+	end;
+end;
 
 function vape:CreateOverlay(props)
 	return components.Overlay(props)
@@ -1395,7 +1540,17 @@ function vape:LoadGUI()
 		List = {'Normal', 'Gradient', 'Retro'},
 		Tooltip = 'Normal - Smooth color fade\nGradient - Gradient color fade\nRetro - Static color'
 	})
-	
+
+	vape.GUIFont = guipane:CreateFont({
+		["Name"] = 'GUI font',
+		["Default"] = 'Gotham',
+		["Function"] = function(value: Font?): ()
+			if value then
+				vape:SetFont(value);
+			end;
+		end
+	});
+
 	guipane:CreateButton({
 		Name = 'Reset GUI positions',
 		Function = function()
@@ -1442,7 +1597,127 @@ function vape:LoadGUI()
 		end,
 		Tooltip = 'Sorts GUI by category order'
 	})
-	
+
+	local notifpanestyle: table = guipane:CreateSettingsPane({["Name"] = 'Notification Style'});
+	local NotifColor: table;
+	local NotifImage: table;
+	local NotifTransparency: table;
+	local NotifCorner: table;
+	local refreshNotifOptions: (mode: string) -> () = function(mode: string): ()
+		NotifColor["Object"].Visible = mode == 'Color';
+		NotifImage["Object"].Visible = mode == 'Image';
+		NotifTransparency["Object"].Visible = mode ~= 'Color';
+		NotifCorner["Object"].Visible = mode ~= 'Default';
+	end;
+	notifpanestyle:CreateDropdown({
+		["Name"] = 'Background',
+		["List"] = {'Default', 'Color', 'Image'},
+		["Function"] = function(value: string): ()
+			notifStyle["Background"] = value;
+			refreshNotifOptions(value);
+		end,
+		["Tooltip"] = 'Default - Vape notification background\nColor - Solid color background\nImage - Your own image as the background'
+	});
+	NotifColor = notifpanestyle:CreateColorSlider({
+		["Name"] = 'Background color',
+		["DefaultHue"] = 0,
+		["DefaultSat"] = 0,
+		["DefaultValue"] = 0.06,
+		["DefaultOpacity"] = 0.8,
+		["Function"] = function(hue: number, sat: number, val: number, opacity: number): ()
+			notifStyle["Color"] = Color3.fromHSV(hue, sat, val);
+			notifStyle["Opacity"] = opacity;
+		end,
+		["Tooltip"] = 'Background color of notifications, opacity controls how see-through it is',
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	NotifImage = notifpanestyle:CreateTextBox({
+		["Name"] = 'Background image',
+		["Placeholder"] = 'image id',
+		["Function"] = function(): ()
+			notifStyle["Image"] = NotifImage["Value"];
+		end,
+		["Tooltip"] = 'Image asset id (not a decal id), an rbxassetid:// link or a file path in your workspace folder',
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	NotifTransparency = notifpanestyle:CreateSlider({
+		["Name"] = 'Transparency',
+		["Min"] = 0,
+		["Max"] = 1,
+		["Decimal"] = 100,
+		["Default"] = 0,
+		["Function"] = function(value: number): ()
+			notifStyle["Transparency"] = value;
+		end,
+		["Tooltip"] = 'How see-through the notification background is',
+		["Darker"] = true
+	});
+	NotifCorner = notifpanestyle:CreateSlider({
+		["Name"] = 'Corner radius',
+		["Min"] = 0,
+		["Max"] = 30,
+		["Default"] = 6,
+		["Function"] = function(value: number): ()
+			notifStyle["Corner"] = value;
+		end,
+		["Suffix"] = 'px',
+		["Tooltip"] = 'Corner radius of Color and Image notifications',
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	for _, kind: string in {'info', 'warning', 'alert'} do
+		local IconBox: table;
+		IconBox = notifpanestyle:CreateTextBox({
+			["Name"] = (kind:gsub('^%l', string.upper)) .. ' icon',
+			["Placeholder"] = 'default',
+			["Function"] = function(): ()
+				notifStyle["Icons"][kind] = IconBox["Value"];
+			end,
+			["Tooltip"] = 'Image id for the ' .. kind .. ' notification icon, leave empty for the default icon'
+		});
+	end;
+	notifpanestyle:CreateSlider({
+		["Name"] = 'Icon size',
+		["Min"] = 8,
+		["Max"] = 40,
+		["Default"] = 20,
+		["Function"] = function(value: number): ()
+			notifStyle["IconSize"] = value;
+		end,
+		["Suffix"] = 'px',
+		["Tooltip"] = 'Size of the notification icon'
+	});
+	notifpanestyle:CreateFont({
+		["Name"] = 'Font',
+		["Default"] = 'GUI font',
+		["Function"] = function(value: Font?): ()
+			notifStyle["Font"] = value;
+		end
+	});
+	notifpanestyle:CreateSlider({
+		["Name"] = 'Text size',
+		["Min"] = 8,
+		["Max"] = 24,
+		["Default"] = 14,
+		["Function"] = function(value: number): ()
+			notifStyle["TextSize"] = value;
+		end,
+		["Tooltip"] = 'Text size of the notification title and message'
+	});
+	local testKinds: {string} = {'info', 'warning', 'alert'};
+	local testIndex: number = 0;
+	notifpanestyle:CreateButton({
+		["Name"] = 'Test notification',
+		["Function"] = function(): ()
+			testIndex = testIndex % #testKinds + 1;
+			local kind: string = testKinds[testIndex];
+			vape:CreateNotification('Velocity', 'This is a test ' .. kind .. ' notification.', 3, kind);
+		end,
+		["Tooltip"] = 'Shows a notification with your current settings (cycles info, warning, alert)'
+	});
+
 	--[[
 		Notification Settings
 	]]
@@ -2728,15 +3003,17 @@ function vape:LoadGUI()
 		end
 	end))
 	
-	vape:Clean(notifications.ChildRemoved:Connect(function()
-		for index, notif in notifications:GetChildren() do
+	vape:Clean(notifications.ChildRemoved:Connect(function(): ()
+		local offset: number = 29;
+		for _, notif: any in notifications:GetChildren() do
+			offset += notif.Size.Y.Offset + 3;
 			if tween.Tween then
 				tween:Tween(notif, TweenInfo.new(0.326, Enum.EasingStyle.Exponential), {
-					Position = UDim2.new(1, 0, 1, -(29 + (78 * index)))
-				})
-			end
-		end
-	end))
+					["Position"] = UDim2.new(1, 0, 1, -offset)
+				});
+			end;
+		end;
+	end));
 	
 	vape:Clean(scale:GetPropertyChangedSignal('Scale'):Connect(function()
 		scaledgui.Size = UDim2.fromScale(1 / scale.Scale, 1 / scale.Scale)
@@ -4597,6 +4874,12 @@ components = {
 		expand.Size = UDim2.fromOffset(17, 13)
 		expand.Text = ''
 		expand.Parent = colorslider
+		title:GetPropertyChangedSignal('FontFace'):Connect(function(): ()
+			if vape.ThreadFix then
+				setthreadidentity(8);
+			end;
+			expand.Position = UDim2.fromOffset(getfontbounds(title.Text, title.TextSize, title.FontFace).X + 11, 7);
+		end);
 		local icon = Instance.new('ImageLabel')
 		icon.BackgroundTransparency = 1
 		icon.Image = getvapeasset('velo/assets/new/downexpandslider.png')
@@ -4959,11 +5242,22 @@ components = {
 		button.MouseButton1Click:Connect(function()
 			if not dropdownchildren then
 				arrow.Rotation = 270
-				dropdown.Size = UDim2.new(1, 0, 0, 43 + (#props.List - 1) * 26)
-				dropdownchildren = Instance.new('Frame')
+				local rows: number = #props.List - 1;
+				local shown: number = props.MaxRows and math.min(rows, props.MaxRows) or rows;
+				dropdown.Size = UDim2.new(1, 0, 0, 43 + shown * 26)
+				if shown < rows then
+					dropdownchildren = Instance.new('ScrollingFrame');
+					dropdownchildren.BorderSizePixel = 0;
+					dropdownchildren.CanvasSize = UDim2.fromOffset(0, rows * 26);
+					dropdownchildren.ScrollBarImageTransparency = 0.75;
+					dropdownchildren.ScrollBarThickness = 2;
+					dropdownchildren.ScrollingDirection = Enum.ScrollingDirection.Y;
+				else
+					dropdownchildren = Instance.new('Frame');
+				end;
 				dropdownchildren.BackgroundTransparency = 1
 				dropdownchildren.Position = UDim2.fromOffset(0, 27)
-				dropdownchildren.Size = UDim2.new(1, 0, 0, (#props.List - 1) * 26)
+				dropdownchildren.Size = UDim2.new(1, 0, 0, shown * 26)
 				dropdownchildren.Parent = button
 		
 				local index = 0
@@ -5032,9 +5326,16 @@ components = {
 				table.insert(fonts, v.Name)
 			end
 		end
-		
+
+		local fromName: (name: string) -> Font? = function(name: string): Font?
+			local success: boolean, font: any = pcall(function(): Font
+				return Font.fromEnum(Enum.Font[name]);
+			end);
+			return success and font or nil;
+		end;
+
 		local component = {
-			Value = Font.fromEnum(Enum.Font[fonts[1]])
+			Value = fromName(fonts[1])
 		}
 		local fontdropdown
 		local fontbox
@@ -5046,7 +5347,7 @@ components = {
 			Function = function(val)
 				fontbox.Object.Visible = val == 'Custom' and fontdropdown.Object.Visible
 				if val ~= 'Custom' then
-					component.Value = Font.fromEnum(Enum.Font[val])
+					component.Value = fromName(val)
 					props.Function(component.Value)
 				else
 					pcall(function()
@@ -5057,7 +5358,8 @@ components = {
 				end
 			end,
 			Darker = props.Darker,
-			Visible = props.Visible
+			Visible = props.Visible,
+			MaxRows = 10
 		}, children, api)
 		component.Object = fontdropdown.Object
 		
@@ -5575,6 +5877,12 @@ components = {
 		expand.Size = UDim2.fromOffset(17, 13)
 		expand.Text = ''
 		expand.Parent = slider
+		title:GetPropertyChangedSignal('FontFace'):Connect(function(): ()
+			if vape.ThreadFix then
+				setthreadidentity(8);
+			end;
+			expand.Position = UDim2.new(0, getfontbounds(title.Text, title.TextSize, title.FontFace).X + 11, 0, 7);
+		end);
 		local icon = Instance.new('ImageLabel')
 		icon.BackgroundTransparency = 1
 		icon.Image = getvapeasset('velo/assets/new/downexpandslider.png')
