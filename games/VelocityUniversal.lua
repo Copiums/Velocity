@@ -1871,38 +1871,10 @@ velo.run(function()
 		return false;
 	end;
 
-	whitelist.newchat = function(self: any, obj: any, plr: Player, skip: boolean?, rawText: string?): ()
-		pcall(function(): ()
-			obj.PrefixText = self:tag(plr, true, true)..(obj.PrefixText or '');
-		end);
-		if not skip then
-			pcall(function(): ()
-				if self:process(obj.Text, plr, rawText) then
-					local text: string = rawText or obj.Text or '';
-					local clean: string = text:gsub('^/w%s+%S+%s*', ''):gsub('^/whisper%s+%S+%s*', '');
-					if clean:sub(1, 3) == 'vc:' or clean == 'helloimusinginhaler' then
-						obj.Text = ' ';
-						obj.PrefixText = ' ';
-					end;
-				end;
-			end);
-		end;
-	end;
-
 	local legacyResults: {[any]: boolean} = {};
 	local legacyResultCount: number = 0;
-	local chatlog: (msg: string) -> () = function(msg: string): ()
-		local line: string = '['..os.date('%X')..'] '..msg;
-		print('[VeloChat] '..msg);
-		pcall(function(): ()
-			local old: string = isfile('velo/chatlog.txt') and readfile('velo/chatlog.txt') or '';
-			writefile('velo/chatlog.txt', old..line..'\n');
-		end);
-	end;
-	whitelist.chatlog = chatlog;
 	whitelist.legacyprocess = function(self: any, data: any): boolean
 		local plr: Player? = playersService:GetPlayerByUserId(data.SpeakerUserId);
-		chatlog('legacyprocess uid='..tostring(data.SpeakerUserId)..' plr='..tostring(plr and plr.Name)..' id='..tostring(data.ID)..' msg='..tostring(data.Message));
 		if not plr then
 			return false;
 		end;
@@ -1913,7 +1885,6 @@ velo.run(function()
 		end;
 		if result == nil and type(data.Message) == 'string' and data.Message ~= '' then
 			result = self:process(data.Message, plr) == true;
-			chatlog('  process('..data.Message..', '..plr.Name..') -> '..tostring(result)..' localprio='..tostring(self.localprio)..' senderprio='..tostring(self:get(plr)));
 			if id ~= nil then
 				legacyResults[id] = result;
 				legacyResultCount += 1;
@@ -1925,39 +1896,6 @@ velo.run(function()
 		end;
 		return result == true;
 	end;
-	whitelist.oldchat = function(self: any, func: any): ()
-		pcall(function(): ()
-			local msgtable: any = debug.getupvalue(func, 3);
-			if typeof(msgtable) == 'table' and msgtable.CurrentChannel then
-				whitelist.oldchattable = msgtable;
-			end;
-		end);
-		local oldchat: any;
-		oldchat = hookfunction(func, function(data: any, ...: any): any
-			chatlog('hookedfn fired datatype='..typeof(data)..' uid='..tostring(type(data) == 'table' and data.SpeakerUserId)..' msg='..tostring(type(data) == 'table' and data.Message));
-			if type(data) == 'table' and data.SpeakerUserId then
-				pcall(function(): ()
-					local plr: Player? = playersService:GetPlayerByUserId(data.SpeakerUserId);
-					if not plr then
-						return;
-					end;
-					data.ExtraData = data.ExtraData or {};
-					data.ExtraData.Tags = data.ExtraData.Tags or {};
-					for _, v: any in (self:tag(plr) or {}) do
-						table.insert(data.ExtraData.Tags, {["TagText"] = removeTags(v.text), ["TagColor"] = v.color});
-					end;
-					if self:legacyprocess(data) then
-						data.Message = '';
-					end;
-				end);
-			end;
-			return oldchat(data, ...);
-		end);
-		vape:Clean(function(): ()
-			hookfunction(func, oldchat);
-		end);
-	end;
-
 	local olduninject: any;
 	whitelist.playeradded = function(self: any, v: Player?, joined: boolean?): ()
 		if self:get(v) ~= 0 then
@@ -2002,136 +1940,113 @@ velo.run(function()
 	whitelist.hook = function(self: any): ()
 		if self.hooked then return; end;
 		self.hooked = true;
-		chatlog('hook() called, ChatVersion='..tostring(textChatService.ChatVersion)..' getconnections='..tostring(getconnections ~= nil)..' hookfunction='..tostring(hookfunction ~= nil));
-		if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-			if getcallbackvalue and restorefunction and hookfunction then
-				local old: any;
-				task.spawn(function(): ()
-					vape:Clean(function(): ()
-						if old then
-							restorefunction(old);
-							old = nil;
-						end;
-					end);
 
-					task.delay(0.5, function(): ()
-						if not getcallbackvalue(textChatService, 'OnIncomingMessage') then
-							pcall(function(): ()
-								textChatService.OnIncomingMessage = function(msg: any): any
-									local props: any = Instance.new('TextChatMessageProperties');
-									props.PrefixText = msg.PrefixText;
-									props.Text = msg.Text;
-									return props;
-								end;
-							end);
-						end;
-					end);
+		local brighten: (c: any) -> any = function(c: any): any
+			if typeof(c) ~= 'Color3' then return c; end;
+			local m: number = math.max(c.R, c.G, c.B);
+			if m > 0 and m < 0.55 then
+				local s: number = 0.82 / m;
+				return Color3.new(math.min(c.R * s, 1), math.min(c.G * s, 1), math.min(c.B * s, 1));
+			end;
+			return c;
+		end;
 
-					repeat
-						local current: any = getcallbackvalue(textChatService, 'OnIncomingMessage');
-						if old ~= current and current then
-							if old then
-								restorefunction(old);
-							end;
-							local hook: any;
-							hook = hookfunction(current, function(...: any): any
-								local msg: any = ...;
-								local data: any = hook(...);
-								local plr: Player? = msg.TextSource and playersService:GetPlayerByUserId(msg.TextSource.UserId);
-								if plr then
-									if not (data and data:IsA('TextChatMessageProperties') and data.PrefixText ~= '') then
-										data = Instance.new('TextChatMessageProperties');
-										data.PrefixText = msg.PrefixText;
-										data.Text = msg.Text;
-									end;
-									self:newchat(data, plr, msg.Status ~= Enum.TextChatMessageStatus.Success, msg.Text);
-								end;
-								return data;
-							end);
-							old = current;
-						end;
-						task.wait(0.1);
-					until shared.veloc ~= vape;
-				end);
-			end;
-		else
-			for _, eventName: string in {'OnNewMessage', 'OnMessageDoneFiltering'} do
-				task.spawn(function(): ()
-					local events: Instance? = replicatedStorage:WaitForChild('DefaultChatSystemChatEvents', 60);
-					local remote: any = events and events:WaitForChild(eventName, 60);
-					chatlog('listener '..eventName..' remote='..tostring(remote and remote.ClassName)..' injected='..tostring(shared.veloc == vape));
-					if remote and shared.veloc == vape then
-						vape:Clean(remote.OnClientEvent:Connect(function(data: any): ()
-							chatlog('event '..eventName..' fired type='..typeof(data)..' uid='..tostring(type(data) == 'table' and data.SpeakerUserId));
-							if type(data) == 'table' and data.SpeakerUserId then
-								pcall(whitelist.legacyprocess, whitelist, data);
-							end;
-						end));
-					end;
-				end);
-			end;
-			if not (getconnections and hookfunction) then
-				chatlog('legacy: no getconnections/hookfunction, cannot hook');
-				return;
-			end;
-			local handlers: {{string}} = {
-				{'OnNewMessage', 'UpdateMessagePostedInChannel'},
-				{'OnMessageDoneFiltering', 'UpdateMessageFiltered'}
-			};
-			local hookedFunctions: {[any]: boolean} = {};
-			local hookedEvents: {[string]: boolean} = {};
-			local isChatHandler: (fn: any, constant: string) -> boolean = function(fn: any, constant: string): boolean
-				local ok: boolean, found: any = pcall(function(): boolean
-					return table.find(debug.getconstants(fn), constant) ~= nil;
-				end);
-				if ok then
-					return found == true;
+		local tagObjs: (plr: Player) -> {any}? = function(plr: Player): {any}?
+			local list: any = self:tag(plr);
+			if type(list) ~= 'table' or #list == 0 then return nil; end;
+			local out: {any} = {};
+			for _, t: any in list do
+				if typeof(t.color) == 'Color3' then
+					out[#out + 1] = {["TagText"] = removeTags(t.text), ["TagColor"] = brighten(t.color)};
+				else
+					out[#out + 1] = {["TagText"] = removeTags(t.text)};
 				end;
-				local okSource: boolean, source: any = pcall(debug.info, fn, 's');
-				return okSource and type(source) == 'string' and source:find('ChatMain') ~= nil;
 			end;
-			task.spawn(function(): ()
-				local attempts: number = 0;
-				repeat
-					attempts += 1;
-					if attempts == 20 then
-						chatlog('legacy: gave up finding chat handlers after 20 tries');
-					end;
-					local events: Instance? = replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents');
-					if events then
-						for _, handler: {string} in handlers do
-							local remote: Instance? = not hookedEvents[handler[1]] and events:FindFirstChild(handler[1]) or nil;
-							if remote then
-								pcall(function(): ()
-									local conns: {any} = getconnections((remote :: any).OnClientEvent);
-									if attempts <= 3 or attempts % 5 == 0 then
-										chatlog('hookloop '..handler[1]..' attempt '..attempts..' connections='..#conns);
-									end;
-									for ci: number, connection: any in conns do
-										local fn: any = connection.Function;
-										local matched: boolean = fn ~= nil and isChatHandler(fn, handler[2]);
-										if attempts <= 3 then
-											chatlog('  conn '..ci..' hasfn='..tostring(fn ~= nil)..' matched='..tostring(matched));
-										end;
-										if fn and not hookedFunctions[fn] and matched then
-											hookedFunctions[fn] = true;
-											hookedEvents[handler[1]] = true;
-											whitelist:oldchat(fn);
-											chatlog('HOOKED '..handler[1]);
-											break;
-										end;
-									end;
-								end);
+			return out;
+		end;
+
+		local lastSelf: string, lastTime: number = '', 0;
+		local processSelf: (msg: string) -> () = function(msg: string): ()
+			local now: number = os.clock();
+			if msg == lastSelf and now - lastTime < 1 then return; end;
+			lastSelf, lastTime = msg, now;
+			pcall(self.process, self, msg, lplr);
+		end;
+		self.chattedConn = lplr.Chatted:Connect(processSelf);
+		vape:Clean(self.chattedConn);
+
+		local tcChannels: Instance? = textChatService:FindFirstChild('TextChannels');
+		local useTextChat: boolean = textChatService.ChatVersion == Enum.ChatVersion.TextChatService
+			or (tcChannels ~= nil and #tcChannels:GetChildren() > 0);
+
+		if useTextChat then
+			local original: any = getcallbackvalue and getcallbackvalue(textChatService, 'OnIncomingMessage');
+			textChatService.OnIncomingMessage = function(message: any): any
+				local props: any = nil;
+				if original then
+					local ok: boolean, r: any = pcall(original, message);
+					if ok then props = r; end;
+				end;
+				if shared.veloc == vape then
+					pcall(function(): ()
+						local src: any = message.TextSource;
+						local plr: Player? = src and playersService:GetPlayerByUserId(src.UserId);
+						if not plr then return; end;
+						local objs: {any}? = tagObjs(plr);
+						if objs then
+							local prefix: string = '';
+							for _, o: any in objs do
+								prefix = prefix..(o.TagColor and ('<font color="#'..o.TagColor:ToHex()..'">['..o.TagText..']</font> ') or ('['..o.TagText..'] '));
+							end;
+							props = props or Instance.new('TextChatMessageProperties');
+							local existing: string = (props.PrefixText ~= '' and props.PrefixText) or message.PrefixText or '';
+							if not existing:find((removeTags(prefix):gsub('%s+$', '')), 1, true) then
+								props.PrefixText = prefix..existing;
 							end;
 						end;
-					end;
-					if hookedEvents.OnNewMessage and hookedEvents.OnMessageDoneFiltering then
-						chatlog('legacy chat fully hooked');
-						break;
-					end;
-					task.wait(1);
-				until shared.veloc ~= vape;
+						if plr == lplr then
+							processSelf(message.Text);
+						else
+							pcall(self.process, self, message.Text, plr, message.Text);
+						end;
+					end);
+				end;
+				return props;
+			end;
+			vape:Clean(function(): ()
+				pcall(function(): () textChatService.OnIncomingMessage = original; end);
 			end);
+		else
+			local events: Instance? = replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents');
+			if events then
+				pcall(function(): ()
+					cloneref(game:GetService('Chat')):RegisterChatCallback(Enum.ChatCallbackType.OnClientFormattingMessage, function(message: any): any
+						if shared.veloc ~= vape or type(message) ~= 'table' then return nil; end;
+						local uid: number? = tonumber(message.SpeakerUserId);
+						local plr: Player? = (uid and uid > 0 and playersService:GetPlayerByUserId(uid))
+							or (type(message.FromSpeaker) == 'string' and playersService:FindFirstChild(message.FromSpeaker))
+							or nil;
+						if not plr then return nil; end;
+						local objs: {any}? = tagObjs(plr);
+						if not objs then return nil; end;
+						local merged: {any} = {};
+						for _, t: any in ((type(message.ExtraData) == 'table' and message.ExtraData.Tags) or {}) do
+							merged[#merged + 1] = t;
+						end;
+						for _, o: any in objs do merged[#merged + 1] = o; end;
+						return {["Tags"] = merged};
+					end);
+				end);
+				local onLegacy: (data: any) -> () = function(data: any): ()
+					if type(data) == 'table' and data.SpeakerUserId then
+						pcall(whitelist.legacyprocess, whitelist, data);
+					end;
+				end;
+				local onNew: any = events:FindFirstChild('OnNewMessage');
+				local onFilter: any = events:FindFirstChild('OnMessageDoneFiltering');
+				if onNew then vape:Clean(onNew.OnClientEvent:Connect(onLegacy)); end;
+				if onFilter then vape:Clean(onFilter.OnClientEvent:Connect(onLegacy)); end;
+			end;
 		end;
 	end;
 
@@ -2280,12 +2195,15 @@ velo.run(function()
 
 	whitelist.update = function(self: any, first: boolean?): boolean?
 		local suc: boolean = pcall(function(): ()
-			local _: any, subbed: string = pcall(function(): string
+			local commit: string = 'main';
+			local okc: boolean, subbed: any = pcall(function(): string
 				return game:HttpGet('https://github.com/Copiums/whitelistss/tree/main');
 			end);
-			local commit: string? = subbed:find('currentOid');
-			commit = commit and subbed:sub(commit + 13, commit + 52) or nil;
-			commit = commit and #commit == 40 and commit or 'main';
+			if okc and type(subbed) == 'string' then
+				local i: number? = subbed:find('currentOid');
+				local c: string? = i and subbed:sub(i + 13, i + 52) or nil;
+				if c and #c == 40 then commit = c; end;
+			end;
 			whitelist.textdata = game:HttpGet('https://raw.githubusercontent.com/Copiums/whitelistss/'..commit..'/PlayerWhitelist.json', true);
 		end);
 		if not suc or not hash or not whitelist.get then return; end;
