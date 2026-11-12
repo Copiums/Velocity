@@ -2113,6 +2113,9 @@ function vape:LoadGUI()
 		local HudGlowTransparency: table = placeholder('Value', 0);
 		local HudShadow: table = placeholder('Enabled', true);
 		local HudShadowTransparency: table = placeholder('Value', 0.5);
+		local HudShadowSpread: table = placeholder('Value', 30);
+		local HudShadowOffsetX: table = placeholder('Value', 0);
+		local HudShadowOffsetY: table = placeholder('Value', 0);
 		local HudOutlineStart: table = hsv(Color3.fromRGB(255, 0, 251));
 		local HudOutlineEnd: table = hsv(Color3.fromRGB(0, 255, 238));
 		local HudOutlineThickness: table = placeholder('Value', 2);
@@ -2186,8 +2189,8 @@ function vape:LoadGUI()
 		hudShadow.AnchorPoint = Vector2.new(0.5, 0.5);
 		hudShadow.BackgroundTransparency = 1;
 		hudShadow.BorderSizePixel = 0;
-		hudShadow.Position = UDim2.new(0.405562878, 215, 0.441396445, 30);
-		hudShadow.Size = UDim2.fromOffset(579, 226);
+		hudShadow.Position = UDim2.fromScale(0.5, 0.5);
+		hudShadow.Size = UDim2.new(1, 60, 1, 60);
 		hudShadow.ZIndex = 2;
 		hudShadow.Parent = hudBackground;
 		local hudShadowGradient: UIGradient = makeHudGradient(hudShadow);
@@ -2250,6 +2253,8 @@ function vape:LoadGUI()
 			hudShadowGradient.Rotation = rotation;
 			hudShadow.Visible = HudShadow["Enabled"];
 			hudShadow.ImageTransparency = HudShadowTransparency["Value"];
+			hudShadow.Position = UDim2.new(0.5, HudShadowOffsetX["Value"], 0.5, HudShadowOffsetY["Value"]);
+			hudShadow.Size = UDim2.new(1, HudShadowSpread["Value"] * 2, 1, HudShadowSpread["Value"] * 2);
 			hudGlowGradient.Color = ColorSequence.new(getColor(HudGlowStart), getColor(HudGlowEnd));
 			hudGlowGradient.Rotation = rotation;
 			hudGlow.Visible = HudGlow["Enabled"];
@@ -2506,6 +2511,9 @@ function vape:LoadGUI()
 		HudGlowTransparency = hudSlider('Glow Transparency', 0, 1, 0, 10);
 		HudShadow = hudToggle('Shadow', true);
 		HudShadowTransparency = hudSlider('Shadow Transparency', 0, 1, 0.5, 10);
+		HudShadowSpread = hudSlider('Shadow Spread', 0, 150, 30, nil, 'px');
+		HudShadowOffsetX = hudSlider('Shadow Offset X', -100, 100, 0, nil, 'px');
+		HudShadowOffsetY = hudSlider('Shadow Offset Y', -100, 100, 0, nil, 'px');
 		HudOutlineStart = hudColor('Outline Start', HudOutlineStart);
 		HudOutlineEnd = hudColor('Outline End', HudOutlineEnd);
 		HudOutlineThickness = hudSlider('Outline Thickness', 0, 6, 2);
