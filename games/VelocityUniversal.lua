@@ -109,6 +109,7 @@ local assetfunction: any = getcustomasset;
 local tween: any = vape.Libraries.tween;
 local targetinfo: any = vape.Libraries.targetinfo;
 local getfontsize: any = vape.Libraries.getfontsize;
+local getfontbounds: any = vape.Libraries.getfontbounds;
 local getcustomasset: any = vape.Libraries.getcustomasset;	
 
 local targetStrafeVector: any, spiderShift: any, waypointFolder: any;
@@ -13463,6 +13464,7 @@ velo.run(function()
 	});
 end);
 
+--[[
 velo.run(function()
         local AutoReport: table = {["Enabled"] = false};
         local AutoReportList: any = {};
@@ -13557,7 +13559,6 @@ velo.run(function()
         });
 end);
 
---[[
 velo.run(function()
 		local overParams: RaycastParams = RaycastParams.new();
 		overParams.RespectCanCollide = true;
