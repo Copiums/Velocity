@@ -11589,6 +11589,7 @@ velo.run(function()
 	    local SkidRoaster: table = {["Enabled"] = false};
 	    local Mode: table = {["Value"] = "Custom"};
 	    local Delay: table = {["Value"] = 3.3};
+	local SkidPhrases: table = {["ListEnabled"] = {}};
 	    local cope: table = {
 	            "Snoopy more like shitnoopy!", "Skidding = NN", "Moon on top!", 
 	            "Snoopy + Grass = skids", "Pisstonware", "Piston loves underaged girls and boys", 
@@ -11600,41 +11601,47 @@ velo.run(function()
 	            "W zenith, W null.wtf, W Render", "Render on top - discord.gg/renderintents", 
 	            "Velocity & Night on top RAH"
 	    };
-	    SkidRoaster = vape.Categories.Utility:CreateModule({
-		        ["Name"] = "🤡",
-		        ["Function"] = function(callback: boolean): void
-			            if callback then
-				                SkidRoaster:Clean(runService.RenderStepped:Connect(function()
-						            	if Mode["Value"] == "Custom" then
-							                	notif("Vape", #SkidPhrases.ListEnabled > 0 and SkidPhrases.ListEnabled[math.random(1, #SkidPhrases.ListEnabled)] or "Voidware still pasting in 2025 be like 💀🤡", Delay["Value"], 'warning');
-							                    task.wait(Delay["Value"]);
-						                else
-							                    for _: any, msg: string? in cope do
-							                            notif("Vape", msg, 3, 'warning');
-							                            task.wait(Delay["Value"]);
-							                    end;
-						                end;
-				                end));
-			            end;
-		        end,
-		        ["HoverText"] = "Roasts skids",
-	    });
-	    Mode = SkidRoaster:CreateDropdown({
-		        ["Name"] = "Mode",
-		        ["List"] = {"Custom", "Copium"},
-		        ["Function"] = function() end
-	    });
-	    SkidPhrases = SkidRoaster:CreateTextList({
-		        ["Name"] = "Phrases",
-		        ["TempText"] = "SkidRoaster Phrases",
-	    });
-	    Delay = SkidRoaster:CreateSlider({
-		        ["Name"] = "Delay",
-		        ["Min"] = 2,
-		        ["Max"] = 5,
-		        ["Default"] = 2,
-		        ["Function"] = function() end
-	    });
+	SkidRoaster = vape.Categories.Utility:CreateModule({
+		["Name"] = "🤡",
+		["Tooltip"] = "Roasts skids",
+		["Function"] = function(callback: boolean): void
+			if not callback then
+				return;
+			end;
+			SkidRoaster:Clean(task.spawn(function(): ()
+				local index: number = 0;
+				repeat
+					local message: string;
+					local duration: number = Delay["Value"];
+					if Mode["Value"] == "Custom" then
+						local list: {string} = SkidPhrases["ListEnabled"] or {};
+						message = #list > 0 and list[math.random(1, #list)] or "Voidware still pasting in 2025 be like 💀🤡";
+					else
+						index = index % #cope + 1;
+						message = cope[index];
+						duration = 3;
+					end;
+					notif("Vape", message, duration, 'warning');
+					task.wait(Delay["Value"]);
+				until false;
+			end));
+		end
+	});
+	Mode = SkidRoaster:CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"Custom", "Copium"},
+		["Tooltip"] = "Custom: random line from Phrases. Copium: cycles the built-in list."
+	});
+	SkidPhrases = SkidRoaster:CreateTextList({
+		["Name"] = "Phrases"
+	});
+	Delay = SkidRoaster:CreateSlider({
+		["Name"] = "Delay",
+		["Min"] = 2,
+		["Max"] = 5,
+		["Default"] = 2,
+		["Suffix"] = "s"
+	});
 end);
 
 -- credits: Render
