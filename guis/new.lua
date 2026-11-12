@@ -111,6 +111,17 @@ local mergeProfileData: (old: table?, new: table) -> table = function(old: table
 		end;
 		new[section] = merged;
 	end;
+	if type(old.Gui) == 'table' then
+		if type(new.Gui) ~= 'table' then
+			new.Gui = old.Gui;
+		elseif type(old.Gui.Settings) == 'table' and type(new.Gui.Settings) == 'table' then
+			for name: string, paneData: any in old.Gui.Settings do
+				if new.Gui.Settings[name] == nil then
+					new.Gui.Settings[name] = paneData;
+				end;
+			end;
+		end;
+	end;
 	return new;
 end;
 
@@ -846,6 +857,10 @@ function vape:Load(skipgui, profile)
 			if module then
 				module:Load(data)
 			end
+		end
+
+		if isGlobalProfile(self.Profile) then
+			self:LoadGuiSettings(mainData.Gui)
 		end
 
 		self:UpdateTextGUI(true)
@@ -2832,6 +2847,86 @@ function vape:Remove(obj)
 	end
 end
 
+function vape:SaveGuiSettings(): table
+	local settings: table = {};
+	for _, pane: table in self.Settings do
+		pane:Save(settings);
+	end;
+	local lists: table = {};
+	for _, name: string in {'Friends', 'Targets'} do
+		local category: table? = rawget(self.Categories, name);
+		if category then
+			lists[name] = {
+				["List"] = table.clone(category.List),
+				["ListEnabled"] = table.clone(category.ListEnabled),
+				["Options"] = self:SaveOptions(category)
+			};
+		end;
+	end;
+	return {["Settings"] = settings, ["Lists"] = lists};
+end;
+
+function vape:LoadGuiSettings(data: table?): ()
+	if type(data) ~= 'table' then
+		return;
+	end;
+	if type(data.Settings) == 'table' then
+		for name: string, paneData: any in data.Settings do
+			local pane: table? = self.Settings[name];
+			if pane and type(paneData) == 'table' then
+				pane:Load(paneData);
+			end;
+		end;
+	end;
+	if type(data.Lists) == 'table' then
+		for name: string, listData: any in data.Lists do
+			local category: table? = rawget(self.Categories, name);
+			if category and type(listData) == 'table' then
+				category.List = type(listData.List) == 'table' and table.clone(listData.List) or {};
+				category.ListEnabled = type(listData.ListEnabled) == 'table' and table.clone(listData.ListEnabled) or {};
+				if type(listData.Options) == 'table' then
+					self:LoadOptions(category, listData.Options);
+				end;
+				category:ChangeValue(nil, true);
+			end;
+		end;
+	end;
+end;
+
+function vape:SnapshotProfile(id: string): ()
+	local mainData: table = {
+		Modules = {},
+		Categories = {},
+		Legit = {},
+		v = 1
+	};
+
+	for _, category: table in self.Categories do
+		if category.Type == 'Overlay' then
+			category:Save(mainData.Categories);
+		end;
+	end;
+
+	for _, module: table in self.Modules do
+		module:Save(mainData.Modules);
+	end;
+
+	for _, module: table in self.Legit.Modules do
+		module:Save(mainData.Legit);
+	end;
+
+	local path: string = profilePath(id);
+	if isGlobalProfile(id) then
+		mainData.Gui = self:SaveGuiSettings();
+		ensureGlobalFolder();
+		if isfile(path) then
+			mainData = mergeProfileData(loadJson(path), mainData);
+		end;
+	end;
+
+	writefile(path, httpService:JSONEncode(mainData));
+end;
+
 function vape:Save(newProfile)
 	if not self.Loaded then
 		return
@@ -2843,35 +2938,14 @@ function vape:Save(newProfile)
 		v = 1
 	}
 
-	local mainData = {
-		Modules = {},
-		Categories = {},
-		Legit = {},
-		v = 1
-	}
-
-	for name, category in self.Categories do
-		category:Save((category.Type == 'Overlay' and mainData or guiData).Categories)
-	end
-
-	for _, module in self.Modules do
-		module:Save(mainData.Modules)
-	end
-
-	for _, module in self.Legit.Modules do
-		module:Save(mainData.Legit)
-	end
-
-	local path = profilePath(self.Profile)
-	if isGlobalProfile(self.Profile) then
-		ensureGlobalFolder()
-		if isfile(path) then
-			mainData = mergeProfileData(loadJson(path), mainData)
+	for _, category in self.Categories do
+		if category.Type ~= 'Overlay' then
+			category:Save(guiData.Categories)
 		end
 	end
 
 	writefile('velo/profiles/'..game.GameId..'.gui.txt', httpService:JSONEncode(guiData))
-	writefile(path, httpService:JSONEncode(mainData))
+	self:SnapshotProfile(self.Profile)
 end
 
 function vape:SaveOptions(obj)
@@ -3875,6 +3949,9 @@ components = {
 						end
 					elseif value ~= '' and not value:find('/') then
 						self:CreateProfile(value, nil, global)
+						if global and vape.Loaded then
+							vape:SnapshotProfile(globalPrefix .. value)
+						end
 					end
 				else
 					local index = table.find(self.List, value)
@@ -5557,7 +5634,7 @@ components = {
 		local currentNotch
 		
 		function component:Load(data)
-			if data.Rainbow then
+			if (data.Rainbow == true) ~= (self.Rainbow == true) then
 				self:Toggle()
 			end
 		
