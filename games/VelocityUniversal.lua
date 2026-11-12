@@ -1934,6 +1934,7 @@ velo.run(function()
 		end);
 		local oldchat: any;
 		oldchat = hookfunction(func, function(data: any, ...: any): any
+			chatlog('hookedfn fired datatype='..typeof(data)..' uid='..tostring(type(data) == 'table' and data.SpeakerUserId)..' msg='..tostring(type(data) == 'table' and data.Message));
 			if type(data) == 'table' and data.SpeakerUserId then
 				pcall(function(): ()
 					local plr: Player? = playersService:GetPlayerByUserId(data.SpeakerUserId);
@@ -2070,7 +2071,7 @@ velo.run(function()
 				end);
 			end;
 			if not (getconnections and hookfunction) then
-				warn('[Velo] legacy chat: executor has no getconnections/hookfunction, commands work but tags will not show');
+				chatlog('legacy: no getconnections/hookfunction, cannot hook');
 				return;
 			end;
 			local handlers: {{string}} = {
@@ -2094,7 +2095,7 @@ velo.run(function()
 				repeat
 					attempts += 1;
 					if attempts == 20 then
-						warn('[Velo] legacy chat: could not find the chat handlers to hook, commands work but tags will not show');
+						chatlog('legacy: gave up finding chat handlers after 20 tries');
 					end;
 					local events: Instance? = replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents');
 					if events then
@@ -2102,12 +2103,21 @@ velo.run(function()
 							local remote: Instance? = not hookedEvents[handler[1]] and events:FindFirstChild(handler[1]) or nil;
 							if remote then
 								pcall(function(): ()
-									for _, connection: any in getconnections((remote :: any).OnClientEvent) do
+									local conns: {any} = getconnections((remote :: any).OnClientEvent);
+									if attempts <= 3 or attempts % 5 == 0 then
+										chatlog('hookloop '..handler[1]..' attempt '..attempts..' connections='..#conns);
+									end;
+									for ci: number, connection: any in conns do
 										local fn: any = connection.Function;
-										if fn and not hookedFunctions[fn] and isChatHandler(fn, handler[2]) then
+										local matched: boolean = fn ~= nil and isChatHandler(fn, handler[2]);
+										if attempts <= 3 then
+											chatlog('  conn '..ci..' hasfn='..tostring(fn ~= nil)..' matched='..tostring(matched));
+										end;
+										if fn and not hookedFunctions[fn] and matched then
 											hookedFunctions[fn] = true;
 											hookedEvents[handler[1]] = true;
 											whitelist:oldchat(fn);
+											chatlog('HOOKED '..handler[1]);
 											break;
 										end;
 									end;
@@ -2116,7 +2126,7 @@ velo.run(function()
 						end;
 					end;
 					if hookedEvents.OnNewMessage and hookedEvents.OnMessageDoneFiltering then
-						print('[Velo] legacy chat hooked');
+						chatlog('legacy chat fully hooked');
 						break;
 					end;
 					task.wait(1);
