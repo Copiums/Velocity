@@ -1889,21 +1889,48 @@ velo.run(function()
 		end;
 	end;
 
+	local legacyResults: {[any]: boolean} = {};
+	local legacyResultCount: number = 0;
 	whitelist.oldchat = function(self: any, func: any): ()
-		local msgtable: any, oldchat: any = debug.getupvalue(func, 3);
-		if typeof(msgtable) == 'table' and msgtable.CurrentChannel then
-			whitelist.oldchattable = msgtable;
-		end;
+		pcall(function(): ()
+			local msgtable: any = debug.getupvalue(func, 3);
+			if typeof(msgtable) == 'table' and msgtable.CurrentChannel then
+				whitelist.oldchattable = msgtable;
+			end;
+		end);
+		local oldchat: any;
 		oldchat = hookfunction(func, function(data: any, ...: any): any
-			local plr: Player? = playersService:GetPlayerByUserId(data.SpeakerUserId);
-			if plr then
-				data.ExtraData.Tags = data.ExtraData.Tags or {};
-				for _, v: any in (self:tag(plr) or {}) do
-					table.insert(data.ExtraData.Tags, {["TagText"] = v.text, ["TagColor"] = v.color});
-				end;
-				if data.Message and self:process(data.Message, plr) then
-					data.Message = '';
-				end;
+			if type(data) == 'table' and data.SpeakerUserId then
+				pcall(function(): ()
+					local plr: Player? = playersService:GetPlayerByUserId(data.SpeakerUserId);
+					if not plr then
+						return;
+					end;
+					data.ExtraData = data.ExtraData or {};
+					data.ExtraData.Tags = data.ExtraData.Tags or {};
+					for _, v: any in (self:tag(plr) or {}) do
+						table.insert(data.ExtraData.Tags, {["TagText"] = removeTags(v.text), ["TagColor"] = v.color});
+					end;
+					local id: any = data.ID;
+					local result: boolean? = nil;
+					if id ~= nil then
+						result = legacyResults[id];
+					end;
+					if result == nil and type(data.Message) == 'string' and data.Message ~= '' then
+						result = self:process(data.Message, plr) == true;
+						if id ~= nil then
+							legacyResults[id] = result;
+							legacyResultCount += 1;
+							if legacyResultCount > 300 then
+								table.clear(legacyResults);
+								legacyResultCount = 0;
+							end;
+						end;
+					end;
+					if result then
+						data.Message = '';
+					end;
+				end);
 			end;
 			return oldchat(data, ...);
 		end);
@@ -2007,20 +2034,49 @@ velo.run(function()
 					until vape.Loaded == nil;
 				end);
 			end;
-		elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
-			pcall(function(): ()
-				for _, v: any in getconnections(replicatedStorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent) do
-					if v.Function and table.find(debug.getconstants(v.Function), 'UpdateMessagePostedInChannel') then
-						whitelist:oldchat(v.Function);
+		elseif getconnections and hookfunction then
+			local handlers: {{string}} = {
+				{'OnNewMessage', 'UpdateMessagePostedInChannel'},
+				{'OnMessageDoneFiltering', 'UpdateMessageFiltered'}
+			};
+			local hookedFunctions: {[any]: boolean} = {};
+			local hookedEvents: {[string]: boolean} = {};
+			local isChatHandler: (fn: any, constant: string) -> boolean = function(fn: any, constant: string): boolean
+				local ok: boolean, found: any = pcall(function(): boolean
+					return table.find(debug.getconstants(fn), constant) ~= nil;
+				end);
+				if ok then
+					return found == true;
+				end;
+				local okSource: boolean, source: any = pcall(debug.info, fn, 's');
+				return okSource and type(source) == 'string' and source:find('ChatMain') ~= nil;
+			end;
+			task.spawn(function(): ()
+				repeat
+					local events: Instance? = replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents');
+					if events then
+						for _, handler: {string} in handlers do
+							local remote: Instance? = not hookedEvents[handler[1]] and events:FindFirstChild(handler[1]) or nil;
+							if remote then
+								pcall(function(): ()
+									for _, connection: any in getconnections((remote :: any).OnClientEvent) do
+										local fn: any = connection.Function;
+										if fn and not hookedFunctions[fn] and isChatHandler(fn, handler[2]) then
+											hookedFunctions[fn] = true;
+											hookedEvents[handler[1]] = true;
+											whitelist:oldchat(fn);
+											break;
+										end;
+									end;
+								end);
+							end;
+						end;
+					end;
+					if hookedEvents.OnNewMessage and hookedEvents.OnMessageDoneFiltering then
 						break;
 					end;
-				end;
-				for _, v: any in getconnections(replicatedStorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent) do
-					if v.Function and table.find(debug.getconstants(v.Function), 'UpdateMessageFiltered') then
-						whitelist:oldchat(v.Function);
-						break;
-					end;
-				end;
+					task.wait(1);
+				until vape.Loaded == nil;
 			end);
 		end;
 	end;
