@@ -7692,8 +7692,8 @@ velo.run(function()
 	Color = Tracers:CreateColorSlider({
 		["Name"] = 'Player Color',
 		["Function"] = function(hue, sat, val)
-			if Tracers["Enabled"] and ColorFuncs then
-				ColorFuncs(hue, sat, val)
+			if Tracers["Enabled"] and ColorFunc then
+				ColorFunc(hue, sat, val)
 			end
 		end
 	})
