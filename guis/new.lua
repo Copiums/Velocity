@@ -17,7 +17,7 @@ local vape = {
 	SettingToggleNotifications = {},
 	ThreadFix = setthreadidentity and true or false,
 	ToggleNotifications = {},
-	Version = '4.24',
+	Version = '4.22',
 	Windows = {}
 }
 
@@ -183,17 +183,12 @@ do
 		['velo/assets/new/world.png'] = 'rbxassetid://118917453153459'
 	}
 
-	-- Velocity's own icons. These download from Copiums/Velocity; every other icon
-	-- downloads from 7GrandDadPGN/VapeCompiled at its latest commit.
-	-- ['icon the UI asks for'] = 'file in Copiums/Velocity/assets/new'
 	local veloAssets = {
 		['velo/assets/new/noti_warning.png'] = 'warning.png',
 		['velo/assets/new/radaricon.png'] = 'radaricon.png',
 		['velo/assets/new/warn.png'] = 'warn.png'
 	}
 
-	-- Latest VapeCompiled commit, read off its GitHub page the same way loader.lua gets
-	-- commit.txt. Only fetched when an icon actually needs downloading, once per session.
 	local vapeAssetCommit
 	local function getVapeAssetCommit()
 		if not vapeAssetCommit then
@@ -326,23 +321,15 @@ do
 	fontsize.Font = uipallet.Font
 end
 
--- vape lines text up by putting hair spaces (U+200A) in front of it, counting each one as
--- about 1px. A hair space's real width depends on the font (about 1.3px in Gotham at size 14),
--- so measure it once and turn pixel offsets into the right number of hair spaces.
-local hairWidth = 1
-do
-	local success, width = pcall(function()
-		local hairs = string.rep('\u{200A}', 100)
-		return (getfontbounds('|'..hairs..'|', 14, uipallet.Font).X - getfontbounds('||', 14, uipallet.Font).X) / 100
-	end)
-
-	if success and width > 0 and width < 10 then
-		hairWidth = width
-	end
+-- vape lines text up with hair spaces (U+200A) and tuned the counts for Arial. Drawing just those
+-- spaces in Arial (rich text) keeps vape's original spacing while the text itself uses uipallet.Font.
+local hairFont = Font.fromEnum(Enum.Font.Arial).Family
+local function indent(count)
+	return '<font family="'..hairFont..'">'..string.rep('\u{200A}', count)..'</font>'
 end
 
-local function indent(px)
-	return string.rep('\u{200A}', math.round(px / hairWidth))
+local function richEscape(text)
+	return (tostring(text):gsub('&', '&amp;'):gsub('<', '&lt;'):gsub('>', '&gt;'))
 end
 
 vape.Libraries = {
@@ -698,7 +685,7 @@ function vape:CreateNotification(title, text, duration, type)
 		local progress = Instance.new('Frame')
 		progress.BackgroundColor3 =
 			type == 'alert' and Color3.fromRGB(250, 50, 56)
-			or type == 'warning' and Color3.fromRGB(108, 110, 237)
+			or type == 'warning' and Color3.fromRGB(108, 110, 237) -- same color as Velocity's warning.png icon
 			or Color3.new(1, 1, 1)
 		progress.BorderSizePixel = 0
 		progress.Position = UDim2.new(0, 3, 1, -4)
@@ -2674,7 +2661,8 @@ components = {
 			holder.BorderSizePixel = 0
 			holder.FontFace = uipallet.Font
 			holder.Size = UDim2.new(1, 0, 0, 40)
-			holder.Text = '          '..props.Name
+			holder.RichText = true
+			holder.Text = indent(10)..richEscape(props.Name)
 			holder.TextColor3 = color.Dark(uipallet.Text, 0.16)
 			holder.TextSize = 14
 			holder.TextXAlignment = Enum.TextXAlignment.Left
@@ -3139,7 +3127,7 @@ components = {
 		
 			for _, module in vape.Modules do
 				module.Object.Visible = module.Visible
-				module.Object.Text = string.rep(' ', 12)..module.Name
+				module.Object.Text = indent(12)..richEscape(module.Name)
 				module.Edit.Visible = false
 			end
 		end)
@@ -3164,7 +3152,7 @@ components = {
 		
 			for _, module in vape.Modules do
 				module.Object.Visible = true
-				module.Object.Text = string.rep(' ', 50)..module.Name
+				module.Object.Text = indent(50)..richEscape(module.Name)
 				module.Edit.Visible = true
 			end
 		end)
@@ -4297,7 +4285,8 @@ components = {
 			local label = Instance.new('TextLabel')
 			label.Size = UDim2.fromOffset(218, 27)
 			label.BackgroundTransparency = 1
-			label.Text = '          '..props.Text:upper()
+			label.RichText = true
+			label.Text = indent(10)..richEscape(props.Text:upper())
 			label.TextXAlignment = Enum.TextXAlignment.Left
 			label.TextColor3 = color.Dark(uipallet.Text, 0.43)
 			label.TextSize = 9
@@ -4342,7 +4331,8 @@ components = {
 		title.BackgroundTransparency = 1
 		title.FontFace = uipallet.Font
 		title.Size = UDim2.new(1, 0, 0, 29)
-		title.Text = '         '..props.Name..' - '..component.Value
+		title.RichText = true
+		title.Text = indent(9)..richEscape(props.Name..' - '..component.Value)
 		title.TextColor3 = color.Dark(uipallet.Text, 0.16)
 		title.TextSize = 13
 		title.TextTruncate = Enum.TextTruncate.AtEnd
@@ -4381,7 +4371,7 @@ components = {
 		
 		function component:SetValue(value, isClick)
 			self.Value = table.find(props.List, value) and value or props.List[1] or 'None'
-			title.Text = '         '..props.Name..' - '..self.Value
+			title.Text = indent(9)..richEscape(props.Name..' - '..self.Value)
 		
 			if dropdownchildren then
 				arrow.Rotation = 90
@@ -4413,7 +4403,8 @@ components = {
 					entry.FontFace = uipallet.Font
 					entry.Position = UDim2.fromOffset(0, index * 26)
 					entry.Size = UDim2.new(1, 0, 0, 26)
-					entry.Text = '         '..v
+					entry.RichText = true
+					entry.Text = indent(9)..richEscape(v)
 					entry.TextColor3 = color.Dark(uipallet.Text, 0.16)
 					entry.TextSize = 13
 					entry.TextTruncate = Enum.TextTruncate.AtEnd
@@ -4691,6 +4682,11 @@ components = {
 			end
 		
 			window.Size = UDim2.fromOffset(220, 42 + windowlist.AbsoluteContentSize.Y / scale.Scale)
+			for _, button in component.Buttons do
+				if button.Icon then
+					button.Object.Text = indent(39 * scale.Scale)..richEscape(button.Name)
+				end
+			end
 		end)
 		
 		vape.Categories.Main = component
@@ -4711,7 +4707,8 @@ components = {
 		button.FontFace = uipallet.Font
 		button.Name = props.Name
 		button.Size = UDim2.fromOffset(220, 40)
-		button.Text = indent(props.Icon and 39 or props.Window and 17 or 10)..props.Name
+		button.RichText = true
+		button.Text = indent(props.Icon and 39 or props.Window and 17 or 10)..richEscape(props.Name)
 		button.TextColor3 = color.Dark(uipallet.Text, 0.16)
 		button.TextSize = 14
 		button.TextXAlignment = Enum.TextXAlignment.Left
@@ -5296,7 +5293,8 @@ components = {
 		toggle.BorderSizePixel = 0
 		toggle.FontFace = uipallet.Font
 		toggle.Size = UDim2.new(1, 0, 0, 40)
-		toggle.Text = indent(33)..props.Name
+		toggle.RichText = true
+		toggle.Text = indent(33 * scale.Scale)..richEscape(props.Name)
 		toggle.TextColor3 = color.Dark(uipallet.Text, 0.16)
 		toggle.TextSize = 14
 		toggle.TextXAlignment = Enum.TextXAlignment.Left
@@ -5347,6 +5345,10 @@ components = {
 		
 			props.Function(self.Enabled)
 		end
+		
+		scale:GetPropertyChangedSignal('Scale'):Connect(function()
+			toggle.Text = indent(33 * scale.Scale)..richEscape(props.Name)
+		end)
 		
 		toggle.MouseEnter:Connect(function()
 			isHover = true
@@ -5861,7 +5863,8 @@ components = {
 		button.FontFace = uipallet.Font
 		button.Name = props.Name
 		button.Size = UDim2.fromOffset(220, 40)
-		button.Text = string.rep(' ', 12)..props.Name
+		button.RichText = true
+		button.Text = indent(12)..richEscape(props.Name)
 		button.TextColor3 = color.Dark(uipallet.Text, 0.16)
 		button.TextSize = 14
 		button.TextXAlignment = Enum.TextXAlignment.Left
@@ -7928,7 +7931,8 @@ components = {
 		toggle.BorderSizePixel = 0
 		toggle.FontFace = uipallet.Font
 		toggle.Size = UDim2.new(1, 0, 0, 30)
-		toggle.Text = '          '..props.Name
+		toggle.RichText = true
+		toggle.Text = indent(10)..richEscape(props.Name)
 		toggle.TextColor3 = color.Dark(uipallet.Text, 0.16)
 		toggle.TextSize = 14
 		toggle.TextXAlignment = Enum.TextXAlignment.Left
