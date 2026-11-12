@@ -1177,14 +1177,17 @@ function vape:LoadGUI()
 		Size = UDim2.fromOffset(15, 14)
 	})
 	vape.Categories.Main:CreateDivider({
-		Text = 'misc'
-	})
+		["Text"] = 'velocity'
+	});
 	vape:CreateCategory({
 		Name = 'Velocity',
 		Icon = getvapeasset('velo/assets/new/radaricon.png'),
 		Size = UDim2.fromOffset(14, 14)
 	})
-	
+	vape.Categories.Main:CreateDivider({
+		["Text"] = 'misc'
+	});
+
 	--[[
 		Friends
 	]]
@@ -2442,8 +2445,6 @@ function vape:LoadGUI()
 			return {[key] = value, ["Object"] = {["Visible"] = true}};
 		end;
 		local HudStyle: table = placeholder('Value', 'Velo');
-		local HudNearest: table = placeholder('Enabled', true);
-		local HudRange: table = placeholder('Value', 18);
 		local HudFont: table = placeholder('Value', Font.fromEnum(Enum.Font.GothamBlack));
 		local HudTextColor: table = hsv(Color3.new(1, 1, 1));
 		local HudBackgroundStart: table = hsv(Color3.fromRGB(255, 0, 0));
@@ -2475,8 +2476,6 @@ function vape:LoadGUI()
 		local hudHealthValue: number? = nil;
 		local hudPercent: number = 1;
 		local hudFillWidth: number = 187;
-		local hudNearest: table? = nil;
-		local hudNextScan: number = 0;
 		local hudLastTick: number = os.clock();
 
 		local getColor: (option: table) -> Color3 = function(option: table): Color3
@@ -2553,7 +2552,7 @@ function vape:LoadGUI()
 		local hudGlowGradient: UIGradient = makeHudGradient(hudGlow);
 
 		local hudAvatar: ImageLabel = Instance.new('ImageLabel');
-		hudAvatar.Image = 'rbxasset://textures/ui/GuiImagePlaceholder.png';
+		hudAvatar.Image = 'rbxthumb://type=AvatarHeadShot&w=420&h=420&id=1';
 		hudAvatar.BackgroundTransparency = 1;
 		hudAvatar.Position = UDim2.new(0.0519480519, 0, 0.139784947, 0);
 		hudAvatar.Size = UDim2.fromOffset(65, 65);
@@ -2564,6 +2563,14 @@ function vape:LoadGUI()
 		hudAvatarStroke.Color = Color3.new(1, 1, 1);
 		hudAvatarStroke.Parent = hudAvatar;
 		local hudAvatarGradient: UIGradient = makeHudGradient(hudAvatarStroke);
+		local hudHurt: Frame = Instance.new('Frame');
+		hudHurt.BackgroundColor3 = Color3.new(1, 0, 0);
+		hudHurt.BackgroundTransparency = 1;
+		hudHurt.BorderSizePixel = 0;
+		hudHurt.Size = UDim2.fromScale(1, 1);
+		hudHurt.ZIndex = 5;
+		hudHurt.Parent = hudAvatar;
+		Instance.new('UICorner').Parent = hudHurt;
 
 		local hudFill: Frame = Instance.new('Frame');
 		hudFill.BorderSizePixel = 0;
@@ -2579,7 +2586,7 @@ function vape:LoadGUI()
 		local hudName: TextLabel = makeHudLabel(UDim2.fromOffset(195, 24));
 		hudName.TextScaled = true;
 		hudName.TextSize = 14;
-		hudName.Text = 'UserName';
+		hudName.Text = 'Target name';
 		hudName.Parent = customHolder;
 		local hudStatus: TextLabel = makeHudLabel(UDim2.fromOffset(103, 26));
 		hudStatus.Text = '- Winning';
@@ -2626,37 +2633,25 @@ function vape:LoadGUI()
 			hudHealthValue = nil;
 		end;
 
-		local findNearest: () -> table? = function(): table?
-			local entitylib: table? = vape.Libraries.entity;
-			if not entitylib or not entitylib.isAlive then
-				return nil;
+		local showCustom: (entity: table) -> () = function(entity: table): ()
+			local player: Player? = entity.Player;
+			if player then
+				hudName.Text = DisplayName["Enabled"] and player.DisplayName or player.Name;
+			elseif entity.Character then
+				hudName.Text = entity.Character.Name;
 			end;
-			local origin: Vector3 = entitylib.character.RootPart.Position;
-			local best: table? = nil;
-			local bestDistance: number = HudRange["Value"];
-			for _, ent: table in entitylib.List do
-				if ent.Player and ent.RootPart then
-					local distance: number = (ent.RootPart.Position - origin).Magnitude;
-					if distance < bestDistance then
-						best = ent;
-						bestDistance = distance;
-					end;
-				end;
-			end;
-			return best;
-		end;
-
-		local showCustom: (key: any, name: string, userId: number, health: number, maxHealth: number) -> () = function(key: any, name: string, userId: number, health: number, maxHealth: number): ()
-			customHolder.Visible = true;
-			if key ~= hudTarget then
-				hudTarget = key;
-				hudHealthValue = nil;
-				hudName.Text = name;
-				hudAvatar.Image = 'rbxthumb://type=AvatarHeadShot&w=420&h=420&id=' .. userId;
-			end;
-			if health ~= hudHealthValue then
+			hudAvatar.Image = 'rbxthumb://type=AvatarHeadShot&w=420&h=420&id=' .. (player and player.UserId or 1);
+			local health: number = entity.Health or 0;
+			local maxHealth: number = entity.MaxHealth or 100;
+			if entity ~= hudTarget or health ~= hudHealthValue then
 				local percent: number = math.clamp(maxHealth > 0 and health / maxHealth or 0, 0, 1);
 				local duration: number = math.max(math.abs(percent - hudPercent) * 1.5, HudTween["Value"]);
+				if entity == hudTarget and hudHealthValue and health < hudHealthValue then
+					tween:Cancel(hudHurt);
+					hudHurt.BackgroundTransparency = 0.3;
+					tween:Tween(hudHurt, TweenInfo.new(0.5), {["BackgroundTransparency"] = 1});
+				end;
+				hudTarget = entity;
 				hudHealthValue = health;
 				hudPercent = percent;
 				tween:Tween(hudFill, TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {["Size"] = UDim2.fromOffset(hudFillWidth * percent, 5.5)});
@@ -2681,27 +2676,12 @@ function vape:LoadGUI()
 			local now: number = os.clock();
 			local delta: number = now - hudLastTick;
 			hudLastTick = now;
-			if not entity and HudNearest["Enabled"] then
-				if now >= hudNextScan then
-					hudNearest = findNearest();
-					hudNextScan = now + 0.1;
-				end;
-				entity = hudNearest;
+			customHolder.Visible = entity ~= nil or clickgui.Visible;
+			if not customHolder.Visible then
+				return;
 			end;
 			if entity then
-				local player: Player? = entity.Player;
-				local name: string = player and (DisplayName["Enabled"] and player.DisplayName or player.Name) or entity.Character and entity.Character.Name or 'Target';
-				showCustom(entity, name, player and player.UserId or 1, entity.Health or 0, entity.MaxHealth or 100);
-			elseif clickgui.Visible then
-				local localPlayer: Player = playersService.LocalPlayer;
-				local entitylib: table? = vape.Libraries.entity;
-				local humanoid: Humanoid? = entitylib and entitylib.isAlive and entitylib.character.Humanoid or nil;
-				local health: number = humanoid and humanoid.Health or 100;
-				showCustom(localPlayer, DisplayName["Enabled"] and localPlayer.DisplayName or localPlayer.Name, localPlayer.UserId, health, humanoid and humanoid.MaxHealth or 100);
-			else
-				customHolder.Visible = false;
-				hudTarget = nil;
-				return;
+				showCustom(entity);
 			end;
 			hudStrokeGradient.Rotation = (hudStrokeGradient.Rotation + delta * HudSpinSpeed["Value"]) % 360;
 		end;
@@ -2824,7 +2804,7 @@ function vape:LoadGUI()
 			["Name"] = 'Style',
 			["List"] = {'Velo', 'Vape'},
 			["Default"] = 'Velo',
-			["Tooltip"] = "Velo: Velocity's target HUD (its settings show below). Vape: the original vape target info.",
+			["Tooltip"] = "Velo: Velocity's target HUD look (its settings show below). Vape: the original vape look.\nBoth only show while a module is targeting someone or while the GUI is open.",
 			["Function"] = function(value: string): ()
 				for _, option: table in hudOptions do
 					option.Object.Visible = value == 'Velo';
@@ -2835,8 +2815,6 @@ function vape:LoadGUI()
 				end;
 			end
 		});
-		HudNearest = hudToggle('Nearest Fallback', true, 'Shows the closest player when nothing is being targeted.');
-		HudRange = hudSlider('Range', 1, 30, 18, nil, 'studs');
 		HudFont = hudOption(TargetInfoOverlay:CreateFont({
 			["Name"] = 'HUD Font',
 			["Default"] = 'GothamBlack',
@@ -2870,26 +2848,21 @@ function vape:LoadGUI()
 		HudTween = hudSlider('Health Tween', 0, 1, 0.2, 100, 's');
 		applyHudStyle();
 
-		function targetinfo:Update()
-			local entitylib = vape.Libraries
-			if not entitylib then return end
-		
-			local cloned = table.clone(self.Targets)
-			for index, expire in cloned do
-				if expire < os.clock() then
-					self.Targets[index] = nil
-				end
-			end
-			table.clear(cloned)
-		
-			local entity, highest = nil, os.clock()
-			for index, level in self.Targets do
-				if level > highest then
-					entity = index
-					highest = level
-				end
-			end
-		
+		function targetinfo:Update(): ()
+			local now: number = os.clock();
+			local stamp: number = tick();
+			local entity: any = nil;
+			local highest: number = 0;
+			for index: any, expire: any in table.clone(self.Targets) do
+				local remaining: number = type(expire) == 'number' and (expire > 1e8 and expire - stamp or expire - now) or 0;
+				if remaining <= 0 then
+					self.Targets[index] = nil;
+				elseif remaining > highest then
+					entity = index;
+					highest = remaining;
+				end;
+			end;
+
 			if HudStyle["Value"] == 'Velo' then
 				Holder.Visible = false;
 				updateCustom(entity);
