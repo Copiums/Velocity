@@ -1982,10 +1982,6 @@ function vape:LoadGUI()
 	end)
 	
 	run(function()
-		--[[
-			Target Info
-		]]
-		
 		local targetinfo = {
 			Targets = {},
 			Object = Holder,
@@ -2095,6 +2091,229 @@ function vape:LoadGUI()
 		Stroke.Enabled = false
 		Stroke.Color = Color3.fromHSV(0.44, 1, 1)
 		Stroke.Parent = Holder
+
+		local hsv: (value: Color3) -> table = function(value: Color3): table
+			local h: number, s: number, v: number = value:ToHSV();
+			return {["Hue"] = h, ["Sat"] = s, ["Value"] = v, ["Object"] = {["Visible"] = true}};
+		end;
+		local placeholder: (key: string, value: any) -> table = function(key: string, value: any): table
+			return {[key] = value, ["Object"] = {["Visible"] = true}};
+		end;
+		local HudStyle: table = placeholder('Value', 'Velo');
+		local HudNearest: table = placeholder('Enabled', true);
+		local HudRange: table = placeholder('Value', 18);
+		local HudFont: table = placeholder('Value', Font.fromEnum(Enum.Font.GothamBlack));
+		local HudTextColor: table = hsv(Color3.new(1, 1, 1));
+		local HudBackgroundStart: table = hsv(Color3.fromRGB(255, 0, 0));
+		local HudBackgroundEnd: table = hsv(Color3.fromRGB(40, 0, 74));
+		local HudBackgroundRotation: table = placeholder('Value', 90);
+		local HudOutlineStart: table = hsv(Color3.fromRGB(255, 0, 251));
+		local HudOutlineEnd: table = hsv(Color3.fromRGB(0, 255, 238));
+		local HudOutlineThickness: table = placeholder('Value', 2);
+		local HudSpinSpeed: table = placeholder('Value', 120);
+		local HudCornerRadius: table = placeholder('Value', 20);
+		local HudShadow: table = placeholder('Enabled', true);
+		local HudShadowTransparency: table = placeholder('Value', 0.5);
+		local HudAvatar: table = placeholder('Enabled', true);
+		local HudHealthText: table = placeholder('Enabled', true);
+		local HudStatus: table = placeholder('Enabled', true);
+		local HudHealthColor: table = hsv(Color3.new(1, 1, 1));
+		local HudMidColor: table = hsv(Color3.fromRGB(255, 165, 0));
+		local HudLowColor: table = hsv(Color3.fromRGB(255, 0, 0));
+		local HudTween: table = placeholder('Value', 0.25);
+		local hudTarget: any = nil;
+		local hudHealthValue: number? = nil;
+		local hudNearest: table? = nil;
+		local hudNextScan: number = 0;
+		local hudLastTick: number = os.clock();
+
+		local getColor: (option: table) -> Color3 = function(option: table): Color3
+			return Color3.fromHSV(option["Hue"], option["Sat"], option["Value"]);
+		end;
+		local makeHudGradient: (parent: Instance) -> UIGradient = function(parent: Instance): UIGradient
+			local gradient: UIGradient = Instance.new('UIGradient');
+			gradient.Parent = parent;
+			return gradient;
+		end;
+		local makeHudLabel: (alignment: Enum.TextXAlignment) -> TextLabel = function(alignment: Enum.TextXAlignment): TextLabel
+			local label: TextLabel = Instance.new('TextLabel');
+			label.BackgroundTransparency = 1;
+			label.TextSize = 10;
+			label.TextXAlignment = alignment;
+			return label;
+		end;
+
+		local customHolder: Frame = Instance.new('Frame');
+		customHolder.Size = UDim2.fromOffset(308, 93);
+		customHolder.BackgroundTransparency = 1;
+		customHolder.Visible = false;
+		customHolder.Parent = TargetInfoOverlay.Children;
+		local hudShadow: ImageLabel = Instance.new('ImageLabel');
+		hudShadow.Image = 'rbxassetid://8992230677';
+		hudShadow.ScaleType = Enum.ScaleType.Slice;
+		hudShadow.SliceCenter = Rect.new(49, 49, 450, 450);
+		hudShadow.AnchorPoint = Vector2.new(0.5, 0.5);
+		hudShadow.Position = UDim2.fromScale(0.5, 0.5);
+		hudShadow.Size = UDim2.new(1, 60, 1, 60);
+		hudShadow.BackgroundTransparency = 1;
+		hudShadow.ZIndex = 0;
+		hudShadow.Parent = customHolder;
+		local hudShadowGradient: UIGradient = makeHudGradient(hudShadow);
+		local hudBackground: Frame = Instance.new('Frame');
+		hudBackground.Size = UDim2.fromScale(1, 1);
+		hudBackground.BackgroundColor3 = Color3.new(1, 1, 1);
+		hudBackground.BorderSizePixel = 0;
+		hudBackground.Parent = customHolder;
+		local hudBackgroundGradient: UIGradient = makeHudGradient(hudBackground);
+		local hudCorner: UICorner = Instance.new('UICorner');
+		hudCorner.Parent = hudBackground;
+		local hudStroke: UIStroke = Instance.new('UIStroke');
+		hudStroke.Color = Color3.new(1, 1, 1);
+		hudStroke.Parent = hudBackground;
+		local hudAvatar: ImageLabel = Instance.new('ImageLabel');
+		hudAvatar.BackgroundTransparency = 1;
+		hudAvatar.Position = UDim2.fromOffset(16, 14);
+		hudAvatar.Size = UDim2.fromOffset(65, 65);
+		hudAvatar.Parent = customHolder;
+		Instance.new('UICorner').Parent = hudAvatar;
+		local hudAvatarStroke: UIStroke = Instance.new('UIStroke');
+		hudAvatarStroke.Color = Color3.new(1, 1, 1);
+		hudAvatarStroke.Parent = hudAvatar;
+		local hudSpinners: {UIGradient} = {makeHudGradient(hudStroke), makeHudGradient(hudAvatarStroke)};
+		local hudName: TextLabel = makeHudLabel(Enum.TextXAlignment.Left);
+		hudName.TextScaled = true;
+		hudName.Parent = customHolder;
+		local hudBar: Frame = Instance.new('Frame');
+		hudBar.BackgroundColor3 = Color3.new(0, 0, 0);
+		hudBar.BackgroundTransparency = 0.5;
+		hudBar.BorderSizePixel = 0;
+		hudBar.Parent = customHolder;
+		addCorner(hudBar, UDim.new(1, 0));
+		local hudFill: Frame = Instance.new('Frame');
+		hudFill.Size = UDim2.fromScale(1, 1);
+		hudFill.BorderSizePixel = 0;
+		hudFill.Parent = hudBar;
+		addCorner(hudFill, UDim.new(1, 0));
+		local hudHealth: TextLabel = makeHudLabel(Enum.TextXAlignment.Left);
+		hudHealth.Size = UDim2.fromOffset(90, 14);
+		hudHealth.Parent = customHolder;
+		local hudStatus: TextLabel = makeHudLabel(Enum.TextXAlignment.Right);
+		hudStatus.Size = UDim2.fromOffset(100, 14);
+		hudStatus.Parent = customHolder;
+
+		local applyHudStyle: () -> () = function(): ()
+			local background: ColorSequence = ColorSequence.new(getColor(HudBackgroundStart), getColor(HudBackgroundEnd));
+			local outline: ColorSequence = ColorSequence.new(getColor(HudOutlineStart), getColor(HudOutlineEnd));
+			hudBackgroundGradient.Color = background;
+			hudBackgroundGradient.Rotation = HudBackgroundRotation["Value"];
+			hudShadowGradient.Color = background;
+			hudShadowGradient.Rotation = HudBackgroundRotation["Value"];
+			hudShadow.Visible = HudShadow["Enabled"];
+			hudShadow.ImageTransparency = HudShadowTransparency["Value"];
+			hudCorner.CornerRadius = UDim.new(0, HudCornerRadius["Value"]);
+			for _, gradient: UIGradient in hudSpinners do
+				gradient.Color = outline;
+			end;
+			hudStroke.Thickness = HudOutlineThickness["Value"];
+			hudAvatarStroke.Thickness = HudOutlineThickness["Value"];
+			hudAvatar.Visible = HudAvatar["Enabled"];
+			local x: number = HudAvatar["Enabled"] and 95 or 16;
+			local width: number = HudAvatar["Enabled"] and 195 or 274;
+			hudName.Position = UDim2.fromOffset(x, 14);
+			hudName.Size = UDim2.fromOffset(width, 24);
+			hudBar.Position = UDim2.fromOffset(x, 46);
+			hudBar.Size = UDim2.fromOffset(width, 8);
+			hudHealth.Position = UDim2.fromOffset(x, 58);
+			hudHealth.Visible = HudHealthText["Enabled"];
+			hudStatus.Position = UDim2.fromOffset(x + width - 100, 58);
+			hudStatus.Visible = HudStatus["Enabled"];
+			for _, label: TextLabel in {hudName, hudHealth, hudStatus} do
+				label.FontFace = HudFont["Value"];
+			end;
+			hudName.TextColor3 = getColor(HudTextColor);
+			hudHealth.TextColor3 = getColor(HudTextColor);
+			hudHealthValue = nil;
+		end;
+
+		local findNearest: () -> table? = function(): table?
+			local entitylib: table? = vape.Libraries.entity;
+			if not entitylib or not entitylib.isAlive then
+				return nil;
+			end;
+			local origin: Vector3 = entitylib.character.RootPart.Position;
+			local best: table? = nil;
+			local bestDistance: number = HudRange["Value"];
+			for _, ent: table in entitylib.List do
+				if ent.Player and ent.RootPart then
+					local distance: number = (ent.RootPart.Position - origin).Magnitude;
+					if distance < bestDistance then
+						best = ent;
+						bestDistance = distance;
+					end;
+				end;
+			end;
+			return best;
+		end;
+
+		local showCustom: (key: any, name: string, userId: number, health: number, maxHealth: number) -> () = function(key: any, name: string, userId: number, health: number, maxHealth: number): ()
+			customHolder.Visible = true;
+			if key ~= hudTarget then
+				hudTarget = key;
+				hudHealthValue = nil;
+				hudName.Text = name;
+				hudAvatar.Image = 'rbxthumb://type=AvatarHeadShot&w=150&h=150&id=' .. userId;
+			end;
+			if health ~= hudHealthValue then
+				hudHealthValue = health;
+				local percent: number = math.clamp(maxHealth > 0 and health / maxHealth or 0, 0, 1);
+				tween:Tween(hudFill, TweenInfo.new(HudTween["Value"], Enum.EasingStyle.Linear), {["Size"] = UDim2.fromScale(percent, 1)});
+				hudFill.BackgroundColor3 = getColor(percent < 0.2 and HudLowColor or percent < 0.5 and HudMidColor or HudHealthColor);
+				hudHealth.Text = math.floor(percent * 100 + 0.5) .. '%';
+			end;
+			local entitylib: table? = vape.Libraries.entity;
+			local mine: number = entitylib and entitylib.isAlive and entitylib.character.Humanoid.Health or 0;
+			if mine > health then
+				hudStatus.Text = 'Winning';
+				hudStatus.TextColor3 = Color3.fromRGB(0, 255, 0);
+			elseif mine == health then
+				hudStatus.Text = 'Tie';
+				hudStatus.TextColor3 = Color3.new(1, 1, 1);
+			else
+				hudStatus.Text = 'Losing';
+				hudStatus.TextColor3 = Color3.fromRGB(255, 0, 0);
+			end;
+		end;
+
+		local updateCustom: (entity: table?) -> () = function(entity: table?): ()
+			local now: number = os.clock();
+			local delta: number = now - hudLastTick;
+			hudLastTick = now;
+			if not entity and HudNearest["Enabled"] then
+				if now >= hudNextScan then
+					hudNearest = findNearest();
+					hudNextScan = now + 0.1;
+				end;
+				entity = hudNearest;
+			end;
+			if entity then
+				local player: Player? = entity.Player;
+				local name: string = player and (DisplayName["Enabled"] and player.DisplayName or player.Name) or entity.Character and entity.Character.Name or 'Target';
+				showCustom(entity, name, player and player.UserId or 1, entity.Health or 0, entity.MaxHealth or 100);
+			elseif clickgui.Visible then
+				local localPlayer: Player = playersService.LocalPlayer;
+				local entitylib: table? = vape.Libraries.entity;
+				local humanoid: Humanoid? = entitylib and entitylib.isAlive and entitylib.character.Humanoid or nil;
+				local health: number = humanoid and humanoid.Health or 100;
+				showCustom(localPlayer, DisplayName["Enabled"] and localPlayer.DisplayName or localPlayer.Name, localPlayer.UserId, health, humanoid and humanoid.MaxHealth or 100);
+			else
+				customHolder.Visible = false;
+				hudTarget = nil;
+				return;
+			end;
+			for _, gradient: UIGradient in hudSpinners do
+				gradient.Rotation = (gradient.Rotation + delta * HudSpinSpeed["Value"]) % 360;
+			end;
+		end;
 		
 		TargetInfoOverlay:CreateFont({
 			Name = 'Font',
@@ -2174,6 +2393,85 @@ function vape:LoadGUI()
 			Visible = false
 		})
 		
+		local hudOptions: {table} = {};
+		local hudOption: (option: table) -> table = function(option: table): table
+			table.insert(hudOptions, option);
+			return option;
+		end;
+		local hudColor: (name: string, default: table) -> table = function(name: string, default: table): table
+			return hudOption(TargetInfoOverlay:CreateColorSlider({
+				["Name"] = name,
+				["DefaultHue"] = default["Hue"],
+				["DefaultSat"] = default["Sat"],
+				["DefaultValue"] = default["Value"],
+				["Function"] = applyHudStyle,
+				["Darker"] = true
+			}));
+		end;
+		local hudSlider: (name: string, min: number, max: number, default: number, decimal: number?, suffix: string?) -> table = function(name: string, min: number, max: number, default: number, decimal: number?, suffix: string?): table
+			return hudOption(TargetInfoOverlay:CreateSlider({
+				["Name"] = name,
+				["Min"] = min,
+				["Max"] = max,
+				["Default"] = default,
+				["Decimal"] = decimal,
+				["Suffix"] = suffix,
+				["Function"] = applyHudStyle,
+				["Darker"] = true
+			}));
+		end;
+		local hudToggle: (name: string, default: boolean, tooltip: string?) -> table = function(name: string, default: boolean, tooltip: string?): table
+			return hudOption(TargetInfoOverlay:CreateToggle({
+				["Name"] = name,
+				["Default"] = default,
+				["Tooltip"] = tooltip,
+				["Function"] = applyHudStyle,
+				["Darker"] = true
+			}));
+		end;
+		HudStyle = TargetInfoOverlay:CreateDropdown({
+			["Name"] = 'Style',
+			["List"] = {'Velo', 'Vape'},
+			["Default"] = 'Velo',
+			["Tooltip"] = "Velo: Velocity's target HUD (its settings show below). Vape: the original vape target info.",
+			["Function"] = function(value: string): ()
+				for _, option: table in hudOptions do
+					option.Object.Visible = value == 'Velo';
+				end;
+				if value ~= 'Velo' then
+					customHolder.Visible = false;
+					hudTarget = nil;
+				end;
+			end
+		});
+		HudNearest = hudToggle('Nearest Fallback', true, 'Shows the closest player when nothing is being targeted.');
+		HudRange = hudSlider('Range', 1, 30, 18, nil, 'studs');
+		HudFont = hudOption(TargetInfoOverlay:CreateFont({
+			["Name"] = 'HUD Font',
+			["Default"] = 'GothamBlack',
+			["Function"] = applyHudStyle,
+			["Darker"] = true
+		}));
+		HudTextColor = hudColor('Text Color', HudTextColor);
+		HudBackgroundStart = hudColor('Background Start', HudBackgroundStart);
+		HudBackgroundEnd = hudColor('Background End', HudBackgroundEnd);
+		HudBackgroundRotation = hudSlider('Background Rotation', 0, 360, 90);
+		HudOutlineStart = hudColor('Outline Start', HudOutlineStart);
+		HudOutlineEnd = hudColor('Outline End', HudOutlineEnd);
+		HudOutlineThickness = hudSlider('Outline Thickness', 0, 6, 2);
+		HudSpinSpeed = hudSlider('Spin Speed', 0, 720, 120, nil, 'deg/s');
+		HudCornerRadius = hudSlider('Corner Radius', 0, 40, 20);
+		HudShadow = hudToggle('Shadow', true);
+		HudShadowTransparency = hudSlider('Shadow Transparency', 0, 1, 0.5, 10);
+		HudAvatar = hudToggle('Show Avatar', true);
+		HudHealthText = hudToggle('Show Health %', true);
+		HudStatus = hudToggle('Show Winning/Losing', true);
+		HudHealthColor = hudColor('Health Color', HudHealthColor);
+		HudMidColor = hudColor('Mid Health Color', HudMidColor);
+		HudLowColor = hudColor('Low Health Color', HudLowColor);
+		HudTween = hudSlider('Health Tween', 0, 1, 0.25, 100, 's');
+		applyHudStyle();
+
 		function targetinfo:Update()
 			local entitylib = vape.Libraries
 			if not entitylib then return end
@@ -2194,6 +2492,16 @@ function vape:LoadGUI()
 				end
 			end
 		
+			if HudStyle["Value"] == 'Velo' then
+				Holder.Visible = false;
+				updateCustom(entity);
+				if entity and not entity.Character then
+					table.clear(entity);
+				end;
+				return;
+			end;
+			customHolder.Visible = false;
+
 			Holder.Visible = entity ~= nil or clickgui.Visible
 			if entity then
 				Name.Text = entity.Player and (DisplayName.Enabled and entity.Player.DisplayName or entity.Player.Name) or entity.Character and entity.Character.Name or Name.Text
