@@ -11576,244 +11576,285 @@ velo.run(function()
 	local SnowflakesSpread: table = {["Value"] = 35}
 	local SnowflakesRate: table = {["Value"] = 28}
 	local SnowflakesHigh: table = {["Value"] = 100}
+	local Emitters: table = {}
+
+	local snowTransparency: NumberSequence = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.16939899325371, 0),
+		NumberSequenceKeypoint.new(0.23365999758244, 0.62841498851776, 0.37158501148224),
+		NumberSequenceKeypoint.new(0.56209099292755, 0.38797798752785, 0.2771390080452),
+		NumberSequenceKeypoint.new(0.90577298402786, 0.51912599802017, 0),
+		NumberSequenceKeypoint.new(1, 1, 0)
+	})
+	local snowSize: NumberSequence = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0, 0),
+		NumberSequenceKeypoint.new(0.039760299026966, 1.3114800453186, 0.32786899805069),
+		NumberSequenceKeypoint.new(0.7554469704628, 0.98360699415207, 0.44038599729538),
+		NumberSequenceKeypoint.new(1, 0, 0)
+	})
+	local function getOrigin(): Vector3
+		if entitylib.isAlive and entitylib.character.RootPart then
+			return entitylib.character.RootPart.Position
+		end
+		return workspace.CurrentCamera.CFrame.Position
+	end
+
+	local function updateEmitters()
+		for _, emitter in Emitters do
+			emitter.Rate = SnowflakesRate["Value"]
+			emitter.SpreadAngle = Vector2.new(SnowflakesSpread["Value"], SnowflakesSpread["Value"])
+		end
+	end
+
+	local function createSnowEmitter(parent: BasePart, rotSpeed: number, acceleration: Vector3)
+		local emitter: ParticleEmitter = Instance.new("ParticleEmitter")
+		emitter.Texture = "rbxassetid://8158344433"
+		emitter.RotSpeed = NumberRange.new(rotSpeed)
+		emitter.Rotation = NumberRange.new(110)
+		emitter.Acceleration = acceleration
+		emitter.Lifetime = NumberRange.new(8, 14)
+		emitter.Speed = NumberRange.new(8, 18)
+		emitter.EmissionDirection = Enum.NormalId.Bottom
+		emitter.Transparency = snowTransparency
+		emitter.Size = snowSize
+		emitter.Parent = parent
+		table.insert(Emitters, emitter)
+	end
+
+	local function startSnow()
+		local snowpart: Part = Instance.new("Part")
+		snowpart.Name = "SnowParticle"
+		snowpart.Size = Vector3.new(240, 0.5, 240)
+		snowpart.Transparency = 1
+		snowpart.Anchored = true
+		snowpart.CanCollide = false
+		snowpart.CanQuery = false
+		snowpart.CanTouch = false
+		snowpart.CastShadow = false
+		snowpart.CFrame = CFrame.new(getOrigin() + Vector3.new(0, SnowflakesHigh["Value"], 0))
+		createSnowEmitter(snowpart, 300, Vector3.zero)
+		createSnowEmitter(snowpart, 100, Vector3.new(0, 0, 1))
+		updateEmitters()
+		snowpart.Parent = workspace
+		GameWeather:Clean(snowpart)
+		GameWeather:Clean(function()
+			table.clear(Emitters)
+		end)
+
+		-- keep the snow cloud above you every frame (old loop only ran once)
+		GameWeather:Clean(runService.Heartbeat:Connect(function()
+			snowpart.CFrame = CFrame.new(getOrigin() + Vector3.new(0, SnowflakesHigh["Value"], 0))
+		end))
+	end
+
+	local function startRain()
+		local folder: Folder = Instance.new("Folder")
+		folder.Name = "RainParticles"
+		folder.Parent = workspace
+		GameWeather:Clean(folder)
+
+		-- one looping sound for the whole session instead of a new one every 0.03s
+		local sound: Sound = Instance.new("Sound")
+		sound.SoundId = "rbxassetid://236148388"
+		sound.Looped = true
+		sound.Volume = 0.05
+		sound.Parent = folder
+		sound:Play()
+
+		local rayParams: RaycastParams = RaycastParams.new()
+		rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+		local function underRoof(pos: Vector3): boolean
+			rayParams.FilterDescendantsInstances = {folder, lplr.Character, workspace.CurrentCamera}
+			return workspace:Raycast(pos, Vector3.new(0, 150, 0), rayParams) ~= nil
+		end
+
+		local function drop(origin: Vector3)
+			local part: Part = Instance.new("Part")
+			part.Size = Vector3.new(0.15, 2, 0.15)
+			part.BrickColor = BrickColor.new("Steel blue")
+			part.Material = Enum.Material.SmoothPlastic
+			part.Transparency = 0.25
+			part.Reflectance = 0.15
+			part.CanCollide = false
+			part.CanQuery = false
+			part.CastShadow = false
+			part.CFrame = CFrame.new(origin + Vector3.new(math.random(-100, 100), 150 + math.random(-50, 50), math.random(-100, 100)))
+			local smoke: Smoke = Instance.new("Smoke")
+			smoke.RiseVelocity = -25
+			smoke.Opacity = 0.25
+			smoke.Size = 25
+			smoke.Parent = part
+			part.Touched:Connect(function(hit: BasePart)
+				if hit.Parent ~= folder then
+					part:Destroy()
+				end
+			end)
+			part.Parent = folder
+			task.delay(3, part.Destroy, part)
+		end
+
+		GameWeather:Clean(task.spawn(function()
+			repeat
+				local origin: Vector3 = getOrigin()
+				local camPos: Vector3 = workspace.CurrentCamera.CFrame.Position
+				local covered: boolean = underRoof(origin)
+				sound.Volume = covered and 0.02 or 0.05
+				if not covered then
+					for _ = 1, 5 do
+						drop(origin)
+					end
+				end
+				if (camPos - origin).Magnitude > 100 and not underRoof(camPos) then
+					for _ = 1, 5 do
+						drop(camPos)
+					end
+				end
+				task.wait(0.03)
+			until not GameWeather["Enabled"]
+		end))
+	end
+
 	GameWeather = vape.Categories.Velocity:CreateModule({
-		["Name"] ='GameWeather',
-		["HoverText"] = 'Changes the weather.',
-		["Function"] = function(callback: boolean): void 
+		["Name"] = 'GameWeather',
+		["Tooltip"] = 'Changes the weather.',
+		["Function"] = function(callback: boolean): void
 			if callback then
-				task.spawn(function()
-					if game_weather_m["Value"] == 'Snow' then
-						-- vape gametheme code
-						local snowpart = Instance.new("Part")
-						snowpart.Size = Vector3.new(240,0.5,240)
-						snowpart.Name ="SnowParticle"
-						snowpart.Transparency = 1
-						snowpart.CanCollide = false
-						snowpart.Position = Vector3.new(0,120,286)
-						snowpart.Anchored = true
-						snowpart.Parent = workspace
-						local snow: ParticleEmitter = Instance.new("ParticleEmitter")
-						snow.RotSpeed = NumberRange.new(300)
-						snow.VelocitySpread = SnowflakesSpread["Value"]
-						snow.Rate = SnowflakesRate["Value"]
-						snow.Texture = "rbxassetid://8158344433"
-						snow.Rotation = NumberRange.new(110)
-						snow.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,0.16939899325371,0),NumberSequenceKeypoint.new(0.23365999758244,0.62841498851776,0.37158501148224),NumberSequenceKeypoint.new(0.56209099292755,0.38797798752785,0.2771390080452),NumberSequenceKeypoint.new(0.90577298402786,0.51912599802017,0),NumberSequenceKeypoint.new(1,1,0)})
-						snow.Lifetime = NumberRange.new(8,14)
-						snow.Speed = NumberRange.new(8,18)
-						snow.EmissionDirection = Enum.NormalId.Bottom
-						snow.SpreadAngle = Vector2.new(35,35)
-						snow.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0,0),NumberSequenceKeypoint.new(0.039760299026966,1.3114800453186,0.32786899805069),NumberSequenceKeypoint.new(0.7554469704628,0.98360699415207,0.44038599729538),NumberSequenceKeypoint.new(1,0,0)})
-						snow.Parent = snowpart
-						local windsnow = Instance.new("ParticleEmitter")
-						windsnow.Acceleration = Vector3.new(0,0,1)
-						windsnow.RotSpeed = NumberRange.new(100)
-						windsnow.VelocitySpread = SnowflakesSpread["Value"]
-						windsnow.Rate = SnowflakesRate["Value"]
-						windsnow.Texture = "rbxassetid://8158344433"
-						windsnow.EmissionDirection = Enum.NormalId.Bottom
-						windsnow.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,0.16939899325371,0),NumberSequenceKeypoint.new(0.23365999758244,0.62841498851776,0.37158501148224),NumberSequenceKeypoint.new(0.56209099292755,0.38797798752785,0.2771390080452),NumberSequenceKeypoint.new(0.90577298402786,0.51912599802017,0),NumberSequenceKeypoint.new(1,1,0)})
-						windsnow.Lifetime = NumberRange.new(8,14)
-						windsnow.Speed = NumberRange.new(8,18)
-						windsnow.Rotation = NumberRange.new(110)
-						windsnow.SpreadAngle = Vector2.new(35,35)
-						windsnow.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0,0),NumberSequenceKeypoint.new(0.039760299026966,1.3114800453186,0.32786899805069),NumberSequenceKeypoint.new(0.7554469704628,0.98360699415207,0.44038599729538),NumberSequenceKeypoint.new(1,0,0)})
-						windsnow.Parent = snowpart
-						repeat task.wait(0)
-							if entitylib.isAlive then 
-								snowpart.Position = entitylib.character.HumanoidRootPart.Position + Vector3.new(0, SnowflakesHigh.Value, 0)
-							end
-						until not vapeInjected
-					else
-						-- creds to AntiMonacoGang
-						repeat task.wait(0.03)
-							local Player = game:GetService('Players').LocalPlayer
-							local Camera = workspace.CurrentCamera
-							repeat wait() until Player.Character ~= nil
-							local Torso;
-							repeat
-								task.wait(0.03)
-								if Player.Character and Player.Character:FindFirstChild("UpperTorso") then
-							        	Torso = Player.Character.UpperTorso;
-									break;
-							    	end;
-							until Torso;
-							local RainSound = Instance.new("Sound", Camera)
-							RainSound.SoundId = "http://www.roblox.com/asset/?ID=236148388"
-							RainSound.Looped = true
-							RainSound:Play()
-							function Particle(cframe)
-								local Spread = Vector3.new(math.random(-100, 100), math.random(-100, 100), math.random(-100, 100))
-								local Part = Instance.new("Part", Camera)
-								local Smoke = Instance.new("Smoke", Part)
-								Part.CanCollide = false
-								Part.Transparency = 0.25
-								Part.Reflectance = 0.15
-								Smoke.RiseVelocity = -25
-								Smoke.Opacity = 0.25
-								Smoke.Size = 25
-								Part.BrickColor = BrickColor.new("Steel blue")
-								Part.FormFactor = Enum.FormFactor.Custom
-								Part.Size = Vector3.new(0.15, 2, 0.15)
-								Part.CFrame = CFrame.new(cframe.p + (cframe:vectorToWorldSpace(Vector3.new(0, 1, 0)).unit * 150) + Spread) * CFrame.Angles(0, math.atan2(cframe.p.X, cframe.p.Z) + math.pi, 0)
-								game:GetService("Debris"):AddItem(Part, 3)
-								Instance.new("BlockMesh", Part)
-								Part.Touched:Connect(function(Hit)
-									Part:Destroy()
-								end)
-							end
-							function Roof(cframe)
-								return workspace:FindPartOnRayWithIgnoreList(Ray.new(cframe.p, cframe.p * Vector3.new(0, 150, 0)), {Player.Character})
-							end
-							-- if Camera ~= nil and Torso ~= nil then
-								if Roof(Torso.CFrame) == nil then
-									for _ = 1, 5 do
-										if (Camera.CFrame.p - Torso.CFrame.p).Magnitude > 100 then
-											Particle(Camera.CFrame)
-											Particle(Torso.CFrame)
-										else
-											Particle(Torso.CFrame)
-										end
-									end
-									RainSound.Volume = 0.05
-								else
-									RainSound.Volume = 0.05
-									if Roof(Camera.CFrame) == nil then
-										for _ = 1, 5 do
-											Particle(Camera.CFrame)
-										end
-									end
-								end
-								RainSound:Destroy()
-							-- end
-						until (not GameWeather["Enabled"])
-					end
-				end)
-			else
-				for _, v in next, workspace:GetChildren() do
-					if v.Name == "SnowParticle" then
-						v:Remove()
-					end
+				if GameWeatherMode["Value"] == 'Rain' then
+					startRain()
+				else
+					startSnow()
 				end
 			end
 		end
 	})
-	game_weather_m = GameWeather:CreateDropdown({
-		["Name"] ='Mode',
-		["List"] = {
-			'Snow',
-			'Rain'
-		},
-		["Default"] ='Snow',
-		["HoverText"] = 'Mode to change the weather.',
-		["Function"] = function() end;
-	});
+	GameWeatherMode = GameWeather:CreateDropdown({
+		["Name"] = 'Mode',
+		["List"] = {'Snow', 'Rain'},
+		["Default"] = 'Snow',
+		["Tooltip"] = 'Mode to change the weather.',
+		["Function"] = function()
+			if GameWeather["Enabled"] then
+				GameWeather:Toggle()
+				GameWeather:Toggle()
+			end
+		end
+	})
 	SnowflakesSpread = GameWeather:CreateSlider({
-		["Name"] ="Snow Spread",
-		["Min"] =1,
-		["Max"] =100,
-		["Function"] = function() end,
-		["Default"] =35
+		["Name"] = "Snow Spread",
+		["Min"] = 1,
+		["Max"] = 100,
+		["Default"] = 35,
+		["Function"] = updateEmitters
 	})
 	SnowflakesRate = GameWeather:CreateSlider({
-		["Name"] ="Snow Rate",
-		["Min"] =1,
-		["Max"] =100,
-		["Function"] = function() end,
-		["Default"] =28
+		["Name"] = "Snow Rate",
+		["Min"] = 1,
+		["Max"] = 100,
+		["Default"] = 28,
+		["Function"] = updateEmitters
 	})
 	SnowflakesHigh = GameWeather:CreateSlider({
-		["Name"] ="Snow High",
-		["Min"] =1,
-		["Max"] =200,
-		["Function"] = function() end,
-		["Default"] =100
+		["Name"] = "Snow High",
+		["Min"] = 1,
+		["Max"] = 200,
+		["Default"] = 100
 	})
 end)
 
 velo.run(function()
 	local WaterMark: table = {["Enabled"] = false}
-	local WaterMarkBGT: table = {["Value"] = 1}
-	local WaterMarkZI: table = {["Value"] = 10}
-	local WaterMarkPOS: table = {["Value"] = 36}
-	local WaterMarkTST: table = {["Value"] = 0}
-    	local WaterMarkFont: table = {["Value"] = Enum.Font.SourceSansBold}
+	local WaterMarkFont: table = {["Value"] = "SourceSansBold"}
 	local WaterMarkColor: table = {["Hue"] = 1, ["Sat"] = 1, ["Value"] = 0.55}
-	local ScreenGui: ScreenGui = Instance.new("ScreenGui")
-	local TextLabel: TextLabel = Instance.new("TextLabel")
-	local UICorner: UICorner = Instance.new("UICorner")
-	ScreenGui.Parent = lplr:WaitForChild("PlayerGui")
-	ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	TextLabel.Parent = ScreenGui
-	TextLabel.Size = UDim2.new(1, 0, 0, 36)
-	TextLabel.BackgroundTransparency = WaterMarkBGT["Value"]
-	TextLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	TextLabel.ZIndex = WaterMarkZI["Value"]
-	TextLabel.TextStrokeTransparency = WaterMarkTST["Value"]
-	TextLabel.TextScaled = true
-	TextLabel.Font = WaterMarkFont["Value"]
-	TextLabel.TextColor3 = Color3.fromHSV(WaterMarkColor["Hue"], WaterMarkColor["Sat"], WaterMarkColor["Value"])
-	TextLabel.Position = UDim2.new(0, 0, 0, -WaterMarkPOS["Value"])
-	UICorner.Parent = TextLabel
-	UICorner.CornerRadius = UDim.new(0, 10)
+	local WaterMarkPOS: table = {["Value"] = 36}
+	local WaterMarkBGT: table = {["Value"] = 1}
+	local WaterMarkTST: table = {["Value"] = 0}
+	local WaterMarkZI: table = {["Value"] = 10}
+	local TextLabel: TextLabel?
+	local updateLabel: () -> () = function(): ()
+		if not TextLabel then return; end;
+		pcall(function()
+			TextLabel.Font = Enum.Font[WaterMarkFont["Value"]]
+		end)
+		TextLabel.TextColor3 = Color3.fromHSV(WaterMarkColor["Hue"], WaterMarkColor["Sat"], WaterMarkColor["Value"])
+		TextLabel.Position = UDim2.new(0, 0, 0, -WaterMarkPOS["Value"])
+		TextLabel.BackgroundTransparency = WaterMarkBGT["Value"]
+		TextLabel.TextStrokeTransparency = WaterMarkTST["Value"]
+		TextLabel.ZIndex = WaterMarkZI["Value"]
+	end;
+
 	WaterMark = vape.Categories.Velocity:CreateModule({
-		["Name"] ="TextMark",
+		["Name"] = "TextMark",
 		["Function"] = function(callback: boolean): void
 			if callback then
-				TextLabel.Text = "Velocity [V1.0]"
-                TextLabel.Font = WaterMarkFont["Value"]
-			else
-				TextLabel.Text = ""
-                TextLabel.Font = WaterMarkFont["Value"]
+				local ScreenGui: ScreenGui = Instance.new("ScreenGui")
+				ScreenGui.Name = "TextMark"
+				ScreenGui.ResetOnSpawn = false
+				ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+				local label: TextLabel = Instance.new("TextLabel")
+				label.Size = UDim2.new(1, 0, 0, 36)
+				label.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+				label.TextScaled = true
+				label.Text = "Velocity [V1.0]"
+				label.Parent = ScreenGui
+
+				local corner: UICorner = Instance.new("UICorner")
+				corner.CornerRadius = UDim.new(0, 10)
+				corner.Parent = label
+
+				TextLabel = label
+				updateLabel()
+				ScreenGui.Parent = lplr:FindFirstChildOfClass("PlayerGui") or lplr:WaitForChild("PlayerGui")
+				WaterMark:Clean(ScreenGui)
+				WaterMark:Clean(function()
+					TextLabel = nil
+				end)
 			end
 		end
 	})
-    	WaterMarkFont = WaterMark:CreateDropdown({
-		["Name"] ="Font",
+	WaterMarkFont = WaterMark:CreateDropdown({
+		["Name"] = "Font",
 		["List"] = GetItems("Font"),
-		["HoverText"] = "Font of the text.",
-		["Function"] = function()
-			if WaterMark["Enabled"] then
-				WaterMark:Toggle();
-				WaterMark:Toggle();
-			end
-		end
+		["Default"] = "SourceSansBold",
+		["Tooltip"] = "Font of the text.",
+		["Function"] = updateLabel
 	})
 	WaterMarkColor = WaterMark:CreateColorSlider({
-		["Name"] ="Color",
-		["Function"] = function() 
-			if TextLabel then
-				TextLabel.TextColor3 = Color3.fromHSV(WaterMarkColor["Hue"], WaterMarkColor["Sat"], WaterMarkColor["Value"])
-			end
-		end
+		["Name"] = "Color",
+		["DefaultHue"] = 1,
+		["DefaultSat"] = 1,
+		["DefaultValue"] = 0.55,
+		["Function"] = updateLabel
 	})
 	WaterMarkPOS = WaterMark:CreateSlider({
-		["Name"] ="Position",
-		["Min"] =1,
-		["Max"] =45, 
-		["Function"] = function(val) end,
-		["Default"] =36
+		["Name"] = "Position",
+		["Min"] = 1,
+		["Max"] = 45,
+		["Default"] = 36,
+		["Function"] = updateLabel
 	})
 	WaterMarkBGT = WaterMark:CreateSlider({
-		["Name"] ="Background Transparency",
-		["Min"] =0,
-		["Max"] =1, 
-		["Function"] = function(val) end,
-		["Default"] =1
+		["Name"] = "Background Transparency",
+		["Min"] = 0,
+		["Max"] = 1,
+		["Decimal"] = 10,
+		["Default"] = 1,
+		["Function"] = updateLabel
 	})
 	WaterMarkTST = WaterMark:CreateSlider({
-		["Name"] ="Stroke Transparency",
-		["Min"] =0,
-		["Max"] =1, 
-		["Function"] = function(val) end,
-		["Default"] =0
+		["Name"] = "Stroke Transparency",
+		["Min"] = 0,
+		["Max"] = 1,
+		["Decimal"] = 10,
+		["Default"] = 0,
+		["Function"] = updateLabel
 	})
 	WaterMarkZI = WaterMark:CreateSlider({
-		["Name"] ="ZIndex",
-		["Min"] =7,
-		["Max"] =15, 
-		["Function"] = function(val) end,
-		["Default"] =10
+		["Name"] = "ZIndex",
+		["Min"] = 7,
+		["Max"] = 15,
+		["Default"] = 10,
+		["Function"] = updateLabel
 	})
 end)
 
