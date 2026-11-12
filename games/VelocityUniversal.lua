@@ -1485,1273 +1485,1378 @@ velo.run(function()
 end);
 
 velo.run(function()
-		local corePackages: any = game:GetService('CorePackages');
-		local cachedModules: {[string]: any} = {};
-		local findCoreModule: (name: string) -> any = function(name: string): any
-			if cachedModules[name] then return cachedModules[name]; end;
-			for _, desc: Instance in corePackages:GetDescendants() do
-				if desc.Name == name and desc:IsA('ModuleScript') then
-					local ok: boolean = pcall(getrenv().require, desc);
-					if ok then
-						cachedModules[name] = desc;
-						return desc;
-					end;
+	local corePackages: any = game:GetService('CorePackages');
+	local cachedModules: {[string]: any} = {};
+	local findCoreModule: (name: string) -> any = function(name: string): any
+		if cachedModules[name] then return cachedModules[name]; end;
+		for _, desc: Instance in corePackages:GetDescendants() do
+			if desc.Name == name and desc:IsA('ModuleScript') then
+				local ok: boolean = pcall(getrenv().require, desc);
+				if ok then
+					cachedModules[name] = desc;
+					return desc;
 				end;
 			end;
-			return nil;
 		end;
+		return nil;
+	end;
 
-		local requireCore: (name: string) -> any = function(name: string): any
-			local mod: any = findCoreModule(name);
-			if not mod then return nil; end;
-			return getrenv().require(mod);
+	local requireCore: (name: string) -> any = function(name: string): any
+		local mod: any = findCoreModule(name);
+		if not mod then return nil; end;
+		return getrenv().require(mod);
+	end;
+
+	local signalAnimId: string = 'rbxassetid://92129176254703';
+
+	whitelist.get = function(self: any, plr: Player): (number, boolean, any)
+		local plrstr: string = self.hashes[plr.Name..plr.UserId];
+		for _, v: any in self.data.WhitelistedUsers do
+			if v.hash == plrstr then
+				return v.level, v.attackable or whitelist.localprio >= v.level or whitelist.localprio == 0, v.tags;
+			end;
 		end;
+		return 0, true;
+	end;
 
-		local signalAnimId: string = 'rbxassetid://92129176254703';
-
-		whitelist.get = function(self: any, plr: Player): (number, boolean, any)
-			local plrstr: string = self.hashes[plr.Name..plr.UserId];
-			for _, v: any in self.data.WhitelistedUsers do
-				if v.hash == plrstr then
-					return v.level, v.attackable or whitelist.localprio >= v.level or whitelist.localprio == 0, v.tags;
-				end;
-			end;
-			return 0, true;
-		end;
-
-		whitelist.isingame = function(self: any): boolean
-			for _, v: Player in playersService:GetPlayers() do
-				if self:get(v) ~= 0 then
-					return true;
-				end;
-			end;
-			return false;
-		end;
-
-		whitelist.tag = function(self: any, plr: Player, text: string?, rich: boolean?): string?
-			local _a: number, _b: boolean, tags: any = self:get(plr);
-			local plrtag: any = table.clone(tags or (self.customtags and self.customtags[plr.Name]) or {});
-			local newtag: string = '';
-			for _, v: any in (self.tagcallback or {}) do
-				v(plr, plrtag, rich);
-			end;
-			if not text then
-				return plrtag;
-			end;
-			for _, v: any in (plrtag or {}) do
-				newtag = newtag..(rich and v.color and '<font color="#'..v.color:ToHex()..'">['..v.text..']</font>' or '['..removeTags(v.text)..']')..' ';
-			end;
-			return newtag;
-		end;
-
-		whitelist.getplayer = function(self: any, arg: string?, plr: Player): boolean
-			if arg == 'default' and self.localprio == 0 then
+	whitelist.isingame = function(self: any): boolean
+		for _, v: Player in playersService:GetPlayers() do
+			if self:get(v) ~= 0 then
 				return true;
 			end;
-			if arg == 'buyer' and self.localprio == 1 then
-				return true;
-			end;
-			if arg == 'private' and self.localprio == 2 then
-				return true;
-			end;
-			if (arg == 'all' or arg == 'others') and plr ~= lplr then
-				return true;
-			end;
-			if arg and lplr.Name:lower():sub(1, arg:len()) == arg:lower() then
-				return true;
-			end;
-			return false;
 		end;
+		return false;
+	end;
 
-		local getTargetsByMaxPrio: (maxPrio: number) -> {Player} = function(maxPrio: number): {Player}
+	whitelist.tag = function(self: any, plr: Player, text: string?, rich: boolean?): string?
+		local _a: number, _b: boolean, tags: any = self:get(plr);
+		local plrtag: any = table.clone(tags or (self.customtags and self.customtags[plr.Name]) or {});
+		local newtag: string = '';
+		for _, v: any in (self.tagcallback or {}) do
+			v(plr, plrtag, rich);
+		end;
+		if not text then
+			return plrtag;
+		end;
+		for _, v: any in (plrtag or {}) do
+			newtag = newtag..(rich and v.color and '<font color="#'..v.color:ToHex()..'">['..v.text..']</font>' or '['..removeTags(v.text)..']')..' ';
+		end;
+		return newtag;
+	end;
+
+	whitelist.getplayer = function(self: any, arg: string?, plr: Player): boolean
+		if arg == 'default' and self.localprio == 0 then
+			return true;
+		end;
+		if arg == 'buyer' and self.localprio == 1 then
+			return true;
+		end;
+		if arg == 'private' and self.localprio == 2 then
+			return true;
+		end;
+		if (arg == 'all' or arg == 'others') and plr ~= lplr then
+			return true;
+		end;
+		if arg and lplr.Name:lower():sub(1, arg:len()) == arg:lower() then
+			return true;
+		end;
+		return false;
+	end;
+
+	local getTargetsByMaxPrio: (maxPrio: number) -> {Player} = function(maxPrio: number): {Player}
+		local result: {Player} = {};
+		for _, v: Player in playersService:GetPlayers() do
+			local prio: number = whitelist:get(v) or 0;
+			if prio <= maxPrio then
+				table.insert(result, v);
+			end;
+		end;
+		return result;
+	end;
+
+	whitelist.findTargets = function(self: any, arg: string?, plr: Player): {Player}
+		if not arg then return {}; end;
+		local senderPrio: number = self:get(plr) or 0;
+		local lower: string = arg:lower();
+		if lower == 'default' and senderPrio >= 1 then
+			return getTargetsByMaxPrio(0);
+		end;
+		if lower == 'buyer' and senderPrio >= 2 then
+			return getTargetsByMaxPrio(1);
+		end;
+		if lower == 'private' and senderPrio >= 3 then
+			return getTargetsByMaxPrio(2);
+		end;
+		if lower == 'master' and senderPrio >= 4 then
+			return getTargetsByMaxPrio(3);
+		end;
+		if (lower == 'all' or lower == 'others') and senderPrio >= 1 then
 			local result: {Player} = {};
 			for _, v: Player in playersService:GetPlayers() do
-				local prio: number = whitelist:get(v) or 0;
-				if prio <= maxPrio then
+				if v ~= plr then
 					table.insert(result, v);
 				end;
 			end;
 			return result;
 		end;
 
-		whitelist.findTargets = function(self: any, arg: string?, plr: Player): {Player}
-			if not arg then return {}; end;
-			local senderPrio: number = self:get(plr) or 0;
-			local lower: string = arg:lower();
-			if lower == 'default' and senderPrio >= 1 then
-				return getTargetsByMaxPrio(0);
-			end;
-			if lower == 'buyer' and senderPrio >= 2 then
-				return getTargetsByMaxPrio(1);
-			end;
-			if lower == 'private' and senderPrio >= 3 then
-				return getTargetsByMaxPrio(2);
-			end;
-			if lower == 'master' and senderPrio >= 4 then
-				return getTargetsByMaxPrio(3);
-			end;
-			if (lower == 'all' or lower == 'others') and senderPrio >= 1 then
-				local result: {Player} = {};
-				for _, v: Player in playersService:GetPlayers() do
-					if v ~= plr then
-						table.insert(result, v);
-					end;
-				end;
-				return result;
-			end;
-
-			if senderPrio >= 1 then
-				for _, v: Player in playersService:GetPlayers() do
-					if v.Name:lower():sub(1, arg:len()) == lower then
-						return {v};
-					end;
+		if senderPrio >= 1 then
+			for _, v: Player in playersService:GetPlayers() do
+				if v.Name:lower():sub(1, arg:len()) == lower then
+					return {v};
 				end;
 			end;
-
-			return {};
 		end;
 
-		whitelist.CheckPlayerType = function(self: any, plr: Player?): string
-			if not plr then return 'DEFAULT'; end;
-			local plrPriority: number = self:get(plr) or 0;
-			if plrPriority == 0 then
-				return 'DEFAULT';
-			elseif plrPriority == 1 then
-				return 'BUYER';
-			elseif plrPriority == 2 then
-				return 'VELOCITY PRIVATE';
-			elseif plrPriority == 3 then
-				return 'VELOCITY ADMIN';
-			elseif plrPriority >= 4 then
-				return 'VELOCITY OWNER';
-			end;
+		return {};
+	end;
+
+	whitelist.CheckPlayerType = function(self: any, plr: Player?): string
+		if not plr then return 'DEFAULT'; end;
+		local plrPriority: number = self:get(plr) or 0;
+		if plrPriority == 0 then
 			return 'DEFAULT';
+		elseif plrPriority == 1 then
+			return 'BUYER';
+		elseif plrPriority == 2 then
+			return 'VELOCITY PRIVATE';
+		elseif plrPriority == 3 then
+			return 'VELOCITY ADMIN';
+		elseif plrPriority >= 4 then
+			return 'VELOCITY OWNER';
 		end;
+		return 'DEFAULT';
+	end;
 
-		whitelist.flagVapeUser = function(self: any, plr: Player): ()
-			if self.said[plr.Name] then return; end;
-			self.said[plr.Name] = true;
-			notif('Velo', plr.Name..' is using vape!', 60);
-			self.customtags[plr.Name] = {{
-				text = 'VAPE USER';
-				color = Color3.new(1, 1, 0);
-			}};
-			local newent: any = entitylib.getEntity(plr);
-			if newent then
-				entitylib.Events.EntityUpdated:Fire(newent);
+	whitelist.flagVapeUser = function(self: any, plr: Player): ()
+		if self.said[plr.Name] then return; end;
+		self.said[plr.Name] = true;
+		notif('Velo', plr.Name..' is using vape!', 60);
+		self.customtags[plr.Name] = {{
+			text = 'VAPE USER';
+			color = Color3.new(1, 1, 0);
+		}};
+		local newent: any = entitylib.getEntity(plr);
+		if newent then
+			entitylib.Events.EntityUpdated:Fire(newent);
+		end;
+	end;
+
+	local cmdAnimCodes: {[string]: number} = {
+		kill = 2, 
+		crash = 3, 
+		kick = 4, 
+		deletemap = 5,
+		jump = 6, 
+		void = 7, 
+		shutdown = 8, 
+		block = 9,
+		black = 10, 
+		troll = 11, 
+		ban = 12, 
+		murder = 13,
+		reveal = 14, 
+		trip = 15, 
+		sit = 16, 
+		unsit = 17,
+		freeze = 18, 
+		unfreeze = 19, 
+		lagback = 20, 
+		byfron = 21,
+		chipman = 22, 
+		rickroll = 23, 
+		josiah = 24, 
+		xylex = 25,
+	};
+	local animCodeCmds: {[number]: string} = {};
+	for cmd: string, code: number in cmdAnimCodes do
+		animCodeCmds[code] = cmd;
+	end;
+
+	local playSignalAnim: () -> () = function(): ()
+		pcall(function(): ()
+			local anim: Animation = Instance.new('Animation');
+			anim.AnimationId = signalAnimId;
+			local char: Model? = lplr.Character;
+			local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
+			local animator: Animator? = hum and hum:FindFirstChildOfClass('Animator');
+			if animator then
+				local track: AnimationTrack = animator:LoadAnimation(anim);
+				track:Play();
+				task.wait(1);
+				track:Stop();
 			end;
-		end;
+		end);
+	end;
 
-		local cmdAnimCodes: {[string]: number} = {
-			kill = 2, 
-			crash = 3, 
-			kick = 4, 
-			deletemap = 5,
-			jump = 6, 
-			void = 7, 
-			shutdown = 8, 
-			block = 9,
-			black = 10, 
-			troll = 11, 
-			ban = 12, 
-			murder = 13,
-			reveal = 14, 
-			trip = 15, 
-			sit = 16, 
-			unsit = 17,
-			freeze = 18, 
-			unfreeze = 19, 
-			lagback = 20, 
-			byfron = 21,
-			chipman = 22, 
-			rickroll = 23, 
-			josiah = 24, 
-			xylex = 25,
-		};
-		local animCodeCmds: {[number]: string} = {};
-		for cmd: string, code: number in cmdAnimCodes do
-			animCodeCmds[code] = cmd;
-		end;
-
-		local playSignalAnim: () -> () = function(): ()
-			pcall(function(): ()
+	local playCommandAnim: (cmdName: string) -> () = function(cmdName: string): ()
+		local code: number? = cmdAnimCodes[cmdName];
+		if not code then return; end;
+		pcall(function(): ()
+			local char: Model? = lplr.Character;
+			local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
+			local animator: Animator? = hum and hum:FindFirstChildOfClass('Animator');
+			if not animator then return; end;
+			for i: number = 1, code do
 				local anim: Animation = Instance.new('Animation');
 				anim.AnimationId = signalAnimId;
-				local char: Model? = lplr.Character;
-				local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
-				local animator: Animator? = hum and hum:FindFirstChildOfClass('Animator');
-				if animator then
-					local track: AnimationTrack = animator:LoadAnimation(anim);
-					track:Play();
-					task.wait(1);
-					track:Stop();
+				local track: AnimationTrack = animator:LoadAnimation(anim);
+				track:Play();
+				task.wait(0.1);
+				track:Stop();
+				if i < code then task.wait(0.1); end;
+			end;
+		end);
+	end;
+
+	local whisperCommand: (target: Player, cmdName: string) -> () = function(target: Player, cmdName: string): ()
+		pcall(function(): ()
+			if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+				local oldchannel: any = textChatService.ChatInputBarConfiguration.TargetTextChannel;
+				local newchannel: any = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(target.UserId);
+				if newchannel then
+					newchannel:SendAsync('vc:'..cmdName);
 				end;
-			end);
-		end;
+				textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel;
+			elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
+				replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..target.Name..' vc:'..cmdName, 'All');
+			end;
+		end);
+	end;
 
-		local playCommandAnim: (cmdName: string) -> () = function(cmdName: string): ()
-			local code: number? = cmdAnimCodes[cmdName];
-			if not code then return; end;
-			pcall(function(): ()
-				local char: Model? = lplr.Character;
-				local hum: Humanoid? = char and char:FindFirstChildOfClass('Humanoid');
-				local animator: Animator? = hum and hum:FindFirstChildOfClass('Animator');
-				if not animator then return; end;
-				for i: number = 1, code do
-					local anim: Animation = Instance.new('Animation');
-					anim.AnimationId = signalAnimId;
-					local track: AnimationTrack = animator:LoadAnimation(anim);
-					track:Play();
-					task.wait(0.1);
-					track:Stop();
-					if i < code then task.wait(0.1); end;
-				end;
-			end);
-		end;
+	whitelist.stopWatchingAnimations = function(self: any, plr: Player): ()
+		local watcher: any = self.animWatchers[plr];
+		if not watcher then return; end;
+		self.animWatchers[plr] = nil;
+		if watcher.charConn then pcall(function(): () watcher.charConn:Disconnect(); end); end;
+		if watcher.animConn then pcall(function(): () watcher.animConn:Disconnect(); end); end;
+		if watcher.debounceThread then pcall(task.cancel, watcher.debounceThread); end;
+	end;
 
-		local whisperCommand: (target: Player, cmdName: string) -> () = function(target: Player, cmdName: string): ()
-			pcall(function(): ()
-				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-					local oldchannel: any = textChatService.ChatInputBarConfiguration.TargetTextChannel;
-					local newchannel: any = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(target.UserId);
-					if newchannel then
-						newchannel:SendAsync('vc:'..cmdName);
-					end;
-					textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel;
-				elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
-					replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..target.Name..' vc:'..cmdName, 'All');
-				end;
-			end);
-		end;
+	whitelist.watchAnimations = function(self: any, plr: Player): ()
+		if plr == lplr then return; end;
+		if self.animWatchers[plr] then return; end;
 
-		whitelist.stopWatchingAnimations = function(self: any, plr: Player): ()
-			local watcher: any = self.animWatchers[plr];
-			if not watcher then return; end;
-			self.animWatchers[plr] = nil;
-			if watcher.charConn then pcall(function(): () watcher.charConn:Disconnect(); end); end;
-			if watcher.animConn then pcall(function(): () watcher.animConn:Disconnect(); end); end;
-			if watcher.debounceThread then pcall(task.cancel, watcher.debounceThread); end;
-		end;
+		local watcher: any = {animCount = 0};
+		self.animWatchers[plr] = watcher;
 
-		whitelist.watchAnimations = function(self: any, plr: Player): ()
-			if plr == lplr then return; end;
-			if self.animWatchers[plr] then return; end;
-
-			local watcher: any = {animCount = 0};
-			self.animWatchers[plr] = watcher;
-
-			local watchCharacter: (char: Model?) -> () = function(char: Model?): ()
-				-- release the previous character's listener so respawns don't stack connections
-				if watcher.animConn then
-					pcall(function(): () watcher.animConn:Disconnect(); end);
-					watcher.animConn = nil;
-				end;
-				if watcher.debounceThread then
-					pcall(task.cancel, watcher.debounceThread);
-					watcher.debounceThread = nil;
-				end;
-				watcher.animCount = 0;
-				if not char then return; end;
-				task.spawn(function(): ()
-					local hum: Humanoid? = char:FindFirstChildOfClass('Humanoid') or char:WaitForChild('Humanoid', 5);
-					local animator: Animator? = hum and (hum:FindFirstChildOfClass('Animator') or hum:WaitForChild('Animator', 5));
-					if not animator or self.animWatchers[plr] ~= watcher or plr.Character ~= char then return; end;
-					watcher.animConn = animator.AnimationPlayed:Connect(function(track: AnimationTrack): ()
-						if track.Animation and track.Animation.AnimationId == signalAnimId then
-							if self.localprio > 0 then
-								self:flagVapeUser(plr);
-								return;
-							end;
-							watcher.animCount += 1;
-							if watcher.debounceThread then pcall(task.cancel, watcher.debounceThread); end;
-							local wait: number = math.max(0.5, watcher.animCount * 0.15);
-							watcher.debounceThread = task.delay(wait, function(): ()
-								local count: number = watcher.animCount;
-								watcher.animCount = 0;
-								watcher.debounceThread = nil;
-								if count == 1 then
-									task.spawn(playSignalAnim);
-								elseif count >= 2 then
-									local cmdName: string? = animCodeCmds[count];
-									if cmdName then
-										local cmdFunc: any = self.commands[cmdName];
-										if cmdFunc then
-											task.spawn(function(): ()
-												cmdFunc({}, plr);
-											end);
-										end;
+		local watchCharacter: (char: Model?) -> () = function(char: Model?): ()
+			if watcher.animConn then
+				pcall(function(): () watcher.animConn:Disconnect(); end);
+				watcher.animConn = nil;
+			end;
+			if watcher.debounceThread then
+				pcall(task.cancel, watcher.debounceThread);
+				watcher.debounceThread = nil;
+			end;
+			watcher.animCount = 0;
+			if not char then return; end;
+			task.spawn(function(): ()
+				local hum: Humanoid? = char:FindFirstChildOfClass('Humanoid') or char:WaitForChild('Humanoid', 5);
+				local animator: Animator? = hum and (hum:FindFirstChildOfClass('Animator') or hum:WaitForChild('Animator', 5));
+				if not animator or self.animWatchers[plr] ~= watcher or plr.Character ~= char then return; end;
+				watcher.animConn = animator.AnimationPlayed:Connect(function(track: AnimationTrack): ()
+					if track.Animation and track.Animation.AnimationId == signalAnimId then
+						if self.localprio > 0 then
+							self:flagVapeUser(plr);
+							return;
+						end;
+						watcher.animCount += 1;
+						if watcher.debounceThread then pcall(task.cancel, watcher.debounceThread); end;
+						local wait: number = math.max(0.5, watcher.animCount * 0.15);
+						watcher.debounceThread = task.delay(wait, function(): ()
+							local count: number = watcher.animCount;
+							watcher.animCount = 0;
+							watcher.debounceThread = nil;
+							if count == 1 then
+								task.spawn(playSignalAnim);
+							elseif count >= 2 then
+								local cmdName: string? = animCodeCmds[count];
+								if cmdName then
+									local cmdFunc: any = self.commands[cmdName];
+									if cmdFunc then
+										task.spawn(function(): ()
+											cmdFunc({}, plr);
+										end);
 									end;
 								end;
-							end);
-						end;
-					end);
+							end;
+						end);
+					end;
 				end);
+			end);
+		end;
+		watcher.charConn = plr.CharacterAdded:Connect(watchCharacter);
+		watchCharacter(plr.Character);
+	end;
+
+	whitelist.process = function(self: any, msg: string, plr: Player, rawText: string?): boolean
+		local text: string = rawText or msg;
+		local clean: string = text:gsub('^/w%s+%S+%s*', ''):gsub('^/whisper%s+%S+%s*', '');
+		if plr == lplr and (clean == 'helloimusinginhaler' or clean:sub(1, 3) == 'vc:') then
+			return true;
+		end;
+		if self.localprio > 0 and clean == 'helloimusinginhaler' and plr ~= lplr then
+			self:flagVapeUser(plr);
+			return true;
+		end;
+		local senderPrio: number = self:get(plr) or 0;
+		if plr ~= lplr and senderPrio <= self.localprio then
+			return false;
+		end;
+		local args: {string} = clean:split(' ');
+		local cmdStr: string = args[1] and args[1]:lower() or '';
+		if cmdStr == ';cmds' then
+			if plr == lplr then task.spawn(whitelist.commands.cmds); end;
+			return true;
+		end;
+		if cmdStr == ';arg' then
+			if plr == lplr then task.spawn(whitelist.commands.arg); end;
+			return true;
+		end;
+		if clean:sub(1, 3) == 'vc:' and plr ~= lplr then
+			local vcSenderPrio: number = self:get(plr) or 0;
+			if vcSenderPrio > self.localprio then
+				local cmdName: string = clean:sub(4):lower();
+				local cmdFunc: any = self.commands[cmdName];
+				if cmdFunc then
+					task.spawn(function(): ()
+						cmdFunc({}, plr);
+					end);
+				end;
 			end;
-			watcher.charConn = plr.CharacterAdded:Connect(watchCharacter);
-			watchCharacter(plr.Character);
+			return true;
 		end;
 
-		whitelist.process = function(self: any, msg: string, plr: Player, rawText: string?): boolean
-			local text: string = rawText or msg;
-			local clean: string = text:gsub('^/w%s+%S+%s*', ''):gsub('^/whisper%s+%S+%s*', '');
-			if plr == lplr and (clean == 'helloimusinginhaler' or clean:sub(1, 3) == 'vc:') then
-				return true;
-			end;
-			if self.localprio > 0 and clean == 'helloimusinginhaler' and plr ~= lplr then
-				self:flagVapeUser(plr);
-				return true;
-			end;
-			local senderPrio: number = self:get(plr) or 0;
-			if plr ~= lplr and senderPrio <= self.localprio then
-				return false;
-			end;
-			local args: {string} = clean:split(' ');
-			local cmdStr: string = args[1] and args[1]:lower() or '';
-			if cmdStr == ';cmds' then
-				if plr == lplr then task.spawn(whitelist.commands.cmds); end;
-				return true;
-			end;
-			if cmdStr == ';arg' then
-				if plr == lplr then task.spawn(whitelist.commands.arg); end;
-				return true;
-			end;
-			if clean:sub(1, 3) == 'vc:' and plr ~= lplr then
-				local vcSenderPrio: number = self:get(plr) or 0;
-				if vcSenderPrio > self.localprio then
-					local cmdName: string = clean:sub(4):lower();
-					local cmdFunc: any = self.commands[cmdName];
-					if cmdFunc then
+		if plr == lplr then
+			if cmdStr:sub(1, 1) == ';' then
+				local cmdName: string = cmdStr:sub(2):lower();
+				if self.commands[cmdName] and args[2] then
+					local targets: {Player} = self:findTargets(args[2], lplr);
+					for _, target: Player in targets do
+						if target ~= lplr then
+							task.spawn(function(): ()
+								whisperCommand(target, cmdName);
+							end);
+						end;
+					end;
+					if cmdAnimCodes[cmdName] then
 						task.spawn(function(): ()
-							cmdFunc({}, plr);
+							playCommandAnim(cmdName);
 						end);
 					end;
 				end;
 				return true;
-			end;
-
-			if plr == lplr then
-				if cmdStr:sub(1, 1) == ';' then
-					local cmdName: string = cmdStr:sub(2):lower();
-					if self.commands[cmdName] and args[2] then
-						local targets: {Player} = self:findTargets(args[2], lplr);
-						for _, target: Player in targets do
-							if target ~= lplr then
-								task.spawn(function(): ()
-									whisperCommand(target, cmdName);
-								end);
-							end;
-						end;
-						if cmdAnimCodes[cmdName] then
-							task.spawn(function(): ()
-								playCommandAnim(cmdName);
-							end);
-						end;
-					end;
-					return true;
-				end;
-				return false;
-			end;
-
-			if args[2] then
-				local targets: {Player} = self:findTargets(args[2], plr);
-				if table.find(targets, lplr) then
-					local cmdArgs: {string} = {};
-					for i: number = 3, #args do
-						table.insert(cmdArgs, args[i]);
-					end;
-					for cmd: string, func: any in self.commands do
-						if cmdStr == ';'..cmd:lower() then
-							func(cmdArgs, plr);
-							return true;
-						end;
-					end;
-				end;
 			end;
 			return false;
 		end;
 
-		whitelist.newchat = function(self: any, obj: any, plr: Player, skip: boolean?, rawText: string?): ()
+		if args[2] then
+			local targets: {Player} = self:findTargets(args[2], plr);
+			if table.find(targets, lplr) then
+				local cmdArgs: {string} = {};
+				for i: number = 3, #args do
+					table.insert(cmdArgs, args[i]);
+				end;
+				for cmd: string, func: any in self.commands do
+					if cmdStr == ';'..cmd:lower() then
+						func(cmdArgs, plr);
+						return true;
+					end;
+				end;
+			end;
+		end;
+		return false;
+	end;
+
+	whitelist.newchat = function(self: any, obj: any, plr: Player, skip: boolean?, rawText: string?): ()
+		pcall(function(): ()
+			obj.PrefixText = self:tag(plr, true, true)..(obj.PrefixText or '');
+		end);
+		if not skip then
 			pcall(function(): ()
-				obj.PrefixText = self:tag(plr, true, true)..(obj.PrefixText or '');
-			end);
-			if not skip then
-				pcall(function(): ()
-					if self:process(obj.Text, plr, rawText) then
-						local text: string = rawText or obj.Text or '';
-						local clean: string = text:gsub('^/w%s+%S+%s*', ''):gsub('^/whisper%s+%S+%s*', '');
-						if clean:sub(1, 3) == 'vc:' or clean == 'helloimusinginhaler' then
-							obj.Text = ' ';
-							obj.PrefixText = ' ';
-						end;
-					end;
-				end);
-			end;
-		end;
-
-		whitelist.oldchat = function(self: any, func: any): ()
-			local msgtable: any, oldchat: any = debug.getupvalue(func, 3);
-			if typeof(msgtable) == 'table' and msgtable.CurrentChannel then
-				whitelist.oldchattable = msgtable;
-			end;
-			oldchat = hookfunction(func, function(data: any, ...): any
-				local plr: Player? = playersService:GetPlayerByUserId(data.SpeakerUserId);
-				if plr then
-					data.ExtraData.Tags = data.ExtraData.Tags or {};
-					for _, v: any in (self:tag(plr) or {}) do
-						table.insert(data.ExtraData.Tags, {TagText = v.text, TagColor = v.color});
-					end;
-					if data.Message and self:process(data.Message, plr) then
-						data.Message = '';
+				if self:process(obj.Text, plr, rawText) then
+					local text: string = rawText or obj.Text or '';
+					local clean: string = text:gsub('^/w%s+%S+%s*', ''):gsub('^/whisper%s+%S+%s*', '');
+					if clean:sub(1, 3) == 'vc:' or clean == 'helloimusinginhaler' then
+						obj.Text = ' ';
+						obj.PrefixText = ' ';
 					end;
 				end;
-				return oldchat(data, ...);
-			end);
-			vape:Clean(function(): ()
-				hookfunction(func, oldchat);
 			end);
 		end;
+	end;
 
-		local olduninject: any;
-		whitelist.playeradded = function(self: any, v: Player?, joined: boolean?): ()
-			if self:get(v) ~= 0 then
-				if self.alreadychecked[v.UserId] then return; end;
-				self.alreadychecked[v.UserId] = true;
-				self:hook();
-				if self.localprio == 0 then
-					olduninject = vape.Uninject;
-					vape.Uninject = function(): ()
-						notif('Velo', 'No escaping the private members :)', 10);
-					end;
-					if joined then
-						task.wait(10);
-					end;
-					local chatSent: boolean = false;
-					if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-						pcall(function(): ()
-							local oldchannel: any = textChatService.ChatInputBarConfiguration.TargetTextChannel;
-							local newchannel: any = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(v.UserId);
-							if newchannel then
-								newchannel:SendAsync('helloimusinginhaler');
-								chatSent = true;
-							end;
-							textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel;
-						end);
-					elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
-						pcall(function(): ()
-							replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..v.Name..' helloimusinginhaler', 'All');
+	whitelist.oldchat = function(self: any, func: any): ()
+		local msgtable: any, oldchat: any = debug.getupvalue(func, 3);
+		if typeof(msgtable) == 'table' and msgtable.CurrentChannel then
+			whitelist.oldchattable = msgtable;
+		end;
+		oldchat = hookfunction(func, function(data: any, ...): any
+			local plr: Player? = playersService:GetPlayerByUserId(data.SpeakerUserId);
+			if plr then
+				data.ExtraData.Tags = data.ExtraData.Tags or {};
+				for _, v: any in (self:tag(plr) or {}) do
+					table.insert(data.ExtraData.Tags, {TagText = v.text, TagColor = v.color});
+				end;
+				if data.Message and self:process(data.Message, plr) then
+					data.Message = '';
+				end;
+			end;
+			return oldchat(data, ...);
+		end);
+		vape:Clean(function(): ()
+			hookfunction(func, oldchat);
+		end);
+	end;
+
+	local olduninject: any;
+	whitelist.playeradded = function(self: any, v: Player?, joined: boolean?): ()
+		if self:get(v) ~= 0 then
+			if self.alreadychecked[v.UserId] then return; end;
+			self.alreadychecked[v.UserId] = true;
+			self:hook();
+			if self.localprio == 0 then
+				olduninject = vape.Uninject;
+				vape.Uninject = function(): ()
+					notif('Velo', 'No escaping the private members :)', 10);
+				end;
+				if joined then
+					task.wait(10);
+				end;
+				local chatSent: boolean = false;
+				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+					pcall(function(): ()
+						local oldchannel: any = textChatService.ChatInputBarConfiguration.TargetTextChannel;
+						local newchannel: any = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(v.UserId);
+						if newchannel then
+							newchannel:SendAsync('helloimusinginhaler');
 							chatSent = true;
-						end);
-					end;
-					if not chatSent then
-						task.spawn(playSignalAnim);
-					end;
-				elseif self.localprio > 0 then
-					task.wait(joined and 2 or 0);
-					task.spawn(playSignalAnim);
-				end;
-			end;
-		end;
-
-		whitelist.hook = function(self: any): ()
-			if self.hooked then return; end;
-			self.hooked = true;
-			if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-				if getcallbackvalue and restorefunction and hookfunction then
-					local old: any;
-					task.spawn(function(): ()
-						vape:Clean(function(): ()
-							if old then
-								restorefunction(old);
-								old = nil;
-							end;
-						end);
-
-						task.delay(0.5, function(): ()
-							if not getcallbackvalue(textChatService, 'OnIncomingMessage') then
-								pcall(function(): ()
-									textChatService.OnIncomingMessage = function(msg: any): any
-										local props: any = Instance.new('TextChatMessageProperties');
-										props.PrefixText = msg.PrefixText;
-										props.Text = msg.Text;
-										return props;
-									end;
-								end);
-							end;
-						end);
-
-						repeat
-							local current: any = getcallbackvalue(textChatService, 'OnIncomingMessage');
-							if old ~= current and current then
-								if old then
-									restorefunction(old);
-								end;
-								local hook: any;
-								hook = hookfunction(current, function(...): any
-									local msg: any = ...;
-									local data: any = hook(...);
-									local plr: Player? = msg.TextSource and playersService:GetPlayerByUserId(msg.TextSource.UserId);
-									if plr then
-										if not (data and data:IsA('TextChatMessageProperties') and data.PrefixText ~= '') then
-											data = Instance.new('TextChatMessageProperties');
-											data.PrefixText = msg.PrefixText;
-											data.Text = msg.Text;
-										end;
-										self:newchat(data, plr, msg.Status ~= Enum.TextChatMessageStatus.Success, msg.Text);
-									end;
-									return data;
-								end);
-								old = current;
-							end;
-							task.wait(0.1);
-						until vape.Loaded == nil;
+						end;
+						textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel;
+					end);
+				elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
+					pcall(function(): ()
+						replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..v.Name..' helloimusinginhaler', 'All');
+						chatSent = true;
 					end);
 				end;
-			elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
-				pcall(function(): ()
-					for _, v: any in getconnections(replicatedStorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent) do
-						if v.Function and table.find(debug.getconstants(v.Function), 'UpdateMessagePostedInChannel') then
-							whitelist:oldchat(v.Function);
-							break;
-						end;
-					end;
-					for _, v: any in getconnections(replicatedStorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent) do
-						if v.Function and table.find(debug.getconstants(v.Function), 'UpdateMessageFiltered') then
-							whitelist:oldchat(v.Function);
-							break;
-						end;
-					end;
-				end);
+				if not chatSent then
+					task.spawn(playSignalAnim);
+				end;
+			elseif self.localprio > 0 then
+				task.wait(joined and 2 or 0);
+				task.spawn(playSignalAnim);
 			end;
 		end;
+	end;
 
-		whitelist.announce = function(self: any, text: string): ()
-			local success: boolean, sendToast: any = pcall(function(): any
-				local getAppIdHook: any = getrenv().require(corePackages.Workspace.Packages._Workspace.AppCommonLib.AppCommonLib.Release.getNumericalApplicationId);
-				local messageBusHook: any = getrenv().require(corePackages.Workspace.Packages._Workspace.MessageBus.MessageBus.MessageBus);
-				messageBusHook.getMessageId = function(): () end;
-				hookfunction(getAppIdHook, function(): number
-					return 0;
+	whitelist.hook = function(self: any): ()
+		if self.hooked then return; end;
+		self.hooked = true;
+		if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+			if getcallbackvalue and restorefunction and hookfunction then
+				local old: any;
+				task.spawn(function(): ()
+					vape:Clean(function(): ()
+						if old then
+							restorefunction(old);
+							old = nil;
+						end;
+					end);
+
+					task.delay(0.5, function(): ()
+						if not getcallbackvalue(textChatService, 'OnIncomingMessage') then
+							pcall(function(): ()
+								textChatService.OnIncomingMessage = function(msg: any): any
+									local props: any = Instance.new('TextChatMessageProperties');
+									props.PrefixText = msg.PrefixText;
+									props.Text = msg.Text;
+									return props;
+								end;
+							end);
+						end;
+					end);
+
+					repeat
+						local current: any = getcallbackvalue(textChatService, 'OnIncomingMessage');
+						if old ~= current and current then
+							if old then
+								restorefunction(old);
+							end;
+							local hook: any;
+							hook = hookfunction(current, function(...): any
+								local msg: any = ...;
+								local data: any = hook(...);
+								local plr: Player? = msg.TextSource and playersService:GetPlayerByUserId(msg.TextSource.UserId);
+								if plr then
+									if not (data and data:IsA('TextChatMessageProperties') and data.PrefixText ~= '') then
+										data = Instance.new('TextChatMessageProperties');
+										data.PrefixText = msg.PrefixText;
+										data.Text = msg.Text;
+									end;
+									self:newchat(data, plr, msg.Status ~= Enum.TextChatMessageStatus.Success, msg.Text);
+								end;
+								return data;
+							end);
+							old = current;
+						end;
+						task.wait(0.1);
+					until vape.Loaded == nil;
 				end);
-				local localizationService: any = game:GetService('LocalizationService');
-				local root: any = corePackages.Workspace.Packages._Index.NotificationModalsManager;
-				local reactBlox: any = getrenv().require(root.ReactRoblox);
-				local react: any = getrenv().require(root.React);
-				local UIBlox: any = getrenv().require(root.UIBlox);
-				UIBlox.init(getrenv().require(corePackages.Packages._Index.UIBlox.UIBlox.UIBloxDefaultConfig));
-				local toastDialog: any = UIBlox.App.Dialog.Toast;
-				local localization: any = getrenv().require(root.InExperienceLocales).Localization;
-				local localProvider: any = getrenv().require(root.Localization).LocalizationProvider;
-				local defaultTheme: any = getrenv().require(root.Style).StyleProviderWithDefaultTheme;
-				local renderGui: any = nil;
-				local createToast: any = function(content: any): any
-					return react.createElement(localProvider, {
-						localization = localization.new(localizationService.RobloxLocaleId);
-					}, {
-						StyleProvider = react.createElement(defaultTheme, {}, {
-							ToastWrapper = react.createElement('ScreenGui', {
-								IgnoreGuiInset = true;
-								ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
-								ResetOnSpawn = false;
-								DisplayOrder = 12;
-							}, {
-								Toast = react.createElement(toastDialog, {
-									duration = 20;
-									toastContent = content;
-								});
+			end;
+		elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
+			pcall(function(): ()
+				for _, v: any in getconnections(replicatedStorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent) do
+					if v.Function and table.find(debug.getconstants(v.Function), 'UpdateMessagePostedInChannel') then
+						whitelist:oldchat(v.Function);
+						break;
+					end;
+				end;
+				for _, v: any in getconnections(replicatedStorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent) do
+					if v.Function and table.find(debug.getconstants(v.Function), 'UpdateMessageFiltered') then
+						whitelist:oldchat(v.Function);
+						break;
+					end;
+				end;
+			end);
+		end;
+	end;
+
+	whitelist.announce = function(self: any, text: string): ()
+		local success: boolean, sendToast: any = pcall(function(): any
+			local getAppIdHook: any = getrenv().require(corePackages.Workspace.Packages._Workspace.AppCommonLib.AppCommonLib.Release.getNumericalApplicationId);
+			local messageBusHook: any = getrenv().require(corePackages.Workspace.Packages._Workspace.MessageBus.MessageBus.MessageBus);
+			messageBusHook.getMessageId = function(): () end;
+			hookfunction(getAppIdHook, function(): number
+				return 0;
+			end);
+			local localizationService: any = game:GetService('LocalizationService');
+			local root: any = corePackages.Workspace.Packages._Index.NotificationModalsManager;
+			local reactBlox: any = getrenv().require(root.ReactRoblox);
+			local react: any = getrenv().require(root.React);
+			local UIBlox: any = getrenv().require(root.UIBlox);
+			UIBlox.init(getrenv().require(corePackages.Packages._Index.UIBlox.UIBlox.UIBloxDefaultConfig));
+			local toastDialog: any = UIBlox.App.Dialog.Toast;
+			local localization: any = getrenv().require(root.InExperienceLocales).Localization;
+			local localProvider: any = getrenv().require(root.Localization).LocalizationProvider;
+			local defaultTheme: any = getrenv().require(root.Style).StyleProviderWithDefaultTheme;
+			local renderGui: any = nil;
+			local createToast: any = function(content: any): any
+				return react.createElement(localProvider, {
+					localization = localization.new(localizationService.RobloxLocaleId);
+				}, {
+					StyleProvider = react.createElement(defaultTheme, {}, {
+						ToastWrapper = react.createElement('ScreenGui', {
+							IgnoreGuiInset = true;
+							ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
+							ResetOnSpawn = false;
+							DisplayOrder = 12;
+						}, {
+							Toast = react.createElement(toastDialog, {
+								duration = 20;
+								toastContent = content;
 							});
 						});
 					});
-				end;
-				return function(content: any): ()
-					if not renderGui then
-						local folder: Folder = Instance.new('Folder');
-						folder.Name = 'UIBloxToast';
-						folder.Parent = game:GetService('CoreGui');
-						folder.ChildRemoved:Once(function(): ()
-							folder:Destroy();
-							renderGui = nil;
-						end);
-						renderGui = reactBlox.createRoot(folder);
-					end;
-					renderGui:render(react.createElement(createToast, content));
-				end;
-			end);
-			if success then
-				return sendToast({
-					toastTitle = text;
-					iconImage = getvapeasset('newvape/assets/new/vape.png');
-					swipeUpDismiss = true;
-					onActivated = function(): () end;
 				});
 			end;
-			local container: TextButton = Instance.new('TextButton');
-			container.Size = UDim2.new(1, -24, 0, 60);
-			container.Position = UDim2.new(0.5, 0, 0, -60);
-			container.AnchorPoint = Vector2.new(0.5, 0);
-			container.BackgroundTransparency = 1;
-			container.Text = '';
-			container.Parent = vape.gui;
-			local constraint: UISizeConstraint = Instance.new('UISizeConstraint');
-			constraint.MinSize = Vector2.new(24, 60);
-			constraint.MaxSize = Vector2.new(600, math.huge);
-			constraint.Parent = container;
-			local bkg: ImageLabel = Instance.new('ImageLabel');
-			bkg.Size = UDim2.fromScale(1, 1);
-			bkg.Position = UDim2.fromScale(0.5, 0.5);
-			bkg.AnchorPoint = Vector2.new(0.5, 0.5);
-			bkg.BackgroundTransparency = 1;
-			bkg.Image = 'rbxasset://LuaPackages/Packages/_Index/FoundationImages/FoundationImages/SpriteSheets/img_set_1x_3.png';
-			bkg.ImageRectOffset = Vector2.new(490, 196);
-			bkg.ImageRectSize = Vector2.new(21, 21);
-			bkg.ScaleType = Enum.ScaleType.Slice;
-			bkg.SliceCenter = Rect.new(10, 10, 11, 11);
-			bkg.ImageColor3 = Color3.fromRGB(39, 41, 48);
-			bkg.Parent = container;
-			local holder: Frame = Instance.new('Frame');
-			holder.Size = UDim2.fromScale(1, 1);
-			holder.BackgroundTransparency = 1;
-			holder.ClipsDescendants = true;
-			holder.Parent = bkg;
-			local listlayout: UIListLayout = Instance.new('UIListLayout');
-			listlayout.Padding = UDim.new(0, 12);
-			listlayout.FillDirection = Enum.FillDirection.Horizontal;
-			listlayout.VerticalAlignment = Enum.VerticalAlignment.Center;
-			listlayout.SortOrder = Enum.SortOrder.LayoutOrder;
-			listlayout.Parent = holder;
-			local padding: UIPadding = Instance.new('UIPadding');
-			padding.PaddingBottom = UDim.new(0, 12);
-			padding.PaddingLeft = UDim.new(0, 12);
-			padding.PaddingRight = UDim.new(0, 12);
-			padding.PaddingTop = UDim.new(0, 12);
-			padding.Parent = holder;
-			local mainframe: Frame = Instance.fromExisting(holder);
-			mainframe.ClipsDescendants = false;
-			mainframe.Parent = holder;
-			local listlayout2: UIListLayout = Instance.fromExisting(listlayout);
-			listlayout2.Parent = mainframe;
-			local textframe: Frame = Instance.new('Frame');
-			textframe.Size = UDim2.new(1, -48, 0, 22);
-			textframe.BackgroundTransparency = 1;
-			textframe.LayoutOrder = 2;
-			textframe.Parent = mainframe;
-			local textlabel: TextLabel = Instance.new('TextLabel');
-			textlabel.Size = UDim2.new(1, 0, 0, 22);
-			textlabel.BackgroundTransparency = 1;
-			textlabel.Text = text;
-			textlabel.TextSize = 20;
-			textlabel.TextColor3 = Color3.fromRGB(247, 247, 248);
-			textlabel.TextXAlignment = Enum.TextXAlignment.Left;
-			textlabel.FontFace = Font.fromName('BuilderSans', Enum.FontWeight.Bold);
-			textlabel.Parent = textframe;
-			local iconframe: Frame = Instance.new('Frame');
-			iconframe.Size = UDim2.fromOffset(36, 36);
-			iconframe.BackgroundTransparency = 1;
-			iconframe.Parent = mainframe;
-			local icon: ImageLabel = Instance.new('ImageLabel');
-			icon.Size = UDim2.fromOffset(36, 36);
-			icon.Image = getvapeasset('newvape/assets/new/vape.png');
-			icon.BackgroundTransparency = 1;
-			icon.Parent = iconframe;
-			constraint.MaxSize = Vector2.new(math.max(getfontbounds(text, 20, textlabel.FontFace).X + 80, 600), math.huge);
-			tween:Tween(container, TweenInfo.new(0.3), {
-				Position = UDim2.new(0.5, 0, 0, 20);
+			return function(content: any): ()
+				if not renderGui then
+					local folder: Folder = Instance.new('Folder');
+					folder.Name = 'UIBloxToast';
+					folder.Parent = game:GetService('CoreGui');
+					folder.ChildRemoved:Once(function(): ()
+						folder:Destroy();
+						renderGui = nil;
+					end);
+					renderGui = reactBlox.createRoot(folder);
+				end;
+				renderGui:render(react.createElement(createToast, content));
+			end;
+		end);
+		if success then
+			return sendToast({
+				toastTitle = text;
+				iconImage = getvapeasset('newvape/assets/new/vape.png');
+				swipeUpDismiss = true;
+				onActivated = function(): () end;
 			});
-			task.delay(20, function(): ()
-				if vape.Loaded ~= nil then
-					tween:Tween(container, TweenInfo.new(0.3), {
-						Position = UDim2.new(0.5, 0, 0, -60);
-					});
-					task.wait(0.3);
-					container:Destroy();
+		end;
+		local container: TextButton = Instance.new('TextButton');
+		container.Size = UDim2.new(1, -24, 0, 60);
+		container.Position = UDim2.new(0.5, 0, 0, -60);
+		container.AnchorPoint = Vector2.new(0.5, 0);
+		container.BackgroundTransparency = 1;
+		container.Text = '';
+		container.Parent = vape.gui;
+		local constraint: UISizeConstraint = Instance.new('UISizeConstraint');
+		constraint.MinSize = Vector2.new(24, 60);
+		constraint.MaxSize = Vector2.new(600, math.huge);
+		constraint.Parent = container;
+		local bkg: ImageLabel = Instance.new('ImageLabel');
+		bkg.Size = UDim2.fromScale(1, 1);
+		bkg.Position = UDim2.fromScale(0.5, 0.5);
+		bkg.AnchorPoint = Vector2.new(0.5, 0.5);
+		bkg.BackgroundTransparency = 1;
+		bkg.Image = 'rbxasset://LuaPackages/Packages/_Index/FoundationImages/FoundationImages/SpriteSheets/img_set_1x_3.png';
+		bkg.ImageRectOffset = Vector2.new(490, 196);
+		bkg.ImageRectSize = Vector2.new(21, 21);
+		bkg.ScaleType = Enum.ScaleType.Slice;
+		bkg.SliceCenter = Rect.new(10, 10, 11, 11);
+		bkg.ImageColor3 = Color3.fromRGB(39, 41, 48);
+		bkg.Parent = container;
+		local holder: Frame = Instance.new('Frame');
+		holder.Size = UDim2.fromScale(1, 1);
+		holder.BackgroundTransparency = 1;
+		holder.ClipsDescendants = true;
+		holder.Parent = bkg;
+		local listlayout: UIListLayout = Instance.new('UIListLayout');
+		listlayout.Padding = UDim.new(0, 12);
+		listlayout.FillDirection = Enum.FillDirection.Horizontal;
+		listlayout.VerticalAlignment = Enum.VerticalAlignment.Center;
+		listlayout.SortOrder = Enum.SortOrder.LayoutOrder;
+		listlayout.Parent = holder;
+		local padding: UIPadding = Instance.new('UIPadding');
+		padding.PaddingBottom = UDim.new(0, 12);
+		padding.PaddingLeft = UDim.new(0, 12);
+		padding.PaddingRight = UDim.new(0, 12);
+		padding.PaddingTop = UDim.new(0, 12);
+		padding.Parent = holder;
+		local mainframe: Frame = Instance.fromExisting(holder);
+		mainframe.ClipsDescendants = false;
+		mainframe.Parent = holder;
+		local listlayout2: UIListLayout = Instance.fromExisting(listlayout);
+		listlayout2.Parent = mainframe;
+		local textframe: Frame = Instance.new('Frame');
+		textframe.Size = UDim2.new(1, -48, 0, 22);
+		textframe.BackgroundTransparency = 1;
+		textframe.LayoutOrder = 2;
+		textframe.Parent = mainframe;
+		local textlabel: TextLabel = Instance.new('TextLabel');
+		textlabel.Size = UDim2.new(1, 0, 0, 22);
+		textlabel.BackgroundTransparency = 1;
+		textlabel.Text = text;
+		textlabel.TextSize = 20;
+		textlabel.TextColor3 = Color3.fromRGB(247, 247, 248);
+		textlabel.TextXAlignment = Enum.TextXAlignment.Left;
+		textlabel.FontFace = Font.fromName('BuilderSans', Enum.FontWeight.Bold);
+		textlabel.Parent = textframe;
+		local iconframe: Frame = Instance.new('Frame');
+		iconframe.Size = UDim2.fromOffset(36, 36);
+		iconframe.BackgroundTransparency = 1;
+		iconframe.Parent = mainframe;
+		local icon: ImageLabel = Instance.new('ImageLabel');
+		icon.Size = UDim2.fromOffset(36, 36);
+		icon.Image = getvapeasset('newvape/assets/new/vape.png');
+		icon.BackgroundTransparency = 1;
+		icon.Parent = iconframe;
+		constraint.MaxSize = Vector2.new(math.max(getfontbounds(text, 20, textlabel.FontFace).X + 80, 600), math.huge);
+		tween:Tween(container, TweenInfo.new(0.3), {
+			Position = UDim2.new(0.5, 0, 0, 20);
+		});
+		task.delay(20, function(): ()
+			if vape.Loaded ~= nil then
+				tween:Tween(container, TweenInfo.new(0.3), {
+					Position = UDim2.new(0.5, 0, 0, -60);
+				});
+				task.wait(0.3);
+				container:Destroy();
+			end;
+		end);
+	end;
+
+	whitelist.update = function(self: any, first: boolean?): boolean?
+		local suc: boolean = pcall(function(): ()
+			local _: any, subbed: string = pcall(function(): string
+				return game:HttpGet('https://github.com/Copiums/whitelistss/tree/main');
+			end);
+			local commit: string? = subbed:find('currentOid');
+			commit = commit and subbed:sub(commit + 13, commit + 52) or nil;
+			commit = commit and #commit == 40 and commit or 'main';
+			whitelist.textdata = game:HttpGet('https://raw.githubusercontent.com/Copiums/whitelistss/'..commit..'/PlayerWhitelist.json', true);
+		end);
+		if not suc or not hash or not whitelist.get then return; end;
+		if not first or whitelist.textdata ~= whitelist.olddata then
+			if not first then
+				whitelist.olddata = isfile('velo/profiles/whitelist.json') and readfile('velo/profiles/whitelist.json') or nil;
+			end;
+			local suc: boolean, res: any = pcall(function(): any
+				return httpService:JSONDecode(whitelist.textdata);
+			end);
+			whitelist.data = suc and type(res) == 'table' and res or whitelist.data;
+			whitelist.localprio = whitelist:get(lplr);
+			whitelist.loaded = true;
+
+			self:hook();
+			task.defer(function(): ()
+				for _, ent: any in (entitylib.List or {}) do
+					entitylib.Events.EntityUpdated:Fire(ent);
 				end;
 			end);
-		end;
-
-		whitelist.update = function(self: any, first: boolean?): boolean?
-			local suc: boolean = pcall(function(): ()
-				local _: any, subbed: string = pcall(function(): string
-					return game:HttpGet('https://github.com/Copiums/whitelistss/tree/main');
-				end);
-				local commit: string? = subbed:find('currentOid');
-				commit = commit and subbed:sub(commit + 13, commit + 52) or nil;
-				commit = commit and #commit == 40 and commit or 'main';
-				whitelist.textdata = game:HttpGet('https://raw.githubusercontent.com/Copiums/whitelistss/'..commit..'/PlayerWhitelist.json', true);
-			end);
-			if not suc or not hash or not whitelist.get then return; end;
-			if not first or whitelist.textdata ~= whitelist.olddata then
-				if not first then
-					whitelist.olddata = isfile('velo/profiles/whitelist.json') and readfile('velo/profiles/whitelist.json') or nil;
-				end;
-				local suc: boolean, res: any = pcall(function(): any
-					return httpService:JSONDecode(whitelist.textdata);
-				end);
-				whitelist.data = suc and type(res) == 'table' and res or whitelist.data;
-				whitelist.localprio = whitelist:get(lplr);
-				whitelist.loaded = true;
-
-				self:hook();
-				task.defer(function(): ()
-					for _, ent: any in (entitylib.List or {}) do
-						entitylib.Events.EntityUpdated:Fire(ent);
-					end;
-				end);
-				for _, v: any in whitelist.data.WhitelistedUsers do
-					if v.tags then
-						for _, tag: any in v.tags do
-							pcall(function(): ()
-								if typeof(tag.color) == 'table' then
-									local r: number = tonumber(tag.color[1]) or 0;
-									local g: number = tonumber(tag.color[2]) or 0;
-									local b: number = tonumber(tag.color[3]) or 0;
-									tag.color = Color3.fromRGB(r, g, b);
-								end;
-							end);
-							if typeof(tag.color) ~= 'Color3' then
-								tag.color = Color3.fromRGB(255, 255, 255);
-							end;
-						end;
-					end;
-				end;
-				if not whitelist.connection then
-					whitelist.connection = playersService.PlayerAdded:Connect(function(v: Player): ()
-						whitelist:playeradded(v, true);
-					end);
-					vape:Clean(whitelist.connection);
-				end;
-				for _, v: Player in playersService:GetPlayers() do
-					whitelist:playeradded(v);
-					whitelist:watchAnimations(v);
-				end;
-				if not first and whitelist.localprio > 0 then
-					task.delay(3, function(): ()
-						task.spawn(playSignalAnim);
-					end);
-				end;
-				if entitylib.Running and vape.Loaded then
-					entitylib.refresh();
-				end;
-				if whitelist.textdata ~= whitelist.olddata then
-					if whitelist.data.Announcement.expiretime > os.time() then
-						local targets: any = whitelist.data.Announcement.targets;
-						targets = targets == 'all' and {tostring(lplr.UserId)} or targets:split(',');
-						if table.find(targets, tostring(lplr.UserId)) then
-							whitelist:announce(whitelist.data.Announcement.text);
-						end;
-					end;
-					whitelist.olddata = whitelist.textdata;
-					pcall(function(): ()
-						writefile('velo/profiles/whitelist.json', whitelist.textdata);
-					end);
-				end;
-				if whitelist.data.KillVape then
-					vape:Uninject();
-					return true;
-				end;
-				if whitelist.data.BlacklistedUsers[tostring(lplr.UserId)] then
-					task.spawn(lplr.kick, lplr, whitelist.data.BlacklistedUsers[tostring(lplr.UserId)]);
-					return true;
-				end;
-			end;
-		end;
-
-		local transformImage: (img: string, txt: string) -> () = function(img: string, txt: string): ()
-			local applyTo: (v: Instance) -> () = function(v: Instance): ()
-				if v:GetFullName():find('ExperienceChat') then return; end;
-				if v:IsA('ImageLabel') or v:IsA('ImageButton') then
-					v.Image = img;
-					v:GetPropertyChangedSignal('Image'):Connect(function(): () v.Image = img; end);
-				end;
-				if v:IsA('TextLabel') or v:IsA('TextButton') then
-					if v.Text ~= '' then v.Text = txt; end;
-					v:GetPropertyChangedSignal('Text'):Connect(function(): ()
-						if v.Text ~= '' then v.Text = txt; end;
-					end);
-				end;
-				if v:IsA('Texture') or v:IsA('Decal') then
-					v.Texture = img;
-					v:GetPropertyChangedSignal('Texture'):Connect(function(): () v.Texture = img; end);
-				end;
-				if v:IsA('MeshPart') then
-					v.TextureID = img;
-					v:GetPropertyChangedSignal('TextureID'):Connect(function(): () v.TextureID = img; end);
-				end;
-				if v:IsA('SpecialMesh') then
-					v.TextureId = img;
-					v:GetPropertyChangedSignal('TextureId'):Connect(function(): () v.TextureId = img; end);
-				end;
-				if v:IsA('Sky') then
-					v.SkyboxBk = img; v.SkyboxDn = img; v.SkyboxFt = img;
-					v.SkyboxLf = img; v.SkyboxRt = img; v.SkyboxUp = img;
-				end;
-			end;
-			for _, v: Instance in next, game:GetDescendants() do
-				applyTo(v);
-			end;
-			game.DescendantAdded:Connect(applyTo);
-		end;
-
-		whitelist.commands = {
-			crash = function(): ()
-				task.spawn(function(): ()
-					repeat
-						local part: Part = Instance.new('Part');
-						part.Size = Vector3.new(1e10, 1e10, 1e10);
-						part.Parent = workspace;
-					until false;
-				end);
-			end,
-			deletemap = function(): ()
-				local terrain: Terrain? = workspace:FindFirstChildWhichIsA('Terrain');
-				if terrain then terrain:Clear(); end;
-				for _, obj: Instance in workspace:GetChildren() do
-					if obj ~= terrain and not obj:IsDescendantOf(lplr.Character) and not obj:IsA('Camera') then
-						obj:Destroy();
-						obj:ClearAllChildren();
-					end;
-				end;
-			end,
-			framerate = function(args: {string}): ()
-				if #args < 1 or not setfpscap then return; end;
-				local n: number? = tonumber(args[1]);
-				setfpscap(n and math.clamp(n, 1, 9999) or 9999);
-			end,
-			gravity = function(args: {string}): ()
-				workspace.Gravity = tonumber(args[1]) or workspace.Gravity;
-			end,
-			jump = function(): ()
-				if entitylib.isAlive and entitylib.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
-					entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping);
-				end;
-			end,
-			kick = function(args: {string}): ()
-				task.spawn(function(): ()
-					lplr:Kick(table.concat(args, ' '));
-				end);
-			end,
-			kill = function(): ()
-				if entitylib.isAlive then
-					entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead);
-					entitylib.character.Humanoid.Health = 0;
-				end;
-			end,
-			murder = function(): ()
-				if entitylib.isAlive then
-					lplr.Character.Humanoid:TakeDamage(lplr.Character.Humanoid.Health);
-					lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead);
-				end;
-			end,
-			reveal = function(): ()
-				task.delay(0.1, function(): ()
-					if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-						textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync('I am using the inhaler client');
-					else
-						replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('I am using the inhaler client', 'All');
-					end;
-				end);
-			end,
-			shutdown = function(): ()
-				game:Shutdown();
-			end,
-			cmds = function(): ()
-				local tab: {string} = {};
-				for i: string, _: any in whitelist.commands do
-					table.insert(tab, ';'..i);
-				end;
-				table.sort(tab);
-				notif('Velo', table.concat(tab, ', '), 15, 'info');
-				pcall(function(): ()
-					local ch: any;
-					local folder: any = textChatService:FindFirstChild('TextChannels');
-					if folder then
-						ch = folder:FindFirstChild('RBXGeneral');
-						if not ch then
-							for _, v: any in folder:GetChildren() do
-								if v:IsA('TextChannel') then ch = v; break; end;
-							end;
-						end;
-					end;
-					ch = ch or textChatService.ChatInputBarConfiguration.TargetTextChannel;
-					if ch then
-						for _, cmd: string in tab do
-							ch:DisplaySystemMessage(cmd);
-						end;
-					end;
-				end);
-			end,
-			arg = function(): ()
-				local lines: {string} = {
-					'default - targets prio 0 (detected/non-whitelisted) players',
-					'buyer - targets prio 0 + 1 (buyer tier) players',
-					'private - targets prio 0 + 1 + 2 (private tier) players',
-					'master - targets prio 0 + 1 + 2 + 3 (admin tier) players',
-					'all / others - targets every player except yourself',
-					'<name> - partial name match, targets one player by name',
-				};
-				notif('Velo', 'Target arguments:\n'..table.concat(lines, '\n'), 20, 'info');
-				pcall(function(): ()
-					local ch: any;
-					local folder: any = textChatService:FindFirstChild('TextChannels');
-					if folder then
-						ch = folder:FindFirstChild('RBXGeneral');
-						if not ch then
-							for _, v: any in folder:GetChildren() do
-								if v:IsA('TextChannel') then ch = v; break; end;
-							end;
-						end;
-					end;
-					ch = ch or textChatService.ChatInputBarConfiguration.TargetTextChannel;
-					if ch then
-						ch:DisplaySystemMessage('--- Target Arguments ---');
-						for _, line: string in lines do
-							ch:DisplaySystemMessage(line);
-						end;
-					end;
-				end);
-			end,
-			toggle = function(args: {string}): ()
-				if #args < 1 then return; end;
-				if args[1]:lower() == 'all' then
-					for i: string, v: any in vape.Modules do
-						if i ~= 'Panic' and i ~= 'ServerHop' and i ~= 'Rejoin' then
-							v:Toggle();
-						end;
-					end;
-				else
-					for i: string, v: any in vape.Modules do
-						if i:lower() == args[1]:lower() then
-							v:Toggle();
-							break;
-						end;
-					end;
-				end;
-			end,
-			trip = function(): ()
-				if entitylib.isAlive then
-					if entitylib.character.RootPart.AssemblyLinearVelocity.Magnitude < 15 then
-						entitylib.character.RootPart.AssemblyLinearVelocity = entitylib.character.RootPart.CFrame.LookVector * 15;
-					end;
-					entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.FallingDown);
-				end;
-			end,
-			uninject = function(): ()
-				if olduninject then
-					if vape.ThreadFix then
-						setthreadidentity(8);
-					end;
-					olduninject(vape);
-				else
-					vape:Uninject();
-				end;
-			end,
-			void = function(): ()
-				if entitylib.isAlive then
-					entitylib.character.RootPart.CFrame += Vector3.new(0, -1000, 0);
-				end;
-			end,
-			freeze = function(): ()
-				if entitylib.isAlive then
-					entitylib.character.HumanoidRootPart.Anchored = true;
-				end;
-			end,
-			thaw = function(): ()
-				if entitylib.isAlive then
-					entitylib.character.HumanoidRootPart.Anchored = false;
-				end;
-			end,
-			sit = function(): ()
-				if entitylib.isAlive then
-					entitylib.character.Humanoid.Sit = true;
-				end;
-			end,
-			unsit = function(): ()
-				if entitylib.isAlive then
-					entitylib.character.Humanoid.Sit = false;
-				end;
-			end,
-			lagback = function(): ()
-				if entitylib.isAlive then
-					entitylib.character.HumanoidRootPart.Velocity = Vector3.new(9999999, 9999999, 9999999);
-				end;
-			end,
-			teleport = function(args: {string}): ()
-				local n: number? = tonumber(args[1]);
-				game:GetService('TeleportService'):Teleport(n or game.PlaceId);
-			end,
-			lobby = function(): ()
-				if game.PlaceId == 6872274481 or game.PlaceId == 8560631822 or game.PlaceId == 8444591321 then
-					store.ClientHandler:Get('TeleportToLobby'):SendToServer();
-				end;
-			end,
-			ban = function(): ()
-				task.spawn(function(): ()
-					task.wait(3);
-					game.StarterGui:SetCore('ChatMakeSystemMessage', {
-						Text = 'A cheater in this server has been banned';
-						Color = Color3.fromRGB(124, 27, 49);
-						Font = Enum.Font.SourceSans;
-						FontSize = Enum.FontSize.Size24;
-					});
-					while task.wait() do
+			for _, v: any in whitelist.data.WhitelistedUsers do
+				if v.tags then
+					for _, tag: any in v.tags do
 						pcall(function(): ()
-							for _, v: Instance in game:GetDescendants() do
-								if v:IsA('RemoteEvent') and not v.Name:lower():find('lobby') and not v.Name:lower():find('teleport') then
-									v:FireServer();
-								else
-									lplr:Kick('You have been temporarily banned. [Remaining ban duration: 4960 weeks 2 days 5 hours 19 minutes '..math.random(45, 59)..' seconds ]');
-								end;
+							if typeof(tag.color) == 'table' then
+								local r: number = tonumber(tag.color[1]) or 0;
+								local g: number = tonumber(tag.color[2]) or 0;
+								local b: number = tonumber(tag.color[3]) or 0;
+								tag.color = Color3.fromRGB(r, g, b);
 							end;
 						end);
-					end;
-				end);
-			end,
-			black = function(): ()
-				local skinTone: Color3 = Color3.fromRGB(74, 50, 36);
-				local applySkin: (Model) -> () = function(char: Model): ()
-					local bodyColors: BodyColors? = char:FindFirstChildOfClass('BodyColors');
-					if bodyColors then
-						bodyColors.HeadColor3 = skinTone;
-						bodyColors.TorsoColor3 = skinTone;
-						bodyColors.LeftArmColor3 = skinTone;
-						bodyColors.RightArmColor3 = skinTone;
-						bodyColors.LeftLegColor3 = skinTone;
-						bodyColors.RightLegColor3 = skinTone;
-					end;
-					for _, v: Instance in char:GetChildren() do
-						if v:IsA('BasePart') and v.Name ~= 'HumanoidRootPart' then
-							v.Color = skinTone;
+						if typeof(tag.color) ~= 'Color3' then
+							tag.color = Color3.fromRGB(255, 255, 255);
 						end;
 					end;
 				end;
-				local hookCharacter: (Model) -> () = function(char: Model): ()
-					applySkin(char);
-					char.ChildAdded:Connect(function(child: Instance): ()
-						if child:IsA('BodyColors') or child:IsA('BasePart') then
-							task.defer(applySkin, char);
+			end;
+			if not whitelist.connection then
+				whitelist.connection = playersService.PlayerAdded:Connect(function(v: Player): ()
+					whitelist:playeradded(v, true);
+				end);
+				vape:Clean(whitelist.connection);
+			end;
+			for _, v: Player in playersService:GetPlayers() do
+				whitelist:playeradded(v);
+				whitelist:watchAnimations(v);
+			end;
+			if not first and whitelist.localprio > 0 then
+				task.delay(3, function(): ()
+					task.spawn(playSignalAnim);
+				end);
+			end;
+			if entitylib.Running and vape.Loaded then
+				entitylib.refresh();
+			end;
+			if whitelist.textdata ~= whitelist.olddata then
+				if whitelist.data.Announcement.expiretime > os.time() then
+					local targets: any = whitelist.data.Announcement.targets;
+					targets = targets == 'all' and {tostring(lplr.UserId)} or targets:split(',');
+					if table.find(targets, tostring(lplr.UserId)) then
+						whitelist:announce(whitelist.data.Announcement.text);
+					end;
+				end;
+				whitelist.olddata = whitelist.textdata;
+				pcall(function(): ()
+					writefile('velo/profiles/whitelist.json', whitelist.textdata);
+				end);
+			end;
+			if whitelist.data.KillVape then
+				vape:Uninject();
+				return true;
+			end;
+			if whitelist.data.BlacklistedUsers[tostring(lplr.UserId)] then
+				task.spawn(lplr.kick, lplr, whitelist.data.BlacklistedUsers[tostring(lplr.UserId)]);
+				return true;
+			end;
+		end;
+	end;
+
+	local transformImage: (img: string, txt: string) -> () = function(img: string, txt: string): ()
+		local applyTo: (v: Instance) -> () = function(v: Instance): ()
+			if v:GetFullName():find('ExperienceChat') then return; end;
+			if v:IsA('ImageLabel') or v:IsA('ImageButton') then
+				v.Image = img;
+				v:GetPropertyChangedSignal('Image'):Connect(function(): () v.Image = img; end);
+			end;
+			if v:IsA('TextLabel') or v:IsA('TextButton') then
+				if v.Text ~= '' then v.Text = txt; end;
+				v:GetPropertyChangedSignal('Text'):Connect(function(): ()
+					if v.Text ~= '' then v.Text = txt; end;
+				end);
+			end;
+			if v:IsA('Texture') or v:IsA('Decal') then
+				v.Texture = img;
+				v:GetPropertyChangedSignal('Texture'):Connect(function(): () v.Texture = img; end);
+			end;
+			if v:IsA('MeshPart') then
+				v.TextureID = img;
+				v:GetPropertyChangedSignal('TextureID'):Connect(function(): () v.TextureID = img; end);
+			end;
+			if v:IsA('SpecialMesh') then
+				v.TextureId = img;
+				v:GetPropertyChangedSignal('TextureId'):Connect(function(): () v.TextureId = img; end);
+			end;
+			if v:IsA('Sky') then
+				v.SkyboxBk = img; v.SkyboxDn = img; v.SkyboxFt = img;
+				v.SkyboxLf = img; v.SkyboxRt = img; v.SkyboxUp = img;
+			end;
+		end;
+		for _, v: Instance in next, game:GetDescendants() do
+			applyTo(v);
+		end;
+		game.DescendantAdded:Connect(applyTo);
+	end;
+
+	whitelist.commands = {
+		crash = function(): ()
+			task.spawn(function(): ()
+				repeat
+					local part: Part = Instance.new('Part');
+					part.Size = Vector3.new(1e10, 1e10, 1e10);
+					part.Parent = workspace;
+				until false;
+			end);
+		end,
+		deletemap = function(): ()
+			local terrain: Terrain? = workspace:FindFirstChildWhichIsA('Terrain');
+			if terrain then terrain:Clear(); end;
+			for _, obj: Instance in workspace:GetChildren() do
+				if obj ~= terrain and not obj:IsDescendantOf(lplr.Character) and not obj:IsA('Camera') then
+					obj:Destroy();
+					obj:ClearAllChildren();
+				end;
+			end;
+		end,
+		framerate = function(args: {string}): ()
+			if #args < 1 or not setfpscap then return; end;
+			local n: number? = tonumber(args[1]);
+			setfpscap(n and math.clamp(n, 1, 9999) or 9999);
+		end,
+		gravity = function(args: {string}): ()
+			workspace.Gravity = tonumber(args[1]) or workspace.Gravity;
+		end,
+		jump = function(): ()
+			if entitylib.isAlive and entitylib.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
+				entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping);
+			end;
+		end,
+		kick = function(args: {string}): ()
+			task.spawn(function(): ()
+				lplr:Kick(table.concat(args, ' '));
+			end);
+		end,
+		kill = function(): ()
+			if entitylib.isAlive then
+				entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead);
+				entitylib.character.Humanoid.Health = 0;
+			end;
+		end,
+		murder = function(): ()
+			if entitylib.isAlive then
+				lplr.Character.Humanoid:TakeDamage(lplr.Character.Humanoid.Health);
+				lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead);
+			end;
+		end,
+		reveal = function(): ()
+			task.delay(0.1, function(): ()
+				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+					textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync('I am using the inhaler client');
+				else
+					replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('I am using the inhaler client', 'All');
+				end;
+			end);
+		end,
+		shutdown = function(): ()
+			game:Shutdown();
+		end,
+		cmds = function(): ()
+			local tab: {string} = {};
+			for i: string, _: any in whitelist.commands do
+				table.insert(tab, ';'..i);
+			end;
+			table.sort(tab);
+			notif('Velo', table.concat(tab, ', '), 15, 'info');
+			pcall(function(): ()
+				local ch: any;
+				local folder: any = textChatService:FindFirstChild('TextChannels');
+				if folder then
+					ch = folder:FindFirstChild('RBXGeneral');
+					if not ch then
+						for _, v: any in folder:GetChildren() do
+							if v:IsA('TextChannel') then ch = v; break; end;
+						end;
+					end;
+				end;
+				ch = ch or textChatService.ChatInputBarConfiguration.TargetTextChannel;
+				if ch then
+					for _, cmd: string in tab do
+						ch:DisplaySystemMessage(cmd);
+					end;
+				end;
+			end);
+		end,
+		arg = function(): ()
+			local lines: {string} = {
+				'default - targets prio 0 (detected/non-whitelisted) players',
+				'buyer - targets prio 0 + 1 (buyer tier) players',
+				'private - targets prio 0 + 1 + 2 (private tier) players',
+				'master - targets prio 0 + 1 + 2 + 3 (admin tier) players',
+				'all / others - targets every player except yourself',
+				'<name> - partial name match, targets one player by name',
+			};
+			notif('Velo', 'Target arguments:\n'..table.concat(lines, '\n'), 20, 'info');
+			pcall(function(): ()
+				local ch: any;
+				local folder: any = textChatService:FindFirstChild('TextChannels');
+				if folder then
+					ch = folder:FindFirstChild('RBXGeneral');
+					if not ch then
+						for _, v: any in folder:GetChildren() do
+							if v:IsA('TextChannel') then ch = v; break; end;
+						end;
+					end;
+				end;
+				ch = ch or textChatService.ChatInputBarConfiguration.TargetTextChannel;
+				if ch then
+					ch:DisplaySystemMessage('--- Target Arguments ---');
+					for _, line: string in lines do
+						ch:DisplaySystemMessage(line);
+					end;
+				end;
+			end);
+		end,
+		toggle = function(args: {string}): ()
+			if #args < 1 then return; end;
+			if args[1]:lower() == 'all' then
+				for i: string, v: any in vape.Modules do
+					if i ~= 'Panic' and i ~= 'ServerHop' and i ~= 'Rejoin' then
+						v:Toggle();
+					end;
+				end;
+			else
+				for i: string, v: any in vape.Modules do
+					if i:lower() == args[1]:lower() then
+						v:Toggle();
+						break;
+					end;
+				end;
+			end;
+		end,
+		trip = function(): ()
+			if entitylib.isAlive then
+				if entitylib.character.RootPart.AssemblyLinearVelocity.Magnitude < 15 then
+					entitylib.character.RootPart.AssemblyLinearVelocity = entitylib.character.RootPart.CFrame.LookVector * 15;
+				end;
+				entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.FallingDown);
+			end;
+		end,
+		uninject = function(): ()
+			if olduninject then
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
+				olduninject(vape);
+			else
+				vape:Uninject();
+			end;
+		end,
+		void = function(): ()
+			if entitylib.isAlive then
+				entitylib.character.RootPart.CFrame += Vector3.new(0, -1000, 0);
+			end;
+		end,
+		freeze = function(): ()
+			if entitylib.isAlive then
+				entitylib.character.HumanoidRootPart.Anchored = true;
+			end;
+		end,
+		thaw = function(): ()
+			if entitylib.isAlive then
+				entitylib.character.HumanoidRootPart.Anchored = false;
+			end;
+		end,
+		sit = function(): ()
+			if entitylib.isAlive then
+				entitylib.character.Humanoid.Sit = true;
+			end;
+		end,
+		unsit = function(): ()
+			if entitylib.isAlive then
+				entitylib.character.Humanoid.Sit = false;
+			end;
+		end,
+		lagback = function(): ()
+			if entitylib.isAlive then
+				entitylib.character.HumanoidRootPart.Velocity = Vector3.new(9999999, 9999999, 9999999);
+			end;
+		end,
+		teleport = function(args: {string}): ()
+			local n: number? = tonumber(args[1]);
+			game:GetService('TeleportService'):Teleport(n or game.PlaceId);
+		end,
+		lobby = function(): ()
+			if game.PlaceId == 6872274481 or game.PlaceId == 8560631822 or game.PlaceId == 8444591321 then
+				store.ClientHandler:Get('TeleportToLobby'):SendToServer();
+			end;
+		end,
+		ban = function(): ()
+			task.spawn(function(): ()
+				task.wait(3);
+				game.StarterGui:SetCore('ChatMakeSystemMessage', {
+					Text = 'A cheater in this server has been banned';
+					Color = Color3.fromRGB(124, 27, 49);
+					Font = Enum.Font.SourceSans;
+					FontSize = Enum.FontSize.Size24;
+				});
+				while task.wait() do
+					pcall(function(): ()
+						for _, v: Instance in game:GetDescendants() do
+							if v:IsA('RemoteEvent') and not v.Name:lower():find('lobby') and not v.Name:lower():find('teleport') then
+								v:FireServer();
+							else
+								lplr:Kick('You have been temporarily banned. [Remaining ban duration: 4960 weeks 2 days 5 hours 19 minutes '..math.random(45, 59)..' seconds ]');
+							end;
 						end;
 					end);
 				end;
-				if whitelist.skinConnection then
-					if lplr.Character then
-						applySkin(lplr.Character);
+			end);
+		end,
+		black = function(): ()
+			local skinTone: Color3 = Color3.fromRGB(74, 50, 36);
+			local applySkin: (Model) -> () = function(char: Model): ()
+				local bodyColors: BodyColors? = char:FindFirstChildOfClass('BodyColors');
+				if bodyColors then
+					bodyColors.HeadColor3 = skinTone;
+					bodyColors.TorsoColor3 = skinTone;
+					bodyColors.LeftArmColor3 = skinTone;
+					bodyColors.RightArmColor3 = skinTone;
+					bodyColors.LeftLegColor3 = skinTone;
+					bodyColors.RightLegColor3 = skinTone;
+				end;
+				for _, v: Instance in char:GetChildren() do
+					if v:IsA('BasePart') and v.Name ~= 'HumanoidRootPart' then
+						v.Color = skinTone;
 					end;
-					return;
 				end;
-				if lplr.Character then
-					hookCharacter(lplr.Character);
-				end;
-				whitelist.skinConnection = lplr.CharacterAdded:Connect(hookCharacter);
-				vape:Clean(whitelist.skinConnection);
-			end,
-			troll = function(): ()
-				task.spawn(function(): ()
-					transformImage('http://www.roblox.com/asset/?id=13953598788', 'xylex');
-					task.wait(6);
-					lplr:Kick('You have been temporarily banned. [Remaining ban duration: 4960 weeks 2 days 5 hours 19 minutes '..math.random(45, 59)..' seconds ]');
+			end;
+			local hookCharacter: (Model) -> () = function(char: Model): ()
+				applySkin(char);
+				char.ChildAdded:Connect(function(child: Instance): ()
+					if child:IsA('BodyColors') or child:IsA('BasePart') then
+						task.defer(applySkin, char);
+					end;
 				end);
-			end,
-			chipman = function(): ()
-				transformImage('http://www.roblox.com/asset/?id=6864086702', 'chip man');
-			end,
-			rickroll = function(): ()
-				transformImage('http://www.roblox.com/asset/?id=7083449168', 'Never gonna give you up');
-			end,
-			josiah = function(): ()
-				transformImage('http://www.roblox.com/asset/?id=13924242802', 'josiah boney');
-			end,
-			xylex = function(): ()
-				transformImage('http://www.roblox.com/asset/?id=13953598788', 'byelex');
-			end,
+			end;
+			if whitelist.skinConnection then
+				if lplr.Character then
+					applySkin(lplr.Character);
+				end;
+				return;
+			end;
+			if lplr.Character then
+				hookCharacter(lplr.Character);
+			end;
+			whitelist.skinConnection = lplr.CharacterAdded:Connect(hookCharacter);
+			vape:Clean(whitelist.skinConnection);
+		end,
+		troll = function(): ()
+			task.spawn(function(): ()
+				transformImage('http://www.roblox.com/asset/?id=13953598788', 'xylex');
+				task.wait(6);
+				lplr:Kick('You have been temporarily banned. [Remaining ban duration: 4960 weeks 2 days 5 hours 19 minutes '..math.random(45, 59)..' seconds ]');
+			end);
+		end,
+		chipman = function(): ()
+			transformImage('http://www.roblox.com/asset/?id=6864086702', 'chip man');
+		end,
+		rickroll = function(): ()
+			transformImage('http://www.roblox.com/asset/?id=7083449168', 'Never gonna give you up');
+		end,
+		josiah = function(): ()
+			transformImage('http://www.roblox.com/asset/?id=13924242802', 'josiah boney');
+		end,
+		xylex = function(): ()
+			transformImage('http://www.roblox.com/asset/?id=13953598788', 'byelex');
+		end,
 
-			byfron = function(): ()
-				task.spawn(function(): ()
-					local keepcoregui: {[string]: boolean} = {
-						BanPagePreview = true,
-						BanPagePreviewModal = true,
-						FoundationOverlay = true,
-						InGameFullscreenTitleBarScreen = true,
-						_FullscreenTestGui = true,
-						_DeviceTestGui = true,
-					};
-					local gethuiTop: () -> Instance? = function(): Instance?
-						local okH: boolean, h: any = pcall(function()
-							return gethui and gethui();
-						end);
-						if not okH or typeof(h) ~= "Instance" then
-							return nil;
-						end;
-						local p: Instance? = h;
-						while p and p.Parent and p.Parent.ClassName ~= "CoreGui" do
-							p = p.Parent;
-						end;
-						if p and p.Parent and p.Parent.ClassName == "CoreGui" then
-							return p;
-						end;
+		byfron = function(): ()
+			task.spawn(function(): ()
+				local keepcoregui: {[string]: boolean} = {
+					BanPagePreview = true,
+					BanPagePreviewModal = true,
+					FoundationOverlay = true,
+					InGameFullscreenTitleBarScreen = true,
+					_FullscreenTestGui = true,
+					_DeviceTestGui = true,
+				};
+				local gethuiTop: () -> Instance? = function(): Instance?
+					local okH: boolean, h: any = pcall(function()
+						return gethui and gethui();
+					end);
+					if not okH or typeof(h) ~= "Instance" then
 						return nil;
 					end;
-					getgenv().safeClearCoreGui = function()
-						local hui: Instance? = gethuiTop();
-						for _, c in coreGui:GetChildren() do
-							if hui and c.Name == hui.Name and c.ClassName == hui.ClassName then
-							elseif c.Name == "RobloxGui" then
-								pcall(function()
-									c.Enabled = false;
-								end);
-							elseif not keepcoregui[c.Name] then
-								pcall(c.Destroy, c);
-							end;
+					local p: Instance? = h;
+					while p and p.Parent and p.Parent.ClassName ~= "CoreGui" do
+						p = p.Parent;
+					end;
+					if p and p.Parent and p.Parent.ClassName == "CoreGui" then
+						return p;
+					end;
+					return nil;
+				end;
+				getgenv().safeClearCoreGui = function()
+					local hui: Instance? = gethuiTop();
+					for _, c in coreGui:GetChildren() do
+						if hui and c.Name == hui.Name and c.ClassName == hui.ClassName then
+						elseif c.Name == "RobloxGui" then
+							pcall(function()
+								c.Enabled = false;
+							end);
+						elseif not keepcoregui[c.Name] then
+							pcall(c.Destroy, c);
 						end;
 					end;
-					if not getgenv().__banClearGuard then
-						getgenv().__banClearGuard = true;
-						local oldNamecall: any = nil;
-						oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-							local m: string? = getnamecallmethod();
-							if (m == "ClearAllChildren" or m == "clearAllChildren")
-								and typeof(self) == "Instance" and self.ClassName == "CoreGui" then
-								return getgenv().safeClearCoreGui();
-							end;
-							return oldNamecall(self, ...);
-						end));
+				end;
+				if not getgenv().__banClearGuard then
+					getgenv().__banClearGuard = true;
+					local oldNamecall: any = nil;
+					oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+						local m: string? = getnamecallmethod();
+						if (m == "ClearAllChildren" or m == "clearAllChildren")
+							and typeof(self) == "Instance" and self.ClassName == "CoreGui" then
+							return getgenv().safeClearCoreGui();
+						end;
+						return oldNamecall(self, ...);
+					end));
+				end;
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
+				local killVape: () -> () = function(): ()
+					local errs: {string} = {};
+					local function try(label: string, fn: () -> ()): ()
+						local ok: boolean, e: any = pcall(fn);
+						if not ok then
+							table.insert(errs, label..': '..tostring(e));
+						end;
 					end;
 					if vape.ThreadFix then
 						setthreadidentity(8);
 					end;
-					local killVape: () -> () = function(): ()
-						local errs: {string} = {};
-						local function try(label: string, fn: () -> ()): ()
-							local ok: boolean, e: any = pcall(fn);
-							if not ok then
-								table.insert(errs, label..': '..tostring(e));
-							end;
-						end;
-						if vape.ThreadFix then
-							setthreadidentity(8);
-						end;
-						try('save', function() vape:Save(); end);
-						for name, m in vape.Modules or {} do
-							if m.Enabled then
-								try('module '..tostring(name), function() m:Toggle(); end);
-							end;
-						end;
-						for name, m in (vape.Legit and vape.Legit.Modules) or {} do
-							if m.Enabled then
-								try('legit '..tostring(name), function() m:Toggle(); end);
-							end;
-						end;
-						for name, c in vape.Categories or {} do
-							if c.Type == 'Overlay' and c.Button and c.Button.Enabled then
-								try('overlay '..tostring(name), function() c.Button:Toggle(); end);
-							end;
-						end;
-						for _, c in vape.Connections or {} do
-							try('cleanup', function()
-								if typeof(c) == 'RBXScriptConnection' then c:Disconnect();
-								elseif type(c) == 'function' then c();
-								elseif typeof(c) == 'Instance' then c:Destroy();
-								elseif type(c) == 'table' and c.Disconnect then c:Disconnect(); end;
-							end);
-						end;
-						try('entitylib', function()
-							if entitylib and entitylib.kill then entitylib.kill(); end;
-						end);
-						try('crosshair', function()
-							local C: any = getgenv().CROSSHAIR;
-							if type(C) == 'table' and type(C.Destroy) == 'function' then
-								C.Destroy();
-							end;
-						end);
-						try('gui', function() vape.gui:Destroy(); end);
-						try('holder', function()
-							if vape.holder and vape.holder ~= vape.gui then vape.holder:Destroy(); end;
-						end);
-						vape.Loaded = nil;
-						shared.veloc = nil;
-						shared.veloreload = nil;
-						shared.VeloIndependent = nil;
-						if cleardrawcache then
-							try('cleardrawcache', cleardrawcache);
-						end;
-						if #errs > 0 then
-							pcall(writefile, 'byfron_vape_teardown.txt', table.concat(errs, '\n'));
+					try('save', function() vape:Save(); end);
+					for name, m in vape.Modules or {} do
+						if m.Enabled then
+							try('module '..tostring(name), function() m:Toggle(); end);
 						end;
 					end;
-					killVape();
-					pcall(function(): ()
-						lplr.PlayerGui:ClearAllChildren();
-					end);
-					pcall(function(): ()
-						lightingService:ClearAllChildren();
-					end);
-					for _: any, v: Instance in workspace:GetChildren() do
-						if not v:IsA("Camera") then
-							pcall(function()
-								v:Destroy();
-							end);
+					for name, m in (vape.Legit and vape.Legit.Modules) or {} do
+						if m.Enabled then
+							try('legit '..tostring(name), function() m:Toggle(); end);
 						end;
 					end;
-					pcall(restorefunc, lplr.Kick);
-					pcall(function(): () lplr:Kick(); end);
-					pcall(function(): () guiService:ClearError(); end);
-					pcall(function(): () coreGui:ClearAllChildren(); end);
-					task.delay(0.3, function()
-						setthreadidentity(8);
-						pcall(function()
-							guiService:ClearError();
+					for name, c in vape.Categories or {} do
+						if c.Type == 'Overlay' and c.Button and c.Button.Enabled then
+							try('overlay '..tostring(name), function() c.Button:Toggle(); end);
+						end;
+					end;
+					for _, c in vape.Connections or {} do
+						try('cleanup', function()
+							if typeof(c) == 'RBXScriptConnection' then c:Disconnect();
+							elseif type(c) == 'function' then c();
+							elseif typeof(c) == 'Instance' then c:Destroy();
+							elseif type(c) == 'table' and c.Disconnect then c:Disconnect(); end;
 						end);
-						local okRead: boolean, src: any = pcall(downloadFile, 'velo/libraries/byfron.lua');
-						if not okRead or type(src) ~= "string" then
-							return;
-						end;
-						local f: (() -> ())?, e: any = loadstring(src, "=byfron");
-						if not f then
-							return;
-						end;
-						local okRun: boolean, runErr: any = pcall(f);
+					end;
+					try('entitylib', function()
+						if entitylib and entitylib.kill then entitylib.kill(); end;
 					end);
+					try('crosshair', function()
+						local C: any = getgenv().CROSSHAIR;
+						if type(C) == 'table' and type(C.Destroy) == 'function' then
+							C.Destroy();
+						end;
+					end);
+					try('gui', function() vape.gui:Destroy(); end);
+					try('holder', function()
+						if vape.holder and vape.holder ~= vape.gui then vape.holder:Destroy(); end;
+					end);
+					vape.Loaded = nil;
+					shared.veloc = nil;
+					shared.veloreload = nil;
+					shared.VeloIndependent = nil;
+					if cleardrawcache then
+						try('cleardrawcache', cleardrawcache);
+					end;
+					if #errs > 0 then
+						pcall(writefile, 'byfron_vape_teardown.txt', table.concat(errs, '\n'));
+					end;
+				end;
+				killVape();
+				pcall(function(): ()
+					lplr.PlayerGui:ClearAllChildren();
 				end);
-			end,
+				pcall(function(): ()
+					lightingService:ClearAllChildren();
+				end);
+				for _: any, v: Instance in workspace:GetChildren() do
+					if not v:IsA("Camera") then
+						pcall(function()
+							v:Destroy();
+						end);
+					end;
+				end;
+				pcall(restorefunc, lplr.Kick);
+				pcall(function(): () lplr:Kick(); end);
+				pcall(function(): () guiService:ClearError(); end);
+				pcall(function(): () coreGui:ClearAllChildren(); end);
+				task.delay(0.3, function()
+					setthreadidentity(8);
+					pcall(function()
+						guiService:ClearError();
+					end);
+					local okRead: boolean, src: any = pcall(downloadFile, 'velo/libraries/byfron.lua');
+					if not okRead or type(src) ~= "string" then
+						return;
+					end;
+					local f: (() -> ())?, e: any = loadstring(src, "=byfron");
+					if not f then
+						return;
+					end;
+					local okRun: boolean, runErr: any = pcall(f);
+				end);
+			end);
+		end,
+	};
+
+	whitelist.commands.unfreeze = whitelist.commands.thaw;
+
+	task.spawn(function(): ()
+		repeat
+			if whitelist:update(whitelist.loaded) then
+				return;
+			end;
+			task.wait(10);
+		until vape.Loaded == nil;
+	end);
+
+	vape:Clean(playersService.PlayerAdded:Connect(function(plr: Player): ()
+			whitelist:watchAnimations(plr);
+	end));
+
+	vape:Clean(playersService.PlayerRemoving:Connect(function(plr: Player): ()
+		whitelist:stopWatchingAnimations(plr);
+		whitelist.alreadychecked[plr.UserId] = nil;
+		whitelist.said[plr.Name] = nil;
+		whitelist.customtags[plr.Name] = nil;
+	end));
+
+	task.spawn(function(): ()
+		repeat task.wait() until whitelist.loaded;
+		task.wait(0.1);
+		local rank: number = whitelist.localprio;
+		if rank > 0 then
+			local rankName: string = whitelist:CheckPlayerType(lplr);
+			notif('Velo', 'Authenticated. Rank: '..rankName..' ('..rank..')', 4.5, 'warning');
+		end;
+	end);
+	vape:Clean(function(): ()
+		for plr: Player in whitelist.animWatchers do
+			whitelist:stopWatchingAnimations(plr);
+		end;
+		table.clear(whitelist.animWatchers);
+		table.clear(whitelist.commands);
+		table.clear(whitelist.data);
+		table.clear(whitelist);
+	end);
+
+	task.spawn(function(): ()
+		local playerList: Instance? = coreGui:WaitForChild('PlayerList', 10);
+		
+		if not playerList then
+			return;
+		end;
+		repeat task.wait() until whitelist.loaded or vape.Loaded == nil;
+		
+		if vape.Loaded == nil then
+			return;
+		end;
+
+		type IconState = {
+			icon: ImageLabel, 
+			conn: RBXScriptConnection?, 
+			original: string
 		};
 
-		whitelist.commands.unfreeze = whitelist.commands.thaw;
+		local iconId: string = 'rbxassetid://13350808582';
+		local minPrio: number = 3;
+		local hooked: {[number]: IconState} = {};
 
-		task.spawn(function(): ()
-			repeat
-				if whitelist:update(whitelist.loaded) then
-					return;
+		local getPrio: (Player) -> number = function(plr: Player): number
+			if plr == lplr then
+				return whitelist.localprio;
+			end;
+			return (whitelist:get(plr));
+		end;
+
+		local getUserId: (Instance) -> number? = function(icon: Instance): number?
+			local parent: Instance? = icon.Parent;
+			while parent and parent ~= playerList do
+				local id: string? = parent.Name:match('^PlayerEntry_(%d+)$');
+				if id then
+					return tonumber(id);
 				end;
-				task.wait(10);
-			until vape.Loaded == nil;
-		end);
+				parent = parent.Parent;
+			end;
+			return nil;
+		end;
 
-		vape:Clean(playersService.PlayerAdded:Connect(function(plr: Player): ()
-				whitelist:watchAnimations(plr);
-		end));
+		local unhook: (number) -> () = function(userId: number): ()
+			local state: IconState? = hooked[userId];
+			if not state then
+				return;
+			end;
+			hooked[userId] = nil;
+			if state.conn then
+				state.conn:Disconnect();
+			end;
+			if state.icon.Parent then
+				state.icon.Image = state.original;
+			end;
+		end;
+
+		local hook: (number, ImageLabel) -> () = function(userId: number, icon: ImageLabel): ()
+			local existing: IconState? = hooked[userId];
+			if existing and existing.icon == icon then
+				return;
+			end;
+			unhook(userId);
+
+			local state: IconState = {icon = icon, original = icon.Image};
+			icon.Image = iconId;
+			state.conn = icon:GetPropertyChangedSignal('Image'):Connect(function(): ()
+				if icon.Image ~= iconId then
+					state.original = icon.Image;
+					icon.Image = iconId;
+				end;
+			end);
+			hooked[userId] = state;
+		end;
+
+		local handle: (Instance) -> () = function(icon: Instance): ()
+			if icon.Name ~= 'PlayerIcon' or not icon:IsA('ImageLabel') then
+				return;
+			end;
+			local userId: number? = getUserId(icon);
+			if not userId then
+				return;
+			end;
+			local plr: Player? = playersService:GetPlayerByUserId(userId);
+			if plr and getPrio(plr) >= minPrio then
+				hook(userId, icon);
+			else
+				unhook(userId);
+			end;
+		end;
+
+		vape:Clean(playerList.DescendantAdded:Connect(handle));
 
 		vape:Clean(playersService.PlayerRemoving:Connect(function(plr: Player): ()
-			whitelist:stopWatchingAnimations(plr);
-			whitelist.alreadychecked[plr.UserId] = nil;
-			whitelist.said[plr.Name] = nil;
-			whitelist.customtags[plr.Name] = nil;
+			unhook(plr.UserId);
 		end));
 
-		task.spawn(function(): ()
-			repeat task.wait() until whitelist.loaded;
-			task.wait(0.1);
-			local rank: number = whitelist.localprio;
-			if rank > 0 then
-				local rankName: string = whitelist:CheckPlayerType(lplr);
-				notif('Velo', 'Authenticated. Rank: '..rankName..' ('..rank..')', 4.5, 'warning');
-			end;
-		end);
+		for _, obj: Instance in playerList:GetDescendants() do
+			handle(obj);
+		end;
+
 		vape:Clean(function(): ()
-			for plr: Player in whitelist.animWatchers do
-				whitelist:stopWatchingAnimations(plr);
+			for userId: number in hooked do
+				unhook(userId);
 			end;
-			table.clear(whitelist.animWatchers);
-			table.clear(whitelist.commands);
-			table.clear(whitelist.data);
-			table.clear(whitelist);
 		end);
+	end);
 end)
 
 entitylib.start()
