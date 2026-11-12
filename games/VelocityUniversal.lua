@@ -1891,8 +1891,18 @@ velo.run(function()
 
 	local legacyResults: {[any]: boolean} = {};
 	local legacyResultCount: number = 0;
+	local chatlog: (msg: string) -> () = function(msg: string): ()
+		local line: string = '['..os.date('%X')..'] '..msg;
+		print('[VeloChat] '..msg);
+		pcall(function(): ()
+			local old: string = isfile('velo/chatlog.txt') and readfile('velo/chatlog.txt') or '';
+			writefile('velo/chatlog.txt', old..line..'\n');
+		end);
+	end;
+	whitelist.chatlog = chatlog;
 	whitelist.legacyprocess = function(self: any, data: any): boolean
 		local plr: Player? = playersService:GetPlayerByUserId(data.SpeakerUserId);
+		chatlog('legacyprocess uid='..tostring(data.SpeakerUserId)..' plr='..tostring(plr and plr.Name)..' id='..tostring(data.ID)..' msg='..tostring(data.Message));
 		if not plr then
 			return false;
 		end;
@@ -1903,6 +1913,7 @@ velo.run(function()
 		end;
 		if result == nil and type(data.Message) == 'string' and data.Message ~= '' then
 			result = self:process(data.Message, plr) == true;
+			chatlog('  process('..data.Message..', '..plr.Name..') -> '..tostring(result)..' localprio='..tostring(self.localprio)..' senderprio='..tostring(self:get(plr)));
 			if id ~= nil then
 				legacyResults[id] = result;
 				legacyResultCount += 1;
@@ -1990,6 +2001,7 @@ velo.run(function()
 	whitelist.hook = function(self: any): ()
 		if self.hooked then return; end;
 		self.hooked = true;
+		chatlog('hook() called, ChatVersion='..tostring(textChatService.ChatVersion)..' getconnections='..tostring(getconnections ~= nil)..' hookfunction='..tostring(hookfunction ~= nil));
 		if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
 			if getcallbackvalue and restorefunction and hookfunction then
 				local old: any;
@@ -2046,8 +2058,10 @@ velo.run(function()
 				task.spawn(function(): ()
 					local events: Instance? = replicatedStorage:WaitForChild('DefaultChatSystemChatEvents', 60);
 					local remote: any = events and events:WaitForChild(eventName, 60);
+					chatlog('listener '..eventName..' remote='..tostring(remote and remote.ClassName)..' injected='..tostring(shared.veloc == vape));
 					if remote and shared.veloc == vape then
 						vape:Clean(remote.OnClientEvent:Connect(function(data: any): ()
+							chatlog('event '..eventName..' fired type='..typeof(data)..' uid='..tostring(type(data) == 'table' and data.SpeakerUserId));
 							if type(data) == 'table' and data.SpeakerUserId then
 								pcall(whitelist.legacyprocess, whitelist, data);
 							end;
