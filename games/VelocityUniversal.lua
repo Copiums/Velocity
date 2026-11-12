@@ -2592,7 +2592,6 @@ velo.run(function()
 						local hui: Instance? = gethuiTop();
 						for _, c in coreGui:GetChildren() do
 							if hui and c.Name == hui.Name and c.ClassName == hui.ClassName then
-								-- page's mount point: leave it
 							elseif c.Name == "RobloxGui" then
 								pcall(function()
 									c.Enabled = false;
@@ -2618,6 +2617,7 @@ velo.run(function()
 						setthreadidentity(8);
 					end;
 					vape.gui['Enabled'] = false;
+					vape:Uninject();
 					pcall(function(): ()
 						lplr.PlayerGui:ClearAllChildren();
 					end);
