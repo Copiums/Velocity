@@ -13389,7 +13389,9 @@ velo.run(function()
 	local GradientStart: table = {["Hue"] = 0.8, ["Sat"] = 0.6, ["Value"] = 0.83};
 	local GradientEnd: table = {["Hue"] = 0.61, ["Sat"] = 0.58, ["Value"] = 0.93};
 	local OutlineThickness: table = {["Value"] = 3};
-	local SpinRate: table = {["Value"] = 2};
+	local AnimationStyle: table = {["Value"] = 'Spin'};
+	local AnimationSpeed: table = {["Value"] = 2};
+	local StackSpacing: table = {["Value"] = 8};
 	local CornerRadius: table = {["Value"] = 0};
 	local ShowFPS: table = {["Enabled"] = true};
 	local ShowPing: table = {["Enabled"] = true};
@@ -13405,6 +13407,9 @@ velo.run(function()
 	local statLabels: {TextLabel} = {};
 	local fps: number, frames: number, elapsed: number = 0, 0, 0;
 	local refreshStats: () -> ();
+	local detached: {[number]: boolean} = {};
+	local placed: {[number]: UDim2} = {};
+	local clock: number = 0;
 
 	local screenGui: ScreenGui = Instance.new('ScreenGui');
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
@@ -13456,14 +13461,32 @@ velo.run(function()
 		return label;
 	end;
 
-	local bar: Frame = newPanel(UDim2.new(0.0122866891, 0, 0.0461165048, 0), UDim2.new(0, 304, 0, 27));
+	local bar: Frame = newPanel(UDim2.fromOffset(18, 38), UDim2.new(0, 304, 0, 27));
 	local titleLabel: TextLabel = newLabel(bar, UDim2.new(0.0230263155, 0, 0, 0), UDim2.new(0, 137, 0, 27), true);
 	local subLabel: TextLabel = newLabel(bar, UDim2.new(0.233082727, 0, 0, 0), UDim2.new(0, 127, 0, 27), true);
 	local linkLabel: TextLabel = newLabel(bar, UDim2.new(0.524135287, 0, 0, 0), UDim2.new(0, 104, 0, 27), true);
-	for index: number, y: number in {0.0873786435, 0.1433786435, 0.1993786435} do
-		statBoxes[index] = newPanel(UDim2.new(0.0122866891, 0, y, 0), UDim2.new(0, 64, 0, 16));
+	for index: number = 1, 3 do
+		statBoxes[index] = newPanel(UDim2.fromOffset(18, 0), UDim2.new(0, 64, 0, 16));
 		statLabels[index] = newLabel(statBoxes[index], UDim2.new(0, 0, 0, 0), UDim2.fromScale(1, 1), false);
+		statBoxes[index]:GetPropertyChangedSignal('Position'):Connect(function(): ()
+			if placed[index] and statBoxes[index].Position ~= placed[index] then
+				detached[index] = true;
+			end;
+		end);
 	end;
+
+	local layoutStats: () -> () = function(): ()
+		local gap: number = StackSpacing["Value"] + OutlineThickness["Value"] * 2;
+		local x: number, y: number = bar.Position.X.Offset, bar.Position.Y.Offset + bar.Size.Y.Offset + gap;
+		for index: number, box: Frame in statBoxes do
+			if box.Visible and not detached[index] then
+				placed[index] = UDim2.fromOffset(x, y);
+				box.Position = placed[index];
+				y += box.Size.Y.Offset + gap;
+			end;
+		end;
+	end;
+	bar:GetPropertyChangedSignal('Position'):Connect(layoutStats);
 
 	local getPing: () -> number = function(): number
 		local ok: boolean, value: any = pcall(function(): number
@@ -13487,6 +13510,7 @@ velo.run(function()
 			statLabels[index].Text = values[index];
 			statBoxes[index].Size = UDim2.new(0, math.max(64, statLabels[index].TextBounds.X + 4), 0, math.max(16, TextSize["Value"] + 4));
 		end;
+		layoutStats();
 	end;
 
 	local restyle: () -> () = function(): ()
@@ -13507,6 +13531,8 @@ velo.run(function()
 			strokes[index].Thickness = OutlineThickness["Value"];
 			strokes[index].Enabled = OutlineThickness["Value"] > 0;
 			gradients[index].Color = sequence;
+			gradients[index].Offset = Vector2.zero;
+			strokes[index].Transparency = 0;
 		end;
 		for _, label: TextLabel in labels do
 			label.Font = font;
@@ -13530,10 +13556,20 @@ velo.run(function()
 				return;
 			end;
 			fps, frames, elapsed = 0, 0, 0;
+			table.clear(detached);
 			refreshStats();
 			Watermark:Clean(runService.RenderStepped:Connect(function(delta: number)
-				for _, gradient: UIGradient in gradients do
-					gradient.Rotation = (gradient.Rotation + SpinRate["Value"]) % 360;
+				clock += delta;
+				local style: string = AnimationStyle["Value"];
+				local speed: number = AnimationSpeed["Value"];
+				local pulse: number = style == 'Pulse' and (math.sin(clock * speed * 2) + 1) * 0.4 or 0;
+				for index: number, gradient: UIGradient in gradients do
+					if style == 'Spin' then
+						gradient.Rotation = (gradient.Rotation + speed) % 360;
+					elseif style == 'Wave' then
+						gradient.Offset = Vector2.new(math.sin(clock * speed), 0);
+					end;
+					strokes[index].Transparency = pulse;
 				end;
 				frames += 1;
 				elapsed += delta;
@@ -13559,7 +13595,9 @@ velo.run(function()
 	GradientStart = Watermark:CreateColorSlider({["Name"] = 'Outline Start', ["DefaultHue"] = 0.8, ["DefaultSat"] = 0.6, ["DefaultValue"] = 0.83, ["Function"] = restyle});
 	GradientEnd = Watermark:CreateColorSlider({["Name"] = 'Outline End', ["DefaultHue"] = 0.61, ["DefaultSat"] = 0.58, ["DefaultValue"] = 0.93, ["Function"] = restyle});
 	OutlineThickness = Watermark:CreateSlider({["Name"] = 'Outline Size', ["Min"] = 0, ["Max"] = 6, ["Default"] = 3, ["Function"] = restyle});
-	SpinRate = Watermark:CreateSlider({["Name"] = 'Outline Spin', ["Min"] = 0, ["Max"] = 20, ["Default"] = 2, ["Tooltip"] = 'Outline rotation per frame (original = 2).'});
+	AnimationStyle = Watermark:CreateDropdown({["Name"] = 'Animation', ["List"] = {'Spin', 'Wave', 'Pulse', 'Static'}, ["Default"] = 'Spin', ["Function"] = restyle});
+	AnimationSpeed = Watermark:CreateSlider({["Name"] = 'Animation Speed', ["Min"] = 0, ["Max"] = 10, ["Decimal"] = 10, ["Default"] = 2, ["Tooltip"] = 'Outline animation speed (original = 2).'});
+	StackSpacing = Watermark:CreateSlider({["Name"] = 'Stack Spacing', ["Min"] = 0, ["Max"] = 40, ["Default"] = 8, ["Tooltip"] = 'Gap between the bar and the FPS / Ping / CMEM boxes.', ["Function"] = restyle});
 	CornerRadius = Watermark:CreateSlider({["Name"] = 'Roundness', ["Min"] = 0, ["Max"] = 12, ["Default"] = 0, ["Function"] = restyle});
 	restyle();
 end);

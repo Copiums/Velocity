@@ -1027,7 +1027,7 @@ function vape:Load(skipgui, profile)
 
 		if not skipgui then
 			for name, data in guiData.Categories do
-				local category = rawget(self.Categories, name)
+				local category = self.Categories[name]
 				if category then
 					category:Load(data)
 				end
@@ -1950,13 +1950,6 @@ function vape:LoadGUI()
 				if pane.Options[name] then
 					return pane.Options[name]
 				end
-			end
-		end
-	})
-	setmetatable(vape.Categories, {
-		__index = function(categories, name)
-			if name == 'Minigames' then
-				return rawget(categories, 'World')
 			end
 		end
 	})
@@ -3266,7 +3259,7 @@ function vape:SaveGuiSettings(): table
 	end;
 	local lists: table = {};
 	for _, name: string in {'Friends', 'Targets'} do
-		local category: table? = rawget(self.Categories, name);
+		local category: table? = self.Categories[name];
 		if category then
 			lists[name] = {
 				["List"] = table.clone(category.List),
@@ -3292,7 +3285,7 @@ function vape:LoadGuiSettings(data: table?): ()
 	end;
 	if type(data.Lists) == 'table' then
 		for name: string, listData: any in data.Lists do
-			local category: table? = rawget(self.Categories, name);
+			local category: table? = self.Categories[name];
 			if category and type(listData) == 'table' then
 				category.List = type(listData.List) == 'table' and table.clone(listData.List) or {};
 				category.ListEnabled = type(listData.ListEnabled) == 'table' and table.clone(listData.ListEnabled) or {};

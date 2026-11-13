@@ -6481,7 +6481,7 @@ velo.run(function()
 		end;
 	end;
 	
-	BedPlates = vape.Categories.Minigames:CreateModule({
+	BedPlates = vape.Categories.World:CreateModule({
 		["Name"] = 'BedPlates',
 		["Function"] = function(callback: boolean): void
 			if callback then
@@ -6688,7 +6688,7 @@ velo.run(function()
 		return false;
 	end;
 	
-	Breaker = vape.Categories.Minigames:CreateModule({
+	Breaker = vape.Categories.World:CreateModule({
 		["Name"] = 'Breaker',
 		["Function"] = function(callback: boolean): void
 			if callback then

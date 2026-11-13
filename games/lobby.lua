@@ -178,7 +178,7 @@ end)
 
 velo.run(function()
 	local AutoGamble: table = {["Enabled"] = false};
-	AutoGamble = vape.Categories.Minigames:CreateModule({
+	AutoGamble = vape.Categories.World:CreateModule({
 		["Name"] = 'AutoGamble',
 		["Function"] = function(callback: boolean): void
 			if callback then
