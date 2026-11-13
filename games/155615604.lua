@@ -108,6 +108,14 @@ local removeTags: (str: any) -> any = function(str: any): any
 	return (str:gsub('<[^<>]->', ''));
 end;
 
+if vape.ThreadFix then
+	setthreadidentity(8);
+end;
+
+for _, v in {'AutoGoon'} do
+	vape:Remove(v);
+end;
+
 local originScanner: table = {["Cache"] = {}, ["Offset"] = 0};
 velo.run(function()
 	local rayParams: RaycastParams = RaycastParams.new();
