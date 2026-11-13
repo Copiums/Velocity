@@ -3807,7 +3807,7 @@ velo.run(function()
 	local Destroy: table = {["Enabled"] = true};
 	local MaxVelocity: table = {["Value"] = 500};
 	local modified: table = {};
-	local noPhysics: PhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0);
+	local noPhysics: PhysicalProperties = PhysicalProperties.new(0.0001, 0, 0, 0, 0);
 	local neutralize: (part: any) -> () = function(part: any): ()
 		if Collision["Enabled"] and part:IsA('BasePart') and not modified[part] then
 			modified[part] = {part.CanCollide, part.CanTouch, part.Massless, part.CustomPhysicalProperties};
@@ -10449,7 +10449,7 @@ velo.run(function()
 	local TimeConnection: RBXScriptConnection = nil
 	ThemesModule = vape.Categories.Velocity:CreateModule({
 		["Name"] = "Themes",
-		["HoverText"] = HoverText("Changes the theme."),
+		["HoverText"] = hoverText("Changes the theme."),
 		["Function"] = function(callback: boolean): void
 			if callback then
 				for _, v in lightingService:GetChildren() do
@@ -10514,7 +10514,7 @@ velo.run(function()
 			"Antarctic Evening"
 		},
 		["Default"] = "Antarctic Evening",
-		["HoverText"] = HoverText("Theme to be set to the game."),
+		["HoverText"] = hoverText("Theme to be set to the game."),
 		["Function"] = function()
 			if ThemesModule["Enabled"] then
 				for _, v in next, lightingService:GetChildren() do
@@ -10541,7 +10541,7 @@ velo.run(function()
 	})
 	Atmosphere = ThemesModule:CreateToggle({
 	        ["Name"] = "Atmosphere",
-	        ["HoverText"] = HoverText("Enables vape's atmosphere."),
+	        ["HoverText"] = hoverText("Enables vape's atmosphere."),
 	        ["Function"] = function() end,
 	        ["Default"] = true
 	})
