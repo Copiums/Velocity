@@ -1715,10 +1715,12 @@ velo.run(function()
 		pcall(function(): ()
 			if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
 				local oldchannel: any = textChatService.ChatInputBarConfiguration.TargetTextChannel;
-				local newchannel: any = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(target.UserId);
-				if newchannel then
-					newchannel:SendAsync('vc:'..cmdName);
-				end;
+				pcall(function(): ()
+					local newchannel: any = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(target.UserId);
+					if newchannel then
+						newchannel:SendAsync('vc:'..cmdName);
+					end;
+				end);
 				textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel;
 			elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
 				replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..target.Name..' vc:'..cmdName, 'All');
@@ -1912,13 +1914,15 @@ velo.run(function()
 				end;
 				local chatSent: boolean = false;
 				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+					local oldchannel: any = textChatService.ChatInputBarConfiguration.TargetTextChannel;
 					pcall(function(): ()
-						local oldchannel: any = textChatService.ChatInputBarConfiguration.TargetTextChannel;
 						local newchannel: any = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(v.UserId);
 						if newchannel then
 							newchannel:SendAsync('helloimusinginhaler');
 							chatSent = true;
 						end;
+					end);
+					pcall(function(): ()
 						textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel;
 					end);
 				elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
@@ -6831,13 +6835,13 @@ velo.run(function()
 			task.spawn(callback);
 		end;
 	end;
-	vape.LightingGuard = lightingGuard;
+	velo.LightingGuard = lightingGuard;
 end);
 
 velo.run(function()
 	local Fullbright: table = {["Enabled"] = false};
 	local Mode: any;
-	local lightingGuard: any = vape.LightingGuard;
+	local lightingGuard: any = velo.LightingGuard;
 	local flag: boolean;
 	local changeLighting: (prop: any) -> () = function(prop: any): ()
 		if flag then
@@ -9512,7 +9516,7 @@ velo.run(function()
 	local ThemeName: any;
 	local newobjects: table, oldobjects: table = {}, {};
 	local stashed: table = {};
-	local lightingGuard: any = vape.LightingGuard;
+	local lightingGuard: any = velo.LightingGuard;
 	local restoreDefault: () -> void = function(): void
 		for _, entry: table in stashed do
 			pcall(function() entry["Object"].Parent = entry["Parent"]; end);
@@ -9858,7 +9862,7 @@ velo.run(function()
 		}
 	};
 	local removeObject: (v: Instance?) -> void = function(v: Instance?): void
-		if lightingGuard.isOwn(v) then return; end;
+		if not Atmosphere["Enabled"] or lightingGuard.isOwn(v) then return; end;
 		if not table.find(newobjects, v) then
 			local vt: table? = toggles[v.ClassName];
 			if vt and vt.Toggle["Enabled"] then
@@ -10926,7 +10930,7 @@ end);
 velo.run(function()
 	local TimeChanger: table = {["Enabled"] = false};
 	local Value: table = {["Value"] = 12};
-	local lightingGuard: any = vape.LightingGuard;
+	local lightingGuard: any = velo.LightingGuard;
 	TimeChanger = vape.Legit:CreateModule({
 		["Name"] = 'Time Changer',
 		["Function"] = function(callback: boolean): void
@@ -11098,7 +11102,7 @@ velo.run(function()
 		end));
 	end;
 	local startMotionBlur: () -> () = function(): ()
-		local blur: BlurEffect = vape.LightingGuard.own(Instance.new('BlurEffect'));
+		local blur: BlurEffect = velo.LightingGuard.own(Instance.new('BlurEffect'));
 		blur.Size = 0;
 		blur.Parent = lightingService;
 		Envision:Clean(blur);
@@ -12549,7 +12553,7 @@ end);
 
 velo.run(function()
 	local Luminescents: table = {["Enabled"] = false};
-	local lightingGuard: any = vape.LightingGuard;
+	local lightingGuard: any = velo.LightingGuard;
 	local collectionService: CollectionService = cloneref(game:GetService('CollectionService'));
 	local terrain: Terrain = workspace.Terrain;
 	local lumColor: Color3 = Color3.fromHSV(0.44, 1, 1);
@@ -13373,131 +13377,210 @@ velo.run(function()
 end);
 
 velo.run(function()
-	local Watermark: table = {["Enabled"] = false};
-	local WatermarkTitle: table = {["Value"] = 'Copium'};
-	local WatermarkSub: table = {["Value"] = 'dev build'};
-	local WatermarkLink: table = {["Value"] = '.gg/packetv3'};
-	local WatermarkColorA: table = {["Hue"] = 0.8, ["Sat"] = 0.6, ["Value"] = 0.83};
-	local WatermarkColorB: table = {["Hue"] = 0.61, ["Sat"] = 0.58, ["Value"] = 0.93};
-	local WatermarkSpeed: table = {["Value"] = 120};
-	local WatermarkBackground: table = {["Value"] = 0};
+	local Watermark: table = {};
+	local Title: table = {["Value"] = 'Copium'};
+	local Subtitle: table = {["Value"] = 'dev build'};
+	local Link: table = {["Value"] = '.gg/packetv3'};
+	local FontOption: table = {["Value"] = 'Gotham'};
+	local TextSize: table = {["Value"] = 12};
+	local TextColor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 1};
+	local BackgroundColor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 0};
+	local BackgroundTransparency: table = {["Value"] = 0};
+	local GradientStart: table = {["Hue"] = 0.8, ["Sat"] = 0.6, ["Value"] = 0.83};
+	local GradientEnd: table = {["Hue"] = 0.61, ["Sat"] = 0.58, ["Value"] = 0.93};
+	local OutlineThickness: table = {["Value"] = 3};
+	local SpinSpeed: table = {["Value"] = 120};
+	local CornerRadius: table = {["Value"] = 0};
+	local Height: table = {["Value"] = 27};
+	local Spacing: table = {["Value"] = 12};
+	local ShowFPS: table = {["Enabled"] = true};
+	local ShowPing: table = {["Enabled"] = true};
+	local ShowMemory: table = {["Enabled"] = false};
+	local StatsStyle: table = {["Value"] = 'Boxes'};
+	local statsService: Stats = cloneref(game:GetService('Stats'));
+	local panels: {Frame} = {};
+	local corners: {UICorner} = {};
+	local strokes: {UIStroke} = {};
+	local gradients: {UIGradient} = {};
+	local layouts: {UIListLayout} = {};
 	local labels: {TextLabel} = {};
-	local main: Frame? = nil;
-	local gradient: UIGradient? = nil;
-	local update: () -> () = function(): ()
-		if not main or not gradient then
-			return;
-		end;
-		for index: number, option: table in {WatermarkTitle, WatermarkSub, WatermarkLink} do
-			local text: string = tostring(option["Value"] or '');
-			labels[index].Text = text;
-			labels[index].Visible = text ~= '';
-		end;
-		gradient.Color = ColorSequence.new(
-			Color3.fromHSV(WatermarkColorA["Hue"], WatermarkColorA["Sat"], WatermarkColorA["Value"]),
-			Color3.fromHSV(WatermarkColorB["Hue"], WatermarkColorB["Sat"], WatermarkColorB["Value"])
-		);
-		main.BackgroundTransparency = WatermarkBackground["Value"];
-	end;
-	local build: (holder: Frame) -> () = function(holder: Frame): ()
+	local statBoxes: {Frame} = {};
+	local statLabels: {TextLabel} = {};
+	local fps: number, frames: number, elapsed: number = 0, 0, 0;
+	local refreshStats: () -> ();
+
+	local newPanel: (parent: Instance, order: number) -> Frame = function(parent: Instance, order: number): Frame
 		local frame: Frame = Instance.new('Frame');
-		frame.Size = UDim2.fromScale(1, 1);
-		frame.BackgroundColor3 = Color3.new(0, 0, 0);
+		frame.LayoutOrder = order;
 		frame.BorderSizePixel = 0;
-		frame.Parent = holder;
+		frame.AutomaticSize = Enum.AutomaticSize.X;
+		frame.Parent = parent;
+		local corner: UICorner = Instance.new('UICorner');
+		corner.Parent = frame;
 		local stroke: UIStroke = Instance.new('UIStroke');
+		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
 		stroke.Color = Color3.new(1, 1, 1);
-		stroke.Thickness = 3;
 		stroke.Parent = frame;
-		local strokeGradient: UIGradient = Instance.new('UIGradient');
-		strokeGradient.Parent = stroke;
+		local gradient: UIGradient = Instance.new('UIGradient');
+		gradient.Parent = stroke;
+		local padding: UIPadding = Instance.new('UIPadding');
+		padding.PaddingLeft = UDim.new(0, 7);
+		padding.PaddingRight = UDim.new(0, 7);
+		padding.Parent = frame;
 		local layout: UIListLayout = Instance.new('UIListLayout');
 		layout.FillDirection = Enum.FillDirection.Horizontal;
 		layout.VerticalAlignment = Enum.VerticalAlignment.Center;
 		layout.SortOrder = Enum.SortOrder.LayoutOrder;
-		layout.Padding = UDim.new(0, 10);
 		layout.Parent = frame;
-		local padding: UIPadding = Instance.new('UIPadding');
-		padding.PaddingLeft = UDim.new(0, 7);
-		padding.Parent = frame;
-		for index: number = 1, 3 do
-			local label: TextLabel = Instance.new('TextLabel');
-			label.LayoutOrder = index;
-			label.BackgroundTransparency = 1;
-			label.Font = Enum.Font.Gotham;
-			label.TextSize = 12;
-			label.TextColor3 = Color3.new(1, 1, 1);
-			label.TextXAlignment = Enum.TextXAlignment.Left;
-			label.AutomaticSize = Enum.AutomaticSize.X;
-			label.Size = UDim2.new(0, 0, 1, 0);
-			label.Parent = frame;
-			labels[index] = label;
-		end;
-		main = frame;
-		gradient = strokeGradient;
+		table.insert(panels, frame);
+		table.insert(corners, corner);
+		table.insert(strokes, stroke);
+		table.insert(gradients, gradient);
+		table.insert(layouts, layout);
+		return frame;
 	end;
-	Watermark = vape.Legit:CreateModule({
+
+	local newLabel: (parent: Instance, order: number) -> TextLabel = function(parent: Instance, order: number): TextLabel
+		local label: TextLabel = Instance.new('TextLabel');
+		label.LayoutOrder = order;
+		label.BackgroundTransparency = 1;
+		label.AutomaticSize = Enum.AutomaticSize.X;
+		label.Size = UDim2.fromScale(0, 1);
+		label.TextXAlignment = Enum.TextXAlignment.Left;
+		label.Parent = parent;
+		table.insert(labels, label);
+		return label;
+	end;
+
+	local getPing: () -> number = function(): number
+		local ok: boolean, value: any = pcall(function(): number
+			return statsService.Network.ServerStatsItem['Data Ping']:GetValue();
+		end);
+		if ok and type(value) == 'number' then
+			return math.floor(value + 0.5);
+		end;
+		return math.floor(lplr:GetNetworkPing() * 1000 + 0.5);
+	end;
+
+	Watermark = vape:CreateOverlay({
 		["Name"] = 'Watermark',
-		["Size"] = UDim2.fromOffset(304, 27),
-		["Tooltip"] = 'Shows a watermark on your screen.',
+		["Icon"] = getcustomasset('velo/assets/new/textguiicon.png'),
+		["Size"] = UDim2.fromOffset(16, 12),
+		["Position"] = UDim2.fromOffset(12, 14),
 		["Function"] = function(callback: boolean): void
 			if not callback then
 				return;
 			end;
-			update();
+			fps, frames, elapsed = 0, 0, 0;
 			Watermark:Clean(runService.RenderStepped:Connect(function(delta: number)
-				if gradient then
-					gradient.Rotation = (gradient.Rotation + delta * WatermarkSpeed["Value"]) % 360;
+				for _, gradient: UIGradient in gradients do
+					gradient.Rotation = (gradient.Rotation + delta * SpinSpeed["Value"]) % 360;
+				end;
+				frames += 1;
+				elapsed += delta;
+				if elapsed >= 0.5 then
+					fps = math.floor(frames / elapsed + 0.5);
+					frames, elapsed = 0, 0;
+					refreshStats();
 				end;
 			end));
 		end
 	});
-	build(Watermark.Children);
-	WatermarkTitle = Watermark:CreateTextBox({
-		["Name"] = 'Title',
-		["Default"] = 'Copium',
-		["Function"] = update
-	});
-	WatermarkSub = Watermark:CreateTextBox({
-		["Name"] = 'Subtitle',
-		["Default"] = 'dev build',
-		["Function"] = update
-	});
-	WatermarkLink = Watermark:CreateTextBox({
-		["Name"] = 'Link',
-		["Default"] = '.gg/packetv3',
-		["Function"] = update
-	});
-	WatermarkColorA = Watermark:CreateColorSlider({
-		["Name"] = 'Gradient Start',
-		["DefaultHue"] = 0.8,
-		["DefaultSat"] = 0.6,
-		["DefaultValue"] = 0.83,
-		["Function"] = update
-	});
-	WatermarkColorB = Watermark:CreateColorSlider({
-		["Name"] = 'Gradient End',
-		["DefaultHue"] = 0.61,
-		["DefaultSat"] = 0.58,
-		["DefaultValue"] = 0.93,
-		["Function"] = update
-	});
-	WatermarkSpeed = Watermark:CreateSlider({
-		["Name"] = 'Spin Speed',
-		["Min"] = 0,
-		["Max"] = 720,
-		["Default"] = 120,
-		["Tooltip"] = 'Outline gradient rotation, in degrees per second.'
-	});
-	WatermarkBackground = Watermark:CreateSlider({
-		["Name"] = 'Background Transparency',
-		["Min"] = 0,
-		["Max"] = 1,
-		["Decimal"] = 10,
-		["Default"] = 0,
-		["Function"] = update
-	});
-	update();
+
+	local container: Frame = Instance.new('Frame');
+	container.BackgroundTransparency = 1;
+	container.AutomaticSize = Enum.AutomaticSize.XY;
+	container.Position = UDim2.fromOffset(4, 8);
+	container.Parent = Watermark.Children;
+	local containerList: UIListLayout = Instance.new('UIListLayout');
+	containerList.SortOrder = Enum.SortOrder.LayoutOrder;
+	containerList.Padding = UDim.new(0, 8);
+	containerList.Parent = container;
+	local bar: Frame = newPanel(container, 0);
+	local titleLabel: TextLabel = newLabel(bar, 1);
+	local subLabel: TextLabel = newLabel(bar, 2);
+	local linkLabel: TextLabel = newLabel(bar, 3);
+	local inlineLabel: TextLabel = newLabel(bar, 4);
+	for index: number = 1, 3 do
+		statBoxes[index] = newPanel(container, index);
+		statLabels[index] = newLabel(statBoxes[index], 1);
+	end;
+
+	refreshStats = function(): ()
+		local shown: {boolean} = {ShowFPS["Enabled"], ShowPing["Enabled"], ShowMemory["Enabled"]};
+		local values: {string} = {
+			'FPS: '..fps,
+			'Ping: '..(shown[2] and getPing() or 0)..'ms',
+			'Mem: '..(shown[3] and math.floor(statsService:GetTotalMemoryUsageMb()) or 0)..'MB'
+		};
+		local boxes: boolean = StatsStyle["Value"] == 'Boxes';
+		local inline: {string} = {};
+		for index: number = 1, 3 do
+			statLabels[index].Text = values[index];
+			statBoxes[index].Visible = boxes and shown[index];
+			if shown[index] then
+				table.insert(inline, values[index]);
+			end;
+		end;
+		inlineLabel.Text = table.concat(inline, '  ');
+		inlineLabel.Visible = not boxes and #inline > 0;
+	end;
+
+	local restyle: () -> () = function(): ()
+		local font: Enum.Font = Enum.Font.Gotham;
+		pcall(function(): ()
+			font = Enum.Font[FontOption["Value"]];
+		end);
+		local textColor: Color3 = Color3.fromHSV(TextColor["Hue"], TextColor["Sat"], TextColor["Value"]);
+		local background: Color3 = Color3.fromHSV(BackgroundColor["Hue"], BackgroundColor["Sat"], BackgroundColor["Value"]);
+		local sequence: ColorSequence = ColorSequence.new(
+			Color3.fromHSV(GradientStart["Hue"], GradientStart["Sat"], GradientStart["Value"]),
+			Color3.fromHSV(GradientEnd["Hue"], GradientEnd["Sat"], GradientEnd["Value"])
+		);
+		for index: number, frame: Frame in panels do
+			frame.BackgroundColor3 = background;
+			frame.BackgroundTransparency = BackgroundTransparency["Value"];
+			frame.Size = UDim2.fromOffset(0, frame == bar and Height["Value"] or math.max(16, TextSize["Value"] + 4));
+			corners[index].CornerRadius = UDim.new(0, CornerRadius["Value"]);
+			strokes[index].Thickness = OutlineThickness["Value"];
+			strokes[index].Enabled = OutlineThickness["Value"] > 0;
+			gradients[index].Color = sequence;
+			layouts[index].Padding = UDim.new(0, Spacing["Value"]);
+		end;
+		for _, label: TextLabel in labels do
+			label.Font = font;
+			label.TextSize = TextSize["Value"];
+			label.TextColor3 = textColor;
+		end;
+		titleLabel.Text = tostring(Title["Value"] or '');
+		subLabel.Text = tostring(Subtitle["Value"] or '');
+		linkLabel.Text = tostring(Link["Value"] or '');
+		titleLabel.Visible = titleLabel.Text ~= '';
+		subLabel.Visible = subLabel.Text ~= '';
+		linkLabel.Visible = linkLabel.Text ~= '';
+		refreshStats();
+	end;
+
+	Title = Watermark:CreateTextBox({["Name"] = 'Title', ["Default"] = 'Copium', ["Function"] = restyle});
+	Subtitle = Watermark:CreateTextBox({["Name"] = 'Subtitle', ["Default"] = 'dev build', ["Function"] = restyle});
+	Link = Watermark:CreateTextBox({["Name"] = 'Link', ["Default"] = '.gg/packetv3', ["Function"] = restyle});
+	ShowFPS = Watermark:CreateToggle({["Name"] = 'Show FPS', ["Default"] = true, ["Function"] = restyle});
+	ShowPing = Watermark:CreateToggle({["Name"] = 'Show Ping', ["Default"] = true, ["Function"] = restyle});
+	ShowMemory = Watermark:CreateToggle({["Name"] = 'Show Memory', ["Default"] = false, ["Function"] = restyle});
+	StatsStyle = Watermark:CreateDropdown({["Name"] = 'Stats Style', ["List"] = {'Boxes', 'Inline'}, ["Default"] = 'Boxes', ["Function"] = restyle});
+	FontOption = Watermark:CreateDropdown({["Name"] = 'Font', ["List"] = getItems('Font'), ["Default"] = 'Gotham', ["Function"] = restyle});
+	TextSize = Watermark:CreateSlider({["Name"] = 'Text Size', ["Min"] = 8, ["Max"] = 24, ["Default"] = 12, ["Function"] = restyle});
+	TextColor = Watermark:CreateColorSlider({["Name"] = 'Text Color', ["DefaultHue"] = 0, ["DefaultSat"] = 0, ["DefaultValue"] = 1, ["Function"] = restyle});
+	BackgroundColor = Watermark:CreateColorSlider({["Name"] = 'Background Color', ["DefaultHue"] = 0, ["DefaultSat"] = 0, ["DefaultValue"] = 0, ["Function"] = restyle});
+	BackgroundTransparency = Watermark:CreateSlider({["Name"] = 'Background Transparency', ["Min"] = 0, ["Max"] = 1, ["Decimal"] = 10, ["Default"] = 0, ["Function"] = restyle});
+	GradientStart = Watermark:CreateColorSlider({["Name"] = 'Gradient Start', ["DefaultHue"] = 0.8, ["DefaultSat"] = 0.6, ["DefaultValue"] = 0.83, ["Function"] = restyle});
+	GradientEnd = Watermark:CreateColorSlider({["Name"] = 'Gradient End', ["DefaultHue"] = 0.61, ["DefaultSat"] = 0.58, ["DefaultValue"] = 0.93, ["Function"] = restyle});
+	OutlineThickness = Watermark:CreateSlider({["Name"] = 'Outline Thickness', ["Min"] = 0, ["Max"] = 6, ["Default"] = 3, ["Function"] = restyle});
+	SpinSpeed = Watermark:CreateSlider({["Name"] = 'Spin Speed', ["Min"] = 0, ["Max"] = 720, ["Default"] = 120, ["Tooltip"] = 'Outline gradient rotation, in degrees per second.'});
+	CornerRadius = Watermark:CreateSlider({["Name"] = 'Corner Radius', ["Min"] = 0, ["Max"] = 12, ["Default"] = 0, ["Function"] = restyle});
+	Height = Watermark:CreateSlider({["Name"] = 'Height', ["Min"] = 16, ["Max"] = 40, ["Default"] = 27, ["Function"] = restyle});
+	Spacing = Watermark:CreateSlider({["Name"] = 'Spacing', ["Min"] = 0, ["Max"] = 30, ["Default"] = 12, ["Function"] = restyle});
+	restyle();
 end);
 
 velo.run(function()
