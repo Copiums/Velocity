@@ -680,6 +680,81 @@ function vape:CreateCategoryList(props)
 	return components.CategoryList(props)
 end
 
+local colorAnim: table = {
+	["Palette"] = 'Rainbow',
+	["Effect"] = 'Smooth',
+	["Spread"] = 1,
+	["Speed"] = 1,
+	["Count"] = 3,
+	["Phase"] = 0,
+	["Custom"] = {
+		Color3.fromRGB(255, 0, 128),
+		Color3.fromRGB(128, 0, 255),
+		Color3.fromRGB(0, 200, 255),
+		Color3.fromRGB(0, 255, 150),
+		Color3.fromRGB(255, 200, 0)
+	}
+};
+
+local colorPalettes: table = {
+	["Sunset"] = {Color3.fromRGB(255, 94, 77), Color3.fromRGB(255, 154, 0), Color3.fromRGB(255, 206, 84), Color3.fromRGB(237, 85, 147)},
+	["Ocean"] = {Color3.fromRGB(0, 90, 200), Color3.fromRGB(0, 180, 216), Color3.fromRGB(72, 202, 228), Color3.fromRGB(0, 119, 182)},
+	["Aurora"] = {Color3.fromRGB(0, 255, 163), Color3.fromRGB(0, 210, 255), Color3.fromRGB(128, 90, 255)},
+	["Fire"] = {Color3.fromRGB(255, 40, 0), Color3.fromRGB(255, 120, 0), Color3.fromRGB(255, 200, 0)},
+	["Vaporwave"] = {Color3.fromRGB(255, 113, 206), Color3.fromRGB(1, 205, 254), Color3.fromRGB(185, 103, 255)},
+	["Toxic"] = {Color3.fromRGB(57, 255, 20), Color3.fromRGB(180, 255, 0), Color3.fromRGB(0, 255, 140)},
+	["Candy"] = {Color3.fromRGB(255, 92, 168), Color3.fromRGB(255, 190, 230), Color3.fromRGB(140, 200, 255)},
+	["Ice"] = {Color3.fromRGB(180, 240, 255), Color3.fromRGB(100, 200, 255), Color3.fromRGB(230, 250, 255)},
+	["Blood"] = {Color3.fromRGB(180, 0, 20), Color3.fromRGB(255, 30, 60), Color3.fromRGB(120, 0, 10)},
+	["Galaxy"] = {Color3.fromRGB(100, 40, 255), Color3.fromRGB(200, 60, 255), Color3.fromRGB(40, 120, 255), Color3.fromRGB(255, 80, 200)},
+	["Mint"] = {Color3.fromRGB(62, 255, 190), Color3.fromRGB(160, 255, 220), Color3.fromRGB(0, 200, 150)},
+	["Gold"] = {Color3.fromRGB(255, 190, 40), Color3.fromRGB(255, 230, 130), Color3.fromRGB(200, 140, 20)},
+	["Mono"] = {Color3.fromRGB(255, 255, 255), Color3.fromRGB(120, 120, 120)}
+};
+
+local paletteNames: {string} = {'Rainbow', 'Sunset', 'Ocean', 'Aurora', 'Fire', 'Vaporwave', 'Toxic', 'Candy', 'Ice', 'Blood', 'Galaxy', 'Mint', 'Gold', 'Mono', 'Custom'};
+
+local samplePalette: (t: number, smooth: boolean) -> Color3 = function(t: number, smooth: boolean): Color3
+	if colorAnim["Palette"] == 'Rainbow' then
+		return Color3.fromHSV(vape:Color(smooth and t or math.floor(t * 8) / 8));
+	end;
+	local isCustom: boolean = colorAnim["Palette"] == 'Custom';
+	local list: {Color3} = isCustom and colorAnim["Custom"] or colorPalettes[colorAnim["Palette"]] or colorPalettes["Sunset"];
+	local count: number = isCustom and math.clamp(colorAnim["Count"], 1, #list) or #list;
+	local position: number = t * count;
+	local index: number = math.floor(position);
+	local first: Color3 = list[index % count + 1];
+	if not smooth then
+		return first;
+	end;
+	return first:Lerp(list[(index + 1) % count + 1], position - index);
+end;
+
+function vape:SampleColor(offset: number): Color3
+	if not self.GUIColor.Rainbow then
+		return Color3.fromHSV(self:Color((self.GUIColor.Hue - offset) % 1));
+	end;
+	local position: number = (colorAnim["Phase"] - offset) * colorAnim["Spread"];
+	local effect: string = colorAnim["Effect"];
+	local result: Color3 = samplePalette(position % 1, effect ~= 'Step');
+	if effect == 'Pulse' then
+		local wave: number = 0.5 + 0.5 * math.cos(position * math.pi * 6);
+		result = result:Lerp(Color3.new(), (1 - wave) * 0.55);
+	elseif effect == 'Shine' then
+		local sweep: number = (position * 2) % 1;
+		result = result:Lerp(Color3.new(1, 1, 1), math.max(0, 1 - math.abs(sweep - 0.5) * 8) * 0.75);
+	end;
+	return result;
+end;
+
+function vape:AnimatedTextColor(fill: Color3): Color3
+	if colorAnim["Palette"] == 'Rainbow' and colorAnim["Effect"] ~= 'Pulse' then
+		return Color3.new(0.19, 0.19, 0.19);
+	end;
+	local luminance: number = fill.R * 0.299 + fill.G * 0.587 + fill.B * 0.114;
+	return luminance > 0.5 and Color3.new(0.19, 0.19, 0.19) or Color3.new(1, 1, 1);
+end;
+
 local notifStyle: table = {
 	["Background"] = 'Default',
 	["Color"] = Color3.fromHSV(0, 0, 0.06),
@@ -1499,7 +1574,7 @@ function vape:LoadGUI()
 		Max = 10,
 		Decimal = 10,
 		Default = 1,
-		Tooltip = 'Adjusts the speed of rainbow values'
+		Tooltip = 'Adjusts the speed of rainbow values and GUI color animations'
 	})
 	
 	vape.RainbowUpdateSpeed = guipane:CreateSlider({
@@ -1541,8 +1616,102 @@ function vape:LoadGUI()
 	vape.RainbowMode = guipane:CreateDropdown({
 		Name = 'Rainbow Mode',
 		List = {'Normal', 'Gradient', 'Retro'},
-		Tooltip = 'Normal - Smooth color fade\nGradient - Gradient color fade\nRetro - Static color'
+		Tooltip = 'Normal - Colors wave down the GUI\nGradient - Modules get a gradient fill\nRetro - The whole GUI shares one color\nApplies to every Color Animation'
 	})
+
+	local colorpane: table = guipane:CreateSettingsPane({["Name"] = 'Color Animation'});
+	local CustomCount: table;
+	local customSliders: {table} = {};
+	local refreshAnimOptions: () -> () = function(): ()
+		local isCustom: boolean = colorAnim["Palette"] == 'Custom';
+		if CustomCount then
+			CustomCount["Object"].Visible = isCustom;
+		end;
+		for index: number, slider: table in customSliders do
+			slider["Object"].Visible = isCustom and index <= colorAnim["Count"];
+		end;
+	end;
+	colorpane:CreateDropdown({
+		["Name"] = 'Animation',
+		["List"] = table.clone(paletteNames),
+		["MaxRows"] = 8,
+		["Function"] = function(value: string, isClick: boolean?): ()
+			colorAnim["Palette"] = value;
+			refreshAnimOptions();
+			if isClick and not vape.GUIColor.Rainbow then
+				vape.GUIColor:Toggle();
+			end;
+			vape:UpdateGUI();
+		end,
+		["Tooltip"] = 'The colors the GUI cycles through while the GUI Theme rainbow button is on.\nPicking one turns the animation on.'
+	});
+	colorpane:CreateDropdown({
+		["Name"] = 'Effect',
+		["List"] = {'Smooth', 'Step', 'Pulse', 'Shine'},
+		["Function"] = function(value: string): ()
+			colorAnim["Effect"] = value;
+			vape:UpdateGUI();
+		end,
+		["Tooltip"] = 'Smooth - Colors blend into each other\nStep - Hard switches between colors\nPulse - Colors flow while the brightness breathes\nShine - A white shine sweeps across the colors'
+	});
+	colorpane:CreateSlider({
+		["Name"] = 'Speed',
+		["Min"] = 0.1,
+		["Max"] = 5,
+		["Decimal"] = 10,
+		["Default"] = 1,
+		["Function"] = function(value: number): ()
+			colorAnim["Speed"] = value;
+		end,
+		["Suffix"] = 'x',
+		["Tooltip"] = 'How fast the animation moves (stacks with Rainbow speed)'
+	});
+	colorpane:CreateSlider({
+		["Name"] = 'Spread',
+		["Min"] = 1,
+		["Max"] = 6,
+		["Default"] = 1,
+		["Function"] = function(value: number): ()
+			colorAnim["Spread"] = math.max(1, math.floor(value));
+			vape:UpdateGUI();
+		end,
+		["Tooltip"] = 'How many times the colors repeat down the GUI, higher gives tighter color bands'
+	});
+	CustomCount = colorpane:CreateSlider({
+		["Name"] = 'Custom colors',
+		["Min"] = 2,
+		["Max"] = 5,
+		["Default"] = 3,
+		["Function"] = function(value: number): ()
+			colorAnim["Count"] = value;
+			refreshAnimOptions();
+		end,
+		["Tooltip"] = 'How many of the colors below the Custom animation uses',
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	for index: number, default: Color3 in table.clone(colorAnim["Custom"]) do
+		local h: number, s: number, v: number = default:ToHSV();
+		local ColorOption: table = colorpane:CreateColorSlider({
+			["Name"] = 'Color ' .. index,
+			["DefaultHue"] = h,
+			["DefaultSat"] = s,
+			["DefaultValue"] = v,
+			["Function"] = function(hue: number, sat: number, val: number): ()
+				colorAnim["Custom"][index] = Color3.fromHSV(hue, sat, val);
+			end,
+			["Darker"] = true,
+			["Visible"] = false
+		});
+		table.insert(customSliders, ColorOption);
+	end;
+	colorpane:CreateButton({
+		["Name"] = 'Start / stop animation',
+		["Function"] = function(): ()
+			vape.GUIColor:Toggle();
+		end,
+		["Tooltip"] = 'Same as the rainbow button on GUI Theme'
+	});
 
 	vape.GUIFont = guipane:CreateFont({
 		["Name"] = 'GUI font',
@@ -2303,7 +2472,7 @@ function vape:LoadGUI()
 		function TextGUI:UpdateColor(hue, sat, val, default)
 			LogoGradient.Color = ColorSequence.new({
 				ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)),
-				ColorSequenceKeypoint.new(1, Gradient.Enabled and Color3.fromHSV(vape:Color((hue - 0.075) % 1)) or Color3.fromHSV(hue, sat, val))
+				ColorSequenceKeypoint.new(1, Gradient.Enabled and vape:SampleColor(0.075) or Color3.fromHSV(hue, sat, val))
 			})
 			LogoGradient2.Color = Gradient.Enabled and GradientV4.Enabled and LogoGradient.Color or ColorSequence.new({
 				ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
@@ -2313,7 +2482,7 @@ function vape:LoadGUI()
 		
 			local isCustom = ColorMode.Value == 'Custom color' and Color3.fromHSV(ColorSlider.Hue, ColorSlider.Sat, ColorSlider.Value) or nil
 			for index, label in Labels do
-				label.Text.TextColor3 = isCustom or (vape.GUIColor.Rainbow and Color3.fromHSV(vape:Color((hue - ((Gradient.Enabled and index + 2 or index) * 0.025)) % 1)) or LogoGradient.Color.Keypoints[2].Value)
+				label.Text.TextColor3 = isCustom or (vape.GUIColor.Rainbow and vape:SampleColor((Gradient.Enabled and index + 2 or index) * 0.025) or LogoGradient.Color.Keypoints[2].Value)
 		
 				if label.Color then
 					label.Color.BackgroundColor3 = label.Text.TextColor3
@@ -2917,21 +3086,23 @@ function vape:LoadGUI()
 		vape.Libraries.targetinfo = targetinfo
 	end)
 	
-	vape:Clean(task.spawn(function()
-		local hue = 0
+	vape:Clean(task.spawn(function(): ()
+		local hue: number = 0;
 		repeat
-			for _, component in vape.RainbowSliders do
+			for _, component: table in vape.RainbowSliders do
 				if component.Type == 'GUISlider' then
-					component:SetValue(vape:Color(hue))
+					component:SetValue(vape:SampleColor(0):ToHSV());
 				else
-					component:SetValue(hue)
-				end
-			end
-	
-			local delta = task.wait(1 / vape.RainbowUpdateSpeed.Value)
-			hue = (hue + (delta * (0.2 * vape.RainbowSpeed.Value))) % 1
-		until false
-	end))
+					component:SetValue(hue);
+				end;
+			end;
+
+			local delta: number = task.wait(1 / vape.RainbowUpdateSpeed.Value);
+			local step: number = delta * 0.2 * vape.RainbowSpeed.Value;
+			hue = (hue + step) % 1;
+			colorAnim["Phase"] = (colorAnim["Phase"] + step * colorAnim["Speed"] / colorAnim["Spread"]) % 1;
+		until false;
+	end));
 	
 	local cursorConnection
 	vape:Clean(clickgui:GetPropertyChangedSignal('Visible'):Connect(function()
@@ -4439,11 +4610,11 @@ components = {
 				end
 			end
 		
-			addbutton.ImageColor3 = isRainbow and Color3.fromHSV(vape:Color(hue % 1)) or Color3.fromHSV(hue, sat, val)
+			addbutton.ImageColor3 = isRainbow and vape:SampleColor(0) or Color3.fromHSV(hue, sat, val)
 		
 			if self.Selected then
-				self.Selected.BackgroundColor3 = isRainbow and Color3.fromHSV(vape:Color(hue % 1)) or Color3.fromHSV(hue, sat, val)
-				self.Selected.Title.TextColor3 = vape.GUIColor.Rainbow and Color3.new(0.19, 0.19, 0.19) or vape:TextColor(hue, sat, val)
+				self.Selected.BackgroundColor3 = isRainbow and vape:SampleColor(0) or Color3.fromHSV(hue, sat, val)
+				self.Selected.Title.TextColor3 = vape.GUIColor.Rainbow and vape:AnimatedTextColor(self.Selected.BackgroundColor3) or vape:TextColor(hue, sat, val)
 				self.Selected.Dots.Dots.ImageColor3 = self.Selected.Title.TextColor3
 				self.Selected.Bind.Icon.ImageColor3 = self.Selected.Title.TextColor3
 				self.Selected.Bind.TextLabel.TextColor3 = self.Selected.Title.TextColor3
@@ -5442,7 +5613,7 @@ components = {
 		
 			for _, button in self.Buttons do
 				if button.Enabled then
-					button.Object.TextColor3 = isRainbow and Color3.fromHSV(vape:Color((hue - (button.Index * 0.025)) % 1)) or Color3.fromHSV(hue, sat, val)
+					button.Object.TextColor3 = isRainbow and vape:SampleColor(button.Index * 0.025) or Color3.fromHSV(hue, sat, val)
 		
 					if button.Icon then
 						button.Icon.ImageColor3 = button.Object.TextColor3
@@ -6187,7 +6358,7 @@ components = {
 		function component:Color(hue, sat, val, isRainbow)
 			if self.Enabled then
 				tween:Cancel(holder)
-				holder.BackgroundColor3 = isRainbow and Color3.fromHSV(vape:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+				holder.BackgroundColor3 = isRainbow and vape:SampleColor(self.Index * 0.075) or Color3.fromHSV(hue, sat, val)
 			end
 		end
 		
@@ -6196,7 +6367,7 @@ components = {
 			self.Enabled = not self.Enabled
 		
 			tween:Tween(holder, uipallet.Tween, {
-				BackgroundColor3 = self.Enabled and (isRainbow and Color3.fromHSV(vape:Color((vape.GUIColor.Hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value)) or (isHover and color.Light(uipallet.Main, 0.37) or color.Light(uipallet.Main, 0.14))
+				BackgroundColor3 = self.Enabled and (isRainbow and vape:SampleColor(self.Index * 0.075) or Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value)) or (isHover and color.Light(uipallet.Main, 0.37) or color.Light(uipallet.Main, 0.14))
 			})
 		
 			tween:Tween(knob, uipallet.Tween, {
@@ -6797,15 +6968,15 @@ components = {
 		
 		function component:Color(hue, sat, val, isRainbow)
 			if self.Enabled then
-				button.BackgroundColor3 = isRainbow and Color3.fromHSV(vape:Color((hue - (self.Index * 0.025)) % 1)) or Color3.fromHSV(hue, sat, val)
-				button.TextColor3 = vape.GUIColor.Rainbow and Color3.new(0.19, 0.19, 0.19) or vape:TextColor(hue, sat, val)
+				button.BackgroundColor3 = isRainbow and vape:SampleColor(self.Index * 0.025) or Color3.fromHSV(hue, sat, val)
+				button.TextColor3 = vape.GUIColor.Rainbow and vape:AnimatedTextColor(button.BackgroundColor3) or vape:TextColor(hue, sat, val)
 				button.UIGradient.Enabled = isRainbow and vape.RainbowMode.Value == 'Gradient'
 		
 				if button.UIGradient.Enabled then
 					button.BackgroundColor3 = Color3.new(1, 1, 1)
 					button.UIGradient.Color = ColorSequence.new({
-						ColorSequenceKeypoint.new(0, Color3.fromHSV(vape:Color((hue - (self.Index * 0.025)) % 1))),
-						ColorSequenceKeypoint.new(1, Color3.fromHSV(vape:Color((hue - ((self.Index + 1) * 0.025)) % 1)))
+						ColorSequenceKeypoint.new(0, vape:SampleColor(self.Index * 0.025)),
+						ColorSequenceKeypoint.new(1, vape:SampleColor((self.Index + 1) * 0.025))
 					})
 				end
 		
@@ -6814,7 +6985,7 @@ components = {
 			end
 		
 			if self.Visible then
-				editbox.BackgroundColor3 = isRainbow and Color3.fromHSV(vape:Color((hue - (self.Index * 0.025)) % 1)) or Color3.fromHSV(hue, sat, val)
+				editbox.BackgroundColor3 = isRainbow and vape:SampleColor(self.Index * 0.025) or Color3.fromHSV(hue, sat, val)
 				editborder.Color = editbox.BackgroundColor3
 			end
 		
@@ -7837,7 +8008,7 @@ components = {
 		props.Decimal = props.Decimal or 1
 		
 		function component:Color(hue, sat, val, isRainbow)
-			fill.BackgroundColor3 = isRainbow and Color3.fromHSV(vape:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+			fill.BackgroundColor3 = isRainbow and vape:SampleColor(self.Index * 0.075) or Color3.fromHSV(hue, sat, val)
 			knob.BackgroundColor3 = fill.BackgroundColor3
 		end
 		
@@ -8026,7 +8197,7 @@ components = {
 		
 		function component:Color(hue, sat, val, isRainbow)
 			if targetswindow.Visible then
-				holder.BackgroundColor3 = isRainbow and Color3.fromHSV(vape:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+				holder.BackgroundColor3 = isRainbow and vape:SampleColor(self.Index * 0.075) or Color3.fromHSV(hue, sat, val)
 			end
 		
 			if self.Players.Enabled then
@@ -8542,7 +8713,7 @@ components = {
 		
 		function component:Color(hue, sat, val, isRainbow)
 			if textlistwindow.Visible then
-				holder.BackgroundColor3 = isRainbow and Color3.fromHSV(vape:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+				holder.BackgroundColor3 = isRainbow and vape:SampleColor(self.Index * 0.075) or Color3.fromHSV(hue, sat, val)
 			end
 		end
 		
@@ -8822,7 +8993,7 @@ components = {
 		function component:Color(hue, sat, val, isRainbow)
 			if self.Enabled then
 				tween:Cancel(holder)
-				holder.BackgroundColor3 = isRainbow and Color3.fromHSV(vape:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+				holder.BackgroundColor3 = isRainbow and vape:SampleColor(self.Index * 0.075) or Color3.fromHSV(hue, sat, val)
 			end
 		end
 		
@@ -8851,7 +9022,7 @@ components = {
 			self.Enabled = not self.Enabled
 		
 			tween:Tween(holder, uipallet.Tween, {
-				BackgroundColor3 = self.Enabled and (isRainbow and Color3.fromHSV(vape:Color((vape.GUIColor.Hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value)) or (isHover and color.Light(uipallet.Main, 0.37) or color.Light(uipallet.Main, 0.14))
+				BackgroundColor3 = self.Enabled and (isRainbow and vape:SampleColor(self.Index * 0.075) or Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value)) or (isHover and color.Light(uipallet.Main, 0.37) or color.Light(uipallet.Main, 0.14))
 			})
 		
 			tween:Tween(knob, uipallet.Tween, {
@@ -8995,7 +9166,7 @@ components = {
 		local random = Random.new()
 		
 		function component:Color(hue, sat, val, isRainbow)
-			fill.BackgroundColor3 = isRainbow and Color3.fromHSV(vape:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+			fill.BackgroundColor3 = isRainbow and vape:SampleColor(self.Index * 0.075) or Color3.fromHSV(hue, sat, val)
 			knobknob.ImageColor3 = fill.BackgroundColor3
 			knobmaxknob.ImageColor3 = fill.BackgroundColor3
 		end
