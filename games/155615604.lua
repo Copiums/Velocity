@@ -1361,7 +1361,6 @@ end);
 
 velo.run(function()
 	local AntiRiotShield: table;
-	
 	AntiRiotShield = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'AntiRiotShield',
 		["Function"] = function(callback: boolean): ()
