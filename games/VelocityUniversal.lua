@@ -13545,22 +13545,22 @@ velo.run(function()
 			end));
 		end
 	});
-	Title = Watermark:CreateTextBox({["Name"] = 'Title', ["Default"] = 'Copium', ["Function"] = restyle});
-	Subtitle = Watermark:CreateTextBox({["Name"] = 'Subtitle', ["Default"] = 'dev build', ["Function"] = restyle});
-	Link = Watermark:CreateTextBox({["Name"] = 'Link', ["Default"] = '.gg/packetv3', ["Function"] = restyle});
-	ShowFPS = Watermark:CreateToggle({["Name"] = 'Show FPS', ["Default"] = true, ["Function"] = restyle});
-	ShowPing = Watermark:CreateToggle({["Name"] = 'Show Ping', ["Default"] = true, ["Function"] = restyle});
-	ShowMemory = Watermark:CreateToggle({["Name"] = 'Show Memory', ["Default"] = false, ["Function"] = restyle});
-	FontOption = Watermark:CreateDropdown({["Name"] = 'Text Font', ["List"] = fonts, ["Default"] = 'Gotham', ["Function"] = restyle});
-	TextSize = Watermark:CreateSlider({["Name"] = 'Text Size', ["Min"] = 8, ["Max"] = 24, ["Default"] = 12, ["Function"] = restyle});
-	TextColor = Watermark:CreateColorSlider({["Name"] = 'Text Color', ["DefaultHue"] = 0, ["DefaultSat"] = 0, ["DefaultValue"] = 1, ["Function"] = restyle});
-	BackgroundColor = Watermark:CreateColorSlider({["Name"] = 'Background Color', ["DefaultHue"] = 0, ["DefaultSat"] = 0, ["DefaultValue"] = 0, ["Function"] = restyle});
-	BackgroundTransparency = Watermark:CreateSlider({["Name"] = 'Background Transparency', ["Min"] = 0, ["Max"] = 1, ["Decimal"] = 10, ["Default"] = 0, ["Function"] = restyle});
-	GradientStart = Watermark:CreateColorSlider({["Name"] = 'Gradient Start', ["DefaultHue"] = 0.8, ["DefaultSat"] = 0.6, ["DefaultValue"] = 0.83, ["Function"] = restyle});
-	GradientEnd = Watermark:CreateColorSlider({["Name"] = 'Gradient End', ["DefaultHue"] = 0.61, ["DefaultSat"] = 0.58, ["DefaultValue"] = 0.93, ["Function"] = restyle});
-	OutlineThickness = Watermark:CreateSlider({["Name"] = 'Outline Thickness', ["Min"] = 0, ["Max"] = 6, ["Default"] = 3, ["Function"] = restyle});
-	SpinRate = Watermark:CreateSlider({["Name"] = 'Spin Rate', ["Min"] = 0, ["Max"] = 20, ["Default"] = 2, ["Tooltip"] = 'Outline rotation per frame (original = 2).'});
-	CornerRadius = Watermark:CreateSlider({["Name"] = 'Corner Radius', ["Min"] = 0, ["Max"] = 12, ["Default"] = 0, ["Function"] = restyle});
+	Title = Watermark:CreateTextBox({["Name"] = 'Name Text', ["Default"] = 'Copium', ["Function"] = restyle});
+	Subtitle = Watermark:CreateTextBox({["Name"] = 'Build Text', ["Default"] = 'dev build', ["Function"] = restyle});
+	Link = Watermark:CreateTextBox({["Name"] = 'Discord Text', ["Default"] = '.gg/packetv3', ["Function"] = restyle});
+	ShowFPS = Watermark:CreateToggle({["Name"] = 'FPS Counter', ["Default"] = true, ["Function"] = restyle});
+	ShowPing = Watermark:CreateToggle({["Name"] = 'Ping Counter', ["Default"] = true, ["Function"] = restyle});
+	ShowMemory = Watermark:CreateToggle({["Name"] = 'Memory Counter', ["Default"] = false, ["Function"] = restyle});
+	FontOption = Watermark:CreateDropdown({["Name"] = 'Typeface', ["List"] = fonts, ["Default"] = 'Gotham', ["Function"] = restyle});
+	TextSize = Watermark:CreateSlider({["Name"] = 'Font Size', ["Min"] = 8, ["Max"] = 24, ["Default"] = 12, ["Function"] = restyle});
+	TextColor = Watermark:CreateColorSlider({["Name"] = 'Font Color', ["DefaultHue"] = 0, ["DefaultSat"] = 0, ["DefaultValue"] = 1, ["Function"] = restyle});
+	BackgroundColor = Watermark:CreateColorSlider({["Name"] = 'Bar Color', ["DefaultHue"] = 0, ["DefaultSat"] = 0, ["DefaultValue"] = 0, ["Function"] = restyle});
+	BackgroundTransparency = Watermark:CreateSlider({["Name"] = 'Bar Transparency', ["Min"] = 0, ["Max"] = 1, ["Decimal"] = 10, ["Default"] = 0, ["Function"] = restyle});
+	GradientStart = Watermark:CreateColorSlider({["Name"] = 'Outline Start', ["DefaultHue"] = 0.8, ["DefaultSat"] = 0.6, ["DefaultValue"] = 0.83, ["Function"] = restyle});
+	GradientEnd = Watermark:CreateColorSlider({["Name"] = 'Outline End', ["DefaultHue"] = 0.61, ["DefaultSat"] = 0.58, ["DefaultValue"] = 0.93, ["Function"] = restyle});
+	OutlineThickness = Watermark:CreateSlider({["Name"] = 'Outline Size', ["Min"] = 0, ["Max"] = 6, ["Default"] = 3, ["Function"] = restyle});
+	SpinRate = Watermark:CreateSlider({["Name"] = 'Outline Spin', ["Min"] = 0, ["Max"] = 20, ["Default"] = 2, ["Tooltip"] = 'Outline rotation per frame (original = 2).'});
+	CornerRadius = Watermark:CreateSlider({["Name"] = 'Roundness', ["Min"] = 0, ["Max"] = 12, ["Default"] = 0, ["Function"] = restyle});
 	restyle();
 end);
 
