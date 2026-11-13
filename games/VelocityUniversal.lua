@@ -3802,7 +3802,139 @@ velo.run(function()
 end);
 	
 velo.run(function()
-	local AntiFall: table;
+	local AntiFling: table ={["Enabled"] = false};
+	local Collision: table = {["Enabled"] = true};
+	local Destroy: table = {["Enabled"] = true};
+	local MaxVelocity: table = {["Value"] = 500};
+	local modified: table = {};
+	local noPhysics: PhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0);
+	local neutralize: (part: any) -> () = function(part: any): ()
+		if Collision["Enabled"] and part:IsA('BasePart') and not modified[part] then
+			modified[part] = {part.CanCollide, part.CanTouch, part.Massless, part.CustomPhysicalProperties};
+			part.CanCollide = false;
+			part.CanTouch = false;
+			part.Massless = true;
+			part.CustomPhysicalProperties = noPhysics;
+		end;
+	end;
+	local handleEntity: (entity: any) -> () = function(entity: any): ()
+		if not entity or entity == entitylib.character or not entity.Character then
+			return;
+		end;
+
+		for _: any, part: any in entity.Character:GetDescendants() do
+			neutralize(part);
+		end;
+
+		AntiFling:Clean(entity.Character.DescendantAdded:Connect(neutralize));
+	end;
+	local killMover: (inst: any) -> () = function(inst: any): ()
+		if not Destroy["Enabled"] or not inst:IsA('BodyMover') or not inst.Parent then
+			return;
+		end;
+
+		local kill: boolean = true;
+		if inst:IsA('BodyVelocity') then
+			kill = inst.Velocity.Magnitude > MaxVelocity["Value"];
+		elseif inst:IsA('BodyGyro') then
+			kill = inst.MaxTorque.Magnitude > 10000;
+		end;
+
+		if kill then
+			inst:Destroy();
+		end;
+	end;
+	local guardLocal: (entity: any) -> () = function(entity: any): ()
+		if not entity or not entity.Character then
+			return;
+		end;
+
+		for _: any, inst: any in entity.Character:GetDescendants() do
+			killMover(inst);
+		end;
+
+		AntiFling:Clean(entity.Character.DescendantAdded:Connect(killMover));
+	end;
+	AntiFling = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'AntiFling',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				if Collision["Enabled"] then
+					AntiFling:Clean(entitylib.Events.EntityAdded:Connect(handleEntity));
+					for _: any, entity: any in entitylib.List do
+						handleEntity(entity);
+					end;
+				end;
+				if Destroy["Enabled"] then
+					AntiFling:Clean(entitylib.Events.LocalAdded:Connect(guardLocal));
+					if entitylib.isAlive then
+						guardLocal(entitylib.character);
+					end;
+					AntiFling:Clean(runService.PreSimulation:Connect(function(): ()
+						if not entitylib.isAlive then
+							return;
+						end;
+						local root: any = entitylib.character.RootPart;
+						if root then
+							if root.AssemblyLinearVelocity.Magnitude > MaxVelocity["Value"] then
+								root.AssemblyLinearVelocity = Vector3.zero;
+							end;
+							if root.AssemblyAngularVelocity.Magnitude > MaxVelocity["Value"] then
+								root.AssemblyAngularVelocity = Vector3.zero;
+							end;
+						end;
+					end));
+				end;
+			else
+				for part: any, value: any in modified do
+					pcall(function(): ()
+						part.CanCollide = value[1];
+						part.CanTouch = value[2];
+						part.Massless = value[3];
+						part.CustomPhysicalProperties = value[4];
+					end);
+				end;
+
+				table.clear(modified);
+			end;
+		end,
+		["Tooltip"] = 'Prevents other players and physics from flinging you'
+	});
+	Collision = AntiFling:CreateToggle({
+		["Name"] = 'Collision',
+		["Default"] = true,
+		["Function"] = function(): ()
+			if AntiFling["Enabled"] then
+				AntiFling:Toggle();
+				AntiFling:Toggle();
+			end;
+		end,
+		["Tooltip"] = 'Disables collision and physics on other characters so they cannot push you'
+	});
+	Destroy = AntiFling:CreateToggle({
+		["Name"] = 'Destroy',
+		["Default"] = true,
+		["Function"] = function(): ()
+			if AntiFling["Enabled"] then
+				AntiFling:Toggle();
+				AntiFling:Toggle();
+			end;
+		end,
+		["Tooltip"] = 'Removes fling body movers from your character and clamps your velocity'
+	});
+	MaxVelocity = AntiFling:CreateSlider({
+		["Name"] = 'Max Velocity',
+		["Min"] = 100,
+		["Max"] = 5000,
+		["Default"] = 500,
+		["Suffix"] = function(val: any): string
+			return 'studs/s';
+		end
+	});
+end);
+
+velo.run(function()
+	local AntiFall: table = {["Enabled"] = false};
 	local Method: table;
 	local Mode: table;
 	local Material: table;
@@ -3810,7 +3942,6 @@ velo.run(function()
 	local rayCheck: RaycastParams = RaycastParams.new();
 	rayCheck.RespectCanCollide = true;
 	local part: Part;
-	
 	AntiFall = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'AntiFall',
 		["Function"] = function(callback: boolean): void
@@ -3926,12 +4057,13 @@ end);
 local Fly: table;
 local LongJump: table;
 velo.run(function()
-	local options: table = {["TPTiming"] = tick()};
+	local options: table = {["TPTiming"] = os.clock()};
 	local Mode: table;
 	local FloatMode: table;
 	local State: table;
 	local MoveMethod: table;
-	local Keys: table;
+	local UpKey: table;
+	local DownKey: table;
 	local VerticalValue: table;
 	local BounceLength: table;
 	local BounceDelay: table;
@@ -3949,7 +4081,15 @@ velo.run(function()
 	local functions: table;
 	functions = {
 		["Velocity"] = function()
-			entitylib.character.RootPart.Velocity = (entitylib.character.RootPart.Velocity * Vector3.new(1, 0, 1)) + Vector3.new(0, 2.25 + ((up + down) * VerticalValue["Value"]), 0);
+			entitylib.character.RootPart.AssemblyLinearVelocity = (entitylib.character.RootPart.AssemblyLinearVelocity * Vector3.new(1, 0, 1)) + Vector3.new(0, 2.25 + ((up + down) * VerticalValue["Value"]), 0);
+		end,
+		["Impulse"] = function(dt: any)
+			local root: any = entitylib.character.RootPart;
+			local diff: Vector3 = (Vector3.new(0, 2.25 + ((up + down) * VerticalValue["Value"]), 0) - root.AssemblyLinearVelocity) * Vector3.new(0, 1, 0);
+
+			if diff.Magnitude > 2 then
+				root:ApplyImpulse(diff * root.AssemblyMass);
+			end;
 		end,
 		["CFrame"] = function(dt: any)
 			local root: any = entitylib.character.RootPart;
@@ -3965,19 +4105,19 @@ velo.run(function()
 					yLevel = ray.Position.Y + entitylib.character.HipHeight;
 				end;
 			end;
-			root.Velocity *= Vector3.new(1, 0, 1);
+			root.AssemblyLinearVelocity *= Vector3.new(1, 0, 1);
 			root.CFrame += Vector3.new(0, yLevel - root.Position.Y, 0);
 		end,
 		["Bounce"] = function()
 			functions.Velocity();
-			entitylib.character.RootPart.Velocity += Vector3.new(0, ((tick() % BounceDelay["Value"]) / BounceDelay["Value"] > 0.5 and 1 or -1) * BounceLength["Value"], 0);
+			entitylib.character.RootPart.AssemblyLinearVelocity += Vector3.new(0, ((os.clock() % BounceDelay["Value"]) / BounceDelay["Value"] > 0.5 and 1 or -1) * BounceLength["Value"], 0);
 		end,
 		["Floor"] = function()
 			platform.CFrame = down ~= 0 and CFrame.identity or entitylib.character.RootPart.CFrame + Vector3.new(0, -(entitylib.character.HipHeight + 0.5), 0);
 		end,
 		["TP"] = function(dt: any)
 			functions.CFrame(dt);
-			if tick() % (FloatTPAir["Value"] + FloatTPGround["Value"]) > FloatTPAir["Value"] then
+			if os.clock() % (FloatTPAir["Value"] + FloatTPGround["Value"]) > FloatTPAir["Value"] then
 				oldYLevel = oldYLevel or yLevel;
 				rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera};
 				rayCheck.CollisionGroup = entitylib.character.RootPart.CollisionGroup;
@@ -4017,7 +4157,7 @@ velo.run(function()
 					if entitylib.isAlive then
 						if PlatformStanding["Enabled"] then
 							entitylib.character.Humanoid.PlatformStand = true;
-							entitylib.character.RootPart.RotVelocity = Vector3.zero;
+							entitylib.character.RootPart.AssemblyAngularVelocity = Vector3.zero;
 							entitylib.character.RootPart.CFrame = CFrame.lookAlong(entitylib.character.RootPart.CFrame.Position, gameCamera.CFrame.LookVector);
 						end;
 						if State["Value"] ~= 'None' then
@@ -4036,7 +4176,6 @@ velo.run(function()
 				for _, v: any in {'InputBegan', 'InputEnded'} do
 					Fly:Clean(inputService[v]:Connect(function(input: any)
 						if not inputService:GetFocusedTextBox() then
-							local divided: {string} = Keys["Value"]:split('/');
 							if input.KeyCode == Enum.KeyCode.W then
 								w = v == 'InputBegan' and -1 or 0;
 							elseif input.KeyCode == Enum.KeyCode.S then
@@ -4045,14 +4184,16 @@ velo.run(function()
 								a = v == 'InputBegan' and -1 or 0;
 							elseif input.KeyCode == Enum.KeyCode.D then
 								d = v == 'InputBegan' and 1 or 0;
-							elseif input.KeyCode == Enum.KeyCode[divided[1]] then
-								up = v == 'InputBegan' and 1 or 0;
-							elseif input.KeyCode == Enum.KeyCode[divided[2]] then
-								down = v == 'InputBegan' and -1 or 0;
 							end;
 						end;
 					end));
 				end;
+				Fly:Clean(UpKey.Triggered:Connect(function(isDown: boolean)
+					up = isDown and 1 or 0;
+				end));
+				Fly:Clean(DownKey.Triggered:Connect(function(isDown: boolean)
+					down = isDown and -1 or 0;
+				end));
 				if inputService.TouchEnabled then
 					pcall(function()
 						local jumpButton: any = lplr.PlayerGui.TouchGui.TouchControlFrame.JumpButton;
@@ -4063,9 +4204,15 @@ velo.run(function()
 				end;
 			else
 				yLevel, oldYLevel = nil, nil;
-				if entitylib.isAlive and PlatformStanding["Enabled"] then
-					entitylib.character.Humanoid.PlatformStand = false;
+				if entitylib.isAlive then
+					if PlatformStanding["Enabled"] then
+						entitylib.character.Humanoid.PlatformStand = false;
+					end;
+					if options.WalkSpeed then
+						entitylib.character.Humanoid.WalkSpeed = options.WalkSpeed;
+					end;
 				end;
+				options.WalkSpeed = nil;
 			end;
 		end,
 		["ExtraText"] = function() 
@@ -4090,7 +4237,7 @@ velo.run(function()
 	});
 	FloatMode = Fly:CreateDropdown({
 		["Name"] = 'Float Mode',
-		["List"] = {'Velocity', 'CFrame', 'Bounce', 'Floor', 'Jump', 'TP'},
+		["List"] = {'Velocity', 'Impulse', 'CFrame', 'Bounce', 'Floor', 'Jump', 'TP'},
 		["Function"] = function(val: any)
 			WallCheck.Object.Visible = Mode["Value"] == 'CFrame' or Mode["Value"] == 'TP' or val == 'CFrame' or val == 'TP';
 			BounceLength.Object.Visible = val == 'Bounce';
@@ -4111,7 +4258,7 @@ velo.run(function()
 				platform.Parent = Fly["Enabled"] and gameCamera or nil;
 			end;
 		end,
-		["Tooltip"] = 'Velocity - Uses smooth physics based movement\nCFrame - Directly adjusts the position of the root\nTP - Teleports you to the ground within intervals\nFloor - Spawns a part under you\nJump - Presses space after going below a certain Y Level\nBounce - Vertical bouncing motion'
+		["Tooltip"] = 'Velocity - Uses smooth physics based movement\nImpulse - Same as velocity while using forces instead\nCFrame - Directly adjusts the position of the root\nTP - Teleports you to the ground within intervals\nFloor - Spawns a part under you\nJump - Presses space after going below a certain Y Level\nBounce - Vertical bouncing motion'
 	});
 	local states: table = {'None'};
 	for _, v: any in Enum.HumanoidStateType:GetEnumItems() do
@@ -4128,10 +4275,17 @@ velo.run(function()
 		["List"] = {'MoveDirection', 'Direct'},
 		["Tooltip"] = 'MoveDirection - Uses the games input vector for movement\nDirect - Directly calculate our own input vector'
 	});
-	Keys = Fly:CreateDropdown({
-		["Name"] = 'Keys',
-		["List"] = {'Space/LeftControl', 'Space/LeftShift', 'E/Q', 'Space/Q', 'ButtonA/ButtonL2'},
-		["Tooltip"] = 'The key combination for going up & down'
+	UpKey = Fly:CreateBind({
+		["Name"] = 'Up Key',
+		["Default"] = {'Space'},
+		["Hold"] = true,
+		["Tooltip"] = 'Keybind to fly upwards'
+	});
+	DownKey = Fly:CreateBind({
+		["Name"] = 'Down Key',
+		["Default"] = {'LeftControl'},
+		["Hold"] = true,
+		["Tooltip"] = 'Keybind to fly downwards'
 	});
 	options["Value"] = Fly:CreateSlider({
 		["Name"] = 'Speed',
@@ -10031,6 +10185,367 @@ velo.run(function()
 	end;
 end);
 
+velo.run(function()
+    local ThemesModule: table = {["Enabled"] = false}
+	local ThemesDropdown: table = {["Value"] = "Antartic Evening"}
+    local Atmosphere: table = {["Enabled"] = true}
+	if replicatedStorage:FindFirstChild("Themes") then
+		replicatedStorage:FindFirstChild("Themes"):Destroy();
+	end;
+	local ThemeProps: table = {
+		["The Milky Way A"] = {
+			["Ambient"] = Color3.fromRGB(107, 107, 107),
+			["OutdoorAmbient"] = Color3.fromRGB(115, 93, 137),
+			["ColorShift_Bottom"] = Color3.fromRGB(219, 3, 246),
+			["ColorShift_Top"] = Color3.fromRGB(144, 6, 177),
+			["Enviroment"] = 0.4,
+			["Brightness"] = 0.05,
+			["Exposure"] = 0.8,
+			["Lat"] = 60,
+			["Time"] = 10,
+			["Shadows"] = true
+		},
+		["The Milky Way B"] = {
+			["Ambient"] = Color3.fromRGB(58, 58, 58),
+			["OutdoorAmbient"] = Color3.fromRGB(127, 116, 79),
+			["ColorShift_Bottom"] = Color3.fromRGB(219, 3, 246),
+			["ColorShift_Top"] = Color3.fromRGB(144, 6, 177),
+			["Enviroment"] = 0.5,
+			["Brightness"] = 0.2,
+			["Exposure"] = 0.6,
+			["Lat"] = 310,
+			["Time"] = 13,
+			["Shadows"] = true
+		},
+		["The Milky Way C"] = {
+			["Ambient"] = Color3.fromRGB(101, 101, 101),
+			["OutdoorAmbient"] = Color3.fromRGB(131, 77, 122),
+			["ColorShift_Bottom"] = Color3.fromRGB(219, 3, 246),
+			["ColorShift_Top"] = Color3.fromRGB(144, 6, 177),
+			["Enviroment"] = 0.5,
+			["Brightness"] = 0.2,
+			["Exposure"] = 0.7,
+			["Lat"] = 0,
+			["Time"] = 15.25,
+			["Shadows"] = true
+		},
+		["Lunar Vape Old"] = {
+			["Ambient"] = Color3.fromRGB(93, 59, 88),
+			["OutdoorAmbient"] = Color3.fromRGB(128, 94, 100),
+			["ColorShift_Bottom"] = Color3.fromRGB(213, 173, 117),
+			["ColorShift_Top"] = Color3.fromRGB(255, 255, 255),
+			["Enviroment"] = 0.5,
+			["Brightness"] = 0.2,
+			["Exposure"] = 0.8,
+			["Lat"] = 325,
+			["Time"] = 11,
+			["Shadows"] = true
+		},
+		["Lunar Vape New"] = {
+			["Ambient"] = Color3.fromRGB(101, 72, 51),
+			["OutdoorAmbient"] = Color3.fromRGB(175, 132, 119),
+			["ColorShift_Bottom"] = Color3.fromRGB(213, 161, 134),
+			["ColorShift_Top"] = Color3.fromRGB(203, 167, 102),
+			["Enviroment"] = 0.3,
+			["Brightness"] = 1,
+			["Exposure"] = 0.7,
+			["Lat"] = 326,
+			["Time"] = 16 + (1 / 3),
+			["Shadows"] = true
+		},
+		["Antarctic Evening"] = {
+			["Ambient"] = Color3.fromRGB(79, 54, 101),
+			["OutdoorAmbient"] = Color3.fromRGB(162, 118, 175),
+			["ColorShift_Bottom"] = Color3.fromRGB(213, 10, 180),
+			["ColorShift_Top"] = Color3.fromRGB(103, 68, 203),
+			["Enviroment"] = 0.4,
+			["Brightness"] = 0.2,
+			["Exposure"] = 1,
+			["Lat"] = 306,
+			["Time"] = 10,
+			["Shadows"] = true
+		}
+	}	
+	local GameThemes: Folder = Instance.new("Folder", replicatedStorage)
+	GameThemes["Name"] = "Themes"
+	local TheMilkyWaySkyA: Sky = Instance.new("Sky", GameThemes)
+	TheMilkyWaySkyA["Name"] = "The Milky Way A"
+	TheMilkyWaySkyA["CelestialBodiesShown"] = false
+	TheMilkyWaySkyA["StarCount"] = 3000
+	TheMilkyWaySkyA["SkyboxUp"] = "rbxassetid://5559302033"
+	TheMilkyWaySkyA["SkyboxLf"] = "rbxassetid://5559292825"
+	TheMilkyWaySkyA["SkyboxFt"] = "rbxassetid://5559300879"
+    TheMilkyWaySkyA["SkyboxBk"] = "rbxassetid://5559289158"
+	TheMilkyWaySkyA["SkyboxDn"] = "rbxassetid://5559290893"
+	TheMilkyWaySkyA["SkyboxRt"] = "rbxassetid://5559302989"
+	TheMilkyWaySkyA["SunTextureId"] = "rbxasset://sky/sun.jpg"
+	TheMilkyWaySkyA["SunAngularSize"] = 1.44
+	TheMilkyWaySkyA["MoonTextureId"] = "rbxasset://sky/moon.jpg"
+	TheMilkyWaySkyA["MoonAngularSize"] = 0.57
+	local TheMilkyWaySkyADOF: DepthOfFieldEffect = Instance.new("DepthOfFieldEffect", TheMilkyWaySkyA)
+	TheMilkyWaySkyADOF["FarIntensity"] = 0.12
+	TheMilkyWaySkyADOF["NearIntensity"] = 0.3
+	TheMilkyWaySkyADOF["FocusDistance"] = 20
+	TheMilkyWaySkyADOF["InFocusRadius"] = 17
+	local TheMilkyWaySkyACC: ColorCorrectionEffect = Instance.new("ColorCorrectionEffect", TheMilkyWaySkyA)
+	TheMilkyWaySkyACC["TintColor"] = Color3.fromRGB(245, 200, 245)
+	TheMilkyWaySkyACC["Brightness"] = 0
+	TheMilkyWaySkyACC["Contrast"] = 0.2
+	TheMilkyWaySkyACC["Saturation"] = -0.1
+	local TheMilkyWaySkyABloom: BloomEffect = Instance.new("BloomEffect", TheMilkyWaySkyA)
+	TheMilkyWaySkyABloom["Intensity"] = 0.4
+	TheMilkyWaySkyABloom["Size"] = 12
+	TheMilkyWaySkyABloom["Threshold"] = 0.2
+	local TheMilkyWaySkyB: Sky = Instance.new("Sky", GameThemes)
+	TheMilkyWaySkyB["Name"] = "The Milky Way B"
+	TheMilkyWaySkyB["CelestialBodiesShown"] = false
+	TheMilkyWaySkyB["StarCount"] = 3000
+	TheMilkyWaySkyB["SkyboxUp"] = "http://www.roblox.com/asset?id=232707707"
+	TheMilkyWaySkyB["SkyboxLf"] = "http://www.roblox.com/asset?id=232708001"
+	TheMilkyWaySkyB["SkyboxFt"] = "http://www.roblox.com/asset?id=232707879"
+	TheMilkyWaySkyB["SkyboxBk"] = "http://www.roblox.com/asset?id=232707959"
+	TheMilkyWaySkyB["SkyboxDn"] = "http://www.roblox.com/asset?id=232707790"
+	TheMilkyWaySkyB["SkyboxRt"] = "http://www.roblox.com/asset?id=232707983"
+	local TheMilkyWaySkyBCC: ColorCorrectionEffect = Instance.new("ColorCorrectionEffect", TheMilkyWaySkyB)
+	TheMilkyWaySkyBCC["TintColor"] = Color3.fromRGB(255, 255, 255)
+	TheMilkyWaySkyBCC["Brightness"] = 0
+	TheMilkyWaySkyBCC["Contrast"] = 0.3
+	TheMilkyWaySkyBCC["Saturation"] = 0.2
+	local TheMilkyWaySkyBDOF: DepthOfFieldEffect = Instance.new("DepthOfFieldEffect", TheMilkyWaySkyB)
+	TheMilkyWaySkyBDOF["FarIntensity"] = 0.12
+	TheMilkyWaySkyBDOF["NearIntensity"] = 0.3
+	TheMilkyWaySkyBDOF["FocusDistance"] = 20
+	TheMilkyWaySkyBDOF["InFocusRadius"] = 17
+	local TheMilkyWaySkyBBloom: BloomEffect = Instance.new("BloomEffect", TheMilkyWaySkyB)
+	TheMilkyWaySkyBBloom["Intensity"] = 0.6
+	TheMilkyWaySkyBBloom["Size"] = 12
+	TheMilkyWaySkyBBloom["Threshold"] = 0.2
+	local TheMilkyWaySkyBSunRay: SunRaysEffect = Instance.new("SunRaysEffect", TheMilkyWaySkyB)
+	TheMilkyWaySkyBSunRay["Enabled"] = true
+	TheMilkyWaySkyBSunRay["Intensity"] = 0.003
+	TheMilkyWaySkyBSunRay["Spread"] = 1
+	local TheMilkyWaySkyC: Sky = Instance.new("Sky", GameThemes)
+	TheMilkyWaySkyC["Name"] = "The Milky Way C"
+	TheMilkyWaySkyC["CelestialBodiesShown"] = false
+	TheMilkyWaySkyC["StarCount"] = 3000
+	TheMilkyWaySkyC["SkyboxUp"] = "rbxassetid://1903391299"
+	TheMilkyWaySkyC["SkyboxLf"] = "rbxassetid://1903388369"
+	TheMilkyWaySkyC["SkyboxFt"] = "rbxassetid://1903389258"
+	TheMilkyWaySkyC["SkyboxBk"] = "rbxassetid://1903390348"
+	TheMilkyWaySkyC["SkyboxDn"] = "rbxassetid://1903391981"
+	TheMilkyWaySkyC["SkyboxRt"] = "rbxassetid://1903387293"
+	TheMilkyWaySkyC["SunTextureId"] = "rbxasset://sky/sun.jpg"
+	TheMilkyWaySkyC["SunAngularSize"] = 21
+	TheMilkyWaySkyC["MoonTextureId"] = "rbxasset://sky/moon.jpg"
+	TheMilkyWaySkyC["MoonAngularSize"] = 11
+	local TheMilkyWaySkyCDOF: DepthOfFieldEffect = Instance.new("DepthOfFieldEffect", TheMilkyWaySkyC)
+	TheMilkyWaySkyCDOF["FarIntensity"] = 0.12
+	TheMilkyWaySkyCDOF["NearIntensity"] = 0.3
+	TheMilkyWaySkyCDOF["FocusDistance"] = 20
+	TheMilkyWaySkyCDOF["InFocusRadius"] = 17
+	local TheMilkyWaySkyCBloom: BloomEffect = Instance.new("BloomEffect", TheMilkyWaySkyC)
+	TheMilkyWaySkyCBloom["Intensity"] = 0.6
+	TheMilkyWaySkyCBloom["Size"] = 12
+	TheMilkyWaySkyCBloom["Threshold"] = 0.2
+	local TheMilkyWaySkyCSunRay: SunRaysEffect = Instance.new("SunRaysEffect", TheMilkyWaySkyC)
+	TheMilkyWaySkyCSunRay["Enabled"] = true
+	TheMilkyWaySkyCSunRay["Intensity"] = 0.003
+	TheMilkyWaySkyCSunRay["Spread"] = 1
+	local TheMilkyWaySkyCCC: ColorCorrectionEffect = Instance.new("ColorCorrectionEffect", TheMilkyWaySkyC)
+	TheMilkyWaySkyCCC["TintColor"] = Color3.fromRGB(245, 240, 255)
+	TheMilkyWaySkyCCC["Brightness"] = -0.04
+	TheMilkyWaySkyCCC["Contrast"] = 0.2
+	TheMilkyWaySkyCCC["Saturation"] = 0.2
+	local LunarVapeOld: Sky = Instance.new("Sky", GameThemes)
+	LunarVapeOld["Name"] = "Lunar Vape Old"
+	LunarVapeOld["CelestialBodiesShown"] = false
+	LunarVapeOld["StarCount"] = 3000
+	LunarVapeOld["SkyboxUp"] = "rbxassetid://2670644331"
+	LunarVapeOld["SkyboxLf"] = "rbxassetid://2670643070"
+	LunarVapeOld["SkyboxFt"] = "rbxassetid://2670643214"
+	LunarVapeOld["SkyboxBk"] = "rbxassetid://2670643994"
+	LunarVapeOld["SkyboxDn"] = "rbxassetid://2670643365"
+	LunarVapeOld["SkyboxRt"] = "rbxassetid://2670644173"
+	LunarVapeOld["SunTextureId"] = "rbxasset://sky/sun.jpg"
+	LunarVapeOld["SunAngularSize"] = 21
+	LunarVapeOld["MoonTextureId"] = "rbxassetid://1075087760"
+	LunarVapeOld["MoonAngularSize"] = 11
+	local LunarVapeOldCC: ColorCorrectionEffect = Instance.new("ColorCorrectionEffect", LunarVapeOld)
+	LunarVapeOldCC["Enabled"] = true
+	LunarVapeOldCC["Brightness"] = 0.13
+	LunarVapeOldCC["Contrast"] = 0.4
+	LunarVapeOldCC["Saturation"] = 0.06
+	LunarVapeOldCC["TintColor"] = Color3.fromRGB(255,230,245)
+	local LunarVapeOldDOF: DepthOfFieldEffect = Instance.new("DepthOfFieldEffect", LunarVapeOld)
+	LunarVapeOldDOF["FarIntensity"] = 0.12
+	LunarVapeOldDOF["NearIntensity"] = 0.3
+	LunarVapeOldDOF["FocusDistance"] = 20
+	LunarVapeOldDOF["InFocusRadius"] = 17
+	local LunarVapeOldBloom: BloomEffect = Instance.new("BloomEffect", LunarVapeOld)
+	LunarVapeOldBloom["Intensity"] = 0.8
+	LunarVapeOldBloom["Threshold"] = 0.4
+	LunarVapeOldBloom["Size"] = 12
+	local LunarVapeNew: Sky = Instance.new("Sky", GameThemes)
+	LunarVapeNew["Name"] = "Lunar Vape New"
+	LunarVapeNew["CelestialBodiesShown"] = false
+	LunarVapeNew["StarCount"] = 0
+	LunarVapeNew["SkyboxUp"] = "http://www.roblox.com/asset/?id=458016792"
+	LunarVapeNew["SkyboxLf"] = "http://www.roblox.com/asset/?id=458016655"
+	LunarVapeNew["SkyboxFt"] = "http://www.roblox.com/asset/?id=458016532"
+	LunarVapeNew["SkyboxBk"] = "http://www.roblox.com/asset/?id=458016711"
+	LunarVapeNew["SkyboxDn"] = "http://www.roblox.com/asset/?id=458016826"
+	LunarVapeNew["SkyboxRt"] = "http://www.roblox.com/asset/?id=458016782"
+	LunarVapeNew["SunTextureId"] = "rbxasset://sky/sun.jpg"
+	LunarVapeNew["SunAngularSize"] = 21
+	LunarVapeNew["MoonTextureId"] = "rbxasset://sky/moon.jpg"
+	LunarVapeNew["MoonAngularSize"] = 11
+	local LunarVapeNewBloom: BloomEffect = Instance.new("BloomEffect", LunarVapeNew)
+	LunarVapeNewBloom["Enabled"] = true
+	LunarVapeNewBloom["Threshold"] = 0.24
+	LunarVapeNewBloom["Size"] = 8
+	LunarVapeNewBloom["Intensity"] = 0.5
+	local LunarVapeNewSunRay: SunRaysEffect = Instance.new("SunRaysEffect", LunarVapeNew)
+	LunarVapeNewSunRay["Enabled"] = true
+	LunarVapeNewSunRay["Intensity"] = 0.05
+	LunarVapeNewSunRay["Spread"] = 0.4
+	local LunarVapeNewCC: ColorCorrectionEffect = Instance.new("ColorCorrectionEffect", LunarVapeNew)
+	LunarVapeNewCC["Saturation"] = 0.14
+	LunarVapeNewCC["Brightness"] = -0.1
+	LunarVapeNewCC["Contrast"] = 0.14
+	local LunarVapeNewDOF: DepthOfFieldEffect = Instance.new("DepthOfFieldEffect", LunarVapeNew)
+	LunarVapeNewDOF["FarIntensity"] = 0.2
+	LunarVapeNewDOF["InFocusRadius"] = 17
+	LunarVapeNewDOF["FocusDistance"] = 20
+	LunarVapeNewDOF["NearIntensity"] = 0.3
+	local AntarcticEvening: Sky = Instance.new("Sky", GameThemes)
+	AntarcticEvening["Name"] = "Antarctic Evening"
+	AntarcticEvening["CelestialBodiesShown"] = false
+	AntarcticEvening["StarCount"] = 3000
+	AntarcticEvening["SkyboxUp"] = "http://www.roblox.com/asset/?id=5260824661"
+	AntarcticEvening["SkyboxLf"] = "http://www.roblox.com/asset/?id=5260800833"
+	AntarcticEvening["SkyboxFt"] = "http://www.roblox.com/asset/?id=5260817288"
+	AntarcticEvening["SkyboxBk"] = "http://www.roblox.com/asset/?id=5260808177"
+	AntarcticEvening["SkyboxDn"] = "http://www.roblox.com/asset/?id=5260653793"
+	AntarcticEvening["SkyboxRt"] = "http://www.roblox.com/asset/?id=5260811073"
+	AntarcticEvening["SunTextureId"] = "rbxasset://sky/sun.jpg"
+	AntarcticEvening["SunAngularSize"] = 21
+	AntarcticEvening["MoonTextureId"] = "rbxasset://sky/moon.jpg"
+	AntarcticEvening["MoonAngularSize"] = 11
+	local AntarcticEveningBloom: BloomEffect = Instance.new("BloomEffect", AntarcticEvening)
+	AntarcticEveningBloom["Enabled"] = true
+	AntarcticEveningBloom["Threshold"] = 0.4
+	AntarcticEveningBloom["Size"] = 12
+	AntarcticEveningBloom["Intensity"] = 0.5
+	local AntarcticEveningCC: ColorCorrectionEffect = Instance.new("ColorCorrectionEffect", AntarcticEvening)
+	AntarcticEveningCC["Brightness"] = -0.03    
+	AntarcticEveningCC["Contrast"] = 0.16
+	AntarcticEveningCC["Saturation"] = 0.06
+	AntarcticEveningCC["TintColor"] = Color3.fromRGB(220, 175, 255)
+	local AntarcticEveningDOF: DepthOfFieldEffect = Instance.new("DepthOfFieldEffect", AntarcticEvening)
+	AntarcticEveningDOF["FarIntensity"] = 0.12
+	AntarcticEveningDOF["InFocusRadius"] = 17
+	AntarcticEveningDOF["FocusDistance"] = 20
+	AntarcticEveningDOF["NearIntensity"] = 0.3
+	local TimeConnection: RBXScriptConnection = nil
+	ThemesModule = vape.Categories.Velocity:CreateModule({
+		["Name"] = "Themes",
+		["HoverText"] = HoverText("Changes the theme."),
+		["Function"] = function(callback: boolean): void
+			if callback then
+				for _, v in lightingService:GetChildren() do
+					v:Destroy();
+				end;
+				local NewSky: table? = GameThemes[ThemesDropdown["Value"]]:Clone();
+				NewSky.Parent = lightingService;
+				for _, v in NewSky:GetChildren() do
+					v.Parent = lightingService;
+				end;
+				lightingService["Brightness"] = ThemeProps[ThemesDropdown["Value"]]["Brightness"];
+				lightingService["ExposureCompensation"] = ThemeProps[ThemesDropdown["Value"]]["Exposure"];
+				lightingService["EnvironmentDiffuseScale"] = ThemeProps[ThemesDropdown["Value"]]["Enviroment"];
+				lightingService["EnvironmentSpecularScale"] = ThemeProps[ThemesDropdown["Value"]]["Enviroment"];
+				lightingService["Ambient"] = ThemeProps[ThemesDropdown["Value"]]["Ambient"];
+				lightingService["OutdoorAmbient"] = ThemeProps[ThemesDropdown["Value"]]["OutdoorAmbient"];
+				lightingService["GeographicLatitude"] = ThemeProps[ThemesDropdown["Value"]]["Lat"];
+				lightingService["ClockTime"] = ThemeProps[ThemesDropdown["Value"]]["Time"];
+				TimeConnection = lightingService:GetPropertyChangedSignal("ClockTime"):Connect(function()
+					lightingService["ClockTime"] = ThemeProps[ThemesDropdown["Value"]]["Time"];
+				end);
+				lightingService["GlobalShadows"] = ThemeProps[ThemesDropdown["Value"]]["Shadows"];
+				lightingService["ShadowSoftness"] = 0.08;
+				sethiddenproperty(lightingService, "Technology", "Future");
+		        if Atmosphere["Enabled"] then
+		            if Atmosphere["Enabled"] then
+		                Atmosphere:Toggle();
+		            end;
+		            task.wait(0.5);
+		            Atmosphere:Toggle();
+		        end;
+			else
+				lightingService["Brightness"] = 2;
+				lightingService["EnvironmentDiffuseScale"] = 1;
+				lightingService["EnvironmentSpecularScale"] = 1;
+				lightingService["Ambient"] = Color3.fromRGB(89, 60, 86);
+				lightingService["OutdoorAmbient"] = Color3.fromRGB(216, 191, 161);
+				lightingService["GeographicLatitude"] = 0;
+				lightingService["ClockTime"] = 14;
+				if TimeConnection then TimeConnection:Disconnect(); end;
+				lightingService["ShadowSoftness"] = 0.2;
+				lightingService["ExposureCompensation"] = 0.1;
+				lightingService["GlobalShadows"] = true;
+				sethiddenproperty(lightingService, "Technology", "ShadowMap");
+				for _, v in lightingService:GetChildren() do
+					v:Destroy();
+				end;
+			end;			
+		end,
+		["ExtraText"] = function()
+			return ThemesDropdown["Value"];
+		end;
+	})
+	ThemesDropdown = ThemesModule:CreateDropdown({
+		["Name"] = "Theme",
+		["List"] = {
+			"The Milky Way A",
+			"The Milky Way B",
+			"The Milky Way C",
+			"Lunar Vape Old",
+			"Lunar Vape New",
+			"Antarctic Evening"
+		},
+		["Default"] = "Antarctic Evening",
+		["HoverText"] = HoverText("Theme to be set to the game."),
+		["Function"] = function()
+			if ThemesModule["Enabled"] then
+				for _, v in next, lightingService:GetChildren() do
+					v:Destroy()
+				end
+				local NewSky = GameThemes[ThemesDropdown["Value"]]:Clone()
+				NewSky.Parent = lightingService
+				for _, v in next, NewSky:GetChildren() do
+					v.Parent = lightingService
+				end
+				lightingService["Brightness"] = ThemeProps[ThemesDropdown["Value"]]["Brightness"]
+				lightingService["ExposureCompensation"] = ThemeProps[ThemesDropdown["Value"]]["Exposure"]
+				lightingService["EnvironmentDiffuseScale"] = ThemeProps[ThemesDropdown["Value"]]["Enviroment"]
+				lightingService["EnvironmentSpecularScale"] = ThemeProps[ThemesDropdown["Value"]]["Enviroment"]
+				lightingService["Ambient"] = ThemeProps[ThemesDropdown["Value"]]["Ambient"]
+				lightingService["OutdoorAmbient"] = ThemeProps[ThemesDropdown["Value"]]["OutdoorAmbient"]
+				lightingService["GeographicLatitude"] = ThemeProps[ThemesDropdown["Value"]]["Lat"]
+				lightingService["ClockTime"] = ThemeProps[ThemesDropdown["Value"]]["Time"]
+				lightingService["GlobalShadows"] = ThemeProps[ThemesDropdown["Value"]]["Shadows"]
+				lightingService["ShadowSoftness"] = 0.5
+				sethiddenproperty(lightingService, "Technology", "Future")
+			end
+		end
+	})
+	Atmosphere = ThemesModule:CreateToggle({
+	        ["Name"] = "Atmosphere",
+	        ["HoverText"] = HoverText("Enables vape's atmosphere."),
+	        ["Function"] = function() end,
+	        ["Default"] = true
+	})
+end)
 
 velo.run(function()
 	local Breadcrumbs: table = {["Enabled"] = false};
@@ -11770,7 +12285,7 @@ velo.run(function()
 		["HoverText"] = 'Mimics others in chat.',
 		["Function"] = function(callback: boolean): void
 			if callback then 
-				table.insert(ChatMimic.Connections, vapeStore.MessageReceived.Event:Connect(function(plr: any, text: any)
+				local onMessage: (plr: any, text: any) -> void = function(plr: any, text: any): void
 					task.wait();
 					if plr == lplr or lastsent[plr] and lastsent[plr] > tick() then 
 						return ;
@@ -11798,9 +12313,29 @@ velo.run(function()
 						end;
 					end;
 					sendmessage(begin..''..text);
-					table.insert(messages, text);
+					table.insert(messages[plr], text);
 					lastsent[plr] = tick() + 0.45;
-				end));
+				end;
+				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+					ChatMimic:Clean(textChatService.MessageReceived:Connect(function(tab: any): void
+						if tab.TextSource then
+							local plr: Player? = playersService:GetPlayerByUserId(tab.TextSource.UserId);
+							if plr then
+								onMessage(plr, tab.Text);
+							end;
+						end;
+					end));
+				elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
+					ChatMimic:Clean(replicatedStorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(tab: any): void
+						local plr: Player? = playersService:FindFirstChild(tab.FromSpeaker);
+						if plr then
+							onMessage(plr, tab.Message);
+						end;
+					end));
+				else
+					notif('Vape', 'Default chat not found.', 5);
+					ChatMimic:Toggle();
+				end;
 			end;
 		end;
 	});
@@ -11818,47 +12353,44 @@ end);
 velo.run(function()
 	local PlayerAttach: table = {["Enabled"] = false};
 	local PlayerAttachRange: table = {["Value"] = 50};
-	local PlayerAttachPersist: table = {};
+	local PlayerAttachPersist: table = {["Enabled"] = false};
 	local PlayerAttachPlayers: table = {};
+	local currentTarget: any = nil;
+	local validTarget: (ent: any, root: any) -> boolean = function(ent: any, root: any): boolean
+		return ent ~= nil and ent.Character ~= nil and ent.RootPart ~= nil and ent.RootPart.Parent ~= nil
+			and (ent.RootPart.Position - root.Position).Magnitude <= PlayerAttachRange["Value"];
+	end;
 	PlayerAttach = vape.Categories.Velocity:CreateModule({
 		["Name"] = 'PlayerAttach',
-		["HoverText"] = 'Attach to players',
+		["HoverText"] = 'Teleports you onto the closest target every frame.',
 		["Function"] = function(callback: boolean): void
-			if callback then 
-				local plrs: any = entitylib.AllPosition({
-					["Range"] = PlayerAttachRange["Value"],
-					["Wallcheck"] = PlayerAttachPlayers.Walls["Enabled"] or nil,
-					["Part"] = 'RootPart',
-					["Players"] = PlayerAttachPlayers.Players["Enabled"],
-					["NPCs"] = PlayerAttachPlayers.NPCs["Enabled"]
-				});
-				local found_player: boolean = false;
-				local targetEntity: any;
-				for i: any, v: any in next, plrs do
-					if v and v.RootPart then
-						targetEntity = v;
-						found_player = true;
-						break;
-					end;
-				end;
-
-				if not found_player then
+			currentTarget = nil;
+			if not callback then
+				return;
+			end;
+			PlayerAttach:Clean(runService.PreSimulation:Connect(function(): void
+				if not entitylib.isAlive then
+					currentTarget = nil;
 					return;
 				end;
-				task.spawn(function()
-					repeat
-						task.wait(0.1);
-						if not entitylib.isAlive and not lplr.Character then 
-							return;
-						end;
-						if targetEntity and targetEntity.RootPart then
-							lplr.Character.PrimaryPart.CFrame = targetEntity.RootPart.CFrame;
-						else
-							return;
-						end;
-					until not PlayerAttach["Enabled"];
-				end);
-			end;
+				local root: any = entitylib.character.RootPart;
+				if not root then
+					return;
+				end;
+				if not (PlayerAttachPersist["Enabled"] and validTarget(currentTarget, root)) then
+					currentTarget = entitylib.EntityPosition({
+						["Range"] = PlayerAttachRange["Value"],
+						["Wallcheck"] = PlayerAttachPlayers.Walls["Enabled"] or nil,
+						["Part"] = 'RootPart',
+						["Players"] = PlayerAttachPlayers.Players["Enabled"],
+						["NPCs"] = PlayerAttachPlayers.NPCs["Enabled"]
+					});
+				end;
+				if currentTarget and currentTarget.RootPart then
+					root.CFrame = currentTarget.RootPart.CFrame;
+					root.AssemblyLinearVelocity = Vector3.zero;
+				end;
+			end));
 		end;
 	});
 	PlayerAttachRange = PlayerAttach:CreateSlider({
@@ -11866,19 +12398,17 @@ velo.run(function()
 		["Min"] = 1,
 		["Max"] = 100,
 		["Default"] = 50,
-		["Function"] = function(val: any)
-			PlayerAttachRange["Value"] = val;
-		end;
+		["Suffix"] = function(val: any): string
+			return val == 1 and 'stud' or 'studs';
+		end
 	});
 	PlayerAttachPersist = PlayerAttach:CreateToggle({
 		["Name"] = "Persist",
-		["Default"] = false,
-		["Function"] = function(val: any)
-			PlayerAttachPersist["Enabled"] = val;
-		end;
+		["HoverText"] = "Stay locked on one target until it dies or leaves range.",
+		["Default"] = false
 	});
 	PlayerAttachPlayers = PlayerAttach:CreateTargets({
-		["Players"] = true, 
+		["Players"] = true,
 		["NPCs"] = true
 	});
 end);
@@ -12230,6 +12760,7 @@ end);
 velo.run(function()
 	local ScriptHub: table = {["Enabled"] = false};
 	local Script: table = {["Value"] = "Dex"};
+	local Link: table = {["Value"] = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"};
 	ScriptHub = vape.Categories.Velocity:CreateModule({
 		["Name"] = "ScriptHub",
 		["HoverText"] = "Loads Scripts",
@@ -12243,6 +12774,20 @@ velo.run(function()
 					task.spawn(function()
 						loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))(); 
 					end);
+				elseif Script["Value"] == "Vex" then
+					task.spawn(function()
+						loadstring(game:HttpGet("https://raw.githubusercontent.com/Vezise/2026/main/Vez/VexExplorer/VEXExplorer.lua"))();
+					end)
+				elseif Script["Value"] == "Cobalt Spy" then
+					task.spawn(function()
+						loadstring(game:HttpGet("https://gitlab.com/upio/cobalt/-/releases/permalink/latest/downloads/Cobalt.luau"))();
+					end)
+				elseif Script["Value"] == "AX Scripts" then
+					setclipboard("https://discord.gg/xvCMHdWmRs");				
+				elseif Script["Value"] == "Custom" then
+					task.spawn(function()					
+						loadstring(game:HttpGet(Link["Value"]))()
+					end);
 				end;
 				ScriptHub:Toggle();
 			end;
@@ -12252,13 +12797,33 @@ velo.run(function()
 		["Name"] ='Mode',
 		["List"] = {
 			'Dex',
-			'InfiniteYield'
+			'InfiniteYield',
+			'Vex',
+			'Cobalt Spy',
+			'AX Scripts',
+			'Custom'
 		},
 		["Default"] ='Dex',
 		["HoverText"] = 'Mode to execute script.',
-		["Function"] = function() end;
+		["Function"] = function(val: any): void
+			if Link and Link.Object then
+				Link.Object.Visible = val == 'Custom';
+			end;
+		end;
 	});	
-end);
+	Link = ScriptHub:CreateTextBox({
+		["Name"] = "Script",
+		["TempText"] = "Script Github/Link",
+		["HoverText"] = "Insert the script link here",
+		["Visible"] = Script["Value"] == 'Custom',
+		["Function"] = function(enter: boolean): void 
+			if enter and ScriptHub["Enabled"] then
+				ScriptHub:Toggle();
+				ScriptHub:Toggle();
+			end;
+		end;
+	});
+end)
 
 velo.run(function()
 	local GameWeather: table = {["Enabled"] = false};
@@ -12267,7 +12832,6 @@ velo.run(function()
 	local SnowflakesRate: table = {["Value"] = 28};
 	local SnowflakesHigh: table = {["Value"] = 100};
 	local emitters: {ParticleEmitter} = {};
-
 	local snowTransparency: NumberSequence = NumberSequence.new({
 		NumberSequenceKeypoint.new(0, 0.16939899325371, 0),
 		NumberSequenceKeypoint.new(0.23365999758244, 0.62841498851776, 0.37158501148224),

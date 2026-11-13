@@ -112,10 +112,6 @@ if vape.ThreadFix then
 	setthreadidentity(8);
 end;
 
-for _, v in {'AutoGoon'} do
-	vape:Remove(v);
-end;
-
 local originScanner: table = {["Cache"] = {}, ["Offset"] = 0};
 velo.run(function()
 	local rayParams: RaycastParams = RaycastParams.new();
@@ -456,13 +452,11 @@ velo.run(function()
 	pl = {
 		["GunTracers"] = require(replicatedStorage.SharedModules.GunTracers)
 	};
-
 	local gui: Instance = lplr.PlayerGui:WaitForChild('Home', 10);
 	gui = gui and gui.hud.ActionArea;
 	if vape.Loaded == nil then
 		return;
 	end;
-
 	local getShootFunction: () -> () = function(): ()
 		for _: any, connection: any in getconnections(gui.InputBegan) do
 			if connection.Function then
@@ -488,7 +482,6 @@ velo.run(function()
 			break;
 		end;
 	end;
-
 	getShootFunction();
 	if not (pl.Bullet and pl.SwitchTable) then
 		repeat
@@ -500,7 +493,6 @@ velo.run(function()
 			table.clear(pl);
 		end;
 	end;
-
 	local kills: any = sessioninfo:AddItem('Kills');
 	local deaths: any = sessioninfo:AddItem('Deaths');
 	local arrests: any = sessioninfo:AddItem('Arrests');
@@ -515,7 +507,6 @@ velo.run(function()
 
 		return text;
 	end, false);
-
 	table.insert(whitelist.tagcallback, function(plr: any, plrtag: any, rich: any)
 		if plr then
 			local entity: any = entitylib.getEntity(plr);
@@ -542,7 +533,6 @@ velo.run(function()
 			end;
 		end;
 	end);
-
 	task.spawn(function()
 		gamepasses = {
 			["Riot Police"] = marketplaceService:UserOwnsGamePassAsync(lplr.UserId, 643697197),
@@ -550,25 +540,20 @@ velo.run(function()
 			["Sniper"] = marketplaceService:UserOwnsGamePassAsync(lplr.UserId, 699360089)
 		};
 	end);
-
 	originScanner:UpdateIgnore();
 	for _: any, event: any in {'EntityAdded', 'LocalAdded'} do
 		vape:Clean(entitylib.Events[event]:Connect(function()
 			originScanner:UpdateIgnore();
 		end));
 	end;
-
 	vape:Clean(replicatedStorage.Killfeed.ChildAdded:Connect(function(obj: any)
 		local names: table = {};
-
 		local start: any = obj.Name:find('@');
 		local endchar: any = obj.Name:find(')');
 		table.insert(names, obj.Name:sub(start + 1, endchar - 1));
-
 		start = obj.Name:find('killed ') + 7;
 		endchar = obj.Name:find(' ', start);
 		table.insert(names, obj.Name:sub(start, endchar - 1));
-
 		vapeEvents.PlayerKill:Fire(unpack(names));
 		if names[1] == lplr.Name then
 			kills:Increment();
@@ -724,7 +709,7 @@ velo.run(function()
 	end;
 end);
 
-for _: any, v: any in {'Reach', 'Jesus', 'MurderMystery'} do
+for _: any, v: any in {'AntiFling', 'AutoGoon', 'Reach', 'Jesus', 'MurderMystery'} do
 	vape:Remove(v);
 end;
 
