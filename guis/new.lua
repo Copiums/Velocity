@@ -382,8 +382,6 @@ do
 	fontsize.Font = uipallet.Font
 end
 
--- vape lines text up with hair spaces (U+200A) and tuned the counts for Arial. Drawing just those
--- spaces in Arial (rich text) keeps vape's original spacing while the text itself uses uipallet.Font.
 local hairFont = Font.fromEnum(Enum.Font.Arial).Family
 local function indent(count)
 	return '<font family="'..hairFont..'">'..string.rep('\u{200A}', count)..'</font>'
@@ -395,9 +393,9 @@ end
 
 vape.Libraries = {
 	color = color,
-	getcustomasset = getvapeasset, -- old UI name
+	getcustomasset = getvapeasset, 
 	getfontbounds = getfontbounds,
-	getfontsize = getfontbounds, -- old UI name
+	getfontsize = getfontbounds,
 	getvapeasset = getvapeasset,
 	tween = tween,
 	uipallet = uipallet,
@@ -1029,7 +1027,7 @@ function vape:Load(skipgui, profile)
 
 		if not skipgui then
 			for name, data in guiData.Categories do
-				local category = rawget(self.Categories, name) -- skips the Minigames alias in old saves
+				local category = rawget(self.Categories, name)
 				if category then
 					category:Load(data)
 				end
@@ -1937,9 +1935,6 @@ function vape:LoadGUI()
 		Tooltip = 'Change the bind of the GUI'
 	})
 
-	--[[
-		Velocity compatibility: old UI names that main.lua and the game scripts still use
-	]]
 	vape.guiscale = scale
 	vape.Keybind = vape.GUIBind.Keys
 	do
@@ -1949,8 +1944,6 @@ function vape:LoadGUI()
 			vape.Keybind = self.Keys
 		end
 	end
-
-	-- Categories.Main.Options['Use team color'] etc. now live in the settings panes
 	vape.Categories.Main.Options = setmetatable({}, {
 		__index = function(_, name)
 			for _, pane in vape.Settings do
@@ -1960,8 +1953,6 @@ function vape:LoadGUI()
 			end
 		end
 	})
-
-	-- No Minigames tab: modules created in Minigames show up under World (where vape moved them)
 	setmetatable(vape.Categories, {
 		__index = function(categories, name)
 			if name == 'Minigames' then
@@ -3964,7 +3955,6 @@ components = {
 		
 		function component:Color(hue, sat, val, isRainbow) end
 		
-		-- Slides open/closed like the old UI instead of snapping
 		function component:Expand()
 			self.Expanded = not self.Expanded
 			arrow.Rotation = self.Expanded and 0 or 180
@@ -7115,8 +7105,7 @@ components = {
 		
 			component:Toggle()
 		end)
-		
-		-- Slides the settings open/closed like the old UI instead of popping in
+	
 		local settingsOpen = false
 		local settingsTween
 		local function toggleSettings()
