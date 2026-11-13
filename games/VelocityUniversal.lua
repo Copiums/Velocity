@@ -8959,7 +8959,7 @@ velo.run(function()
 		["Function"] = function(callback: boolean)
 			if callback then
 				if Mode["Value"] == 'Signal' then
-					FastProxPrompt:Clean(proxService.PromptButtonHoldBegan:Connect(function(prompt: any, plr: any)
+					FastProxPrompt:Clean(proximitypromptService.PromptButtonHoldBegan:Connect(function(prompt: any, plr: any)
 						if plr == lplr then
 							thread = task.delay(prompt.HoldDuration * (Value["Value"] / 100), function()
 								fireproximityprompt(prompt);
@@ -8968,14 +8968,14 @@ velo.run(function()
 						end;
 					end));
 	
-					FastProxPrompt:Clean(proxService.PromptButtonHoldEnded:Connect(function(prompt: any, plr: any)
+					FastProxPrompt:Clean(proximitypromptService.PromptButtonHoldEnded:Connect(function(prompt: any, plr: any)
 						if plr == lplr and thread then
 							task.cancel(thread);
 							thread = nil;
 						end;
 					end));
 				else
-					FastProxPrompt:Clean(proxService.PromptShown:Connect(function(prompt: any)
+					FastProxPrompt:Clean(proximitypromptService.PromptShown:Connect(function(prompt: any)
 						if not modified[prompt] then
 							modified[prompt] = prompt.HoldDuration;
 						end;
@@ -8983,7 +8983,7 @@ velo.run(function()
 						prompt.HoldDuration = modified[prompt] * (Value["Value"] / 100);
 					end));
 	
-					FastProxPrompt:Clean(proxService.PromptHidden:Connect(function(prompt: any)
+					FastProxPrompt:Clean(proximitypromptService.PromptHidden:Connect(function(prompt: any)
 						if modified[prompt] then
 							prompt.HoldDuration = modified[prompt];
 							modified[prompt] = nil;

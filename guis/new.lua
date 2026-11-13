@@ -3237,19 +3237,25 @@ function vape:Uninject()
 
 	for _, module in self.Modules do
 		if module.Enabled then
-			module:Toggle()
+			pcall(function()
+				module:Toggle()
+			end)
 		end
 	end
 
 	for _, module in self.Legit.Modules do
 		if module.Enabled then
-			module:Toggle()
+			pcall(function()
+				module:Toggle()
+			end)
 		end
 	end
 
 	for _, category in self.Categories do
 		if category.Type == 'Overlay' and category.Button.Enabled then
-			category.Button:Toggle()
+			pcall(function()
+				category.Button:Toggle()
+			end)
 		end
 	end
 
@@ -6418,7 +6424,9 @@ components = {
 		
 			if not self.Enabled then
 				for _, v in self.Connections do
-					v:Disconnect()
+					pcall(function()
+						v:Disconnect()
+					end)
 				end
 				table.clear(self.Connections)
 			end
@@ -6879,7 +6887,9 @@ components = {
 		
 			if not self.Enabled then
 				for _, v in self.Connections do
-					v:Disconnect()
+					pcall(function()
+						v:Disconnect()
+					end)
 				end
 				table.clear(self.Connections)
 			end
