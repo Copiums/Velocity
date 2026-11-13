@@ -1,0 +1,3797 @@
+local velo: table = {};
+velo.run = function(func: () -> ()): ()
+	func();
+end;
+local cloneref: (obj: any) -> any = cloneref or function(obj: any): any
+	return obj;
+end;
+local vapeEvents: table = setmetatable({}, {
+	["__index"] = function(self: any, index: any)
+		self[index] = Instance.new('BindableEvent');
+		return self[index];
+	end
+});
+
+local playersService: Players = cloneref(game:GetService('Players'));
+local inputService: UserInputService = cloneref(game:GetService('UserInputService'));
+local replicatedStorage: ReplicatedStorage = cloneref(game:GetService('ReplicatedStorage'));
+local replicatedFirst: ReplicatedFirst = cloneref(game:GetService('ReplicatedFirst'));
+local collectionService: CollectionService = cloneref(game:GetService('CollectionService'));
+local marketplaceService: MarketplaceService = cloneref(game:GetService('MarketplaceService'));
+local textChatService: TextChatService = cloneref(game:GetService('TextChatService'));
+local tweenService: TweenService = cloneref(game:GetService('TweenService'));
+local runService: RunService = cloneref(game:GetService('RunService'));
+local guiService: GuiService = cloneref(game:GetService('GuiService'));
+local teams: Teams = cloneref(game:GetService('Teams'));
+local coreGui: CoreGui = cloneref(game:GetService('CoreGui'));
+
+local gameCamera: Camera = workspace.CurrentCamera;
+local lplr: Player = playersService.LocalPlayer;
+local vape: any = shared.veloc;
+local entitylib: any = vape.Libraries.entity;
+local whitelist: any = vape.Libraries.whitelist;
+local targetinfo: any = vape.Libraries.targetinfo;
+local sessioninfo: any = vape.Libraries.sessioninfo;
+local getfontbounds: any = vape.Libraries.getfontbounds;
+
+local pl: table = {};
+local spring: table = {};
+local tracerHook: table = {["Hooks"] = {}};
+local VehicleWallbang: table = {["Enabled"] = false};
+local oldshoot: any, oldequip: any;
+local aimTimer: number, shootTimer: number, aimVec: any = 0, 0;
+local arrestCooldown: number = 0;
+local teamCooldown: number = 0;
+local tempTargets: table = {};
+local gamepasses: table = {};
+local vtool: any;
+
+local checkPoint: (pos: any, params: any) -> any = function(pos: any, params: any): any
+	for _: any, part: any in workspace:GetPartBoundsInRadius(pos, 0, params) do
+		if part.CanCollide and (part:GetClosestPointOnSurface(pos) - pos).Magnitude <= 0.0001 then
+			return false;
+		end;
+	end;
+
+	return true;
+end;
+
+local canClick: () -> any = function(): any
+	local mousePosition: any = (inputService:GetMouseLocation() - guiService:GetGuiInset());
+
+	for _: any, hit: any in lplr.PlayerGui:GetGuiObjectsAtPosition(mousePosition.X, mousePosition.Y) do
+		local obj: ScreenGui? = v:FindFirstAncestorOfClass('ScreenGui');
+		if hit.Active and hit.Visible and obj and obj.Enabled then
+			return false;
+		end;
+	end;
+
+	for _: any, hit: any in coreGui:GetGuiObjectsAtPosition(mousePosition.X, mousePosition.Y) do
+		local obj: ScreenGui? = v:FindFirstAncestorOfClass('ScreenGui');
+		if hit.Active and hit.Visible and obj and obj.Enabled then
+			return false;
+		end;
+	end;
+
+	return (not vape.gui.ScaledGui.ClickGui.Visible) and (not inputService:GetFocusedTextBox());
+end;
+
+local isFriend: (plr: any, recolor: any) -> any = function(plr: any, recolor: any): any
+	if vape.Categories.Friends.Options["Use friends"]["Enabled"] then
+		local friend: any = table.find(vape.Categories.Friends.ListEnabled, plr.Name) and true;
+		if recolor then
+			friend = friend and vape.Categories.Friends.Options["Recolor visuals"]["Enabled"];
+		end;
+		return friend;
+	end;
+
+	return nil;
+end;
+
+local isTarget: (plr: any) -> any = function(plr: any): any
+	return (table.find(vape.Categories.Targets.ListEnabled, plr.Name) or tempTargets[plr.Name]) and true;
+end;
+
+local notif: (...any) -> ...any = function(...: any): ...any
+	return vape:CreateNotification(...);
+end;
+
+local pickTeam: (button: any) -> () = function(button: any): ()
+	if teamCooldown < os.clock() then
+		firesignal(button.MouseButton1Click);
+		teamCooldown = os.clock() + 0.1;
+	end;
+end;
+
+local removeTags: (str: any) -> any = function(str: any): any
+	str = str:gsub('<br%s*/>', '\n');
+	return (str:gsub('<[^<>]->', ''));
+end;
+
+local originScanner: table = {["Cache"] = {}, ["Offset"] = 0};
+velo.run(function()
+	local rayParams: RaycastParams = RaycastParams.new();
+	local overlapParams: OverlapParams = OverlapParams.new();
+	rayParams.CollisionGroup = 'ClientBullet';
+	rayParams.FilterType = Enum.RaycastFilterType.Exclude;
+	overlapParams.CollisionGroup = 'ClientBullet';
+	overlapParams.FilterType = Enum.RaycastFilterType.Exclude;
+	originScanner.Ray = rayParams;
+
+	local positions: table = {
+		Vector3.new(0, 1, 0),
+		Vector3.new(1, 0, 0),
+		Vector3.new(0.7, -0.5, -0.5),
+		Vector3.new(-0.1, -0.8, -0.8),
+		Vector3.new(-0.8, -0.5, -0.5),
+		Vector3.new(-1, 0, 0),
+		Vector3.new(-0.8, 0.4, 0.4),
+		Vector3.new(0, 0.7, 0.7),
+		Vector3.new(0.7, 0.5, 0.5),
+		Vector3.new(1, 0, 0),
+		Vector3.new(0.7, 0, -0.8),
+		Vector3.new(-0.1, 0, -1),
+		Vector3.new(-0.8, 0, -0.8),
+		Vector3.new(-1, 0, 0),
+		Vector3.new(-0.8, 0, 0.7),
+		Vector3.new(0, 0, 1),
+		Vector3.new(0.7, 0, 0.7),
+		Vector3.new(1, 0, 0),
+		Vector3.new(0.7, 0.4, -0.5),
+		Vector3.new(-0.1, 0.7, -0.8),
+		Vector3.new(-0.8, 0.4, -0.5),
+		Vector3.new(-1, -0.1, 0),
+		Vector3.new(-0.8, -0.5, 0.4),
+		Vector3.new(0, -0.8, 0.7),
+		Vector3.new(0.7, -0.6, 0.5),
+		Vector3.new(0, -1, 0)
+	};
+
+	originScanner.Scan = function(self: table, origin: Vector3, target: Vector3, extra: Vector3?, part: BasePart, entity: table): ...any
+		if self.Cache[part] then
+			return table.unpack(self.Cache[part]);
+		end;
+
+		local hitboxPositions: table = {};
+		if checkPoint(target, overlapParams) then
+			if extra and (origin - extra).Magnitude < 7.5 then
+				self.Cache[part] = {extra};
+				return extra;
+			end;
+
+			table.insert(hitboxPositions, target);
+		end;
+
+		local scanPositions: table = {origin};
+		local diff: Vector3 = CFrame.lookAt(origin * Vector3.new(1, 0, 1), target * Vector3.new(1, 0, 1)).LookVector;
+		for _: any, normal: any in Enum.NormalId:GetEnumItems() do
+			local offset: Vector3 = Vector3.fromNormalId(normal);
+
+			if (offset * Vector3.new(1, 0, 1)):Dot(-diff) > -0.5 then
+				local pos: any = entity.RootPart.Position + offset * 7.4;
+
+				if checkPoint(pos, overlapParams) then
+					table.insert(hitboxPositions, pos);
+				end;
+			end;
+		end;
+
+		for _: any, offset: any in positions do
+			if (offset * Vector3.new(1, 0, 1)):Dot(diff) > -0.5 then
+				local pos: any = origin + offset * (7 - math.min(self.Offset, 1));
+
+				if checkPoint(pos, overlapParams) then
+					table.insert(scanPositions, pos);
+				end;
+			end;
+		end;
+
+		for _: any, hitbox: any in hitboxPositions do
+			for _: any, pos: any in scanPositions do
+				local ray: RaycastResult? = workspace:Raycast(hitbox, (pos - hitbox), rayParams);
+
+				if not ray then
+					self.Cache[part] = {pos, hitbox ~= target and hitbox or nil};
+					return pos, hitbox;
+				end;
+			end;
+		end;
+	end;
+
+	originScanner.UpdateIgnore = function(self: table): ()
+		local ignoreList: table = VehicleWallbang["Enabled"] and {lplr.Character, workspace.CarContainer} or {lplr.Character};
+		for _: any, entity: any in entitylib.List do
+			table.insert(ignoreList, entity.Character);
+		end;
+
+		rayParams.FilterDescendantsInstances = ignoreList;
+		overlapParams.FilterDescendantsInstances = ignoreList;
+	end;
+
+	local localPositions: table = {};
+	vape:Clean(task.spawn(function()
+		repeat
+			if entitylib.isAlive then
+				repeat
+					local _: any, obj: any = next(localPositions);
+					if obj and (os.clock() - obj[2]) > 0.1 then
+						table.remove(localPositions, 1);
+					else
+						break;
+					end;
+				until false;
+
+				table.insert(localPositions, {entitylib.character.RootPart.Position, os.clock()});
+				originScanner.Offset = (entitylib.character.RootPart.Position - (localPositions[1] and localPositions[1][1] or entitylib.character.RootPart.Position)).Magnitude;
+			else
+				table.clear(localPositions);
+			end;
+
+			task.wait();
+		until false;
+	end));
+end);
+
+local cheats: table = {["Flags"] = {}, ["Flagged"] = {}};
+velo.run(function()
+	cheats.Flag = function(self: table, plr: Player, flagType: string, limit: number): ()
+		if self.Flagged[plr.UserId] then
+			return;
+		end;
+
+		if not self.Flags[plr.UserId] then
+			self.Flags[plr.UserId] = {};
+		end;
+
+		local flags: any = self.Flags[plr.UserId];
+		flags[flagType] = (flags[flagType] or 0) + 1;
+
+		if flags[flagType] > limit then
+			self.Flagged[plr.UserId] = true;
+			vapeEvents.CheatFlagged:Fire(plr, flagType);
+		end;
+	end;
+
+	cheats.Clear = function(self: table): ()
+		table.clear(self.Flags);
+		table.clear(self.Flagged);
+	end;
+end);
+
+velo.run(function()
+	local getMousePosition: () -> ...any = function(): ...any
+		if inputService.TouchEnabled then
+			return gameCamera.ViewportSize / 2;
+		end;
+		return inputService.GetMouseLocation(inputService);
+	end;
+
+	entitylib.getUpdateConnections = function(entity: any)
+		local humanoid: any = entity.Humanoid;
+		return {
+			humanoid:GetPropertyChangedSignal('Health'),
+			humanoid:GetPropertyChangedSignal('MaxHealth'),
+			entity.Character:GetAttributeChangedSignal('Trespassing'),
+			entity.Character:GetAttributeChangedSignal('Hostile'),
+			entity.Player:GetAttributeChangedSignal('InnocentKills'),
+			{
+				["Connect"] = function()
+					entity.Friend = entity.Player and isFriend(entity.Player) or nil;
+					entity.Target = entity.Player and isTarget(entity.Player) or nil;
+					return {["Disconnect"] = function() end};
+				end
+			}
+		};
+	end;
+
+	entitylib.targetCheck = function(entity: any, skip: any)
+		if entity.TeamCheck then
+			return entity:TeamCheck();
+		end;
+		if entity.NPC then return true; end;
+		if isFriend(entity.Player) then return false; end;
+		if not select(2, whitelist:get(entity.Player)) then return false; end;
+		if vape.Settings.Modules.Options["Teams by server"]["Enabled"] and (not skip or lplr.Team == teams.Guards) then
+			return lplr.Team ~= entity.Player.Team and entity.Player.Team ~= teams.Neutral;
+		end;
+		return true;
+	end;
+
+	entitylib.isVulnerable = function(entity: any, attackCheck: any, skipCheck: any)
+		if attackCheck and lplr.Team == teams.Guards and entity.Player.Team == teams.Inmates and not entity.Character:GetAttribute('Hostile') then
+			return false;
+		end;
+
+		return entity.Health > 0 and entity.Humanoid:GetState() ~= Enum.HumanoidStateType.Dead and entity.SpawnTime < os.clock() and not entity.Character.FindFirstChildWhichIsA(entity.Character, 'ForceField') and (entity.Player.Team ~= teams.Inmates or (skipCheck or entity.Character:GetAttribute('Trespassing') or entity.Character:GetAttribute('Hostile')));
+	end;
+
+	entitylib.EntityMouse = function(entitysettings: table): any
+		if entitylib.isAlive then
+			local mouseLocation: any, sortingTable: table = entitysettings.MouseOrigin or getMousePosition(), {};
+			local localPosition: any = entitysettings.Origin or entitylib.character.HumanoidRootPart.Position;
+			for _: any, entity: any in entitylib.List do
+				if not entitysettings.Players and entity.Player then continue; end;
+				if not entitysettings.NPCs and entity.NPC then continue; end;
+				if not entity.Targetable then continue; end;
+				local position: any, vis: any = gameCamera.WorldToViewportPoint(gameCamera, entity[entitysettings.Part].Position);
+				if not vis then continue; end;
+				local mag: number = (mouseLocation - Vector2.new(position.x, position.y)).Magnitude;
+				if mag > entitysettings.Range then continue; end;
+				if entitylib.isVulnerable(entity, entitysettings.AttackCheck) then
+					if entitysettings.RangePosition then
+						local pmag: number = (entity[entitysettings.Part].Position - localPosition).Magnitude;
+						if pmag > entitysettings.RangePosition then continue; end;
+					end;
+
+					table.insert(sortingTable, {
+						["Entity"] = entity,
+						["Magnitude"] = entity.Target and -1 or mag
+					});
+				end;
+			end;
+
+			table.sort(sortingTable, entitysettings.Sort or function(a: any, b: any)
+				return a.Magnitude < b.Magnitude;
+			end);
+
+			for _: any, v: any in sortingTable do
+				if entitysettings.Wallcheck then
+					if entitylib.Wallcheck(entitysettings.Origin, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part], v.Entity) then continue; end;
+				end;
+				table.clear(entitysettings);
+				table.clear(sortingTable);
+				return v.Entity;
+			end;
+			table.clear(sortingTable);
+		end;
+		table.clear(entitysettings);
+	end;
+
+	entitylib.EntityPosition = function(entitysettings: table): any
+		if entitylib.isAlive then
+			local localPosition: any, sortingTable: table = entitysettings.Origin or entitylib.character.HumanoidRootPart.Position, {};
+			for _: any, entity: any in entitylib.List do
+				if not entitysettings.Players and entity.Player then continue; end;
+				if not entitysettings.NPCs and entity.NPC then continue; end;
+				if not entity.Targetable then continue; end;
+				local mag: number = (entity[entitysettings.Part].Position - localPosition).Magnitude;
+				if mag > entitysettings.Range then continue; end;
+				if entitylib.isVulnerable(entity, entitysettings.AttackCheck) then
+					table.insert(sortingTable, {
+						["Entity"] = entity,
+						["Magnitude"] = entity.Target and -1 or mag
+					});
+				end;
+			end;
+
+			table.sort(sortingTable, entitysettings.Sort or function(a: any, b: any)
+				return a.Magnitude < b.Magnitude;
+			end);
+
+			for _: any, v: any in sortingTable do
+				if entitysettings.Wallcheck then
+					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part], v.Entity) then continue; end;
+				end;
+				table.clear(entitysettings);
+				table.clear(sortingTable);
+				return v.Entity;
+			end;
+			table.clear(sortingTable);
+		end;
+		table.clear(entitysettings);
+	end;
+
+	entitylib.AllPosition = function(entitysettings: table): {any}
+		local returned: table = {};
+		if entitylib.isAlive then
+			local localPosition: any, sortingTable: table = entitysettings.Origin or entitylib.character.HumanoidRootPart.Position, {};
+			for _: any, entity: any in entitylib.List do
+				if not entitysettings.Players and entity.Player then continue; end;
+				if not entitysettings.NPCs and entity.NPC then continue; end;
+				if not (entity.Targetable or entitysettings.SkipTeam and entitylib.targetCheck(entity, true)) then continue; end;
+				local mag: number = (entity[entitysettings.Part].Position - localPosition).Magnitude;
+				if mag > entitysettings.Range then continue; end;
+				if entitylib.isVulnerable(entity, entitysettings.AttackCheck, entitysettings.SkipTeam) then
+					table.insert(sortingTable, {
+						["Entity"] = entity,
+						["Magnitude"] = entity.Target and -1 or mag
+					});
+				end;
+			end;
+
+			table.sort(sortingTable, entitysettings.Sort or function(a: any, b: any)
+				return a.Magnitude < b.Magnitude;
+			end);
+
+			for _: any, v: any in sortingTable do
+				if entitysettings.Wallcheck then
+					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part], v.Entity) then continue; end;
+				end;
+				table.insert(returned, v.Entity);
+				if #returned >= (entitysettings.Limit or math.huge) then break; end;
+			end;
+			table.clear(sortingTable);
+		end;
+		table.clear(entitysettings);
+		return returned;
+	end;
+
+	entitylib.getEntityColor = function(entity: any)
+		if not (entity.Player and vape.Settings.Modules.Options["Use team color"]["Enabled"]) then
+			return;
+		end;
+
+		if isFriend(entity.Player, true) then
+			return Color3.fromHSV(vape.Categories.Friends.Options["Friends color"]["Hue"], vape.Categories.Friends.Options["Friends color"]["Sat"], vape.Categories.Friends.Options["Friends color"]["Value"]);
+		end;
+
+		local color: any = tostring(entity.Player.TeamColor) ~= 'White' and entity.Player.TeamColor.Color or nil;
+		if entity.Player.Team == teams.Inmates and (entity.Character:GetAttribute('Hostile') or entity.Character:GetAttribute('Trespassing')) then
+			return Color3.new(color.R, color.G * 0.5, color.B * 0.5);
+		end;
+
+		return color;
+	end;
+
+	entitylib.Wallcheck = function(origin: any, position: any, checkPosition: any, part: any, entity: any)
+		local ray: any = workspace.Raycast(workspace, position, (origin - position), originScanner.Ray);
+		if ray or workspace.Raycast(workspace, origin, (position - origin), originScanner.Ray) then
+			return not checkPosition or not originScanner:Scan(checkPosition, position, ray and ray.Position + ray.Normal * 0.01 or nil, part, entity);
+		end;
+
+		return false;
+	end;
+end);
+entitylib.start();
+
+velo.run(function()
+	pl = {
+		["GunTracers"] = require(replicatedStorage.SharedModules.GunTracers)
+	};
+
+	local gui: Instance = lplr.PlayerGui:WaitForChild('Home', 10);
+	gui = gui and gui.hud.ActionArea;
+	if vape.Loaded == nil then
+		return;
+	end;
+
+	local getShootFunction: () -> () = function(): ()
+		for _: any, connection: any in getconnections(gui.InputBegan) do
+			if connection.Function then
+				pl.Shoot = debug.getupvalue(connection.Function, 2);
+				pl.Reload = debug.getupvalue(pl.Shoot, 2);
+				pl.Bullet = debug.getupvalue(pl.Shoot, 16);
+				pl.PlaySound = debug.getupvalue(pl.Reload, 3);
+				break;
+			end;
+		end;
+
+		for _: any, connection: any in getconnections(lplr.CharacterAdded) do
+			if connection.Function and debug.info(connection.Function, 's'):find('GunController') then
+				pl.ShootParams = debug.getupvalue(connection.Function, 2);
+				pl.Equip = debug.getupvalue(connection.Function, 3);
+				break;
+			end;
+		end;
+
+		for _: any, connection: any in getconnections(lplr:GetAttributeChangedSignal('BackpackEnabled')) do
+			pl.SwitchUpdate = debug.getupvalue(debug.getupvalue(connection.Function, 10), 5);
+			pl.SwitchTable = debug.getupvalue(debug.getupvalue(connection.Function, 8), 2);
+			break;
+		end;
+	end;
+
+	getShootFunction();
+	if not (pl.Bullet and pl.SwitchTable) then
+		repeat
+			getShootFunction();
+			task.wait();
+		until pl.Bullet and pl.SwitchTable or vape.Loaded == nil;
+
+		if vape.Loaded == nil then
+			table.clear(pl);
+		end;
+	end;
+
+	local kills: any = sessioninfo:AddItem('Kills');
+	local deaths: any = sessioninfo:AddItem('Deaths');
+	local arrests: any = sessioninfo:AddItem('Arrests');
+	local cheaterkicked: any = sessioninfo:AddItem('Cheaters Kicked');
+	local cheaters: any = sessioninfo:AddItem('Cheater List', '', function()
+		local text: string = '';
+		for _: any, plr: any in playersService:GetPlayers() do
+			if cheats.Flagged[plr.UserId] then
+				text = text..'\n'..(plr.DisplayName ~= plr.Name and plr.DisplayName..' ('..plr.Name..')' or plr.Name);
+			end;
+		end;
+
+		return text;
+	end, false);
+
+	table.insert(whitelist.tagcallback, function(plr: any, plrtag: any, rich: any)
+		if plr then
+			local entity: any = entitylib.getEntity(plr);
+			if entity then
+				if cheats.Flagged[plr.UserId] then
+					table.insert(plrtag, {["text"] = rich and '⚠️' or 'Cheater'});
+				end;
+
+				if plr.Team == teams.Inmates then
+					if entity.Character:GetAttribute('Hostile') then
+						table.insert(plrtag, {["text"] = rich and '💢' or 'Hostile'});
+					elseif entity.Character:GetAttribute('Trespassing') then
+						table.insert(plrtag, {["text"] = rich and '🔗' or 'Trespassing'});
+					end;
+				elseif plr.Team == teams.Guards then
+					local count: any = plr:GetAttribute('InnocentKills') or 0;
+					if count > 0 then
+						table.insert(plrtag, {
+							["text"] = tostring(count),
+							["color"] = Color3.fromHSV(math.clamp(1 - (count / 2), 0, 1) / 2.5, 0.89, 0.75)
+						});
+					end;
+				end;
+			end;
+		end;
+	end);
+
+	task.spawn(function()
+		gamepasses = {
+			["Riot Police"] = marketplaceService:UserOwnsGamePassAsync(lplr.UserId, 643697197),
+			["Mafia"] = marketplaceService:UserOwnsGamePassAsync(lplr.UserId, 1443271),
+			["Sniper"] = marketplaceService:UserOwnsGamePassAsync(lplr.UserId, 699360089)
+		};
+	end);
+
+	originScanner:UpdateIgnore();
+	for _: any, event: any in {'EntityAdded', 'LocalAdded'} do
+		vape:Clean(entitylib.Events[event]:Connect(function()
+			originScanner:UpdateIgnore();
+		end));
+	end;
+
+	vape:Clean(replicatedStorage.Killfeed.ChildAdded:Connect(function(obj: any)
+		local names: table = {};
+
+		local start: any = obj.Name:find('@');
+		local endchar: any = obj.Name:find(')');
+		table.insert(names, obj.Name:sub(start + 1, endchar - 1));
+
+		start = obj.Name:find('killed ') + 7;
+		endchar = obj.Name:find(' ', start);
+		table.insert(names, obj.Name:sub(start, endchar - 1));
+
+		vapeEvents.PlayerKill:Fire(unpack(names));
+		if names[1] == lplr.Name then
+			kills:Increment();
+		elseif names[2] == lplr.Name then
+			deaths:Increment();
+		end;
+	end));
+
+	vape:Clean(vapeEvents.Arrested.Event:Connect(function()
+		arrests:Increment();
+	end));
+
+	vape:Clean(replicatedStorage.Remotes.MessageReceived.OnClientEvent:Connect(function(msg: any)
+		if msg:find('kicked') then
+			cheaterkicked:Increment();
+
+			task.defer(function()
+				vapeEvents.CheaterKicked:Fire(msg:sub(1, msg:find(' ')));
+			end);
+		end;
+	end));
+
+	vape:Clean(entitylib.Events.EntityUpdated:Connect(function(entity: any)
+		if entity.Player and entity.Player.Team == teams.Inmates then
+			vape.Categories.Friends.ColorUpdate:Fire();
+		end;
+	end));
+
+	vape:Clean(runService.RenderStepped:Connect(function()
+		table.clear(originScanner.Cache);
+	end));
+
+	vape:Clean(function()
+		table.clear(pl);
+	end);
+end);
+
+velo.run(function()
+	spring.__index = spring;
+
+	spring.new = function(properties: table?): table
+		local typeRefined: table = properties or {};
+
+		local self: table = setmetatable({
+			["Target"] = Vector3.new(),
+			["Position"] = Vector3.new(),
+			["Velocity"] = Vector3.new(),
+
+			["Mass"] = typeRefined.Mass or 5,
+			["Force"] = typeRefined.Force or 50,
+			["Damping"] = typeRefined.Damping or 4,
+			["Speed"] = typeRefined.Speed or 4,
+		}, spring);
+
+		return self;
+	end;
+
+	spring.Update = function(self: table, deltaTime: number): Vector3
+		local iterationsThisFrame: number = deltaTime / ((1 / 60) / 8);
+		local scaledDeltaTime: number = deltaTime * self.Speed / iterationsThisFrame;
+
+		for i: number = 1, math.round(iterationsThisFrame) do
+			local iterationForce: Vector3 = self.Target - self.Position;
+			local acceleration: Vector3 = (iterationForce * self.Force) / self.Mass;
+
+			acceleration -= self.Velocity * self.Damping;
+
+			self.Velocity += acceleration * scaledDeltaTime;
+			self.Position += self.Velocity * scaledDeltaTime;
+		end;
+
+		return self.Position;
+	end;
+end);
+
+velo.run(function()
+	local oldtracer: any, oldtracertaser: any, oldtracersniper: any;
+
+	local hook: (...any) -> ...any = function(...: any): ...any
+		if debug.info(3, 's') ~= 'ReplicatedStorage.Scripts.Replication.ClientReplicator' then
+			for _: any, v: any in tracerHook.Hooks do
+				if v[2](...) then return; end;
+			end;
+		end;
+
+		return oldtracer(...);
+	end;
+
+	local hookTaser: (...any) -> ...any = function(...: any): ...any
+		if debug.info(3, 's') ~= 'ReplicatedStorage.Scripts.Replication.ClientReplicator' then
+			for _: any, v: any in tracerHook.Hooks do
+				if v[2](...) then return; end;
+			end;
+		end;
+
+		return oldtracertaser(...);
+	end;
+
+	local hookSniper: (...any) -> ...any = function(...: any): ...any
+		if debug.info(3, 's') ~= 'ReplicatedStorage.Scripts.Replication.ClientReplicator' then
+			for _: any, v: any in tracerHook.Hooks do
+				if v[2](...) then return; end;
+			end;
+		end;
+
+		return oldtracersniper(...);
+	end;
+
+	tracerHook.Add = function(self: table, key: string, val: (...any) -> any, priority: number?): ()
+		table.insert(self.Hooks, {key, val, priority or 0});
+		table.sort(self.Hooks, function(a: any, b: any)
+			return a[3] < b[3];
+		end);
+
+		if not oldtracer then
+			oldtracer = hookfunction(pl.GunTracers.createBullet, function(...: any)
+				return hook(...);
+			end);
+
+			oldtracertaser = hookfunction(pl.GunTracers.createTaser, function(...: any)
+				return hookTaser(...);
+			end);
+
+			oldtracersniper = hookfunction(pl.GunTracers.createSniper, function(...: any)
+				return hookSniper(...);
+			end);
+		end;
+	end;
+
+	tracerHook.Remove = function(self: table, key: string): ()
+		for i: any, v: any in self.Hooks do
+			if v[1] == key then
+				table.remove(self.Hooks, i);
+				break;
+			end;
+		end;
+
+		if oldtracer and not next(self.Hooks) then
+			if restorefunction then
+				restorefunction(pl.GunTracers.createBullet);
+				restorefunction(pl.GunTracers.createTaser);
+				restorefunction(pl.GunTracers.createSniper);
+			else
+				hookfunction(pl.GunTracers.createBullet, oldtracer);
+				hookfunction(pl.GunTracers.createTaser, oldtracertaser);
+				hookfunction(pl.GunTracers.createSniper, oldtracersniper);
+			end;
+
+			oldtracer = nil;
+			oldtracertaser = nil;
+			oldtracersniper = nil;
+		end;
+	end;
+end);
+
+for _: any, v: any in {'Reach', 'Jesus', 'MurderMystery'} do
+	vape:Remove(v);
+end;
+
+local mouseClicked: any;
+velo.run(function()
+	local SilentAim: table;
+	local Target: table;
+	local Mode: table;
+	local Range: table;
+	local HitChance: table;
+	local HeadshotChance: table;
+	local AutoFire: table = {["Enabled"] = false};
+	local AutoFireRate: table;
+	local AutoFireTaser: table;
+	local AutoFireSwitch: table;
+	local Wallbang: table;
+	local CircleColor: table;
+	local CircleTransparency: table;
+	local CircleFilled: table;
+	local circleObject: any;
+	local rand: Random = Random.new();
+	local old: any;
+
+	local getMousePosition: () -> ...any = function(): ...any
+		if inputService.TouchEnabled then
+			return gameCamera.ViewportSize / 2;
+		end;
+
+		return inputService.GetMouseLocation(inputService);
+	end;
+
+	local getShootTool: (range: any) -> any = function(range: any): any
+		local tool: Tool? = lplr.Character:FindFirstChildWhichIsA('Tool');
+		if tool and tool:GetAttribute('FireRate') and (not tool:GetAttribute('Local_IsShooting')) and (tool:GetAttribute('Local_ReloadSession') or 0) <= 0 and (tool:GetAttribute('Local_CurrentAmmo') or 1) > 0 then
+			local dist: any = tool:GetAttribute('Range') or 0;
+			if dist > range then
+				return tool;
+			end;
+		end;
+
+		local backpack: Backpack? = lplr:FindFirstChildWhichIsA('Backpack');
+		if backpack then
+			for _: any, tool: any in backpack:GetChildren() do
+				if tool:IsA('Tool') and tool:GetAttribute('FireRate') and (not tool:GetAttribute('Local_IsShooting')) and (tool:GetAttribute('Local_ReloadSession') or 0) <= 0 and tool.Name ~= 'Taser' then
+					local dist: any = tool:GetAttribute('Range') or 0;
+					if dist > range then
+						return tool;
+					end;
+				end;
+			end;
+		end;
+	end;
+
+	local getMaxRange: () -> any = function(): any
+		local mag: number = 0;
+		local tool: Tool? = lplr.Character:FindFirstChildWhichIsA('Tool');
+		if tool and tool:GetAttribute('Range') and (tool:GetAttribute('Local_ReloadSession') or 0) <= 0 then
+			local dist: any = tool:GetAttribute('Range');
+			if dist > mag then
+				mag = dist;
+			end;
+		end;
+
+		local backpack: Backpack? = lplr:FindFirstChildWhichIsA('Backpack');
+		if backpack then
+			for _: any, tool: any in backpack:GetChildren() do
+				if tool:IsA('Tool') and tool:GetAttribute('Range') and (tool:GetAttribute('Local_ReloadSession') or 0) <= 0 and tool.Name ~= 'Taser' then
+					local dist: any = tool:GetAttribute('Range');
+					if dist > mag then
+						mag = dist;
+					end;
+				end;
+			end;
+		end;
+
+		return mag;
+	end;
+
+	local getTarget: (origin: any, limit: any, attackcheck: any) -> ...any = function(origin: any, limit: any, attackcheck: any): ...any
+		if rand.NextNumber(rand, 0, 100) > (AutoFire["Enabled"] and 100 or HitChance["Value"]) then
+			return;
+		end;
+
+		local targetPart: string = (rand.NextNumber(rand, 0, 100) < (AutoFire["Enabled"] and 100 or HeadshotChance["Value"])) and 'Head' or 'RootPart';
+		local entity: any = entitylib['Entity'..Mode["Value"]]({
+			["Range"] = Mode["Value"] == 'Position' and math.min(Range["Value"], limit) or Range["Value"],
+			["RangePosition"] = limit,
+			["AttackCheck"] = attackcheck,
+			["Wallcheck"] = Target.Walls["Enabled"] and true or nil,
+			["Wallbang"] = Wallbang["Enabled"] and entitylib.character.RootPart.Position or nil,
+			["Part"] = targetPart,
+			["Origin"] = origin,
+			["Players"] = Target.Players["Enabled"],
+			["NPCs"] = Target.NPCs["Enabled"]
+		});
+
+		if entity then
+			targetinfo.Targets[entity] = os.clock() + 1;
+		end;
+
+		return entity, entity and entity[targetPart], origin;
+	end;
+
+	local hook: (...any) -> ...any = function(...: any): ...any
+		local origin: any, direction: any = ...;
+		local gundata: any = debug.getupvalue(oldshoot or pl.Shoot, 10);
+		local entity: any, targetPart: any, origin: any = getTarget(origin, gundata and gundata.Range or 1000, not gundata or gundata.Behavior ~= 'Taser');
+
+		if not entity then
+			return old(...);
+		end;
+
+		local args: table = table.pack(...);
+		args[2] = targetPart.Position;
+		aimTimer = os.clock() + 0.3;
+		aimVec = args[2];
+
+		if Wallbang["Enabled"] then
+			local ray: RaycastResult?;
+			if not originScanner.Cache[targetPart] then
+				ray = workspace:Raycast(args[2], (origin - args[2]), originScanner.Ray);
+			end;
+
+			if originScanner.Cache[targetPart] or ray or workspace:Raycast(origin, (args[2] - origin), originScanner.Ray) then
+				local newOrigin: any, hit: any = originScanner:Scan(entitylib.character.RootPart.Position, args[2], ray and ray.Position + ray.Normal * 0.01 or nil, targetPart, entity);
+
+				if newOrigin then
+					for index: any, value: any in debug.getstack(3) do
+						if value == origin then
+							debug.setstack(3, index, newOrigin);
+						end;
+					end;
+
+					args[1] = newOrigin;
+					if hit then
+						return targetPart, hit;
+					end;
+				end;
+			end;
+		end;
+
+		return old(unpack(args, 1, args.n));
+	end;
+
+	SilentAim = vape.Categories.Combat:CreateModule({
+		["Name"] = 'SilentAim',
+		["Function"] = function(callback: boolean): ()
+			if circleObject then
+				circleObject.Visible = callback and Mode["Value"] == 'Mouse';
+			end;
+
+			if callback then
+				old = hookfunction(pl.Bullet, function(...: any)
+					return hook(...);
+				end);
+
+				local fireDelay: number = os.clock();
+				repeat
+					if circleObject then
+						circleObject.Position = getMousePosition();
+					end;
+
+					if AutoFire["Enabled"] and fireDelay < os.clock() then
+						fireDelay = os.clock() + (1 / AutoFireRate["Value"]);
+
+						local tool: Tool? = lplr.Character:FindFirstChildWhichIsA('Tool');
+						local gundata: any = debug.getupvalue(oldshoot or pl.Shoot, 10);
+						if tool and gundata then
+							local limit: any = AutoFireSwitch["Enabled"] and getMaxRange() or gundata.Range or 1000;
+							local taser: any = gundata and gundata.Behavior == 'Taser';
+							local entity: any = entitylib['Entity'..Mode["Value"]]({
+								["Range"] = Mode["Value"] == 'Position' and math.min(Range["Value"], limit) or Range["Value"],
+								["RangePosition"] = limit,
+								["AttackCheck"] = not taser,
+								["Wallcheck"] = Target.Walls["Enabled"] and true or nil,
+								["Wallbang"] = Wallbang["Enabled"] and entitylib.isAlive and entitylib.character.RootPart.Position or nil,
+								["Part"] = 'Head',
+								["Origin"] = entitylib.isAlive and entitylib.character.Head.Position or Vector3.zero,
+								["Players"] = Target.Players["Enabled"]
+							});
+
+							if entity and entitylib.character.Humanoid.Health > 0 then
+								local ammo: any = (tool:GetAttribute('Local_CurrentAmmo') or 0);
+								local canFire: boolean = not tool:GetAttribute('Local_IsShooting') and ammo > 0;
+								if AutoFireSwitch["Enabled"] then
+									local ideal: any = getShootTool((entity.Head.Position - entitylib.character.Head.Position).Magnitude);
+									if ideal and tool ~= ideal then
+										entitylib.character.Humanoid:EquipTool(ideal);
+										canFire = false;
+									end;
+								end;
+
+								if canFire and not ((taser or AutoFireTaser["Enabled"]) and (entity.Character:GetAttribute('Tased') or entity.Character:GetAttribute('Arrested'))) then
+									fireDelay = os.clock() + (AutoFireSwitch["Enabled"] and 0.05 or ammo > 1 and gundata.FireRate or 1 / AutoFireRate["Value"]);
+									local obj: table = {["UserInputState"] = Enum.UserInputState.Begin, ["UserInputType"] = Enum.UserInputType.MouseButton1, ["Position"] = Vector3.zero};
+									task.spawn(pl.Shoot, obj);
+									obj.UserInputState = Enum.UserInputState.End;
+								end;
+							end;
+						end;
+					end;
+
+					task.wait();
+				until not SilentAim["Enabled"];
+			else
+				if old then
+					if restorefunction then
+						restorefunction(pl.Bullet);
+					else
+						hookfunction(pl.Bullet, old);
+					end;
+
+					old = nil;
+				end;
+			end;
+		end,
+		["ExtraText"] = function()
+			return 'PrisonLife';
+		end,
+		["Tooltip"] = 'Silently adjusts your aim towards the enemy'
+	});
+	Target = SilentAim:CreateTargets({
+		["Players"] = true,
+		["Walls"] = true
+	});
+	Mode = SilentAim:CreateDropdown({
+		["Name"] = 'Mode',
+		["List"] = {'Mouse', 'Position'},
+		["Function"] = function(val: string): ()
+			if circleObject then
+				circleObject.Visible = SilentAim["Enabled"] and val == 'Mouse';
+			end;
+		end,
+		["Tooltip"] = 'Mouse - Checks for entities near the mouses position\nPosition - Checks for entities near the local character'
+	});
+	Range = SilentAim:CreateSlider({
+		["Name"] = 'Range',
+		["Min"] = 1,
+		["Max"] = 1500,
+		["Default"] = 150,
+		["Function"] = function(val: number): ()
+			if circleObject then
+				circleObject.Radius = val;
+			end;
+		end,
+		["Suffix"] = function(val: number): string
+			return val == 1 and 'stud' or 'studs';
+		end
+	});
+	HitChance = SilentAim:CreateSlider({
+		["Name"] = 'Hit Chance',
+		["Min"] = 0,
+		["Max"] = 100,
+		["Default"] = 85,
+		["Suffix"] = '%'
+	});
+	HeadshotChance = SilentAim:CreateSlider({
+		["Name"] = 'Headshot Chance',
+		["Min"] = 0,
+		["Max"] = 100,
+		["Default"] = 65,
+		["Suffix"] = '%'
+	});
+	AutoFire = SilentAim:CreateToggle({
+		["Name"] = 'AutoFire',
+		["Function"] = function(callback: boolean): ()
+			AutoFireRate.Object.Visible = callback;
+			AutoFireTaser.Object.Visible = callback;
+			AutoFireSwitch.Object.Visible = callback;
+		end,
+		["Tooltip"] = 'Automatically fires guns when the specified target conditions are met.'
+	});
+	AutoFireRate = SilentAim:CreateSlider({
+		["Name"] = 'Update rate',
+		["Min"] = 1,
+		["Max"] = 120,
+		["Default"] = 60,
+		["Visible"] = false,
+		["Darker"] = true,
+		["Suffix"] = 'hz'
+	});
+	AutoFireTaser = SilentAim:CreateToggle({
+		["Name"] = 'Ignore Tased',
+		["Visible"] = false,
+		["Darker"] = true
+	});
+	AutoFireSwitch = SilentAim:CreateToggle({
+		["Name"] = 'Auto Switch',
+		["Visible"] = false,
+		["Darker"] = true,
+		["Tooltip"] = 'Spam switch guns while shooting to get fast damage, only good with multiple tools.'
+	});
+	Wallbang = SilentAim:CreateToggle({
+		["Name"] = 'Wallbang',
+		["Tooltip"] = 'Allow you to shoot people through walls when specific conditions are met.\n(If the entity has a valid hitbox position exposed or if the shoot position can be moved past walls (eg hugging walls))'
+	});
+	SilentAim:CreateToggle({
+		["Name"] = 'Range Circle',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				circleObject = Drawing.new('Circle');
+				circleObject.Filled = CircleFilled["Enabled"];
+				circleObject.Color = Color3.fromHSV(CircleColor["Hue"], CircleColor["Sat"], CircleColor["Value"]);
+				circleObject.Position = vape.gui.AbsoluteSize / 2;
+				circleObject.Radius = Range["Value"];
+				circleObject.NumSides = 100;
+				circleObject.Transparency = 1 - CircleTransparency["Value"];
+				circleObject.Visible = SilentAim["Enabled"] and Mode["Value"] == 'Mouse';
+			else
+				pcall(function()
+					circleObject.Visible = false;
+					circleObject:Remove();
+				end);
+			end;
+			CircleColor.Object.Visible = callback;
+			CircleTransparency.Object.Visible = callback;
+			CircleFilled.Object.Visible = callback;
+		end
+	});
+	CircleColor = SilentAim:CreateColorSlider({
+		["Name"] = 'Circle Color',
+		["Function"] = function(hue: number, sat: number, val: number): ()
+			if circleObject then
+				circleObject.Color = Color3.fromHSV(hue, sat, val);
+			end;
+		end,
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	CircleTransparency = SilentAim:CreateSlider({
+		["Name"] = 'Transparency',
+		["Min"] = 0,
+		["Max"] = 1,
+		["Decimal"] = 10,
+		["Default"] = 0.5,
+		["Function"] = function(val: number): ()
+			if circleObject then
+				circleObject.Transparency = 1 - val;
+			end;
+		end,
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	CircleFilled = SilentAim:CreateToggle({
+		["Name"] = 'Circle Filled',
+		["Function"] = function(callback: boolean): ()
+			if circleObject then
+				circleObject.Filled = callback;
+			end;
+		end,
+		["Darker"] = true,
+		["Visible"] = false
+	});
+end);
+
+velo.run(function()
+	local TriggerBot: table;
+	local Targets: table;
+	local rayParams: RaycastParams = RaycastParams.new();
+	rayParams.CollisionGroup = 'ClientBullet';
+	rayParams.FilterType = Enum.RaycastFilterType.Exclude;
+	
+	local getTriggerBotTarget: () -> any = function(): any
+		rayParams.FilterDescendantsInstances = VehicleWallbang["Enabled"] and {lplr.Character, workspace.CarContainer} or {lplr.Character};
+	
+		if entitylib.isAlive then
+			local tool: any = debug.getupvalue(oldshoot or pl.Shoot, 1);
+			local data: any = debug.getupvalue(oldshoot or pl.Shoot, 10);
+	
+			if tool and data and data.Range then
+				local posX: number, posY: number;
+				if inputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
+					posX = gameCamera.ViewportSize.X / 2;
+					posY = gameCamera.ViewportSize.Y / 2;
+				else
+					local location: Vector2 = inputService:GetMouseLocation();
+					posX = location.X;
+					posY = location.Y;
+				end;
+	
+				local hitPos: any;
+				local rayPos: Ray = gameCamera:ViewportPointToRay(posX, posY);
+				local ray: RaycastResult? = workspace:Raycast(rayPos.Origin, rayPos.Direction * 1500, rayParams);
+				local vEntity: any;
+	
+				for _: any, entity: any in entitylib.List do
+					if entity.Targetable and entity.Character and (Targets.Players["Enabled"] and entity.Player or Targets.NPCs["Enabled"] and entity.NPC) and entitylib.isVulnerable(entity, true) and ray.Instance:IsDescendantOf(entity.Character) then
+						vEntity = entity;
+						break;
+					end;
+				end;
+	
+				if vEntity then
+					local origin: any = entitylib.character.Head.Position;
+					local hitCheck: RaycastResult? = workspace:Raycast(origin, (ray.Position - origin), rayCheck);
+	
+					if hitCheck and hitCheck.Instance:IsDescendantOf(vEntity.Character) and (ray.Position - origin).Magnitude <= data.Range then
+						return vEntity;
+					end;
+				end;
+			end;
+		end;
+	end;
+	
+	TriggerBot = vape.Categories.Combat:CreateModule({
+		["Name"] = 'TriggerBot',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				repeat
+					if getTriggerBotTarget() then
+						local obj: table = {["UserInputState"] = Enum.UserInputState.Begin, ["UserInputType"] = Enum.UserInputType.MouseButton1, ["Position"] = Vector3.zero};
+						task.spawn(pl.Shoot, obj);
+						obj.UserInputState = Enum.UserInputState.End;
+					end;
+	
+					task.wait();
+				until not TriggerBot["Enabled"];
+			end;
+		end,
+		["Tooltip"] = 'Shoots people that enter your crosshair'
+	});
+	Targets = TriggerBot:CreateTargets({
+		["Players"] = true,
+		["NPCs"] = true
+	});
+end);
+
+velo.run(function()
+	local AntiFling: table;
+	local modified: table = {};
+	
+	local localAdded: (entity: any) -> () = function(entity: any): ()
+		for _: any, prompt: any in workspace.CarContainer:QueryDescendants('ProximityPrompt') do
+			prompt.Enabled = not entity.Humanoid.SeatPart and not prompt.Parent.Occupant;
+		end;
+	
+		AntiFling:Clean(entity.Humanoid:GetPropertyChangedSignal('SeatPart'):Connect(function()
+			for _: any, prompt: any in workspace.CarContainer:QueryDescendants('ProximityPrompt') do
+				prompt.Enabled = not entity.Humanoid.SeatPart and not prompt.Parent.Occupant;
+			end;
+		end));
+	end;
+	
+	local modify: (part: any) -> () = function(part: any): ()
+		if part:IsA('BasePart') and part.CollisionGroup ~= 'Wheels' then
+			if not modified[part] then
+				modified[part] = {part.CanCollide, part.CanQuery};
+			end;
+	
+			if (part:IsA('Seat') or part:IsA('VehicleSeat')) and part.Name == part.ClassName then
+				local connection: RBXScriptConnection;
+				local prox: ProximityPrompt = Instance.new('ProximityPrompt');
+				prox.ActionText = 'Enter';
+				prox.Enabled = not part.Occupant;
+				prox.MaxActivationDistance = 8;
+				prox.RequiresLineOfSight = false;
+				prox.Parent = part;
+	
+				prox.Triggered:Connect(function()
+					if entitylib.isAlive then
+						part:Sit(entitylib.character.Humanoid);
+					end;
+				end);
+	
+				prox.Destroying:Connect(function()
+					connection:Disconnect();
+				end);
+	
+				connection = part:GetPropertyChangedSignal('Occupant'):Connect(function()
+					prox.Enabled = not part.Occupant;
+				end);
+			end;
+	
+			part.CanCollide = false;
+			part.CanTouch = false;
+		end;
+	end;
+	
+	AntiFling = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'AntiFling',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				AntiFling:Clean(workspace.CarContainer.DescendantAdded:Connect(modify));
+				AntiFling:Clean(entitylib.Events.LocalAdded:Connect(localAdded));
+	
+				for _: any, part: any in workspace.CarContainer:QueryDescendants('BasePart') do
+					modify(part);
+				end;
+	
+				if entitylib.isAlive then
+					localAdded(entitylib.character);
+				end;
+			else
+				for part: any, value: any in modified do
+					part.CanCollide = value[1];
+					part.CanTouch = value[2];
+				end;
+	
+				for _: any, prompt: any in workspace.CarContainer:QueryDescendants('ProximityPrompt') do
+					prompt:Destroy();
+				end;
+	
+				table.clear(modified);
+			end;
+		end,
+		["Tooltip"] = 'Prevent certain methods of flinging you'
+	});
+end);
+
+velo.run(function()
+	local AntiInvisible: table;
+	local threads: table = {};
+	local whitelist: table = {
+		["http://www.roblox.com/asset/?id=125750702"] = true,
+		["http://www.roblox.com/asset/?id=128777973"] = true,
+		["http://www.roblox.com/asset/?id=128853357"] = true,
+		["http://www.roblox.com/asset/?id=129423030"] = true,
+		["http://www.roblox.com/asset/?id=129423131"] = true,
+		["http://www.roblox.com/asset/?id=129967390"] = true,
+		["http://www.roblox.com/asset/?id=129967478"] = true,
+		["http://www.roblox.com/asset/?id=178130996"] = true,
+		["http://www.roblox.com/asset/?id=180426354"] = true,
+		["http://www.roblox.com/asset/?id=180435571"] = true,
+		["http://www.roblox.com/asset/?id=180435792"] = true,
+		["http://www.roblox.com/asset/?id=180436148"] = true,
+		["http://www.roblox.com/asset/?id=180436334"] = true,
+		["http://www.roblox.com/asset/?id=182393478"] = true,
+		["http://www.roblox.com/asset/?id=182435998"] = true,
+		["http://www.roblox.com/asset/?id=182436842"] = true,
+		["http://www.roblox.com/asset/?id=182436935"] = true,
+		["http://www.roblox.com/asset/?id=182491037"] = true,
+		["http://www.roblox.com/asset/?id=182491065"] = true,
+		["http://www.roblox.com/asset/?id=182491248"] = true,
+		["http://www.roblox.com/asset/?id=182491277"] = true,
+		["http://www.roblox.com/asset/?id=182491368"] = true,
+		["http://www.roblox.com/asset/?id=182491423"] = true,
+		["rbxassetid://279227693"] = true,
+		["rbxassetid://279229192"] = true,
+		["rbxassetid://287112271"] = true,
+		["rbxassetid://388723916"] = true,
+		["rbxassetid://388726667"] = true,
+		["rbxassetid://389472570"] = true,
+		["rbxassetid://405194080"] = true,
+		["rbxassetid://405212265"] = true,
+		["rbxassetid://481088553"] = true,
+		["rbxassetid://481089053"] = true,
+		["rbxassetid://484200742"] = true,
+		["rbxassetid://484926359"] = true,
+		["rbxassetid://83690472549256"] = true,
+		["rbxassetid://107176344504758"] = true,
+		["rbxassetid://111090572475133"] = true,
+		["rbxassetid://113267949064300"] = true,
+		["rbxassetid://131326339350805"] = true
+	};
+	
+	local animationAdded: (anim: any, plr: any) -> () = function(anim: any, plr: any): ()
+		if not whitelist[anim.Animation.AnimationId] and plr then
+			if threads[anim] then
+				task.cancel(threads[anim]);
+			end;
+	
+			cheats:Flag(plr, 'invalid animation', 1);
+			threads[anim] = task.spawn(function()
+				repeat
+					anim:AdjustWeight(0, 0);
+					task.wait();
+				until not (anim.IsPlaying and AntiInvisible["Enabled"]);
+	
+				threads[anim] = nil;
+			end);
+		end;
+	end;
+	
+	local entityAdded: (ent: any) -> () = function(ent: any): ()
+		local animator: Instance = ent.Humanoid:WaitForChild('Animator', 5);
+	
+		if animator and AntiInvisible["Enabled"] then
+			AntiInvisible:Clean(animator.AnimationPlayed:Connect(function(anim: any)
+				animationAdded(anim, ent.Player);
+			end));
+	
+			for _: any, anim: any in animator:GetPlayingAnimationTracks() do
+				task.spawn(animationAdded, anim, ent.Player);
+			end;
+		end;
+	end;
+	
+	for _: any, v: any in replicatedStorage:QueryDescendants('Animation') do
+		whitelist[v.AnimationId] = true;
+	end;
+	
+	AntiInvisible = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'AntiInvisible',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				AntiInvisible:Clean(entitylib.Events.EntityAdded:Connect(entityAdded));
+				for _: any, v: any in entitylib.List do
+					task.spawn(entityAdded, v);
+				end;
+			else
+				for _: any, v: any in threads do
+					task.cancel(v);
+				end;
+				table.clear(threads);
+			end;
+		end,
+		["Tooltip"] = 'Prevent people from using animations outside of the game\'s scope'
+	});
+end);
+
+velo.run(function()
+	local AntiKillPlane: table;
+	
+	AntiKillPlane = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'AntiKillPlane',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				AntiKillPlane:Clean(runService.Heartbeat:Connect(function()
+					if entitylib.isAlive then
+						local root: any = entitylib.character.RootPart;
+						local diff: any = math.clamp(root.Position.Y, -10, 179.99) - root.Position.Y;
+	
+						if math.abs(diff) > 0 then
+							root.CFrame += Vector3.new(0, diff, 0);
+							root.AssemblyLinearVelocity *= Vector3.new(1, 0, 1);
+						end;
+					end;
+				end));
+			end;
+		end,
+		["Tooltip"] = 'Prevents you from touching the kill plane'
+	});
+end);
+
+velo.run(function()
+	local AntiRiotShield: table;
+	
+	AntiRiotShield = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'AntiRiotShield',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				repeat
+					for _: any, entity: any in entitylib.List do
+						local shield: Instance? = entity.Character:FindFirstChild('RiotShieldPart');
+						if shield then
+							shield.CanQuery = false;
+						end;
+					end;
+	
+					task.wait(0.05);
+				until not AntiRiotShield["Enabled"];
+			else
+				for _: any, entity: any in entitylib.List do
+					local shield: Instance? = entity.Character:FindFirstChild('RiotShieldPart');
+					if shield then
+						shield.CanQuery = true;
+					end;
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Allow you to shoot through riot shields.'
+	});
+end);
+
+velo.run(function()
+	local AntiTaze: table;
+	local old: any, connection: any;
+	
+	local entityAdded: (ent: any) -> () = function(ent: any): ()
+		connection = getconnections(replicatedStorage.GunRemotes.PlayerTased.OnClientEvent)[1];
+		if not (connection and connection.Function) then
+			repeat
+				connection = getconnections(replicatedStorage.GunRemotes.PlayerTased.OnClientEvent)[1];
+				task.wait();
+			until connection and connection.Function or not AntiTaze["Enabled"];
+		end;
+	
+		if connection and AntiTaze["Enabled"] then
+			old = hookfunction(connection.Function, function()
+				local char: Model? = lplr.Character;
+				lplr:SetAttribute('BackpackEnabled', false);
+				if entitylib.isAlive then
+					entitylib.character.Humanoid:UnequipTools();
+				end;
+	
+				task.wait(3.5);
+				if lplr.Character == char then
+					lplr:SetAttribute('BackpackEnabled', true);
+				end;
+			end);
+		end;
+	end;
+	
+	AntiTaze = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'AntiTaze',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				AntiTaze:Clean(entitylib.Events.LocalAdded:Connect(entityAdded));
+				if entitylib.isAlive then
+					task.spawn(entityAdded, entitylib.character);
+				end;
+			else
+				if old and connection.Function then
+					hookfunction(connection.Function, old);
+					old = nil;
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Prevent you from getting tazed'
+	});
+end);
+
+velo.run(function()
+	local AutoArrest: table;
+	local Range: table;
+	local HandCheck: table;
+	local CooldownBar: table;
+	local toggles: table = {};
+	local cdholder: Frame, cdframe: Frame, cdlabel: TextLabel;
+	local arrestCooldown: number = 0;
+	
+	AutoArrest = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'AutoArrest',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				repeat
+					local check: boolean = arrestCooldown < os.clock();
+					if HandCheck["Enabled"] then
+						local tool: any = entitylib.isAlive and lplr.Character:FindFirstChildWhichIsA('Tool');
+						check = check and tool and tool.Name == 'Handcuffs';
+					end;
+	
+					if check then
+						local entities: any = entitylib.AllPosition({
+							["Range"] = Range["Value"],
+							["Players"] = true,
+							["Part"] = 'RootPart',
+							["TargetCheck"] = true
+						});
+	
+						for _: any, ent: any in entities do
+							if not ent.Character:GetAttribute('Arrested') then
+								local toggle: any = ent.Player.Team and toggles[ent.Player.Team.Name];
+								if toggle and not toggle["Enabled"] then
+									continue;
+								end;
+	
+								if ent.Player.Team == teams.Inmates and ent.Character:GetAttribute('Hostile') and not ent.Character:GetAttribute('Tased') then
+									continue;
+								end;
+	
+								if replicatedStorage.Remotes.ArrestPlayer:InvokeServer(ent.Player, 1) then
+									arrestCooldown = os.clock() + 7;
+									vapeEvents.Arrested:Fire();
+									notif('AutoArrest', 'Arrested '..(ent.Player.Name), 7);
+								end;
+	
+								break;
+							end;
+						end;
+					end;
+	
+					if cdholder then
+						cdholder.Visible = arrestCooldown > os.clock();
+	
+						if cdholder.Visible then
+							local diff: number = (arrestCooldown - os.clock());
+							cdframe.Size = UDim2.new(math.clamp(diff / 7, 0, 1), -2, 1, -2);
+							cdlabel.Text = (math.round(diff * 10) / 10)..'s';
+						end;
+					end;
+	
+					task.wait(0.05);
+				until not AutoArrest["Enabled"];
+			else
+				if cdholder then
+					cdholder.Visible = false;
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Automatically uses handcuffs on nearby entities'
+	});
+	Range = AutoArrest:CreateSlider({
+		["Name"] = 'Range',
+		["Min"] = 1,
+		["Max"] = 8,
+		["Default"] = 8,
+		["Suffix"] = function(val: number): string
+			return val == 1 and 'stud' or 'studs';
+		end
+	});
+	HandCheck = AutoArrest:CreateToggle({
+		["Name"] = 'Hand Check',
+		["Tooltip"] = 'Only arrest if you have handcuffs equipped.'
+	});
+	CooldownBar = AutoArrest:CreateToggle({
+		["Name"] = 'Cooldown Bar',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				cdholder = Instance.new('Frame');
+				cdholder.Visible = false;
+				cdholder.BorderSizePixel = 0;
+				cdholder.BackgroundTransparency = 0.7;
+				cdholder.AnchorPoint = Vector2.new(0.5, 0);
+				cdholder.BackgroundColor3 = Color3.new(1, 1, 1);
+				cdholder.Size = UDim2.new(0.1, 0, 0, 5);
+				cdholder.Position = UDim2.fromScale(0.5, 0.55);
+				cdholder.Parent = vape.gui;
+				cdframe = Instance.new('Frame');
+				cdframe.BorderSizePixel = 0;
+				cdframe.BackgroundTransparency = 0.3;
+				cdframe.BackgroundColor3 = Color3.new(1, 1, 1);
+				cdframe.Size = UDim2.new(1, -2, 1, -2);
+				cdframe.Position = UDim2.fromOffset(1, 1);
+				cdframe.Parent = cdholder;
+				cdlabel = Instance.new('TextLabel');
+				cdlabel.Size = UDim2.new(1, 0, 0, 14);
+				cdlabel.Position = UDim2.fromOffset(0, 10);
+				cdlabel.BackgroundTransparency = 1;
+				cdlabel.TextColor3 = Color3.new(1, 1, 1);
+				cdlabel.TextScaled = true;
+				cdlabel.TextStrokeTransparency = 0;
+				cdlabel.Font = Enum.Font.Arial;
+				cdlabel.Parent = cdholder;
+			else
+				if cdholder then
+					cdholder:Destroy();
+					cdholder = nil;
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Show the cooldown for arresting'
+	});
+	
+	for _: any, v: any in {'Inmates', 'Criminals'} do
+		toggles[v] = AutoArrest:CreateToggle({
+			["Name"] = 'Arrest '..v,
+			["Default"] = true
+		});
+	end;
+end);
+
+velo.run(function()
+	local AutoReset: table;
+	
+	AutoReset = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'AutoReset',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				AutoReset:Clean(lplr:GetPropertyChangedSignal('Team'):Connect(function()
+					if lplr.Team == teams.Criminals and entitylib.isAlive then
+						entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead);
+					end;
+				end));
+			end;
+		end,
+		["Tooltip"] = 'Automatically reset after becoming a criminal.'
+	});
+end);
+
+velo.run(function()
+	local AutoTaze: table;
+	local Range: table;
+	local VelocityCheck: table;
+	local cooldown: number = 0;
+	
+	AutoTaze = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'AutoTaze',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				repeat
+					local backpack: Backpack? = lplr:FindFirstChildWhichIsA('Backpack');
+					local taser: any = backpack and backpack:FindFirstChild('Taser');
+	
+					if taser and (taser:GetAttribute('CurrentAmmo') or 1) > 0 and cooldown < os.clock() and (arrestCooldown - os.clock()) < 3 then
+						if not VelocityCheck["Enabled"] or entitylib.isAlive and entitylib.character.RootPart.AssemblyLinearVelocity.Magnitude < 40 then
+							local entities: any = entitylib.AllPosition({
+								["Range"] = Range["Value"],
+								["AttackCheck"] = false,
+								["Wallcheck"] = true,
+								["Part"] = 'Head',
+								["Origin"] = entitylib.isAlive and entitylib.character.Head.Position or Vector3.zero,
+								["Players"] = true
+							});
+	
+							for _: any, entity: any in entities do
+								if not (entity.Character:GetAttribute('Tased') or entity.Character:GetAttribute('Arrested')) then
+									cooldown = os.clock() + 2;
+									entitylib.character.Humanoid:EquipTool(taser);
+									break;
+								end;
+							end;
+						end;
+					end;
+	
+					task.wait(0.05);
+				until not AutoTaze["Enabled"];
+			end;
+		end,
+		["Tooltip"] = 'Automatically taze people around you. (only works with SilentAim AutoFire with Position Mode enabled)'
+	});
+	Range = AutoTaze:CreateSlider({
+		["Name"] = 'Range',
+		["Min"] = 1,
+		["Max"] = 52,
+		["Default"] = 52,
+		["Suffix"] = function(val: number): string
+			return val == 1 and 'stud' or 'studs';
+		end
+	});
+	VelocityCheck = AutoTaze:CreateToggle({
+		["Name"] = 'Velocity Check',
+		["Default"] = true
+	});
+end);
+
+velo.run(function()
+	local FenceGodmode: table;
+	
+	FenceGodmode = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'FenceGodmode',
+		["Function"] = function(callback: boolean): ()
+			for _: any, fence: any in workspace.Prison_Fences:QueryDescendants('BasePart:has(> TouchTransmitter)') do
+				fence.CanTouch = not callback;
+			end;
+		end,
+		["Tooltip"] = 'Ignore damage from standing ontop of fences.'
+	});
+end);
+
+velo.run(function()
+	local FlingExploit: table;
+	local Mode: table;
+	local List: table;
+	local Movement: table;
+	local Equipment: table;
+	local AutoRejoin: table;
+	local PlayerLimit: table;
+	local TimeLimit: table;
+	local HopList: table;
+	local didClick: table = {};
+	local lastFling: table = {};
+	local tempList: table = setmetatable({}, {
+		["__mode"] = 'k'
+	});
+	
+	local getTarget: (seat: any) -> any = function(seat: any): any
+		local tEntity: any = tempList[seat];
+		if tEntity and tEntity.RootPart:IsDescendantOf(workspace) and (os.clock() - lastFling[tEntity.Player.Name]) < 0.75 and not (tEntity.Humanoid.Sit and tEntity.Humanoid.SeatPart.Anchored) then
+			return tEntity;
+		end;
+	
+		if entitylib.isAlive then
+			local cloned: table = table.clone(entitylib.List);
+			table.sort(cloned, function(a: any, b: any)
+				return (lastFling[a.Player.Name] or 0) < (lastFling[b.Player.Name] or 0);
+			end);
+	
+			for _: any, entity: any in cloned do
+				if isFriend(entity.Player) then continue; end;
+				if not select(2, whitelist:get(entity.Player)) then continue; end;
+				if entity.Player.Team == teams.Neutral then continue; end;
+				if Mode["Value"] ~= 'All' and not table.find(List.ListEnabled, entity.Player.Name) then continue; end;
+				if not (entity.Humanoid.Sit and entity.Humanoid.SeatPart.Anchored) and entity.RootPart:IsDescendantOf(workspace) and (os.clock() - entity.SpawnTime) > 2 then
+					lastFling[entity.Player.Name] = os.clock();
+					tempList[seat] = entity;
+					table.clear(cloned);
+					notif('FlingExploit', 'Attempted fling: '..entity.Player.Name, 5);
+					return entity;
+				end;
+			end;
+	
+			table.clear(cloned);
+		end;
+	end;
+	
+	FlingExploit = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'FlingExploit',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				local reqTimer: number = os.clock();
+				local startTime: number = os.clock();
+				local dir: number = 0;
+	
+				if not vape.Modules.AntiFling["Enabled"] then
+					vape.Modules.AntiFling:Toggle();
+				end;
+	
+				if AutoRejoin["Enabled"] then
+					for _: any, plr: any in playersService:GetPlayers() do
+						if plr and plr.Team ~= teams.Neutral and table.find(HopList.ListEnabled, plr.Name) then
+							repeat
+								vape.Modules.ServerHop:Toggle();
+								task.wait(1);
+							until not FlingExploit["Enabled"];
+	
+							return;
+						end;
+					end;
+				end;
+	
+				FlingExploit:Clean(runService.Heartbeat:Connect(function(dt: number)
+					if lplr.Team == teams.Neutral then
+						local gui: Instance? = lplr.PlayerGui:FindFirstChild('TeamsFrame', true);
+						if gui then
+							local buttons: {Instance} = gui:GetChildren();
+							table.sort(buttons, function(a: any, b: any)
+								return (a.Name == 'Inmates' and 1 or 2) < (b.Name == 'Inmates' and 1 or 2);
+							end);
+	
+							for _: any, holder: any in buttons do
+								if holder.Button.AutoButtonColor then
+									pickTeam(holder.Button);
+									break;
+								end;
+							end;
+						end;
+	
+						return;
+					end;
+	
+					if AutoRejoin["Enabled"] then
+						local plrCount: number = #teams.Guards:GetPlayers() + #teams.Inmates:GetPlayers() + #teams.Criminals:GetPlayers();
+	
+						if ((os.clock() - startTime) > TimeLimit["Value"] * 60 or plrCount <= PlayerLimit["Value"]) then
+							if (os.clock() - reqTimer) > 1 then
+								vape.Modules.ServerHop:Toggle();
+								reqTimer = os.clock();
+							end;
+	
+							return;
+						end;
+					end;
+	
+					if entitylib.isAlive then
+						local root: any = entitylib.character.RootPart;
+						local didMove: boolean;
+	
+						for _: any, button: any in workspace.Prison_ITEMS.buttons:GetChildren() do
+							if button.Name == 'Car Spawner' then
+								local mag: number = (button["Car Spawner"].Position - root.Position).Magnitude;
+								if mag < 15 and (didClick[button] or 0) < os.clock() then
+									didClick[button] = os.clock() + 0.2;
+									task.spawn(function()
+										replicatedStorage.Remotes.InteractWithItem:InvokeServer(button["Car Spawner"]);
+									end);
+								end;
+	
+								if mag < 50 and button["Car Spawner"].BrickColor == BrickColor.new('Cyan') and not didMove then
+									local diff: number = math.clamp((button["Car Spawner"].Position - root.Position).X, -1, 1);
+									dir = math.clamp(dir + (diff * dt * 24), -12, 14);
+									didMove = true;
+								end;
+							end;
+						end;
+	
+						if not didMove then
+							local diff: number = math.clamp(0 - dir, -1, 1);
+							dir = math.clamp(dir + (diff * dt * 24), -12, 14);
+						end;
+	
+						if Movement["Enabled"] then
+							if Equipment["Enabled"] and (os.clock() - entitylib.character.SpawnTime) < 2 then
+								local backpack: Backpack? = lplr:FindFirstChildWhichIsA('Backpack');
+								local btool: any = backpack and backpack:FindFirstChildWhichIsA('Tool') or nil;
+								local ltool: Tool? = lplr.Character:FindFirstChildWhichIsA('Tool');
+	
+								if not (btool or ltool) then
+									root.CFrame = CFrame.new(Vector3.new(816, 98, 2233));
+									return;
+								elseif btool and not ltool then
+									entitylib.character.Humanoid:EquipTool(btool);
+								end;
+							end;
+	
+							if (root.Position - Vector3.new(633, 98, 2489)).Magnitude < 40 or (os.clock() - entitylib.character.SpawnTime) < 2 then
+								root.CFrame = CFrame.new(Vector3.new(610 + dir, 90, 2494));
+								root.AssemblyLinearVelocity = Vector3.new(24, 0, 0);
+							end;
+						end;
+	
+						for _: any, seat: any in workspace.CarContainer:QueryDescendants('VehicleSeat') do
+							if isnetworkowner(seat) then
+								local target: any = getTarget(seat);
+								if target then
+									seat.AssemblyLinearVelocity = Vector3.new(10000, 10000, 0);
+									seat.CFrame = CFrame.new(target.RootPart.Position) * CFrame.new(-2, 0, -12);
+									target.RootPart.AssemblyLinearVelocity = Vector3.zero;
+									sethiddenproperty(seat, 'PhysicsRepRootPart', target.RootPart);
+									sethiddenproperty(seat, 'PhysicsRepRootRef', InstanceHandle.new(target.RootPart));
+	
+									local wheels: Instance? = seat.Parent.Parent:FindFirstChild('Wheels');
+									if wheels then
+										wheels:Destroy();
+									end;
+								end;
+							end;
+						end;
+					end;
+				end));
+			end;
+		end,
+		["Tooltip"] = 'aesthetical, just remove collisions on vehicles please, this is the worst.'
+	});
+	Mode = FlingExploit:CreateDropdown({
+		["Name"] = 'Mode',
+		["List"] = {'All', 'Individual'},
+		["Function"] = function(value: string): ()
+			List.Object.Visible = value ~= 'All';
+		end
+	});
+	List = FlingExploit:CreateTextList({
+		["Name"] = 'Targets',
+		["Placeholder"] = 'Roblox username',
+		["Player"] = true,
+		["Visible"] = false,
+		["Darker"] = true
+	});
+	Movement = FlingExploit:CreateToggle({
+		["Name"] = 'Movement',
+		["Default"] = true
+	});
+	Equipment = FlingExploit:CreateToggle({
+		["Name"] = 'Equipment',
+		["Tooltip"] = 'Grab a gun before kicking to kill seated players.'
+	});
+	AutoRejoin = FlingExploit:CreateToggle({
+		["Name"] = 'AutoRejoin',
+		["Function"] = function(callback: boolean): ()
+			PlayerLimit.Object.Visible = callback;
+			TimeLimit.Object.Visible = callback;
+			HopList.Object.Visible = callback;
+		end,
+		["Tooltip"] = 'Automatically server hop after certain conditions are met.'
+	});
+	PlayerLimit = FlingExploit:CreateSlider({
+		["Name"] = 'Player Limit',
+		["Min"] = 1,
+		["Max"] = 24,
+		["Default"] = 10,
+		["Visible"] = false,
+		["Darker"] = true,
+		["Suffix"] = function(value: number): string
+			return value == 1 and 'player' or 'players';
+		end
+	});
+	TimeLimit = FlingExploit:CreateSlider({
+		["Name"] = 'Time Limit',
+		["Min"] = 1,
+		["Max"] = 20,
+		["Default"] = 6,
+		["Visible"] = false,
+		["Darker"] = true,
+		["Suffix"] = function(value: number): string
+			return value == 1 and 'minute' or 'minutes';
+		end
+	});
+	HopList = FlingExploit:CreateTextList({
+		["Name"] = 'Hop List',
+		["Placeholder"] = 'Roblox username',
+		["Tooltip"] = 'Automatically hop if the player is spawned in and in the server, good for multiboxing.',
+		["Player"] = true,
+		["Visible"] = false,
+		["Darker"] = true
+	});
+end);
+
+velo.run(function()
+	local GunModifications: table;
+	local Spread: table;
+	local FireRate: table;
+	local Automatic: table;
+	local olddata: table, old: any = {};
+	local oldhook: any;
+	
+	local modify: () -> () = function(): ()
+		local data: any = debug.getupvalue(oldshoot or pl.Shoot, 10);
+		if data and GunModifications["Enabled"] then
+			if old ~= data then
+				olddata = table.clone(data);
+				old = data;
+			end;
+	
+			data.SpreadRadius = Spread["Enabled"] and 0 or olddata.SpreadRadius;
+			data.FireRate = (olddata.FireRate or 0) * (FireRate["Value"] / 100);
+			data.AutoFire = Automatic["Enabled"] or olddata.AutoFire;
+		end;
+	end;
+	
+	
+	GunModifications = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'GunModifications',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				oldequip = hookfunction(pl.Equip, function(...: any)
+					local res: table = table.pack(oldequip(...));
+					modify();
+					return unpack(res, 1, res.n);
+				end);
+	
+				modify();
+			else
+				if oldequip then
+					if restorefunction then
+						restorefunction(pl.Equip);
+					else
+						oldequip = nil;
+					end;
+				end;
+	
+				if old then
+					for i: any, v: any in olddata do
+						old[i] = v;
+					end;
+					table.clear(olddata);
+					old = nil;
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Apply various modifications to enhance any firearm'
+	});
+	FireRate = GunModifications:CreateSlider({
+		["Name"] = 'FireRate Multiplier',
+		["Min"] = 1,
+		["Max"] = 100,
+		["Default"] = 100,
+		["Suffix"] = '%',
+		["Function"] = modify
+	});
+	Spread = GunModifications:CreateToggle({
+		["Name"] = 'No Spread',
+		["Function"] = modify
+	});
+	Automatic = GunModifications:CreateToggle({
+		["Name"] = 'Full Automatic',
+		["Function"] = modify
+	});
+end);
+
+velo.run(function()
+	local Killaura: table;
+	local Targets: table;
+	local AttackRange: table;
+	local AngleSlider: table;
+	local Max: table;
+	local Mouse: table;
+	local BoxSwingColor: table;
+	local BoxAttackColor: table;
+	local ParticleTexture: table;
+	local ParticleColor1: table;
+	local ParticleColor2: table;
+	local ParticleSize: table;
+	local Face: table;
+	local overlay: OverlapParams = OverlapParams.new();
+	overlay.FilterType = Enum.RaycastFilterType.Include;
+	local particles: table, boxes: table, attackDelay: number = {}, {}, tick();
+	
+	local getAttackData: () -> any = function(): any
+		if Mouse["Enabled"] then
+			if not inputService:IsMouseButtonPressed(0) then return false; end;
+		end;
+	
+		return true;
+	end;
+	
+	Killaura = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'Killaura',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				repeat
+					local canAttack: any = getAttackData();
+					local attacked: table = {};
+	
+					if canAttack then
+						local entities: any = entitylib.AllPosition({
+							["Range"] = AttackRange["Value"],
+							["Wallcheck"] = Targets.Walls["Enabled"] or nil,
+							["Part"] = 'RootPart',
+							["Players"] = Targets.Players["Enabled"],
+							["NPCs"] = Targets.NPCs["Enabled"],
+							["Limit"] = Max["Value"],
+							["AttackCheck"] = true,
+							["SkipTeam"] = true
+						});
+	
+						if #entities > 0 then
+							local selfpos: any = entitylib.character.RootPart.Position;
+							local localfacing: Vector3 = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1);
+	
+							for _: any, entity: any in entities do
+								local delta: any = (entity.RootPart.Position - selfpos);
+								local angle: number = math.acos(localfacing:Dot((delta * Vector3.new(1, 0, 1)).Unit));
+								if angle > (math.rad(AngleSlider["Value"]) / 2) then continue; end;
+								if lplr.Team == teams.Guards and entity.Player.Team == teams.Inmates and not entity.Character:GetAttribute('Hostile') then
+									continue;
+								end;
+	
+								targetinfo.Targets[entity] = os.clock() + 1;
+								table.insert(attacked, {
+									["Entity"] = entity,
+									["Check"] = BoxAttackColor
+								});
+	
+								replicatedStorage.meleeEvent:FireServer(entity.Player, 1, 1);
+							end;
+						end;
+					end;
+	
+					for index: any, box: any in boxes do
+						box.Adornee = attacked[index] and attacked[index].Entity.RootPart or nil;
+						if box.Adornee then
+							box.Color3 = Color3.fromHSV(attacked[index].Check["Hue"], attacked[index].Check["Sat"], attacked[index].Check["Value"]);
+							box.Transparency = 1 - attacked[index].Check["Opacity"];
+						end;
+					end;
+	
+					for index: any, particle: any in particles do
+						particle.Position = attacked[index] and attacked[index].Entity.RootPart.Position or Vector3.new(math.huge, math.huge, math.huge);
+						particle.Parent = attacked[index] and gameCamera or nil;
+					end;
+	
+					if Face["Enabled"] and attacked[1] then
+						local vec: any = attacked[1].Entity.RootPart.Position * Vector3.new(1, 0, 1);
+						entitylib.character.RootPart.CFrame = CFrame.lookAt(entitylib.character.RootPart.Position, Vector3.new(vec.X, entitylib.character.RootPart.Position.Y + 0.01, vec.Z));
+					end;
+	
+					task.wait(0.05);
+				until not Killaura["Enabled"];
+			else
+				for _: any, box: any in boxes do
+					box.Adornee = nil;
+				end;
+	
+				for _: any, particle: any in particles do
+					particle.Parent = nil;
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Attack players around you\nwithout aiming at them.'
+	});
+	Targets = Killaura:CreateTargets({
+		["Players"] = true
+	});
+	AttackRange = Killaura:CreateSlider({
+		["Name"] = 'Attack range',
+		["Min"] = 1,
+		["Max"] = 12,
+		["Default"] = 12,
+		["Suffix"] = function(val: number): string
+			return val == 1 and 'stud' or 'studs';
+		end
+	});
+	AngleSlider = Killaura:CreateSlider({
+		["Name"] = 'Max angle',
+		["Min"] = 1,
+		["Max"] = 360,
+		["Default"] = 360
+	});
+	Max = Killaura:CreateSlider({
+		["Name"] = 'Max targets',
+		["Min"] = 1,
+		["Max"] = 10,
+		["Default"] = 10
+	});
+	Mouse = Killaura:CreateToggle({["Name"] = 'Require mouse down'});
+	Killaura:CreateToggle({
+		["Name"] = 'Show target',
+		["Function"] = function(callback: boolean): ()
+			BoxSwingColor.Object.Visible = callback;
+			BoxAttackColor.Object.Visible = callback;
+			if callback then
+				for i: number = 1, 10 do
+					local box: BoxHandleAdornment = Instance.new('BoxHandleAdornment');
+					box.Adornee = nil;
+					box.AlwaysOnTop = true;
+					box.Size = Vector3.new(3, 5, 3);
+					box.CFrame = CFrame.new(0, -0.5, 0);
+					box.ZIndex = 0;
+					box.Parent = vape.holder;
+					boxes[i] = box;
+				end;
+			else
+				for _: any, box: any in boxes do
+					box:Destroy();
+				end;
+				table.clear(boxes);
+			end;
+		end
+	});
+	BoxSwingColor = Killaura:CreateColorSlider({
+		["Name"] = 'Target Color',
+		["Darker"] = true,
+		["DefaultHue"] = 0.6,
+		["DefaultOpacity"] = 0.5,
+		["Visible"] = false
+	});
+	BoxAttackColor = Killaura:CreateColorSlider({
+		["Name"] = 'Attack Color',
+		["Darker"] = true,
+		["DefaultOpacity"] = 0.5,
+		["Visible"] = false
+	});
+	Killaura:CreateToggle({
+		["Name"] = 'Target particles',
+		["Function"] = function(callback: boolean): ()
+			ParticleTexture.Object.Visible = callback;
+			ParticleColor1.Object.Visible = callback;
+			ParticleColor2.Object.Visible = callback;
+			ParticleSize.Object.Visible = callback;
+	
+			if callback then
+				for i: number = 1, 10 do
+					local part: Part = Instance.new('Part');
+					part.Size = Vector3.new(2, 4, 2);
+					part.Anchored = true;
+					part.CanCollide = false;
+					part.Transparency = 1;
+					part.CanQuery = false;
+					part.Parent = Killaura["Enabled"] and gameCamera or nil;
+					local emitter: ParticleEmitter = Instance.new('ParticleEmitter');
+					emitter.Brightness = 1.5;
+					emitter.Size = NumberSequence.new(ParticleSize["Value"]);
+					emitter.Shape = Enum.ParticleEmitterShape.Sphere;
+					emitter.Texture = ParticleTexture["Value"];
+					emitter.Transparency = NumberSequence.new(0);
+					emitter.Lifetime = NumberRange.new(0.4);
+					emitter.Speed = NumberRange.new(16);
+					emitter.Rate = 128;
+					emitter.Drag = 16;
+					emitter.ShapePartial = 1;
+					emitter.Color = ColorSequence.new({
+						ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1["Hue"], ParticleColor1["Sat"], ParticleColor1["Value"])),
+						ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2["Hue"], ParticleColor2["Sat"], ParticleColor2["Value"]))
+					});
+					emitter.Parent = part;
+					particles[i] = part;
+				end;
+			else
+				for _: any, particle: any in particles do
+					particle:Destroy();
+				end;
+				table.clear(particles);
+			end;
+		end
+	});
+	ParticleTexture = Killaura:CreateTextBox({
+		["Name"] = 'Texture',
+		["Default"] = 'rbxassetid://14736249347',
+		["Function"] = function(): ()
+			for _: any, particle: any in particles do
+				particle.ParticleEmitter.Texture = ParticleTexture["Value"];
+			end;
+		end,
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	ParticleColor1 = Killaura:CreateColorSlider({
+		["Name"] = 'Color Begin',
+		["Function"] = function(hue: number, sat: number, val: number): ()
+			for _: any, particle: any in particles do
+				particle.ParticleEmitter.Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)),
+					ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2["Hue"], ParticleColor2["Sat"], ParticleColor2["Value"]))
+				});
+			end;
+		end,
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	ParticleColor2 = Killaura:CreateColorSlider({
+		["Name"] = 'Color End',
+		["Function"] = function(hue: number, sat: number, val: number): ()
+			for _: any, particle: any in particles do
+				particle.ParticleEmitter.Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1["Hue"], ParticleColor1["Sat"], ParticleColor1["Value"])),
+					ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, sat, val))
+				});
+			end;
+		end,
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	ParticleSize = Killaura:CreateSlider({
+		["Name"] = 'Size',
+		["Min"] = 0,
+		["Max"] = 1,
+		["Default"] = 0.2,
+		["Decimal"] = 100,
+		["Function"] = function(val: number): ()
+			for _: any, particle: any in particles do
+				particle.ParticleEmitter.Size = NumberSequence.new(val);
+			end;
+		end,
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	Face = Killaura:CreateToggle({
+		["Name"] = 'Face target'
+	});
+end);
+
+velo.run(function()
+	local NoJumpCooldown: table;
+	local old: any;
+	
+	local entityAdded: (ent: any) -> () = function(ent: any): ()
+		old = getconnections(ent.Humanoid:GetPropertyChangedSignal('Jump'))[1];
+		if not old then
+			repeat
+				old = getconnections(ent.Humanoid:GetPropertyChangedSignal('Jump'))[1];
+				task.wait();
+			until old or not NoJumpCooldown["Enabled"];
+	
+			if not NoJumpCooldown["Enabled"] then
+				return;
+			end;
+		end;
+	
+		if old then
+			old:Disable();
+		end;
+	end;
+	
+	NoJumpCooldown = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'NoJumpCooldown',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				NoJumpCooldown:Clean(entitylib.Events.LocalAdded:Connect(entityAdded));
+				if entitylib.isAlive then
+					task.spawn(entityAdded, entitylib.character);
+				end;
+			else
+				if old then
+					old:Enable();
+					old = nil;
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Remove the stamina cooldown from jumping'
+	});
+end);
+
+velo.run(function()
+	local VehicleFly: table;
+	local Mode: table;
+	local Speed: table;
+	local CameraMove: table;
+	local welds: table = {};
+	local up: number, down: number = 0, 0;
+	
+	local getMoveVecFromCamera: (cf: any, moveVec: any) -> ...any = function(cf: any, moveVec: any): ...any
+		local yaw: any = select(2, cf:ToEulerAnglesYXZ());
+		return CFrame.fromEulerAnglesYXZ(0, yaw, 0):VectorToObjectSpace(moveVec);
+	end;
+	
+	VehicleFly = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'VehicleFly',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				up, down = 0, 0;
+				for _: any, v: any in {'InputBegan', 'InputEnded'} do
+					VehicleFly:Clean(inputService[v]:Connect(function(input: any)
+						if not inputService:GetFocusedTextBox() then
+							if input.KeyCode == Enum.KeyCode.E then
+								up = v == 'InputBegan' and 1 or 0;
+							elseif input.KeyCode == Enum.KeyCode.Q then
+								down = v == 'InputBegan' and -1 or 0;
+							end;
+						end;
+					end));
+				end;
+	
+				if Mode["Value"] == 'Part' then
+					local part: Part = Instance.new('Part');
+					part.Size = Vector3.new(50, 1, 50);
+					part.Anchored = true;
+					part.CanQuery = false;
+					part.Transparency = 1;
+	
+					VehicleFly:Clean(part);
+					repeat
+						local seat: any = entitylib.isAlive and entitylib.character.Humanoid.SeatPart;
+						if seat then
+							part.CFrame = CFrame.new(seat.Position - Vector3.new(0, 2.2 - (up + down), 0));
+							part.Parent = workspace;
+						else
+							part.Parent = nil;
+						end;
+	
+						task.wait(0.05);
+					until not VehicleFly["Enabled"];
+				else
+					local inCar: boolean = false;
+					local old: any;
+					VehicleFly:Clean(runService.PreSimulation:Connect(function(dt: number)
+						local seat: any = entitylib.isAlive and entitylib.character.Humanoid.SeatPart;
+						local root: any = seat and entitylib.character.RootPart;
+	
+						if root then
+							if seat ~= old then
+								inCar = seat:IsDescendantOf(workspace.CarContainer) and seat:IsA('VehicleSeat');
+								if inCar then
+									table.clear(welds);
+									for _: any, weld: any in seat.Parent.Parent.Wheels:QueryDescendants('Rotate') do
+										welds[weld] = root.CFrame:ToObjectSpace(weld.Part0.CFrame);
+									end;
+								end;
+	
+								old = seat;
+							end;
+	
+							if inCar then
+								root.AssemblyLinearVelocity = Vector3.new(0, 2.25, 0);
+								if CameraMove["Enabled"] then
+									local moveVec: any = getMoveVecFromCamera(gameCamera.CFrame, entitylib.character.Humanoid.MoveDirection);
+									root.CFrame = CFrame.lookAlong(root.Position, gameCamera.CFrame.LookVector) * CFrame.new(Vector3.new(moveVec.X, up + down, moveVec.Z) * Speed["Value"] * dt);
+								else
+									root.CFrame = CFrame.lookAlong(root.Position, gameCamera.CFrame.LookVector) + (entitylib.character.Humanoid.MoveDirection + Vector3.new(0, up + down, 0)) * Speed["Value"] * dt;
+								end;
+	
+								for weld: any, offset: any in welds do
+									weld.Part0.CFrame = root.CFrame * offset;
+								end;
+	
+								gameCamera.CameraSubject = entitylib.character.Humanoid;
+							end;
+						end;
+					end));
+				end;
+			else
+				table.clear(welds);
+			end;
+		end,
+		["Tooltip"] = 'Allow you to fly with a vehicle'
+	});
+	Mode = VehicleFly:CreateDropdown({
+		["Name"] = 'Mode',
+		["List"] = {'CFrame', 'Part'},
+		["Function"] = function(val: string): ()
+			Speed.Object.Visible = val == 'CFrame';
+			if VehicleFly["Enabled"] then
+				VehicleFly:Toggle();
+				VehicleFly:Toggle();
+			end;
+		end
+	});
+	Speed = VehicleFly:CreateSlider({
+		["Name"] = 'Speed',
+		["Min"] = 1,
+		["Max"] = 100,
+		["Default"] = 60,
+		["Darker"] = true
+	});
+	CameraMove = VehicleFly:CreateToggle({
+		["Name"] = 'Camera Move',
+		["Default"] = true,
+		["Tooltip"] = 'Move based on the camera look direction.'
+	});
+end);
+
+velo.run(function()
+	local VehicleSpeed: table;
+	local Speed: table;
+	local old: any;
+	local seats: table = {};
+	
+	VehicleSpeed = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'VehicleSpeed',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				repeat
+					local seat: any = entitylib.isAlive and entitylib.character.Humanoid.SeatPart;
+					if seat then
+						if seat ~= old then
+							if seat:IsDescendantOf(workspace.CarContainer) then
+								seats = seat.Parent.Parent:QueryDescendants('VehicleSeat');
+							end;
+	
+							old = seat;
+						end;
+	
+						for _: any, seat: any in seats do
+							seat.MaxSpeed = Speed["Value"];
+							seat.Torque = 4;
+						end;
+					end;
+	
+					task.wait();
+				until not VehicleSpeed["Enabled"];
+			else
+				table.clear(seats);
+			end;
+		end,
+		["Tooltip"] = 'Increase vehicle speed'
+	});
+	Speed = VehicleSpeed:CreateSlider({
+		["Name"] = 'Speed',
+		["Min"] = 80,
+		["Max"] = 200,
+		["Default"] = 140
+	});
+end);
+
+velo.run(function()
+	VehicleWallbang = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'VehicleWallbang',
+		["Function"] = function(callback: boolean): ()
+			originScanner:UpdateIgnore();
+	
+			if callback then
+				pl.ShootParams.FilterDescendantsInstances = {lplr.Character, workspace.CarContainer};
+	
+				VehicleWallbang:Clean(entitylib.Events.LocalAdded:Connect(function()
+					task.defer(function()
+						pl.ShootParams.FilterDescendantsInstances = {lplr.Character, workspace.CarContainer};
+					end);
+				end));
+			else
+				pl.ShootParams.FilterDescendantsInstances = {lplr.Character};
+			end;
+		end,
+		["Tooltip"] = 'Allow you to shoot through vehicles.'
+	});
+end);
+
+velo.run(function()
+	local C4ESP: table;
+	local FillColor: table;
+	local OutlineColor: table;
+	local FillTransparency: table;
+	local OutlineTransparency: table;
+	local reference: table = {};
+	local folder: Folder = Instance.new('Folder');
+	folder.Parent = vape.holder;
+	
+	local added: (c4: any) -> () = function(c4: any): ()
+		local cham: Highlight = Instance.new('Highlight');
+		cham.Adornee = c4;
+		cham.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop;
+		cham.FillColor = Color3.fromHSV(FillColor["Hue"], FillColor["Sat"], FillColor["Value"]);
+		cham.OutlineColor = Color3.fromHSV(OutlineColor["Hue"], OutlineColor["Sat"], OutlineColor["Value"]);
+		cham.FillTransparency = FillTransparency["Value"];
+		cham.OutlineTransparency = OutlineTransparency["Value"];
+		cham.Parent = folder;
+	
+		reference[c4] = cham;
+	end;
+	
+	local removed: (c4: any) -> () = function(c4: any): ()
+		if reference[c4] then
+			if vape.ThreadFix then
+				setthreadidentity(8);
+			end;
+	
+			reference[c4]:Destroy();
+			reference[c4] = nil;
+		end;
+	end;
+	
+	C4ESP = vape.Categories.Render:CreateModule({
+		["Name"] = 'C4ESP',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				C4ESP:Clean(collectionService:GetInstanceAddedSignal('C4'):Connect(added));
+				C4ESP:Clean(collectionService:GetInstanceRemovedSignal('C4'):Connect(removed));
+	
+				for _: any, c4: any in collectionService:GetTagged('C4') do
+					task.spawn(added, c4);
+				end;
+			else
+				for _: any, cham: any in reference do
+					cham:Destroy();
+				end;
+				table.clear(reference);
+			end;
+		end,
+		["Tooltip"] = 'Display all C4\'s placed'
+	});
+	FillColor = C4ESP:CreateColorSlider({
+		["Name"] = 'Color',
+		["Function"] = function(hue: number, sat: number, val: number): ()
+			for _: any, cham: any in reference do
+				cham.FillColor = Color3.fromHSV(hue, sat, val);
+			end;
+		end
+	});
+	OutlineColor = C4ESP:CreateColorSlider({
+		["Name"] = 'Outline Color',
+		["DefaultSat"] = 0,
+		["Function"] = function(hue: number, sat: number, val: number): ()
+			for _: any, cham: any in reference do
+				cham.OutlineColor = Color3.fromHSV(hue, sat, val);
+			end;
+		end
+	});
+	FillTransparency = C4ESP:CreateSlider({
+		["Name"] = 'Transparency',
+		["Min"] = 0,
+		["Max"] = 1,
+		["Default"] = 0.5,
+		["Function"] = function(val: number): ()
+			for _: any, cham: any in reference do
+				cham.FillTransparency = val;
+			end;
+		end,
+		["Decimal"] = 10
+	});
+	OutlineTransparency = C4ESP:CreateSlider({
+		["Name"] = 'Outline Transparency',
+		["Min"] = 0,
+		["Max"] = 1,
+		["Default"] = 0.5,
+		["Function"] = function(val: number): ()
+			for _: any, cham: any in reference do
+				cham.OutlineTransparency = val;
+			end;
+		end,
+		["Decimal"] = 10
+	});
+end);
+
+velo.run(function()
+	local CameraPhase: table;
+	local old: any;
+	
+	CameraPhase = vape.Categories.Render:CreateModule({
+		["Name"] = 'CameraPhase',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				local popper: any = require(lplr.PlayerScripts.PlayerModule.CameraModule.ZoomController.Popper);
+				old = debug.getupvalue(debug.getupvalue(popper, 3), 7);
+				debug.setconstant(old, 16, 0);
+			else
+				if old then
+					debug.setconstant(old, 16, 0.25);
+					old = nil;
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Allow the camera to phase through walls.'
+	});
+end);
+
+velo.run(function()
+	local KillNotifications: table;
+	
+	KillNotifications = vape.Categories.Render:CreateModule({
+		["Name"] = 'KillNotifications',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				KillNotifications:Clean(vapeEvents.PlayerKill.Event:Connect(function(killer: any, victim: any)
+					if victim == lplr.Name and killer ~= lplr.Name then
+						notif('KillNotifications', killer..' killed you!', 5);
+					end;
+				end));
+			end;
+		end,
+		["Tooltip"] = 'Sends a notification of who killed you.'
+	});
+end);
+
+velo.run(function()
+	local AutoDetonate: table;
+	local SafeCheck: table;
+	local localc4: any;
+	local ticks: number = 0;
+	local rayParams: RaycastParams = RaycastParams.new();
+	rayParams.CollisionGroup = 'ClientBullet';
+	rayParams.FilterType = Enum.RaycastFilterType.Exclude;
+	
+	AutoDetonate = vape.Categories.Utility:CreateModule({
+		["Name"] = 'AutoDetonate',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				AutoDetonate:Clean(collectionService:GetInstanceAddedSignal('C4'):Connect(function(c4: any)
+					if c4:GetAttribute('UserId') == lplr.UserId then
+						localc4 = c4;
+					end;
+				end));
+	
+				for _: any, c4: any in collectionService:GetTagged('C4') do
+					if c4:GetAttribute('UserId') == lplr.UserId then
+						localc4 = c4;
+					end;
+				end;
+	
+				repeat
+					local backpack: Backpack? = lplr:FindFirstChildWhichIsA('Backpack');
+	
+					if backpack and localc4 then
+						local tool: Instance? = backpack:FindFirstChild('C4 Explosive');
+	
+						if tool then
+							local entity: any = entitylib.EntityPosition({
+								["Players"] = true,
+								["Part"] = 'RootPart',
+								["Range"] = 25,
+								["Origin"] = localc4.Position
+							});
+	
+							if entity then
+								rayParams.FilterDescendantsInstances = {entity.Character, lplr.Character, localc4};
+	
+								local rootdiff: any = (entitylib.character.RootPart.Position - localc4.Position);
+								local ray: RaycastResult? = workspace:Raycast(localc4.Position, (entity.RootPart.Position - localc4.Position), rayParams);
+								if SafeCheck["Enabled"] and not ray then
+									ray = not (workspace:Raycast(localc4.Position, rootdiff, rayParams) or rootdiff.Magnitude > 40);
+								end;
+	
+								if not ray then
+									ticks += 1;
+									if ticks > 3 then
+										local lastEquip: Tool? = lplr.Character:FindFirstChildWhichIsA('Tool');
+										entitylib.character.Humanoid:EquipTool(tool);
+	
+										task.spawn(function()
+											replicatedStorage.Remotes.C4.ActivateC4:InvokeServer();
+										end);
+	
+										if lastEquip then
+											entitylib.character.Humanoid:EquipTool(lastEquip);
+										else
+											entitylib.character.Humanoid:UnequipTools();
+										end;
+									end;
+	
+									task.wait(0.05);
+									continue;
+								end;
+							end;
+						end;
+					end;
+	
+					ticks = 0;
+					task.wait(0.05);
+				until not AutoDetonate["Enabled"];
+			end;
+		end,
+		["Tooltip"] = 'Automatically detonate when enemies are nearby.'
+	});
+	SafeCheck = AutoDetonate:CreateToggle({
+		["Name"] = 'Safety Check'
+	});
+end);
+
+velo.run(function()
+	local AutoReload: table;
+	local HotSwap: table;
+	local thread: any, oldplaysound: any;
+	local priority: table = {
+		["M4A1"] = 1,
+		["AK-47"] = 1,
+		["MP5"] = 1,
+		["FAL"] = 1,
+		["Remington 870"] = 2,
+		["M9"] = 3,
+		["Revolver"] = 4
+	};
+	
+	local getWeapon: () -> any = function(): any
+		local items: table = {};
+		local backpack: Backpack? = lplr:FindFirstChildWhichIsA('Backpack');
+		if backpack then
+			for _: any, tool: any in backpack:GetChildren() do
+				if tool:GetAttribute('FireRate') and (tool:GetAttribute('Local_ReloadSession') or 0) <= 0 and tool.Name ~= 'Taser' and tool.Name ~= 'M700' then
+					table.insert(items, tool);
+				end;
+			end;
+	
+			table.sort(items, function(a: any, b: any)
+				return (priority[a.Name] or 100) < (priority[b.Name] or 100);
+			end);
+	
+			return items[1];
+		end;
+	end;
+	
+	AutoReload = vape.Categories.Utility:CreateModule({
+		["Name"] = 'AutoReload',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				local gui: any = lplr.PlayerGui.Home.hud.BottomRightFrame.GunFrame.BulletsLabel;
+				if gui then
+					AutoReload:Clean(gui:GetPropertyChangedSignal('Text'):Connect(function()
+						if gui.Text ~= '...' then
+							local tool: any = debug.getupvalue(pl.Shoot, 1);
+							if tool and tool:GetAttribute('Local_CurrentAmmo') <= 0 then
+								task.spawn(pl.Reload);
+	
+								if HotSwap["Enabled"] then
+									local weapon: any = getWeapon();
+	
+									if weapon then
+										entitylib.character.Humanoid:EquipTool(weapon);
+									end;
+								end;
+							end;
+						end;
+					end));
+	
+					oldplaysound = hookfunction(pl.PlaySound, function(sound: any)
+						local obj: any = debug.getupvalue(pl.Shoot, 1);
+						obj = obj and obj:FindFirstChild('Handle');
+						obj = obj and obj:FindFirstChild(sound);
+	
+						if obj then
+							local clone: any = obj:Clone();
+							clone.Parent = obj.Parent;
+							clone:Play();
+	
+							task.delay(5, clone.Destroy, clone);
+						end;
+					end);
+				end;
+			else
+				if oldplaysound then
+					if restorefunction then
+						restorefunction(pl.PlaySound);
+					else
+						hookfunction(pl.PlaySound, oldplaysound);
+					end;
+	
+					oldplaysound = nil;
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Automatically reload after reaching 0 bullets'
+	});
+	HotSwap = AutoReload:CreateToggle({
+		["Name"] = 'Auto Swap',
+		["Tooltip"] = 'Automatically swap weapons when reloading'
+	});
+end);
+
+velo.run(function()
+	local AutoTeam: table;
+	
+	AutoTeam = vape.Categories.Utility:CreateModule({
+		["Name"] = 'AutoTeam',
+		["Function"] = function(callback: boolean): ()
+			if callback and lplr.Team == teams.Neutral then
+				local gui: Instance? = lplr.PlayerGui:FindFirstChild('TeamsFrame', true);
+				if gui then
+					for _: any, holder: any in gui:GetChildren() do
+						if holder.Button.AutoButtonColor then
+							pickTeam(holder.Button);
+							break;
+						end;
+					end;
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Automatically join a team when joining the server'
+	});
+end);
+
+velo.run(function()
+	local AutoToxic: table;
+	local toggles: table, lists: table, cloned: table, presets: table = {}, {}, {}, {};
+	
+	local sendMessage: (name: any, obj: any, default: any) -> () = function(name: any, obj: any, default: any): ()
+		local message: any = default;
+		if #lists[name].ListEnabled > 0 then
+			if #cloned[name] <= 0 then
+				cloned[name] = table.clone(lists[name].ListEnabled);
+			end;
+	
+			local entry: number = Random.new():NextInteger(1, #cloned[name]);
+			message = cloned[name][entry];
+			table.remove(cloned[name], entry);
+		end;
+	
+		if not message then return; end;
+	
+		message = message and message:gsub('<obj>', obj or '') or '';
+		if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+			if textChatService:CanUserChatAsync(lplr.UserId) then
+				textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(message);
+			else
+				textChatService.ChatInputBarConfiguration.TargetTextChannel:SendPresetAsync(presets[message] or presets["So close"]);
+			end;
+		else
+			replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, 'All');
+		end;
+	end;
+	
+	AutoToxic = vape.Categories.Utility:CreateModule({
+		["Name"] = 'AutoToxic',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				AutoToxic:Clean(vapeEvents.CheaterKicked.Event:Connect(function(plr: any)
+					sendMessage('Kicked', plr, 'skill issue cheat | <obj>');
+				end));
+			end;
+		end,
+		["Tooltip"] = 'Says a message after a cheater gets kicked with CheatDetector enabled.'
+	});
+	for _: any, v: any in {'Kicked'} do
+		cloned[v] = {};
+		toggles[v] = AutoToxic:CreateToggle({
+			["Name"] = v..' ',
+			["Function"] = function(callback: boolean): ()
+				if lists[v] then
+					lists[v].Object.Visible = callback;
+				end;
+			end,
+			["Default"] = true
+		});
+		lists[v] = AutoToxic:CreateTextList({
+			["Name"] = v,
+			["Darker"] = true,
+			["Function"] = function(): ()
+				table.clear(cloned[v]);
+			end
+		});
+	end;
+	
+	pcall(function()
+		for _: any, group: any in textChatService:GetPresetsAsync().categoryGroups do
+			for _: any, category: any in group.categories do
+				for _: any, message: any in category.messages do
+					presets[message.value] = message.presetId;
+				end;
+			end;
+		end;
+	end);
+end);
+
+velo.run(function()
+	local CheatDetector: table;
+	local AddTarget: table;
+	local Teleport: table;
+	local positions: table = {};
+	local overlap: OverlapParams = OverlapParams.new();
+	overlap.CollisionGroup = 'Players';
+	overlap.FilterDescendantsInstances = {workspace.CarContainer, workspace.Doors};
+	overlap.FilterType = Enum.RaycastFilterType.Exclude;
+	local carOverlap: OverlapParams = OverlapParams.new();
+	carOverlap.FilterDescendantsInstances = {workspace.CarContainer};
+	carOverlap.FilterType = Enum.RaycastFilterType.Include;
+	carOverlap.MaxParts = 1;
+	
+	local whiteliststates: table = {
+		[Enum.HumanoidStateType.Running] = true,
+		[Enum.HumanoidStateType.Jumping] = true,
+		[Enum.HumanoidStateType.Freefall] = true,
+		[Enum.HumanoidStateType.Landed] = true,
+		[Enum.HumanoidStateType.FallingDown] = true,
+		[Enum.HumanoidStateType.GettingUp] = true,
+		[Enum.HumanoidStateType.Climbing] = true,
+		[Enum.HumanoidStateType.Seated] = true,
+		[Enum.HumanoidStateType.Ragdoll] = true,
+		[Enum.HumanoidStateType.Dead] = true,
+		[Enum.HumanoidStateType.None] = true
+	};
+	
+	CheatDetector = vape.Categories.Utility:CreateModule({
+		["Name"] = 'CheatDetector',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				CheatDetector:Clean(vapeEvents.CheatFlagged.Event:Connect(function(plr: any, flagType: any)
+					notif('CheatDetector', 'This player may be cheating! ('..flagType..'): '..plr.Name, 60, 'warning');
+					if AddTarget["Enabled"] then
+						tempTargets[plr.Name] = true;
+					end;
+	
+					local entity: any = entitylib.getEntity(plr);
+					if entity then
+						entitylib.Events.EntityUpdated:Fire(entity);
+						if AddTarget["Enabled"] then
+							entity.Target = true;
+						end;
+					end;
+				end));
+	
+				CheatDetector:Clean(entitylib.Events.EntityRemoved:Connect(function(entity: any)
+					positions[entity] = nil;
+				end));
+	
+				local lastDelta: number = 0;
+				repeat
+					for _: any, entity: any in entitylib.List do
+						if entity.Health > 0 and entity.Player and not cheats.Flagged[entity.Player.UserId] then
+							local playerPos: any = entity.RootPart.Position;
+	
+							if not checkPoint(entity.Head.Position, overlap) then
+								cheats:Flag(entity.Player, 'phase/noclip', 20);
+							end;
+	
+							if not whiteliststates[entity.Humanoid:GetState()] then
+								cheats:Flag(entity.Player, 'invalid state '..entity.Humanoid:GetState().Name, 1);
+							end;
+	
+							local velo: Vector3 = entity.RootPart.AssemblyLinearVelocity;
+							if not entity.Humanoid.SeatPart then
+								if (velo * Vector3.new(1, 0, 1)).Magnitude > 26 then
+									if #workspace:GetPartBoundsInRadius(playerPos, 30, carOverlap) <= 0 then
+										cheats:Flag(entity.Player, 'speed', 20);
+									end;
+								end;
+	
+								if positions[entity] then
+									if Teleport["Enabled"] and ((playerPos - positions[entity][1]) * Vector3.new(1, 0, 1)).Magnitude > 50 and #workspace:GetPartBoundsInRadius(playerPos, 30, carOverlap) <= 0 then
+										local canFlag: boolean = entity.Player.Team ~= teams.Inmates or (os.clock() - entity.SpawnTime) > 0.1;
+	
+										if canFlag then
+											cheats:Flag(entity.Player, 'teleport', 1);
+										end;
+									end;
+								end;
+	
+								if velo.Y > 50 then
+									cheats:Flag(entity.Player, 'highjump', 20);
+								end;
+	
+								if not positions[entity] or (os.clock() - positions[entity][2]) > 0.2 then
+									positions[entity] = {playerPos, os.clock()};
+								end;
+							else
+								positions[entity] = {playerPos, os.clock()};
+							end;
+						end;
+					end;
+	
+					lastDelta = task.wait(0.05);
+				until not CheatDetector["Enabled"];
+			else
+				table.clear(positions);
+				cheats:Clear();
+			end;
+		end,
+		["Tooltip"] = 'Sends alerts for any possible cheaters.'
+	});
+	AddTarget = CheatDetector:CreateToggle({
+		["Name"] = 'Temporary Target',
+		["Tooltip"] = 'Add temporary combat module priority for cheaters.',
+		["Default"] = true
+	});
+	Teleport = CheatDetector:CreateToggle({
+		["Name"] = 'Teleport',
+		["Tooltip"] = 'Detect people teleporting (EXPERIMENTAL)',
+		["Default"] = true
+	});
+end);
+
+velo.run(function()
+	local Disabler: table;
+	local old: any;
+	
+	local entityAdded: (entity: any) -> () = function(entity: any): ()
+		task.defer(function()
+			old = getconnections(entity.Head:GetPropertyChangedSignal('CanCollide'))[1];
+			if old then
+				old:Disable();
+			end;
+		end);
+	end;
+	
+	Disabler = vape.Categories.Utility:CreateModule({
+		["Name"] = 'Disabler',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				Disabler:Clean(entitylib.Events.LocalAdded:Connect(entityAdded));
+				if entitylib.isAlive then
+					task.spawn(entityAdded, entitylib.character);
+				end;
+			else
+				if old then
+					old:Enable();
+					old = nil;
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Fixes phase with Character mode.',
+		["ExtraText"] = function()
+			return 'Phase';
+		end
+	});
+end);
+
+velo.run(function()
+	local AutoArmor: table;
+	local pickups: table = {};
+	
+	AutoArmor = vape.Categories.Inventory:CreateModule({
+		["Name"] = 'AutoArmor',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				pickups = workspace.Prison_ITEMS.clothes:GetChildren();
+	
+				AutoArmor:Clean(workspace.Prison_ITEMS.clothes.ChildAdded:Connect(function(pickup: any)
+					table.insert(pickups, pickup);
+				end));
+	
+				AutoArmor:Clean(workspace.Prison_ITEMS.clothes.ChildRemoved:Connect(function(pickup: any)
+					local index: number? = table.find(pickups, pickup);
+					if index then
+						table.remove(pickups, index);
+					end;
+				end));
+	
+				repeat
+					if entitylib.isAlive and entitylib.character.Humanoid.MaxHealth <= 100 then
+						local localpos: any = entitylib.character.RootPart.Position;
+	
+						for _: any, pickup: any in pickups do
+							if (pickup:GetPivot().Position - localpos).Magnitude < 10 and gamepasses[pickup:GetAttribute('RequiredGamepass')] and AutoArmor["Enabled"] then
+								if pickup.Name == 'Light Vest' and gamepasses[lplr.Team == teams.Criminals and 'Mafia' or 'Riot Police'] then
+									continue;
+								end;
+	
+								replicatedStorage.Remotes.InteractWithItem:InvokeServer(pickup:FindFirstChildWhichIsA('BasePart'));
+							end;
+						end;
+					end;
+	
+					task.wait(0.05);
+				until not AutoArmor["Enabled"];
+			else
+				table.clear(pickups);
+			end;
+		end,
+		["Tooltip"] = 'Automatically equip armor from the wall.'
+	});
+end);
+
+velo.run(function()
+	local AutoHeal: table;
+	local healItems: table = {
+		["Breakfast"] = true,
+		["Lunch"] = true,
+		["Dinner"] = true
+	};
+	
+	AutoHeal = vape.Categories.Inventory:CreateModule({
+		["Name"] = 'AutoHeal',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				repeat
+					local entity: any = entitylib.isAlive and entitylib.character;
+					if entity and entity.Humanoid.Health <= 85 then
+						local healTool: any;
+						local backpack: Backpack? = lplr:FindFirstChildWhichIsA('Backpack');
+						if backpack then
+							for _: any, tool: any in backpack:GetChildren() do
+								if healItems[tool.Name] then
+									healTool = tool;
+								end;
+							end;
+	
+							if healTool and (os.clock() - (healTool:GetAttribute('Client_LastConsumedAt') or 0)) >= 3 then
+								local lastEquip: Tool? = entity.Character:FindFirstChildWhichIsA('Tool');
+								entity.Humanoid:EquipTool(healTool);
+								healTool:SetAttribute('Quantity', healTool:GetAttribute('Quantity') - 1);
+								healTool:SetAttribute('Client_LastConsumedAt', os.clock());
+								notif('AutoHeal', 'Quantity: '..healTool:GetAttribute('Quantity'), 3);
+								replicatedStorage.Remotes.EatFood:FireServer();
+	
+								if lastEquip then
+									entity.Humanoid:EquipTool(lastEquip);
+								else
+									entity.Humanoid:UnequipTools();
+								end;
+							end;
+						end;
+					end;
+	
+					task.wait(0.05);
+				until not AutoHeal["Enabled"];
+			end;
+		end,
+		["Tooltip"] = 'Automatically heal damage with consumables.'
+	});
+end);
+
+velo.run(function()
+	local AutoHotbar: table;
+	local sortList: table = {};
+	
+	local doSorting: () -> () = function(): ()
+		table.sort(pl.SwitchTable, function(a: any, b: any)
+			return (sortList[a.Tool.name] or 999 + a.Slot) < (sortList[b.Tool.name] or 999 + b.Slot);
+		end);
+	
+		task.spawn(pl.SwitchUpdate);
+	end;
+	
+	local entityAdded: () -> () = function(): ()
+		local backpack: Backpack? = lplr:FindFirstChildWhichIsA('Backpack');
+		if backpack then
+			AutoHotbar:Clean(backpack.ChildAdded:Connect(function(tool: any)
+				if sortList[tool.Name] then
+					task.defer(doSorting);
+				end;
+			end));
+		end;
+	
+		doSorting();
+	end;
+	
+	AutoHotbar = vape.Categories.Inventory:CreateModule({
+		["Name"] = 'AutoHotbar',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				AutoHotbar:Clean(entitylib.Events.LocalAdded:Connect(entityAdded));
+				if entitylib.isAlive then
+					task.spawn(entityAdded);
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Automatically sort hotbar entries'
+	});
+	AutoHotbar:CreateTextList({
+		["Name"] = 'Sort Order',
+		["Default"] = {'1/AK-47', '1/MP5', '1/M4A1', '2/Remington 870', '2/M700', '3/M9', '3/Revolver', '4/Taser'},
+		["Function"] = function(list: {string}?): ()
+			table.clear(sortList);
+			for _: any, entry: any in list do
+				local data: {string} = entry:split('/');
+				local priority: number = tonumber(data[1]) or 999;
+				sortList[data[2] or ''] = priority;
+			end;
+		end
+	});
+end);
+
+velo.run(function()
+	local AutoPickup: table;
+	local items: table = {};
+	local pickupList: table = {};
+	
+	local addPickup: (pickup: any) -> () = function(pickup: any): ()
+		if pickup:IsA('Model') and pickup.Name ~= 'Model' and pickup:GetAttribute('ToolName') then
+			table.insert(items, {
+				pickup,
+				pickup.Name == 'TouchGiver'
+			});
+		end;
+	end;
+	
+	local hasTool: (name: any, backpack: any) -> any = function(name: any, backpack: any): any
+		local tool: Tool? = lplr.Character:FindFirstChildWhichIsA('Tool');
+		return backpack:FindFirstChild(name) or tool and tool.Name == name and tool;
+	end;
+	
+	AutoPickup = vape.Categories.Inventory:CreateModule({
+		["Name"] = 'AutoPickup',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				for _: any, pickup: any in workspace:GetChildren() do
+					task.spawn(addPickup, pickup);
+				end;
+	
+				for _: any, pickup: any in workspace:QueryDescendants('Model > .TouchGiver') do
+					task.spawn(addPickup, pickup);
+				end;
+	
+				AutoPickup:Clean(workspace.ChildAdded:Connect(addPickup));
+				AutoPickup:Clean(workspace.ChildRemoved:Connect(function(pickup: any)
+					for index: any, data: any in items do
+						if data[1] == pickup then
+							table.remove(items, index);
+							break;
+						end;
+					end;
+				end));
+	
+				repeat
+					if entitylib.isAlive then
+						local localpos: any = entitylib.character.RootPart.Position;
+						local backpack: Backpack? = lplr:FindFirstChildWhichIsA('Backpack');
+	
+						if backpack then
+							for _: any, pickup: any in items do
+								if pickup[1].PrimaryPart and (pickup[1].PrimaryPart.Position - localpos).Magnitude < 12 then
+									local tool: any = pickup[1]:GetAttribute('ToolName');
+									if hasTool(tool, backpack) then
+										continue;
+									end;
+	
+									if pickup[2] and not table.find(pickupList[lplr.Team == teams.Guards and 'Guard' or (lplr.Team == teams.Criminals and 'Criminal' or 'Prisoner')].ListEnabled, tool) then
+										continue;
+									end;
+	
+									replicatedStorage.Remotes.GiverPressed:FireServer(pickup[1]);
+								end;
+							end;
+						end;
+					end;
+	
+					task.wait(0.05);
+				until not AutoPickup["Enabled"];
+			else
+				table.clear(items);
+			end;
+		end,
+		["Tooltip"] = 'Automatically grab item pickups'
+	});
+	
+	for _: any, team: any in {'Prisoner', 'Guard', 'Criminal'} do
+		pickupList[team] = AutoPickup:CreateTextList({
+			["Name"] = team,
+			["Default"] = {team == 'Criminal' and 'AK-47' or 'MP5', 'Remington 870'},
+			["Placeholder"] = 'item'
+		});
+	end;
+end);
+
+velo.run(function()
+	local BulletTracers: table;
+	local Material: table;
+	local Color: table;
+	local Lifetime: table;
+	local Fade: table;
+	local DrawingToggle: table;
+	local drawingobjs: table = {};
+	
+	BulletTracers = vape.Legit:CreateModule({
+		["Name"] = 'BulletTracers',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				tracerHook:Add('BulletTracers', function(...: any)
+					local origin: any, dir: any = ...;
+					if vtool then
+						origin = vtool.Muzzle.Position;
+					end;
+	
+					local velocity: Vector3 = CFrame.lookAt(origin, dir).LookVector * 1000;
+					if DrawingToggle["Enabled"] then
+						local obj: any = Drawing.new('Line');
+						obj.Thickness = 2;
+						obj.Color = Color3.fromHSV(Color["Hue"], Color["Sat"], Color["Value"]);
+						drawingobjs[obj] = {origin, origin + velocity, os.clock()};
+						task.delay(Lifetime["Value"], function()
+							drawingobjs[obj] = nil;
+							obj.Visible = false;
+							obj:Remove();
+						end);
+					else
+						local obj: Part = Instance.new('Part');
+						obj.Size = Vector3.new(0.1, 0.1, velocity.Magnitude);
+						obj.CFrame = CFrame.lookAt(origin + (velocity / 2), origin + velocity);
+						obj.CanCollide = false;
+						obj.CanQuery = false;
+						obj.Anchored = true;
+						obj.Material = Enum.Material[Material["Value"]];
+						obj.Color = Color3.fromHSV(Color["Hue"], Color["Sat"], Color["Value"]);
+						obj.Transparency = 1 - Color["Opacity"];
+						obj.Parent = workspace;
+						if Fade["Enabled"] then
+							local tween: Tween = tweenService:Create(obj, TweenInfo.new(Lifetime["Value"]), {
+								["Transparency"] = 1
+							});
+							tween.Completed:Connect(function()
+								tween:Destroy();
+							end);
+							tween:Play();
+						end;
+	
+						task.delay(Lifetime["Value"], obj.Destroy, obj);
+					end;
+	
+					return true;
+				end, 1);
+	
+				if DrawingToggle["Enabled"] then
+					BulletTracers:Clean(runService.RenderStepped:Connect(function()
+						for obj: any, data: any in drawingobjs do
+							local from: Vector3, vis: boolean = gameCamera:WorldToViewportPoint(data[1]);
+							local to: Vector3, vis2: boolean = gameCamera:WorldToViewportPoint(data[2]);
+							if vis and vis2 then
+								obj.Visible = true;
+								obj.From = Vector2.new(from.X, from.Y);
+								obj.To = Vector2.new(to.X, to.Y);
+								if Fade["Enabled"] then
+									obj.Transparency = Color["Opacity"] * (1 - math.clamp((os.clock() - data[3]) / Lifetime["Value"], 0, 1));
+								end;
+							else
+								obj.Visible = false;
+							end;
+						end;
+					end));
+				end;
+			else
+				tracerHook:Remove('BulletTracers');
+			end;
+		end,
+		["Tooltip"] = 'Allow you to customize bullet tracers.'
+	});
+	local materials: table = {'SmoothPlastic'};
+	for _: any, v: any in Enum.Material:GetEnumItems() do
+		if v.Name ~= 'SmoothPlastic' then
+			table.insert(materials, v.Name);
+		end;
+	end;
+	Material = BulletTracers:CreateDropdown({
+		["Name"] = 'Material',
+		["List"] = materials
+	});
+	Color = BulletTracers:CreateColorSlider({
+		["Name"] = 'Tracer Color',
+		["DefaultOpacity"] = 0.5
+	});
+	Lifetime = BulletTracers:CreateSlider({
+		["Name"] = 'Lifetime',
+		["Min"] = 0,
+		["Max"] = 0.5,
+		["Default"] = 0.2,
+		["Decimal"] = 10
+	});
+	Fade = BulletTracers:CreateToggle({
+		["Name"] = 'Fade',
+		["Default"] = true
+	});
+	DrawingToggle = BulletTracers:CreateToggle({
+		["Name"] = 'Drawing',
+		["Function"] = function(): ()
+			if BulletTracers["Enabled"] then
+				BulletTracers:Toggle();
+				BulletTracers:Toggle();
+			end;
+		end
+	});
+end);
+
+velo.run(function()
+	local Crosshair: table;
+	local Image: table;
+	local old: any;
+	
+	Crosshair = vape.Legit:CreateModule({
+		["Name"] = 'Crosshair',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				debug.setconstant(oldequip or pl.Equip, 30, Image["Value"]:find('rbxasset') and Image["Value"] or isfile(Image["Value"]) and getcustomasset(Image["Value"]) or '');
+			else
+				debug.setconstant(oldequip or pl.Equip, 30, 'rbxassetid://98794608762931');
+			end;
+		end,
+		["Tooltip"] = 'Change the crosshair icon'
+	});
+	Image = Crosshair:CreateTextBox({
+		["Name"] = 'Image',
+		["Placeholder"] = 'assetid',
+		["Function"] = function(): ()
+			if Crosshair["Enabled"] then
+				debug.setconstant(oldequip or pl.Equip, 30, Image["Value"]:find('rbxasset') and Image["Value"] or isfile(Image["Value"]) and getcustomasset(Image["Value"]) or '');
+			end;
+		end
+	});
+end);
+
+velo.run(function()
+	local DamageIndicator: table;
+	local FontOption: table;
+	local ColorV: table;
+	local Size: table;
+	local tentity: any, lentity: any;
+	local thealth: number, ttimer: number = 0, 0;
+	local indi: TextLabel, indipart: Part, indithread: any;
+	
+	local renderStepForLoop: (startVal: any, endVal: any, increment: any, callback: any) -> () = function(startVal: any, endVal: any, increment: any, callback: any): ()
+		while true do
+			if endVal >= startVal then
+				if callback(startVal) then
+					return;
+				else
+					local diff: number = tick();
+					runService.RenderStepped:Wait();
+					startVal = startVal + increment * (tick() - diff) * 60;
+				end;
+			else
+				callback(endVal);
+				return;
+			end;
+		end;
+	end;
+	
+	local createIndicator: (damage: any, pos: any) -> () = function(damage: any, pos: any): ()
+		if indithread then
+			task.cancel(indithread);
+			indi.Text = math.ceil(tonumber(indi.Text) + damage);
+			indipart.Position = pos;
+		else
+			indipart = Instance.new('Part');
+			indipart.Size = Vector3.zero;
+			indipart.Position = pos;
+			indipart.CanCollide = false;
+			indipart.CanQuery = false;
+			indipart.Anchored = true;
+			indipart.Parent = workspace;
+			local billboard: BillboardGui = Instance.new('BillboardGui');
+			billboard.Adornee = indipart;
+			billboard.Size = UDim2.new(15, 250, 15, 250);
+			billboard.AlwaysOnTop = true;
+			billboard.Parent = indipart;
+			indi = Instance.new('TextLabel');
+			indi.BackgroundTransparency = 1;
+			indi.TextStrokeTransparency = 0;
+			indi.Size = UDim2.fromScale(1, 0.075);
+			indi.Position = UDim2.fromScale(0.5, 0.5);
+			indi.AnchorPoint = Vector2.new(0.5, 0.5);
+			indi.Text = math.ceil(damage);
+			indi.TextColor3 = Color3.fromHSV(ColorV["Hue"], ColorV["Sat"], ColorV["Value"]);
+			indi.TextScaled = true;
+			indi.Font = Enum.Font[FontOption["Value"]];
+			indi.Parent = billboard;
+		end;
+	
+		if indithread then
+			task.cancel(indithread);
+			indithread = nil;
+		end;
+	
+		indithread = task.spawn(function()
+			local sign: number = math.sign(math.random() - 0.5);
+			renderStepForLoop(0, 100, 3, function(value: any)
+				local percent: any = value / 100;
+				local val0: any = tweenService:GetValue(percent, Enum.EasingStyle.Sine, Enum.EasingDirection.In);
+				local val1: any = tweenService:GetValue(percent, Enum.EasingStyle.Back, Enum.EasingDirection.In);
+				local scale: any = 1 - 0.5 * val1;
+				indi.Position = UDim2.new(0.5 + 0.125 * val0 * sign, 0, 0.5 + 0.125 * val1, 0);
+				indi.Size = UDim2.new(1 * scale, 0, 0.075 * scale * (v197 and 1 or 0.75), 0);
+				indi.Rotation = percent ^ 4 * 260 * sign;
+			end);
+	
+			indipart:Destroy();
+			indipart = nil;
+			indithread = nil;
+		end);
+	end;
+	
+	DamageIndicator = vape.Legit:CreateModule({
+		["Name"] = 'DamageIndicator',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				tracerHook:Add('DamageIndicator', function(...: any)
+					local part: any = debug.getstack(4, 13);
+					if typeof(part) == 'Instance' then
+						for _: any, v: any in entitylib.List do
+							if part:IsDescendantOf(v.Character) and entitylib.isVulnerable(v, true) then
+								if ttimer <= os.clock() or v ~= tentity then
+									thealth = v.Health;
+								end;
+	
+								tentity = v;
+								ttimer = os.clock() + 0.5;
+								break;
+							end;
+						end;
+					end;
+				end);
+	
+				DamageIndicator:Clean(entitylib.Events.EntityUpdated:Connect(function(entity: any)
+					if entity == tentity and ttimer > os.clock() then
+						if entity ~= lentity then
+							if indi then
+								indi.Text = '0';
+							end;
+	
+							lentity = entity;
+						end;
+	
+						if thealth > entity.Health then
+							createIndicator(thealth - entity.Health, entity.Head.Position + Vector3.new(0, 2, 0));
+							thealth = entity.Health;
+						end;
+					end;
+				end));
+			else
+				tracerHook:Remove('DamageIndicator');
+			end;
+		end,
+		["Tooltip"] = 'Add custom damage indicators for gun damage.'
+	});
+	local fontitems: table = {'GothamBlack'};
+	for _: any, v: any in Enum.Font:GetEnumItems() do
+		if v.Name ~= 'GothamBlack' then
+			table.insert(fontitems, v.Name);
+		end;
+	end;
+	FontOption = DamageIndicator:CreateDropdown({
+		["Name"] = 'Font',
+		["List"] = fontitems,
+		["Function"] = function(val: string): ()
+			if indi then
+				indi.Font = Enum.Font[val];
+			end;
+		end
+	});
+	ColorV = DamageIndicator:CreateColorSlider({
+		["Name"] = 'Color',
+		["DefaultHue"] = 0,
+		["Function"] = function(hue: number, sat: number, val: number): ()
+			if indi then
+				indi.Color = Color3.fromHSV(hue, sat, val);
+			end;
+		end
+	});
+end);
+
+velo.run(function()
+	local HitSound: table;
+	local Value: table;
+	local Volume: table;
+	local PitchShift: table;
+	local old: any, sounds: table = nil, {};
+	
+	HitSound = vape.Legit:CreateModule({
+		["Name"] = 'HitSound',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				local played: any;
+				tracerHook:Add('HitSound', function(...: any)
+					local part: any = debug.getstack(4, 13);
+					if typeof(part) == 'Instance' then
+						for _: any, v: any in entitylib.List do
+							if part:IsDescendantOf(v.Character) and entitylib.isVulnerable(v, true) then
+								if #sounds > 0 and not played then
+									local sound: Sound = Instance.new('Sound');
+									sound.SoundId = sounds[math.random(1, #sounds)];
+									sound.PlayOnRemove = true;
+									sound.PlaybackSpeed = PitchShift["Enabled"] and 1 + ((0.5 - math.random()) / 10) or 1;
+									sound.Volume = Volume["Value"];
+									sound.Parent = workspace;
+									sound:Destroy();
+	
+									played = task.defer(function()
+										played = nil;
+									end);
+								end;
+	
+								break;
+							end;
+						end;
+					end;
+				end);
+			else
+				tracerHook:Remove('HitSound');
+			end;
+		end,
+		["Tooltip"] = 'Custom hit sound'
+	});
+	Value = HitSound:CreateTextList({
+		["Name"] = 'Sounds',
+		["Placeholder"] = 'sound id (roblox or file path)',
+		["Function"] = function(list: {string}?): ()
+			table.clear(sounds);
+			for index: any, sound: any in list or {} do
+				sounds[index] = sound:find('rbxasset') and sound or isfile(sound) and getcustomasset(sound) or nil;
+			end;
+		end
+	});
+	Volume = HitSound:CreateSlider({
+		["Name"] = 'Volume',
+		["Min"] = 0,
+		["Max"] = 2,
+		["Default"] = 1,
+		["Decimal"] = 10
+	});
+	PitchShift = HitSound:CreateToggle({
+		["Name"] = 'Pitch Shift'
+	});
+end);
+
+velo.run(function()
+	local KillSound: table;
+	local Value: table;
+	local Volume: table;
+	local PitchShift: table;
+	local old: any, sounds: table = nil, {};
+	
+	KillSound = vape.Legit:CreateModule({
+		["Name"] = 'KillSound',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				KillSound:Clean(vapeEvents.PlayerKill.Event:Connect(function(plr: any)
+					if plr == lplr.Name and #sounds > 0 then
+						local sound: Sound = Instance.new('Sound');
+						sound.SoundId = sounds[math.random(1, #sounds)];
+						sound.PlayOnRemove = true;
+						sound.PlaybackSpeed = PitchShift["Enabled"] and 1 + ((0.5 - math.random()) / 10) or 1;
+						sound.Volume = Volume["Value"];
+						sound.Parent = workspace;
+						sound:Destroy();
+					end;
+				end));
+			end;
+		end,
+		["Tooltip"] = 'Custom kill sound'
+	});
+	Value = KillSound:CreateTextList({
+		["Name"] = 'Sounds',
+		["Placeholder"] = 'sound id (roblox or file path)',
+		["Function"] = function(list: {string}?): ()
+			table.clear(sounds);
+			for index: any, sound: any in list or {} do
+				sounds[index] = sound:find('rbxasset') and sound or isfile(sound) and getcustomasset(sound) or nil;
+			end;
+		end
+	});
+	Volume = KillSound:CreateSlider({
+		["Name"] = 'Volume',
+		["Min"] = 0,
+		["Max"] = 2,
+		["Default"] = 1,
+		["Decimal"] = 10
+	});
+	PitchShift = KillSound:CreateToggle({
+		["Name"] = 'Pitch Shift'
+	});
+end);
+
+velo.run(function()
+	local Viewmodel: table;
+	local Depth: table;
+	local Horizontal: table;
+	local Vertical: table;
+	local Sway: table;
+	local ForceField: table;
+	local ColorSl: table;
+	local handle: Instance?;
+	local old: any;
+	local moveSpring: any = spring.new();
+	local aimSpring: any = spring.new({["Speed"] = 15});
+	
+	local toolAdded: (tool: any) -> () = function(tool: any): ()
+		if tool and tool:IsA('Tool') then
+			if old then
+				for _: any, inst: any in old:QueryDescendants('BasePart, Texture, Decal') do
+					inst.LocalTransparencyModifier = 0;
+				end;
+			end;
+	
+			if vtool then
+				vtool:Destroy();
+			end;
+	
+			old = tool;
+			vtool = tool:Clone();
+			handle = vtool:FindFirstChild('Handle');
+			vtool.Parent = gameCamera;
+	
+			for _: any, part: any in vtool:QueryDescendants('BasePart') do
+				part.Material = ForceField["Enabled"] and Enum.Material.ForceField or part.Material;
+				part.Color = ForceField["Enabled"] and Color3.fromHSV(ColorSl["Hue"], ColorSl["Sat"], ColorSl["Value"]) or part.Color;
+			end;
+	
+			for _: any, inst: any in old:QueryDescendants('BasePart, Texture, Decal') do
+				inst.LocalTransparencyModifier = 1;
+			end;
+		end;
+	end;
+	
+	local entityAdded: (entity: any) -> () = function(entity: any): ()
+		if vtool then
+			vtool:Destroy();
+			vtool = nil;
+			handle = nil;
+		end;
+	
+		Viewmodel:Clean(entity.Character.ChildAdded:Connect(toolAdded));
+		Viewmodel:Clean(entity.Character.ChildRemoved:Connect(function(tool: any)
+			if tool == old then
+				if vtool then
+					vtool:Destroy();
+					vtool = nil;
+				end;
+	
+				for _: any, inst: any in old:QueryDescendants('BasePart, Texture, Decal') do
+					inst.LocalTransparencyModifier = 0;
+				end;
+	
+				old = nil;
+			end;
+		end));
+	
+		toolAdded(entity.Character:FindFirstChildWhichIsA('Tool'));
+	end;
+	
+	Viewmodel = vape.Legit:CreateModule({
+		["Name"] = 'Viewmodel',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				tracerHook:Add('Viewmodel', function(...: any)
+					shootTimer = os.clock() + 0.3;
+				end, 0);
+	
+				Viewmodel:Clean(entitylib.Events.LocalAdded:Connect(entityAdded));
+				if entitylib.isAlive then
+					task.spawn(entityAdded, entitylib.character);
+				end;
+	
+				Viewmodel:Clean(runService.RenderStepped:Connect(function(dt: number)
+					if handle then
+						moveSpring.Target = entitylib.isAlive and entitylib.character.RootPart.AssemblyLinearVelocity * 0.005 or Vector3.zero;
+	
+						if Sway["Enabled"] then
+							if moveSpring.Target.Magnitude > 0.1 then
+								moveSpring.Target += (gameCamera.CFrame * CFrame.new(math.sin(tick() * 10) * 0.06, 0, 0)).Position - gameCamera.CFrame.Position;
+							else
+								moveSpring.Target += (gameCamera.CFrame * CFrame.new(0, math.sin(tick()) * 0.04, 0)).Position - gameCamera.CFrame.Position;
+							end;
+						end;
+	
+						local cf: any = (gameCamera.CFrame * CFrame.new(Horizontal["Value"], Vertical["Value"], -Depth["Value"])) + moveSpring:Update(dt);
+						aimSpring.Target = aimTimer > os.clock() and CFrame.lookAt(cf.Position, aimVec).LookVector or gameCamera.CFrame.LookVector;
+						handle.CFrame = CFrame.lookAlong(cf.Position, aimSpring:Update(dt)) * (CFrame.Angles(math.rad(math.max(shootTimer - os.clock(), 0) * 10), 0, 0) * CFrame.new(0, 0, math.max(shootTimer - os.clock(), 0)));
+						handle.AssemblyLinearVelocity = Vector3.zero;
+					end;
+				end));
+			else
+				tracerHook:Remove('Viewmodel');
+	
+				if old then
+					for _: any, inst: any in old:QueryDescendants('BasePart, Texture, Decal') do
+						inst.LocalTransparencyModifier = 0;
+					end;
+	
+					old = nil;
+				end;
+	
+				if vtool then
+					vtool:Destroy();
+					vtool = nil;
+					handle = nil;
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Custom viewmodel for guns'
+	});
+	Depth = Viewmodel:CreateSlider({
+		["Name"] = 'Depth',
+		["Min"] = 0,
+		["Max"] = 3,
+		["Default"] = 3,
+		["Decimal"] = 10
+	});
+	Horizontal = Viewmodel:CreateSlider({
+		["Name"] = 'Horizontal',
+		["Min"] = 0,
+		["Max"] = 2,
+		["Default"] = 2,
+		["Decimal"] = 10
+	});
+	Vertical = Viewmodel:CreateSlider({
+		["Name"] = 'Vertical',
+		["Min"] = -1.5,
+		["Max"] = 2,
+		["Default"] = -1.5,
+		["Decimal"] = 10
+	});
+	Sway = Viewmodel:CreateToggle({
+		["Name"] = 'Sway Effect',
+		["Default"] = true
+	});
+	ForceField = Viewmodel:CreateToggle({
+		["Name"] = 'ForceField Effect',
+		["Function"] = function(callback: boolean): ()
+			ColorSl.Object.Visible = callback;
+			if callback and Viewmodel["Enabled"] then
+				Viewmodel:Toggle();
+				Viewmodel:Toggle();
+			end;
+		end
+	});
+	ColorSl = Viewmodel:CreateColorSlider({
+		["Name"] = 'Color',
+		["Function"] = function(hue: number, sat: number, val: number): ()
+			if vtool then
+				for _: any, part: any in vtool:QueryDescendants('BasePart') do
+					part.Color = Color3.fromHSV(hue, sat, val);
+				end;
+			end;
+		end,
+		["Visible"] = false
+	});
+end);
