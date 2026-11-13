@@ -6762,9 +6762,82 @@ velo.run(function()
 end);
 
 velo.run(function()
+	local guardLighting: {string} = {'ClockTime', 'Brightness', 'ExposureCompensation', 'ShadowSoftness', 'EnvironmentDiffuseScale', 'EnvironmentSpecularScale', 'GlobalShadows', 'Ambient', 'OutdoorAmbient', 'ColorShift_Top', 'ColorShift_Bottom', 'FogColor', 'FogEnd', 'FogStart', 'Technology'};
+	local guardTerrain: {string} = {'WaterColor', 'WaterReflectance', 'WaterTransparency', 'WaterWaveSize', 'WaterWaveSpeed'};
+	local lightingGuard: table = {
+		["refs"] = 0,
+		["lighting"] = {},
+		["terrain"] = {},
+		["owned"] = {},
+		["listeners"] = {}
+	};
+	lightingGuard.own = function(object: Instance): Instance
+		lightingGuard.owned[object] = true;
+		object.Destroying:Once(function(): ()
+			lightingGuard.owned[object] = nil;
+		end);
+		return object;
+	end;
+	lightingGuard.isOwn = function(object: Instance?): boolean
+		return object ~= nil and lightingGuard.owned[object] == true;
+	end;
+	lightingGuard.acquire = function(lighting: {string}?, terrain: {string}?): ()
+		lightingGuard.refs += 1;
+		for _, prop: string in lighting or guardLighting do
+			if lightingGuard.lighting[prop] == nil then
+				pcall(function(): ()
+					lightingGuard.lighting[prop] = lightingService[prop];
+				end);
+			end;
+		end;
+		for _, prop: string in terrain or guardTerrain do
+			if lightingGuard.terrain[prop] == nil then
+				pcall(function(): ()
+					lightingGuard.terrain[prop] = workspace.Terrain[prop];
+				end);
+			end;
+		end;
+	end;
+	lightingGuard.release = function(): ()
+		lightingGuard.refs -= 1;
+		if lightingGuard.refs > 0 then
+			return;
+		end;
+		lightingGuard.refs = 0;
+		for prop: string, value: any in lightingGuard.lighting do
+			local ok: boolean = pcall(function(): ()
+				lightingService[prop] = value;
+			end);
+			if not ok and prop == 'Technology' and sethiddenproperty then
+				pcall(sethiddenproperty, lightingService, prop, value);
+			end;
+		end;
+		for prop: string, value: any in lightingGuard.terrain do
+			pcall(function(): ()
+				workspace.Terrain[prop] = value;
+			end);
+		end;
+		table.clear(lightingGuard.lighting);
+		table.clear(lightingGuard.terrain);
+	end;
+	lightingGuard.listen = function(callback: () -> ()): () -> ()
+		lightingGuard.listeners[callback] = true;
+		return function(): ()
+			lightingGuard.listeners[callback] = nil;
+		end;
+	end;
+	lightingGuard.notify = function(): ()
+		for callback: () -> () in lightingGuard.listeners do
+			task.spawn(callback);
+		end;
+	end;
+	vape.LightingGuard = lightingGuard;
+end);
+
+velo.run(function()
 	local Fullbright: table = {["Enabled"] = false};
 	local Mode: any;
-	local oldsettings: table = {};
+	local lightingGuard: any = vape.LightingGuard;
 	local flag: boolean;
 	local changeLighting: (prop: any) -> () = function(prop: any): ()
 		if flag then
@@ -6782,10 +6855,9 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				if Mode["Value"] == 'Lighting' then
-					for _: {string?}, v: table? in {'Ambient', 'OutdoorAmbient', 'Brightness'} do
-						oldsettings[v] = lightingService[v];
-					end;
+					lightingGuard.acquire({'Ambient', 'OutdoorAmbient', 'Brightness'}, {});
 					Fullbright:Clean(lightingService.Changed:Connect(changeLighting));
+					Fullbright:Clean(lightingGuard.release);
 					task.spawn(changeLighting);
 				else
 					local inst: PointLight = Instance.new('PointLight');
@@ -6798,10 +6870,6 @@ velo.run(function()
 				end;
 			else
 				flag = false;
-				for i: any, v: any in oldsettings do
-					lightingService[i] = v;
-				end;
-				table.clear(oldsettings);
 			end;
 		end,
 		["Tooltip"] = 'Increase the lighting of the world around you.'
@@ -9445,68 +9513,6 @@ velo.run(function()
 	local newobjects: table, oldobjects: table = {}, {};
 	local stashed: table = {};
 	local lightingGuard: any = vape.LightingGuard;
-	if not lightingGuard then
-		lightingGuard = {["refs"] = 0, ["lighting"] = {}, ["terrain"] = {}, ["owned"] = setmetatable({}, {["__mode"] = 'k'})};
-		local guardProps: {string} = {'ClockTime', 'Brightness', 'ExposureCompensation', 'ShadowSoftness', 'EnvironmentDiffuseScale', 'EnvironmentSpecularScale', 'GlobalShadows', 'Ambient', 'OutdoorAmbient', 'ColorShift_Top', 'ColorShift_Bottom', 'FogColor', 'FogEnd', 'FogStart'};
-		local guardWater: {string} = {'WaterColor', 'WaterReflectance', 'WaterTransparency', 'WaterWaveSize', 'WaterWaveSpeed'};
-		lightingGuard.own = function(object: Instance): Instance
-			lightingGuard.owned[object] = true;
-			return object;
-		end;
-		lightingGuard.isOwn = function(object: Instance?): boolean
-			return object ~= nil and lightingGuard.owned[object] == true;
-		end;
-		lightingGuard.acquire = function(): ()
-			if lightingGuard.refs == 0 then
-				table.clear(lightingGuard.lighting);
-				table.clear(lightingGuard.terrain);
-				for _, prop: string in guardProps do
-					pcall(function(): ()
-						lightingGuard.lighting[prop] = lightingService[prop];
-					end);
-				end;
-				pcall(function(): ()
-					lightingGuard.lighting.Technology = lightingService.Technology;
-				end);
-				for _, prop: string in guardWater do
-					pcall(function(): ()
-						lightingGuard.terrain[prop] = workspace.Terrain[prop];
-					end);
-				end;
-			end;
-			lightingGuard.refs += 1;
-		end;
-		lightingGuard.release = function(): ()
-			lightingGuard.refs -= 1;
-			if lightingGuard.refs > 0 then
-				return;
-			end;
-			lightingGuard.refs = 0;
-			for prop: string, value: any in lightingGuard.lighting do
-				if prop ~= 'Technology' then
-					pcall(function(): ()
-						lightingService[prop] = value;
-					end);
-				end;
-			end;
-			if lightingGuard.lighting.Technology ~= nil then
-				local okTech: boolean = pcall(function(): ()
-					lightingService.Technology = lightingGuard.lighting.Technology;
-				end);
-				if not okTech and sethiddenproperty then
-					pcall(sethiddenproperty, lightingService, 'Technology', lightingGuard.lighting.Technology);
-				end;
-			end;
-			for prop: string, value: any in lightingGuard.terrain do
-				pcall(function(): ()
-					workspace.Terrain[prop] = value;
-				end);
-			end;
-			table.clear(lightingGuard.lighting);
-			table.clear(lightingGuard.terrain);
-		end;
-		vape.LightingGuard = lightingGuard;
-	end;
 	local restoreDefault: () -> void = function(): void
 		for _, entry: table in stashed do
 			pcall(function() entry["Object"].Parent = entry["Parent"]; end);
@@ -9881,7 +9887,7 @@ velo.run(function()
 		["Name"] = 'Atmosphere',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				lightingGuard.acquire();
+				lightingGuard.acquire({'Brightness', 'EnvironmentDiffuseScale', 'EnvironmentSpecularScale'}, {'WaterTransparency', 'WaterReflectance'});
 				local r: any = workspace.Terrain;
 				for _, v: any in lightingService:GetChildren() do
 					if isLightingEffect(v) and not lightingGuard.isOwn(v) then
@@ -9935,11 +9941,13 @@ velo.run(function()
 						end;
 						obj.Name = "Custom" .. className;
 						table.insert(newobjects, obj);
+						lightingGuard.own(obj);
 						task.defer(function()
 							pcall(function() obj.Parent = lightingService; end);
 						end);
 					end;
 				end;
+				task.defer(lightingGuard.notify);
 			else
 				for _, v: any in newobjects do
 					pcall(function() v:Destroy(); end);
@@ -10918,16 +10926,15 @@ end);
 velo.run(function()
 	local TimeChanger: table = {["Enabled"] = false};
 	local Value: table = {["Value"] = 12};
-	local old: any;
+	local lightingGuard: any = vape.LightingGuard;
 	TimeChanger = vape.Legit:CreateModule({
 		["Name"] = 'Time Changer',
 		["Function"] = function(callback: boolean): void
 			if callback then
-				old = lightingService.TimeOfDay;
+				lightingGuard.acquire({'ClockTime'}, {});
+				TimeChanger:Clean(lightingGuard.release);
 				lightingService.TimeOfDay = Value["Value"]..':00:00';
-			else
-				lightingService.TimeOfDay = old;
-				old = nil;
+				lightingGuard.notify();
 			end;
 		end,
 		["Tooltip"] = 'Change the time of the current world'
@@ -10938,8 +10945,9 @@ velo.run(function()
 		["Max"] = 24,
 		["Default"] = 12,
 		["Function"] = function(val: any)
-			if TimeChanger["Enabled"] then 
+			if TimeChanger["Enabled"] then
 				lightingService.TimeOfDay = val..':00:00';
+				lightingGuard.notify();
 			end;
 		end;
 	});
@@ -11090,7 +11098,7 @@ velo.run(function()
 		end));
 	end;
 	local startMotionBlur: () -> () = function(): ()
-		local blur: BlurEffect = Instance.new('BlurEffect');
+		local blur: BlurEffect = vape.LightingGuard.own(Instance.new('BlurEffect'));
 		blur.Size = 0;
 		blur.Parent = lightingService;
 		Envision:Clean(blur);
@@ -12542,68 +12550,6 @@ end);
 velo.run(function()
 	local Luminescents: table = {["Enabled"] = false};
 	local lightingGuard: any = vape.LightingGuard;
-	if not lightingGuard then
-		lightingGuard = {["refs"] = 0, ["lighting"] = {}, ["terrain"] = {}, ["owned"] = setmetatable({}, {["__mode"] = 'k'})};
-		local guardProps: {string} = {'ClockTime', 'Brightness', 'ExposureCompensation', 'ShadowSoftness', 'EnvironmentDiffuseScale', 'EnvironmentSpecularScale', 'GlobalShadows', 'Ambient', 'OutdoorAmbient', 'ColorShift_Top', 'ColorShift_Bottom', 'FogColor', 'FogEnd', 'FogStart'};
-		local guardWater: {string} = {'WaterColor', 'WaterReflectance', 'WaterTransparency', 'WaterWaveSize', 'WaterWaveSpeed'};
-		lightingGuard.own = function(object: Instance): Instance
-			lightingGuard.owned[object] = true;
-			return object;
-		end;
-		lightingGuard.isOwn = function(object: Instance?): boolean
-			return object ~= nil and lightingGuard.owned[object] == true;
-		end;
-		lightingGuard.acquire = function(): ()
-			if lightingGuard.refs == 0 then
-				table.clear(lightingGuard.lighting);
-				table.clear(lightingGuard.terrain);
-				for _, prop: string in guardProps do
-					pcall(function(): ()
-						lightingGuard.lighting[prop] = lightingService[prop];
-					end);
-				end;
-				pcall(function(): ()
-					lightingGuard.lighting.Technology = lightingService.Technology;
-				end);
-				for _, prop: string in guardWater do
-					pcall(function(): ()
-						lightingGuard.terrain[prop] = workspace.Terrain[prop];
-					end);
-				end;
-			end;
-			lightingGuard.refs += 1;
-		end;
-		lightingGuard.release = function(): ()
-			lightingGuard.refs -= 1;
-			if lightingGuard.refs > 0 then
-				return;
-			end;
-			lightingGuard.refs = 0;
-			for prop: string, value: any in lightingGuard.lighting do
-				if prop ~= 'Technology' then
-					pcall(function(): ()
-						lightingService[prop] = value;
-					end);
-				end;
-			end;
-			if lightingGuard.lighting.Technology ~= nil then
-				local okTech: boolean = pcall(function(): ()
-					lightingService.Technology = lightingGuard.lighting.Technology;
-				end);
-				if not okTech and sethiddenproperty then
-					pcall(sethiddenproperty, lightingService, 'Technology', lightingGuard.lighting.Technology);
-				end;
-			end;
-			for prop: string, value: any in lightingGuard.terrain do
-				pcall(function(): ()
-					workspace.Terrain[prop] = value;
-				end);
-			end;
-			table.clear(lightingGuard.lighting);
-			table.clear(lightingGuard.terrain);
-		end;
-		vape.LightingGuard = lightingGuard;
-	end;
 	local collectionService: CollectionService = cloneref(game:GetService('CollectionService'));
 	local terrain: Terrain = workspace.Terrain;
 	local lumColor: Color3 = Color3.fromHSV(0.44, 1, 1);
@@ -12793,9 +12739,9 @@ velo.run(function()
 		end;
 	end;
 
-	local hideOthers: (className: string) -> () = function(className: string): ()
+	local hideOthers: (className: string, keep: Instance?) -> () = function(className: string, keep: Instance?): ()
 		for _, child: Instance in lightingService:GetChildren() do
-			if child:IsA(className) and not lightingGuard.isOwn(child) then
+			if child ~= keep and child:IsA(className) then
 				table.insert(moved, child);
 				child.Parent = nil;
 			end;
@@ -12816,7 +12762,7 @@ velo.run(function()
 
 	local gameSky: () -> Sky? = function(): Sky?
 		for _, child: Instance in moved do
-			if child:IsA('Sky') then
+			if child:IsA('Sky') and not lightingGuard.isOwn(child) then
 				return child;
 			end;
 		end;
@@ -12827,24 +12773,35 @@ velo.run(function()
 		local object: any = created[key];
 		if not on(key) then
 			if object then
-				object:Destroy();
 				created[key] = nil;
+				object:Destroy();
 				if singletons[className] then
 					releaseOthers(className);
 				end;
 			end;
 			return;
 		end;
+		if object and object.Parent == nil then
+			local reattached: boolean = pcall(function(): ()
+				object.Parent = lightingService;
+			end);
+			if not reattached then
+				created[key] = nil;
+				object = nil;
+			end;
+		end;
 		if not object then
-			object = Instance.new(className);
-			lightingGuard.own(object);
+			object = lightingGuard.own(Instance.new(className));
 			created[key] = object;
 			if singletons[className] then
-				hideOthers(className);
+				hideOthers(className, object);
 			end;
 			configure(object);
 			object.Parent = lightingService;
 			return;
+		end;
+		if singletons[className] then
+			hideOthers(className, object);
 		end;
 		configure(object);
 	end;
@@ -13146,6 +13103,22 @@ velo.run(function()
 				return;
 			end;
 			lightingGuard.acquire();
+			Luminescents:Clean(cleanup);
+			Luminescents:Clean(lightingGuard.listen(queueApply));
+			Luminescents:Clean(lightingService.ChildAdded:Connect(function(child: Instance)
+				local key: string? = child:IsA('Atmosphere') and 'Atmosphere' or child:IsA('Sky') and 'Sky' or nil;
+				if key and on(key) and created[key] ~= child then
+					queueApply();
+				end;
+			end));
+			Luminescents:Clean(lightingService.ChildRemoved:Connect(function(child: Instance)
+				for _, object: Instance in created do
+					if object == child then
+						queueApply();
+						return;
+					end;
+				end;
+			end));
 			Luminescents:Clean(lightingService.Changed:Connect(function(prop: string)
 				if not Luminescents["Enabled"] or not on('Lock') then
 					return;
@@ -13156,7 +13129,6 @@ velo.run(function()
 				end;
 			end));
 			Luminescents:Clean(entitylib.Events.LocalAdded:Connect(queueApply));
-			Luminescents:Clean(cleanup);
 			apply();
 		end
 	});
