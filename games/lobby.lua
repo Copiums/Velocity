@@ -303,7 +303,7 @@ velo.run(function()
 		["Function"] = function(value: number): ()
 			for i: number, v: UICorner? in Object do 
 				if v.ClassName == 'UICorner' then 
-					v.CornerRadius = value;
+					v.CornerRadius = UDim.new(0, value);
 				end;
 			end;
 		end;

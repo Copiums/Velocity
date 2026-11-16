@@ -1460,7 +1460,7 @@ velo.run(function(): ()
 		store.map = world;
 		local airRay: RaycastParams = RaycastParams.new();
 		airRay.FilterType = Enum.RaycastFilterType.Include;
-		airRay.FilterDescendantsInstances = {world};
+		airRay.FilterDescendantsInstances = {world.Parent or world};
 		store.airRay = airRay;
 		local blockFolder: Instance? = world:FindFirstChild('Blocks');
 		if blockFolder then
@@ -3453,6 +3453,8 @@ velo.run(function(): ()
 	local HighHitreg: table;
 	local DynamicHits: table;
 	local MaxTargets: table;
+	local Focus: table;
+	local HitStats: table;
 	local AimMode: table;
 	local AimSpeed: table;
 	local AimArea: table;
@@ -3708,6 +3710,7 @@ velo.run(function(): ()
 		if damage.fromEntity ~= lplr.Character or damage.damageType ~= 0 then
 			return;
 		end;
+		state.StatLanded += 1;
 		local watched: Instance? = damage.entityInstance;
 		local watch: table? = watched and follow.Watch[watched];
 		if watch then
@@ -4075,6 +4078,7 @@ velo.run(function(): ()
 			end;
 		end;
 		sendHit(ent, claim, hitPosition, direction);
+		state.StatSent += 1;
 		if DoubleHit["Enabled"] then
 			followUp(ent, state.LastHit, hitDelay);
 		end;
@@ -4266,6 +4270,25 @@ velo.run(function(): ()
 					end;
 					table.insert(attacked, target);
 				end;
+				if Focus["Enabled"] then
+					local damage: number = meta.sword and meta.sword.damage or 0;
+					local lead: number? = nil;
+					for index: number, target: table in attacked do
+						if target.Hittable and target.Entity.Health <= damage then
+							lead = index;
+							break;
+						end;
+						if not lead and target.Hittable and target.Entity == state.Focus then
+							lead = index;
+						end;
+					end;
+					if lead and lead > 1 then
+						table.insert(attacked, 1, table.remove(attacked, lead));
+					end;
+					if attacked[1] and attacked[1].Hittable then
+						state.Focus = attacked[1].Entity;
+					end;
+				end;
 
 				for index: number, target: table in attacked do
 					local ent: table = target.Entity;
@@ -4319,6 +4342,13 @@ velo.run(function(): ()
 			hitreg.GhostDelay = math.max(hitreg.GhostDelay - (high and 0.001 or 0.003), 0);
 		end;
 
+		if tick() - state.StatClock >= 10 then
+			local span: number = tick() - state.StatClock;
+			if HitStats["Enabled"] and state.StatSent > 0 then
+				notif('Killaura', string.format('%d sent, %d landed (%d%%), %.2f landed/s, ghost +%dms, ping %dms', state.StatSent, state.StatLanded, math.floor(math.min(state.StatLanded / state.StatSent, 1) * 100), state.StatLanded / span, math.floor(hitreg.GhostDelay * 1000), math.floor(lplr:GetNetworkPing() * 1000)), 8);
+			end;
+			state.StatSent, state.StatLanded, state.StatClock = 0, 0, tick();
+		end;
 		if #attacked > 0 then
 			state.ContinueUntil = tick() + ContinueSwing:GetRandomValue() / 1000;
 		elseif sword and meta and tick() < state.ContinueUntil and state.AnimDelay < tick() and not NoSwing["Enabled"] and not SwingOnly["Enabled"] then
@@ -4396,7 +4426,8 @@ velo.run(function(): ()
 			state = {
 				["LastEffect"] = 0, ["LastAttack"] = 0, ["EffectSwing"] = 0, ["SwingGap"] = 0.11, ["AnimDelay"] = 0, ["ContinueUntil"] = 0,
 				["SwingCooldown"] = 0, ["LastHit"] = 0, ["LastShot"] = 0, ["Shooting"] = false, ["ShotIndex"] = 1, ["FireRates"] = {},
-				["FrameTime"] = 0, ["FrameCount"] = 0, ["FrameWindow"] = 0, ["ScanClock"] = 0, ["Entities"] = {}
+				["FrameTime"] = 0, ["FrameCount"] = 0, ["FrameWindow"] = 0, ["ScanClock"] = 0, ["Entities"] = {},
+				["StatSent"] = 0, ["StatLanded"] = 0, ["StatClock"] = tick()
 			};
 			resetHitreg();
 			hitBudget = 60 / (store.remoteLimits.SwordHit or config.RemoteLimit);
@@ -4647,6 +4678,15 @@ velo.run(function(): ()
 		["Darker"] = true,
 		["Visible"] = false,
 		["Tooltip"] = 'Sends the follow-up with your other sword, in case the server tracks cooldown per weapon.'
+	});
+	Focus = Killaura:CreateToggle({
+		["Name"] = 'Focus target',
+		["Default"] = true,
+		["Tooltip"] = 'Keeps hitting one target until it dies or leaves range instead of splitting hits. A target one hit from death always goes first.'
+	});
+	HitStats = Killaura:CreateToggle({
+		["Name"] = 'Hit stats',
+		["Tooltip"] = 'Every 10 seconds shows hits sent, hits the server confirmed, and confirmed hits per second.'
 	});
 	MaxTargets = Killaura:CreateSlider({
 		["Name"] = 'Entities',
@@ -5176,7 +5216,6 @@ velo.run(function(): ()
 	local PearlCheck: table;
 	local WhisperCheck: table;
 	local LassoCheck: table;
-	local SeatFlag: table;
 	local voidMargin: number = 50;
 	local voidRate: number = 0.05;
 	local resources: {string} = {'iron', 'diamond', 'emerald', 'gold'};
@@ -5185,7 +5224,7 @@ velo.run(function(): ()
 	wallRay.RespectCanCollide = true;
 
 	local refresh: () -> () = function(): ()
-		if not SeatFlag then
+		if not LassoCheck then
 			return;
 		end;
 		for _: number, option: table in {MoveMode, Material, PartColor} do
@@ -5229,15 +5268,6 @@ velo.run(function(): ()
 			local dropping: boolean = false;
 			local resetting: table? = nil;
 			local walker: RBXScriptConnection? = nil;
-			local welded: boolean = false;
-			local seat: Instance? = nil;
-			if SeatFlag["Enabled"] then
-				if replicatesignal then
-					seat = replicatedStorage.Assets.Effects.snowball_rider.Handle.Seat;
-				else
-					notif('AntiFall', "Seat Flag needs replicatesignal, which this executor doesn't have", 5, 'warning');
-				end;
-			end;
 
 			local stopWalking: () -> () = function(): ()
 				if walker then
@@ -5249,9 +5279,6 @@ velo.run(function(): ()
 			AntiFall:Clean(function(): ()
 				stopWalking();
 				store.antiFallPart = nil;
-				if welded and seat then
-					replicatesignal(seat.RemoteDestroySeatWeld);
-				end;
 			end);
 
 			local buildPlatform: () -> () = function(): ()
@@ -5279,7 +5306,7 @@ velo.run(function(): ()
 				store.antiFallPart = part;
 				AntiFall:Clean(part);
 				AntiFall:Clean(part.Touched:Connect(function(touched: BasePart): ()
-					if touched.Parent ~= lplr.Character or not entitylib.isAlive or touchDebounce >= tick() then
+					if touched.Parent ~= lplr.Character or not entitylib.isAlive or store.infinitefly or touchDebounce >= tick() then
 						return;
 					end;
 					touchDebounce = tick() + 0.1;
@@ -5297,7 +5324,7 @@ velo.run(function(): ()
 					wallRay.CollisionGroup = root.CollisionGroup;
 					stopWalking();
 					walker = runService.PreSimulation:Connect(function(): ()
-						if vape.Modules.Fly["Enabled"] or vape.Modules.LongJump["Enabled"] or not entitylib.isAlive or lplr:GetAttribute('LastTeleported') ~= lastTeleport then
+						if vape.Modules.Fly["Enabled"] or vape.Modules.LongJump["Enabled"] or store.infinitefly or not entitylib.isAlive or lplr:GetAttribute('LastTeleported') ~= lastTeleport then
 							stopWalking();
 							return;
 						end;
@@ -5329,45 +5356,16 @@ velo.run(function(): ()
 			end;
 
 			AntiFall:Clean(runService.Heartbeat:Connect(function(): ()
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
 				if store.matchState == 0 then
 					return;
 				end;
 				if Platform["Enabled"] and not platformBuilt then
 					buildPlatform();
 				end;
-				if seat then
-					local character: Model? = lplr.Character;
-					local root: BasePart? = character and character:FindFirstChild('HumanoidRootPart');
-					local humanoid: Humanoid? = character and character:FindFirstChildOfClass('Humanoid');
-					if entitylib.isAlive and root and humanoid and not isnetworkowner(root) and not workspace:Raycast(root.Position, Vector3.new(0, -1000, 0), store.airRay) then
-						root.AssemblyLinearVelocity = Vector3.zero;
-						welded = true;
-						humanoid:ChangeState(Enum.HumanoidStateType.Jumping);
-						replicatesignal(seat.RemoteCreateSeatWeld, humanoid);
-					elseif welded and (not entitylib.isAlive or not root or isnetworkowner(root)) then
-						if entitylib.isAlive and root then
-							local origin: Vector3 = root.Position;
-							local ground: Vector3?, groundDistance: number = nil, math.huge;
-							for _: number, axis: Vector3 in groundAxes do
-								for step: number = 1, 18 do
-									local hit: RaycastResult? = workspace:Raycast(origin + Vector3.new(0, 500, 0) + axis * step, Vector3.new(0, -1000, 0), store.airRay);
-									local distance: number = hit and (Vector3.new(origin.X, hit.Position.Y, origin.Z) - hit.Position).Magnitude or math.huge;
-									if distance < groundDistance then
-										ground, groundDistance = hit.Position, distance;
-									end;
-								end;
-							end;
-							if ground then
-								notif('AntiFall', 'Teleported.', 8, 'info');
-								root.AssemblyLinearVelocity = Vector3.new(0, 2.5, 0);
-								root.CFrame = CFrame.lookAlong(ground + Vector3.new(0, 2.5, 0), root.CFrame.LookVector);
-							end;
-						end;
-						replicatesignal(seat.RemoteDestroySeatWeld);
-						welded = false;
-					end;
-				end;
-				if tick() < nextVoid or not entitylib.isAlive then
+				if tick() < nextVoid or not entitylib.isAlive or store.infinitefly then
 					return;
 				end;
 				nextVoid = tick() + voidRate;
@@ -5526,23 +5524,89 @@ velo.run(function(): ()
 		["Darker"] = true,
 		["Tooltip"] = 'Never resets while a lasso is attached to you'
 	});
-	SeatFlag = AntiFall:CreateToggle({
-		["Name"] = 'Seat Flag',
-		["Function"] = refresh,
-		["Tooltip"] = 'When the server takes your character over the void, welds you to a seat until control returns, then puts you on the nearest ground'
-	});
 	refresh();
 end);
 
 velo.run(function(): ()
+	local AntiVoidFlag: table = {["Enabled"] = false};
+	local groundAxes: {Vector3} = {Vector3.xAxis, Vector3.zAxis, -Vector3.xAxis, -Vector3.zAxis};
+
+	local nearGround: (origin: Vector3) -> Vector3? = function(origin: Vector3): Vector3?
+		local ground: Vector3?, groundDistance: number = nil, math.huge;
+		for _: number, axis: Vector3 in groundAxes do
+			for step: number = 1, 18 do
+				local hit: RaycastResult? = workspace:Raycast(origin + Vector3.new(0, 500, 0) + axis * step, Vector3.new(0, -1000, 0), store.airRay);
+				local distance: number = hit and (Vector3.new(origin.X, hit.Position.Y, origin.Z) - hit.Position).Magnitude or math.huge;
+				if distance < groundDistance then
+					ground, groundDistance = hit.Position, distance;
+				end;
+			end;
+		end;
+		return ground;
+	end;
+
+	AntiVoidFlag = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'AntiVoidFlag',
+		["Function"] = function(callback: boolean): ()
+			if not callback then
+				return;
+			end;
+			if not replicatesignal then
+				notif('AntiVoidFlag', "This executor can't replicate the seat signal it needs", 5, 'warning');
+				task.defer(function(): ()
+					if AntiVoidFlag["Enabled"] then
+						AntiVoidFlag:Toggle();
+					end;
+				end);
+				return;
+			end;
+			local seat: Instance = replicatedStorage.Assets.Effects.snowball_rider.Handle.Seat;
+			local welded: boolean = false;
+			AntiVoidFlag:Clean(function(): ()
+				if welded then
+					replicatesignal(seat.RemoteDestroySeatWeld);
+					welded = false;
+				end;
+			end);
+			AntiVoidFlag:Clean(runService.Heartbeat:Connect(function(): ()
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
+				if not entitylib.isAlive then
+					if welded then
+						replicatesignal(seat.RemoteDestroySeatWeld);
+						welded = false;
+					end;
+					return;
+				end;
+				local root: BasePart? = lplr.Character:FindFirstChild('HumanoidRootPart');
+				local humanoid: Humanoid? = lplr.Character:FindFirstChildOfClass('Humanoid');
+				if root and humanoid and not isnetworkowner(root) and not workspace:Raycast(root.Position, Vector3.new(0, -1000, 0), store.airRay) then
+					root.AssemblyLinearVelocity = Vector3.zero;
+					welded = true;
+					humanoid:ChangeState(Enum.HumanoidStateType.Jumping);
+					replicatesignal(seat.RemoteCreateSeatWeld, humanoid);
+				elseif welded and (not root or isnetworkowner(root)) then
+					local ground: Vector3? = root and nearGround(root.Position);
+					if root and ground then
+						notif('AntiVoidFlag', 'Teleported.', 8, 'info');
+						root.AssemblyLinearVelocity = Vector3.new(0, 2.5, 0);
+						root.CFrame = CFrame.lookAlong(ground + Vector3.new(0, 2.5, 0), root.CFrame.LookVector);
+					end;
+					replicatesignal(seat.RemoteDestroySeatWeld);
+					welded = false;
+				end;
+			end));
+		end,
+		["Tooltip"] = 'When the server takes your character over the void, welds you to a seat until control returns, then puts you on the nearest ground'
+	});
+end);
+
+velo.run(function(): ()
 	local NoFall: table = {["Enabled"] = false};
-	local Mode: table;
 	local Damage: table;
 	local safeFall: number = 45;
-	local spoofLimit: number = -85;
-	local hitRate: number = 0.1;
 	local silenced: {[Humanoid]: {any}} = {};
-	local fallRay: RaycastParams = RaycastParams.new();
 
 	local silence: (humanoid: Humanoid) -> () = function(humanoid: Humanoid): ()
 		if not getconnections or silenced[humanoid] then
@@ -5570,30 +5634,35 @@ velo.run(function(): ()
 				table.clear(silenced);
 				return;
 			end;
-			if Mode["Value"] == 'Spoof' then
-				local extraGravity: number = 0;
-				NoFall:Clean(runService.PreSimulation:Connect(function(delta: number): ()
-					if not entitylib.isAlive then
-						return;
-					end;
-					local root: BasePart = entitylib.character.RootPart;
-					if root.AssemblyLinearVelocity.Y >= spoofLimit then
-						extraGravity = 0;
-						return;
-					end;
-					fallRay.FilterDescendantsInstances = {lplr.Character, gameCamera};
-					fallRay.CollisionGroup = root.CollisionGroup;
-					if not workspace:Blockcast(root.CFrame, Vector3.new(3, 3, 3), Vector3.new(0, -(root.Size.Y / 2 + entitylib.character.HipHeight), 0), fallRay) then
-						root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, spoofLimit - 1, root.AssemblyLinearVelocity.Z);
-						root.CFrame += Vector3.new(0, extraGravity * delta, 0);
-						extraGravity -= workspace.Gravity * delta;
-					end;
-				end));
-				return;
-			end;
 			if entitylib.isAlive then
 				silence(entitylib.character.Humanoid);
 			end;
+			local tracked: number, lastHit: number = 0, 0;
+			NoFall:Clean(runService.PostSimulation:Connect(function(): ()
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
+				if not entitylib.isAlive or store.matchState ~= 1 or store.cannonFlight or store.infinitefly then
+					tracked = 0;
+					return;
+				end;
+				local root: BasePart = entitylib.character.RootPart;
+				local velocity: Vector3 = root.AssemblyLinearVelocity;
+				if tracked < -(safeFall + Damage["Value"] * 0.75) then
+					local cushion: Vector3 = Vector3.new(0, 2.5, 0);
+					root.AssemblyLinearVelocity = cushion;
+					entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed);
+					runService.PreRender:Wait();
+					if root.AssemblyLinearVelocity == cushion then
+						root.AssemblyLinearVelocity = velocity;
+					end;
+					if os.clock() - lastHit >= 0.1 then
+						fire('GroundHit', 'SendToServer', nil, Vector3.new(0, tracked, 0), workspace:GetServerTimeNow());
+						lastHit = os.clock();
+					end;
+				end;
+				tracked = velocity.Y;
+			end));
 			NoFall:Clean(entitylib.Events.LocalAdded:Connect(function(ent: table): ()
 				if ent.Humanoid:WaitForChild('Animator', 5) then
 					task.delay(0.5, function(): ()
@@ -5603,59 +5672,8 @@ velo.run(function(): ()
 					end);
 				end;
 			end));
-			local ownHit: boolean = false;
-			remoteHooks.GroundHit = function(remote: any, part: any, velocity: any, ...: any): ...any
-				if not ownHit and typeof(velocity) == 'Vector3' then
-					velocity = Vector3.new(velocity.X, math.max(velocity.Y, -(safeFall + Damage["Value"] * 0.75)), velocity.Z);
-				end;
-				return remote:SendToServer(part, velocity, ...);
-			end;
-			NoFall:Clean(function(): ()
-				remoteHooks.GroundHit = nil;
-			end);
-			local lastFall: number, lastHit: number = 0, 0;
-			NoFall:Clean(runService.PostSimulation:Connect(function(): ()
-				if not entitylib.isAlive or store.matchState ~= 1 or store.cannonFlight or store.infinitefly then
-					lastFall = 0;
-					return;
-				end;
-				local root: BasePart = entitylib.character.RootPart;
-				local velocity: Vector3 = root.AssemblyLinearVelocity;
-				local fallen: number = lastFall;
-				lastFall = velocity.Y;
-				if fallen >= -(safeFall + Damage["Value"] * 0.75) then
-					return;
-				end;
-				local cushion: Vector3 = Vector3.new(0, 2.5, 0);
-				root.AssemblyLinearVelocity = cushion;
-				entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed);
-				if os.clock() - lastHit >= hitRate then
-					lastHit = os.clock();
-					ownHit = true;
-					fire('GroundHit', 'SendToServer', nil, Vector3.new(0, fallen, 0), workspace:GetServerTimeNow());
-					ownHit = false;
-				end;
-				runService.PreRender:Wait();
-				if root.AssemblyLinearVelocity == cushion then
-					root.AssemblyLinearVelocity = velocity;
-				end;
-			end));
 		end,
 		["Tooltip"] = 'Prevents taking fall damage.'
-	});
-	Mode = NoFall:CreateDropdown({
-		["Name"] = 'Mode',
-		["List"] = {'Packet', 'Spoof'},
-		["Function"] = function(value: string): ()
-			if Damage then
-				Damage.Object.Visible = value == 'Packet';
-			end;
-			if NoFall["Enabled"] then
-				NoFall:Toggle();
-				NoFall:Toggle();
-			end;
-		end,
-		["Tooltip"] = 'Packet - Cushions every fall and reports a safe landing\nSpoof - Caps your fall speed and simulates the rest of the drop'
 	});
 	Damage = NoFall:CreateSlider({
 		["Name"] = 'Damage',
@@ -5663,8 +5681,81 @@ velo.run(function(): ()
 		["Max"] = 100,
 		["Default"] = 0,
 		["Suffix"] = '%',
-		["Darker"] = true,
 		["Tooltip"] = 'How much of each fall lands on you, it only starts saving you once you are dropping faster than this lets through'
+	});
+end);
+
+velo.run(function(): ()
+	local DamageBoost: table = {["Enabled"] = false};
+	local Strength: table;
+	local Duration: table;
+	local Push: table;
+	local wallRay: RaycastParams = RaycastParams.new();
+	wallRay.RespectCanCollide = true;
+
+	DamageBoost = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'DamageBoost',
+		["Function"] = function(callback: boolean): ()
+			store.speedBoost = {["Amount"] = 0, ["Expires"] = 0};
+			if not callback then
+				return;
+			end;
+			local stacked: number = 0;
+			DamageBoost:Clean(vapeEvents.EntityDamageEvent.Event:Connect(function(damage: table): ()
+				if not entitylib.isAlive or tick() <= stacked or damage.entityInstance ~= lplr.Character or vape.Modules.LongJump["Enabled"] then
+					return;
+				end;
+				local horizontal: number = damage.knockbackMultiplier and damage.knockbackMultiplier.horizontal or 0;
+				local knockback: number = bedwars.KnockbackUtil.calculateKnockbackVelocity(Vector3.one, 1, {["vertical"] = 0, ["horizontal"] = horizontal}).Magnitude * (0.9 + store.ping.total);
+				stacked = tick() + knockback / 45;
+				store.speedBoost = {["Amount"] = knockback * Strength["Value"] / 100, ["Expires"] = tick() + horizontal / 3.5 * Duration["Value"] / 100};
+			end));
+			DamageBoost:Clean(function(): ()
+				store.speedBoost = {["Amount"] = 0, ["Expires"] = 0};
+			end);
+			DamageBoost:Clean(runService.PreSimulation:Connect(function(delta: number): ()
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
+				if not Push["Enabled"] or store.speedBoost.Expires <= tick() or not entitylib.isAlive or frictionUsers.Speed or frictionUsers.Fly or vape.Modules.LongJump["Enabled"] or store.infinitefly or store.antiFallDirection then
+					return;
+				end;
+				local root: BasePart = entitylib.character.RootPart;
+				if not isnetworkowner(root) or entitylib.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing then
+					return;
+				end;
+				local step: Vector3 = entitylib.character.Humanoid.MoveDirection * store.speedBoost.Amount * delta;
+				wallRay.FilterDescendantsInstances = {lplr.Character, gameCamera};
+				wallRay.CollisionGroup = root.CollisionGroup;
+				local wall: RaycastResult? = workspace:Raycast(root.Position, step, wallRay);
+				if wall then
+					step = wall.Position + wall.Normal - root.Position;
+				end;
+				root.CFrame += step;
+			end));
+		end,
+		["Tooltip"] = 'Makes you go faster when damaged. Works with Speed, Fly and LongJump, and on its own.'
+	});
+	Strength = DamageBoost:CreateSlider({
+		["Name"] = 'Strength',
+		["Min"] = 0,
+		["Max"] = 300,
+		["Default"] = 100,
+		["Suffix"] = '%',
+		["Tooltip"] = 'Extra speed from each hit, 100% is the knockback the hit would have given you'
+	});
+	Duration = DamageBoost:CreateSlider({
+		["Name"] = 'Duration',
+		["Min"] = 0,
+		["Max"] = 500,
+		["Default"] = 100,
+		["Suffix"] = '%',
+		["Tooltip"] = 'How long the boost lasts, 100% matches catsix (stronger knockback lasts longer)'
+	});
+	Push = DamageBoost:CreateToggle({
+		["Name"] = 'Boost without Speed',
+		["Default"] = true,
+		["Tooltip"] = 'Pushes you forward yourself while Blatant Speed and Fly are off, so the boost works in Legit Speed or with Speed disabled'
 	});
 end);
 
@@ -5675,9 +5766,6 @@ velo.run(function(): ()
 	local WallCheck: table;
 	local AutoJump: table;
 	local AlwaysJump: table;
-	local DamageBoost: table;
-	local boostDecay: number = 45;
-	local boostLength: number = 3.5;
 	local modifier: table = {};
 	local wallRay: RaycastParams = RaycastParams.new();
 	wallRay.RespectCanCollide = true;
@@ -5698,21 +5786,6 @@ velo.run(function(): ()
 				local handle: any = bedwars.SprintController:getMovementStatusModifier():addModifier(modifier);
 				Speed:Clean(function(): ()
 					handle:Destroy();
-				end);
-			end;
-			if DamageBoost["Enabled"] then
-				local stacked: number = 0;
-				Speed:Clean(vapeEvents.EntityDamageEvent.Event:Connect(function(damage: table): ()
-					if not entitylib.isAlive or tick() <= stacked or damage.entityInstance ~= lplr.Character or vape.Modules.LongJump["Enabled"] then
-						return;
-					end;
-					local horizontal: number = damage.knockbackMultiplier and damage.knockbackMultiplier.horizontal or 0;
-					local amount: number = bedwars.KnockbackUtil.calculateKnockbackVelocity(Vector3.one, 1, {["vertical"] = 0, ["horizontal"] = horizontal}).Magnitude * (0.9 + store.ping.total);
-					stacked = tick() + amount / boostDecay;
-					store.speedBoost = {["Amount"] = amount, ["Expires"] = tick() + horizontal / boostLength};
-				end));
-				Speed:Clean(function(): ()
-					store.speedBoost = {["Amount"] = 0, ["Expires"] = 0};
 				end);
 			end;
 			Speed:Clean(runService.PreSimulation:Connect(function(delta: number): ()
@@ -5799,16 +5872,6 @@ velo.run(function(): ()
 		["Name"] = 'Always Jump',
 		["Visible"] = false,
 		["Darker"] = true
-	});
-	DamageBoost = Speed:CreateToggle({
-		["Name"] = 'Damage Boost',
-		["Function"] = function(): ()
-			if Speed["Enabled"] then
-				Speed:Toggle();
-				Speed:Toggle();
-			end;
-		end,
-		["Tooltip"] = 'Makes you go slightly faster when damaged'
 	});
 end);
 
@@ -6223,7 +6286,7 @@ velo.run(function(): ()
 			fallTime = 1;
 			ground = workspace:Raycast(root.Position, Vector3.new(0, -1000, 0), store.airRay);
 			if ground then
-				local height: number = math.max(root.Position.Y - ground.Position.Y - entitylib.character.HipHeight, 0);
+				local height: number = math.max(root.Position.Y - ground.Position.Y - entitylib.character.Humanoid.HipHeight - root.Size.Y / 2, 0);
 				local falling: number = math.max(-root.AssemblyLinearVelocity.Y, 0);
 				fallTime = (-falling + math.sqrt(falling * falling + 2 * workspace.Gravity * height)) / workspace.Gravity;
 			end;
