@@ -3702,6 +3702,9 @@ velo.run(function(): ()
 	end;
 
 	local onDamage: (damage: table) -> () = function(damage: table): ()
+		if vape.ThreadFix then
+			setthreadidentity(8);
+		end;
 		if damage.fromEntity ~= lplr.Character or damage.damageType ~= 0 then
 			return;
 		end;
@@ -3846,6 +3849,9 @@ velo.run(function(): ()
 			switchItem(shot.Item.tool, 0);
 		end;
 		task.delay(0.1, function(): ()
+			if vape.ThreadFix then
+				setthreadidentity(8);
+			end;
 			if LegitSwitch["Enabled"] and slot then
 				hotbarSwitch(slot);
 			end;
@@ -3927,7 +3933,10 @@ velo.run(function(): ()
 
 	local followUp: (ent: table, sentAt: number, hitDelay: number) -> () = function(ent: table, sentAt: number, hitDelay: number): ()
 		local main: table = frame.Sword;
-		local weapon: table = DoubleSwap["Enabled"] and altSword(main) or main;
+		local weapon: table? = DoubleSwap["Enabled"] and altSword(main) or main;
+		if not weapon or (DoubleSwap["Enabled"] and weapon == main) then
+			return;
+		end;
 		local swapped: boolean = weapon ~= main;
 		local key: string = (swapped and 'swap:' or 'same:')..main.itemType;
 		local stats: table = follow.Stats[key] or {["Sent"] = 0, ["Landed"] = 0, ["Warned"] = false};
@@ -3949,6 +3958,9 @@ velo.run(function(): ()
 			follow.Watch[victim] = watch;
 		end;
 		task.delay(delay, function(): ()
+			if vape.ThreadFix then
+				setthreadidentity(8);
+			end;
 			if not (Killaura["Enabled"] and DoubleHit["Enabled"]) or state.Shooting or state.LastHit ~= sentAt or not (weapon.tool and weapon.tool.Parent) then
 				return;
 			end;
@@ -4005,8 +4017,15 @@ velo.run(function(): ()
 			deadline = math.max(state.LastHit + tuning.LockFloor, tick() + lock.Target - os.clock());
 		end;
 		local pending: table? = hitreg.Pending[#hitreg.Pending];
-		if tracked and frame.Stock and high and ping >= tuning.GuardPing and pending and #hitreg.Pending < 3 and hitreg.ConfirmMin and hitreg.ConfirmMin + state.FrameTime < hitDelay and pending.Sent == state.LastHit then
+		local waiting: boolean = tracked and frame.Stock and high and ping >= tuning.GuardPing and pending ~= nil and #hitreg.Pending < 3 and hitreg.ConfirmMin ~= nil and hitreg.ConfirmMin + state.FrameTime < hitDelay and pending.Sent == state.LastHit;
+		if waiting then
 			deadline = math.max(deadline, state.LastHit + hitDelay + 0.04);
+		end;
+		local remaining: number = deadline - tick();
+		local frameSpan: number = locked and math.max(state.FrameTime, lock.Frame) or math.min(state.FrameTime, lock.Frame);
+		if frame.Stock and high and not waiting and remaining > 0 and remaining < math.min(frameSpan, 0.25) then
+			local finish: number = os.clock() + remaining;
+			repeat until os.clock() >= finish;
 		end;
 		if tick() < deadline then
 			return;
@@ -4141,6 +4160,9 @@ velo.run(function(): ()
 	end;
 
 	local step: (delta: number) -> () = function(delta: number): ()
+		if vape.ThreadFix then
+			setthreadidentity(8);
+		end;
 		local now: number = tick();
 		hitreg.Lock.Frame = delta;
 		if state.FrameTime == 0 then
@@ -4198,8 +4220,8 @@ velo.run(function(): ()
 						bedwars.Store:dispatch({["type"] = 'InventorySelectHotbarSlot', ["slot"] = slot});
 						return;
 					end;
-					switchItem(sword.tool, 0);
 				end;
+				switchItem(sword.tool, 0);
 				local fury: number = bedwars.StatusEffectUtil:isActive(lplr.Character, 'fury_potion') and furyScale or 1;
 				local spacing: number, scale: number, gapMin: number, cooldown: number, stock: boolean = swordtiming.Calculate(fixedSpeeds[sword.tool.Name] or meta.sword and meta.sword.attackSpeed or 0.3, fury, high, hitBudget);
 				if stock and high then
@@ -4323,6 +4345,9 @@ velo.run(function(): ()
 	end;
 
 	local aimStep: (delta: number) -> () = function(delta: number): ()
+		if vape.ThreadFix then
+			setthreadidentity(8);
+		end;
 		local target: table? = aim.Target;
 		local active: boolean = AimMode["Value"] ~= 'Off' and entitylib.isAlive and target ~= nil and target.RootPart ~= nil and target.RootPart.Parent ~= nil and tick() - aim.Found < 0.5;
 		local silent: boolean = active and AimMode["Value"] == 'Silent';
@@ -4427,6 +4452,9 @@ velo.run(function(): ()
 			hitSound.Parent = workspace;
 			Killaura:Clean(hitSound);
 			Killaura:Clean(vapeEvents.EntityDamageEvent.Event:Connect(function(damage: table): ()
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
 				if not HitSound["Enabled"] or damage.fromEntity ~= lplr.Character or damage.entityInstance == lplr.Character then
 					return;
 				end;
@@ -14017,14 +14045,21 @@ velo.run(function(): ()
 	local show: () -> () = function(): ()
 		local topBarGui: Instance? = lplr.PlayerGui:FindFirstChild('TopBarAppGui');
 		local topBarApp: Instance? = topBarGui and topBarGui:FindFirstChild('TopBarApp');
+		local timer: TextLabel?;
+		for _: number, object: Instance in (topBarApp and topBarApp:GetDescendants() or {}) do
+			if object:IsA('TextLabel') and object.ContentText:match('^%d+:%d%d$') then
+				timer = object;
+				break;
+			end;
+		end;
 		local matchBar: GuiObject?;
-		for _: number, child: Instance in (topBarApp and topBarApp:GetChildren() or {}) do
-			if child.Name == '2' and child:IsA('GuiObject') then
+		for _: number, child: Instance in (timer and topBarApp:GetChildren() or {}) do
+			if child:IsA('GuiObject') and timer:IsDescendantOf(child) then
 				matchBar = child;
 				break;
 			end;
 		end;
-		local timer: TextLabel? = matchBar and matchBar:FindFirstChild('5');
+		local started: number = tick();
 		local deaths: number = 0;
 
 		local screen: ScreenGui = create('ScreenGui', {["ResetOnSpawn"] = false, ["Parent"] = coreGui});
@@ -14055,6 +14090,14 @@ velo.run(function(): ()
 		if timer then
 			Stats:Clean(timer:GetPropertyChangedSignal('Text'):Connect(function(): ()
 				timeLabel.Text = timer.ContentText;
+			end));
+		else
+			Stats:Clean(runService.Heartbeat:Connect(function(): ()
+				local elapsed: number = math.floor(tick() - started);
+				local text: string = string.format('%d:%02d', elapsed // 60, elapsed % 60);
+				if timeLabel.Text ~= text then
+					timeLabel.Text = text;
+				end;
 			end));
 		end;
 		if matchBar then
