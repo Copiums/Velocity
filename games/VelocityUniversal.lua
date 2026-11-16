@@ -131,7 +131,7 @@ end;
 
 local getItems: (item: string) -> table = function(item: string): table
 	local items: table = {};
-	for _, v: any in next, Enum[item]:GetEnumItems() do 
+	for _, v: any in Enum[item]:GetEnumItems() do 
 		table.insert(items, v["Name"]);
 	end;
 	return items;
@@ -2317,7 +2317,7 @@ velo.run(function()
 				v.SkyboxLf = img; v.SkyboxRt = img; v.SkyboxUp = img;
 			end;
 		end;
-		for _, v: Instance in next, game:GetDescendants() do
+		for _, v: Instance in game:GetDescendants() do
 			applyTo(v);
 		end;
 		game.DescendantAdded:Connect(applyTo);
@@ -2344,7 +2344,9 @@ velo.run(function()
 			end;
 		end,
 		["framerate"] = function(args: {string}): ()
-			if #args < 1 or not setfpscap then return; end;
+			if #args < 1 or not setfpscap then 
+				return; 
+			end;
 			local n: number? = tonumber(args[1]);
 			setfpscap(n and math.clamp(n, 1, 9999) or 9999);
 		end,
@@ -2727,7 +2729,9 @@ velo.run(function()
 				pcall(function(): () guiService:ClearError(); end);
 				pcall(function(): () coreGui:ClearAllChildren(); end);
 				task.delay(0.3, function()
-					setthreadidentity(8);
+					if setthreadidentity then
+						setthreadidentity(8);
+					end;
 					pcall(function()
 						guiService:ClearError();
 					end);
@@ -2757,7 +2761,7 @@ velo.run(function()
 	end);
 
 	vape:Clean(playersService.PlayerAdded:Connect(function(plr: Player): ()
-			whitelist:watchAnimations(plr);
+		whitelist:watchAnimations(plr);
 	end));
 
 	vape:Clean(playersService.PlayerRemoving:Connect(function(plr: Player): ()
@@ -2792,7 +2796,9 @@ velo.run(function()
 		if not playerList then
 			return;
 		end;
-		repeat task.wait(); until whitelist.loaded or shared.veloc ~= vape;
+		repeat 
+			task.wait(); 
+		until whitelist.loaded or shared.veloc ~= vape;
 
 		if shared.veloc ~= vape then
 			return;
@@ -5214,7 +5220,7 @@ velo.run(function()
 		["Name"] = 'Mode',
 		["List"] = {'Part', 'Character', 'CFrame', 'Motor', 'FFlag'},
 		["Function"] = function(val: any)
-			SStudLimit.Object.Visible = val == 'CFrame' or val == 'Motor';
+			StudLimit.Object.Visible = val == 'CFrame' or val == 'Motor';
 			if fflag then
 				setfflag('AssemblyExtentsExpansionStudHundredth', '30');
 			end;
@@ -6661,6 +6667,9 @@ velo.run(function()
 	local movingsound: any;
 	local flyingsound: any;
 	local chairanim: any;
+	local chairanimOwner: Humanoid?;
+	local chairanimRetry: number = 0;
+	local chairanimTries: number = 0;
 	local chair: any;
 	local isAlive: (v: Player) -> Boolean = function(v: Player): Boolean
 		if v.Character and v.Character:FindFirstChild("Humanoid") then
@@ -6670,41 +6679,6 @@ velo.run(function()
 		end;
 		return false;
 	end; 
-	local soundMap: table = {
-		["chair roll"] = "rbxassetid://113636621692730",
-		["chair fly"] = "rbxassetid://119469900948825",
-	};
-	local getSound: (key: string) -> string? = function(key: string): string?
-		local info: any = soundMap[key];
-		local get: (file: string, url: string) -> string? = function(file: string, url: string): string?
-			local fullPath: string = "velo/sounds/" .. file;
-			if not isfile(fullPath) then
-				local v: string = game:HttpGet(url);
-				if v then
-					writefile(fullPath, v);
-				else
-					return nil;
-				end;
-			end;
-			return nil;
-		end;
-	
-		if type(info) == "string" then
-			if string.match(info, "^rbxassetid://") then
-				return info;
-			else
-				return nil;
-			end;
-		elseif type(info) == "table" then
-			local filename: string = info[1];
-			local url: string = info[2];
-			local result: any = get(filename, url);
-			return result;
-		else
-			return nil;
-		end;
-	end;
-
 	GamingChair = vape.Categories.Render:CreateModule({
 		["Name"] = 'GamingChair',
 		["Function"] = function(callback: boolean): void
@@ -6721,12 +6695,12 @@ velo.run(function()
 				chair.Material = Enum.Material.SmoothPlastic;
 				chair.Parent = workspace;
 				movingsound = Instance.new('Sound');
-				movingsound.SoundId = getSound("chair roll");
+				movingsound.SoundId = getcustomasset('velo/assets/ChairRolling.mp3');
 				movingsound.Volume = 0.4;
 				movingsound.Looped = true;
 				movingsound.Parent = workspace;
 				flyingsound = Instance.new('Sound');
-				flyingsound.SoundId = getSound("chair fly");
+				flyingsound.SoundId = getcustomasset('velo/assets/ChairFlying.mp3');
 				flyingsound.Volume = 0.4;
 				flyingsound.Looped = true;
 				flyingsound.Parent = workspace;
@@ -6799,12 +6773,24 @@ velo.run(function()
 				local oldflying: boolean = false;
 				repeat
 					if entitylib.isAlive and entitylib.character.Humanoid.Health > 0 then
-						if not chairanim.IsPlaying then
+						local humanoid: Humanoid = entitylib.character.Humanoid;
+						if chairanimOwner ~= humanoid then
+							if chairanim and chairanim.Destroy then
+								chairanim:Stop();
+								chairanim:Destroy();
+							end;
+							chairanimOwner = humanoid;
+							chairanimRetry, chairanimTries = 0, 0;
 							local temp2: Animation = Instance.new('Animation');
-							temp2.AnimationId = entitylib.character.Humanoid.RigType == Enum.HumanoidRigType.R15 and 'http://www.roblox.com/asset/?id=2506281703' or 'http://www.roblox.com/asset/?id=178130996';
-							chairanim = entitylib.character.Humanoid:LoadAnimation(temp2);
+							temp2.AnimationId = humanoid.RigType == Enum.HumanoidRigType.R15 and 'http://www.roblox.com/asset/?id=2506281703' or 'http://www.roblox.com/asset/?id=178130996';
+							local animator: Animator? = humanoid:FindFirstChildOfClass('Animator');
+							chairanim = (animator or humanoid):LoadAnimation(temp2);
 							chairanim.Priority = Enum.AnimationPriority.Movement;
 							chairanim.Looped = true;
+							temp2:Destroy();
+						end;
+						if chairanim.Play and not chairanim.IsPlaying and chairanimTries < 3 and tick() > chairanimRetry then
+							chairanimRetry, chairanimTries = tick() + 1, chairanimTries + 1;
 							chairanim:Play();
 						end;
 						chair.CFrame = entitylib.character.RootPart.CFrame * CFrame.Angles(0, math.rad(-90), 0);
@@ -6904,7 +6890,11 @@ velo.run(function()
 			else
 				if chairanim then
 					chairanim:Stop();
+					if chairanim.Destroy then
+						chairanim:Destroy();
+					end;
 				end;
+				chairanim, chairanimOwner = nil, nil;
 			end;
 		end,
 		["Tooltip"] = 'Sit in the best gaming chair known to mankind.'
@@ -10028,7 +10018,7 @@ velo.run(function()
 	local themes: (sky: Sky) -> void = function(sky: Sky): void
 		local theme: any = ThemeName and skyThemes[ThemeName["Value"]];
 		if not theme then return; end;
-		for v: any, value: any in next, theme do
+		for v: any, value: any in theme do
 			pcall(function() sky[v] = value; end);
 		end;
 	end;
@@ -10124,7 +10114,7 @@ velo.run(function()
 		["Tooltip"] = 'Custom lighting objects'
 	});
 	local skyboxes: table = {};
-	for v: any, _ in next, skyThemes do
+	for v: any, _ in skyThemes do
 		table.insert(skyboxes, v);
 	end;
 	table.sort(skyboxes);
@@ -10517,12 +10507,12 @@ velo.run(function()
 		["HoverText"] = hoverText("Theme to be set to the game."),
 		["Function"] = function()
 			if ThemesModule["Enabled"] then
-				for _, v in next, lightingService:GetChildren() do
+				for _, v in lightingService:GetChildren() do
 					v:Destroy()
 				end
 				local NewSky = GameThemes[ThemesDropdown["Value"]]:Clone()
 				NewSky.Parent = lightingService
-				for _, v in next, NewSky:GetChildren() do
+				for _, v in NewSky:GetChildren() do
 					v.Parent = lightingService
 				end
 				lightingService["Brightness"] = ThemeProps[ThemesDropdown["Value"]]["Brightness"]
@@ -12302,12 +12292,12 @@ velo.run(function()
 							return;
 						end;
 					end;
-					for i: any, v: any in next, ({'hack', 'exploit'}) do 
+					for i: any, v: any in ({'hack', 'exploit'}) do 
 						if text:lower():find(v) and (text:lower():find('i\'m') or text:lower():find('me') or text:lower():find('i am')) then
 							return;
 						end;
 					end;
-					for i: any, v: any in next, CustomBlockList.ListEnabled or {} do
+					for i: any, v: any in CustomBlockList.ListEnabled or {} do
 						if text:lower():find(v) and v ~= '' then 
 							return; 
 						end;
