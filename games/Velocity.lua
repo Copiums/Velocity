@@ -5570,10 +5570,10 @@ velo.run(function(): ()
 	end;
 
 	AntiVoidFlag = vape.Categories.Blatant:CreateModule({
-		["Name"] = 'AntiVoidFlag',
+		["Name"] = 'AntiLagback',
 		["Function"] = function(callback: boolean): ()
 			if callback and not replicate then
-				notif('AntiVoidFlag', "This executor can't replicate the seat signal it needs", 5, 'warning');
+				notif('AntiLagback', "This executor can't replicate the seat signal it needs", 5, 'warning');
 				AntiVoidFlag:Toggle();
 				return;
 			end;
@@ -5594,7 +5594,7 @@ velo.run(function(): ()
 						if root then
 							local ground: Vector3? = findNearGround(root.Position);
 							if ground then
-								notif('AntiVoidFlag', 'Teleported.', 8, 'info');
+								notif('AntiLagback', 'Teleported.', 8, 'info');
 								root.AssemblyLinearVelocity = Vector3.new(0, 2.5, 0);
 								root.CFrame = CFrame.lookAlong(ground + Vector3.new(0, 2.5, 0), root.CFrame.LookVector);
 							end;
