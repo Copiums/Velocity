@@ -1414,9 +1414,12 @@ velo.run(function(): ()
 		if identity then
 			setthreadidentity(2);
 		end;
-		local shopModule: Instance? = ts.games.bedwars.shop:FindFirstChild('bedwars-shop');
-		if shopModule then
-			bedwars.Shop = require(shopModule).BedwarsShop;
+		local loaded: boolean, shop: any = pcall(function(): any
+			require(ts.games.bedwars.shop['bedwars-shop-override']).getBedwarsShopOverrides();
+			return require(ts.games.bedwars.shop['bedwars-shop']).BedwarsShop;
+		end);
+		if loaded and shop then
+			bedwars.Shop = shop;
 			local itemGetter: any = debug.getupvalue(bedwars.Shop.getShopItem, 1);
 			bedwars.ShopItems = type(itemGetter) == 'function' and debug.getupvalue(itemGetter, 2) or nil;
 			store.shopLoaded = true;
@@ -1426,7 +1429,14 @@ velo.run(function(): ()
 		end;
 		return store.shopLoaded;
 	end;
-	task.defer(loadShop);
+	vape:Clean(task.spawn(function(): ()
+		repeat
+			if loadShop() then
+				return;
+			end;
+			task.wait(2);
+		until vape.Loaded == nil;
+	end));
 
 	local kills: table = sessioninfo:AddItem('Kills');
 	local beds: table = sessioninfo:AddItem('Beds');
@@ -5643,9 +5653,6 @@ velo.run(function(): ()
 			end;
 			local tracked: number, lastHit: number = 0, 0;
 			NoFall:Clean(runService.PostSimulation:Connect(function(): ()
-				if vape.ThreadFix then
-					setthreadidentity(8);
-				end;
 				if not entitylib.isAlive or store.matchState ~= 1 or store.cannonFlight or store.infinitefly then
 					tracked = 0;
 					return;
@@ -6169,8 +6176,6 @@ end);
 
 velo.run(function(): ()
 	local Fly: table = {["Enabled"] = false};
-	local InfiniteFly: table = {["Enabled"] = false};
-	local InfiniteVertical: table;
 	local Mode: table = {["Value"] = 'Heatseeker'};
 	local Speed: table;
 	local VerticalSpeed: table;
@@ -6182,11 +6187,7 @@ velo.run(function(): ()
 	local Return: table;
 	local ShowProgress: table;
 	local AirOnly: table;
-	local ShowDistance: table;
 	local pullRetry: number = 0.2;
-	local hoverHeight: number = 195;
-	local groundScan: number = 175;
-	local landingPace: number = 2.55;
 	local climbKeys: {[Enum.KeyCode]: number} = {[Enum.KeyCode.Space] = 1, [Enum.KeyCode.ButtonA] = 1, [Enum.KeyCode.LeftShift] = -1, [Enum.KeyCode.ButtonL2] = -1};
 	local climb: {[number]: number} = {[1] = 0, [-1] = 0};
 	local pull: table = {["ReturnY"] = nil, ["Until"] = 0, ["Next"] = 0};
@@ -6195,7 +6196,6 @@ velo.run(function(): ()
 	local filtered: Model?;
 	local filteredFloor: BasePart?;
 	local bar: table?;
-	local session: table?;
 	local visibleIn: {[table]: {string}} = {};
 
 	local setBar: (wanted: boolean) -> () = function(wanted: boolean): ()
@@ -6253,276 +6253,6 @@ velo.run(function(): ()
 			end;
 		end;
 		return false;
-	end;
-
-	local finishInfinite: () -> () = function(): ()
-		if not session then
-			return;
-		end;
-		for object: Instance, saved: any in session.Hidden do
-			if type(saved) == 'boolean' then
-				object.Enabled = saved;
-			else
-				object.LocalTransparencyModifier = saved;
-			end;
-		end;
-		if session.Fake then
-			session.Fake:Destroy();
-		end;
-		local humanoid: Humanoid? = lplr.Character and lplr.Character:FindFirstChildOfClass('Humanoid');
-		if gameCamera.CameraSubject == session.Part and humanoid then
-			gameCamera.CameraSubject = humanoid;
-		end;
-		session.Part:Destroy();
-		session = nil;
-		if vape.MovementOwner == 'InfiniteFly' then
-			vape.MovementOwner = nil;
-		end;
-	end;
-	vape:Clean(finishInfinite);
-
-	local landInfinite: () -> () = function(): ()
-		store.infinitefly = false;
-		local noFall: table? = vape.Modules.NoFall;
-		if noFall and not noFall["Enabled"] then
-			noFall:Toggle();
-		end;
-		local fallTime: number, ground: RaycastResult? = 0, nil;
-		if entitylib.isAlive and isnetworkowner(entitylib.character.RootPart) and store.airRay then
-			local root: BasePart = entitylib.character.RootPart;
-			fallTime = 1;
-			ground = workspace:Raycast(root.Position, Vector3.new(0, -1000, 0), store.airRay);
-			if ground then
-				local height: number = math.max(root.Position.Y - ground.Position.Y - entitylib.character.Humanoid.HipHeight - root.Size.Y / 2, 0);
-				local falling: number = math.max(-root.AssemblyLinearVelocity.Y, 0);
-				fallTime = (-falling + math.sqrt(falling * falling + 2 * workspace.Gravity * height)) / workspace.Gravity;
-			end;
-		end;
-		task.delay(fallTime / landingPace, function(): ()
-			if ground and entitylib.isAlive then
-				local cell: Vector3 = bedwars.BlockController:getBlockPosition(ground.Position) * 3;
-				local center: RaycastResult? = workspace:Raycast(Vector3.new(cell.X, ground.Position.Y + 1, cell.Z), Vector3.new(0, -2, 0), store.airRay);
-				local flat: boolean = center ~= nil and center.Normal.Y > 0.99 and math.abs(center.Position.Y - ground.Position.Y) < 0.1 and not workspace:Raycast(center.Position + Vector3.new(0, 0.1, 0), Vector3.new(0, 6, 0), store.airRay);
-				entitylib.character.RootPart.CFrame = CFrame.new((flat and center.Position or ground.Position) + Vector3.new(0, 2.5, 0));
-			end;
-			finishInfinite();
-			notif('InfiniteFly', 'Landed', 2.5, 'info');
-		end);
-	end;
-
-	local startInfinite: () -> () = function(): ()
-		if not entitylib.isAlive or session or not store.airRay or workspace:Raycast(entitylib.character.RootPart.Position, Vector3.new(0, -1000, 0), store.airRay) then
-			notif('InfiniteFly', 'Only starts over the void.', 8, 'warning');
-			task.defer(function(): ()
-				if InfiniteFly["Enabled"] then
-					InfiniteFly:Toggle();
-				end;
-			end);
-			return;
-		end;
-		local character: Model = entitylib.character.Character;
-		local root: BasePart = entitylib.character.RootPart;
-		local start: Vector3 = root.Position;
-		local part: Part = Instance.new('Part');
-		part.Transparency = 1;
-		part.CanQuery = false;
-		part.CanTouch = false;
-		part.CanCollide = false;
-		part.Anchored = true;
-		part.CFrame = entitylib.character.Head.CFrame;
-		part.Parent = workspace;
-		session = {["Part"] = part, ["Hidden"] = {}, ["Twins"] = {}};
-		local active: table = session;
-
-		local archivable: boolean = character.Archivable;
-		character.Archivable = true;
-		local fake: Model = character:Clone();
-		character.Archivable = archivable;
-		local pairTwins: (real: Instance, copy: Instance) -> ();
-		pairTwins = function(real: Instance, copy: Instance): ()
-			local copies: {Instance} = copy:GetChildren();
-			local index: number = 1;
-			for _: number, child: Instance in real:GetChildren() do
-				local twin: Instance? = copies[index];
-				if twin and twin.Name == child.Name and twin.ClassName == child.ClassName then
-					index += 1;
-					if child:IsA('BasePart') then
-						active.Twins[child] = twin;
-					end;
-					pairTwins(child, twin);
-				end;
-			end;
-		end;
-		pairTwins(character, fake);
-		local stripped: {Instance} = fake:GetDescendants();
-		table.insert(stripped, fake);
-		for _: number, object: Instance in stripped do
-			for _: number, tag: string in object:GetTags() do
-				object:RemoveTag(tag);
-			end;
-			if object:IsA('LuaSourceContainer') or object:IsA('JointInstance') or object:IsA('Constraint') or object:IsA('WeldConstraint') or object:IsA('ParticleEmitter') or object:IsA('Trail') or object:IsA('Beam') or object:IsA('Highlight') or object:IsA('ForceField') or object:IsA('Sound') or object:IsA('ObjectValue') then
-				object:Destroy();
-			elseif object:IsA('BasePart') then
-				object.CanCollide = false;
-				object.CanQuery = false;
-				object.CanTouch = false;
-				object.Anchored = true;
-			end;
-		end;
-		local fakeHumanoid: Humanoid? = fake:FindFirstChildOfClass('Humanoid');
-		if fakeHumanoid then
-			fakeHumanoid.RequiresNeck = false;
-			fakeHumanoid.BreakJointsOnDeath = false;
-			fakeHumanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None;
-			fakeHumanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff;
-			fakeHumanoid.EvaluateStateMachine = false;
-		end;
-		fake.Name = 'InfiniteFlyFake';
-		fake.Parent = workspace;
-		active.Fake = fake;
-
-		local hide: (object: Instance) -> () = function(object: Instance): ()
-			if active.Hidden[object] ~= nil then
-				return;
-			end;
-			if object:IsA('BasePart') or object:IsA('Decal') then
-				active.Hidden[object] = object.LocalTransparencyModifier;
-				object.LocalTransparencyModifier = 1;
-			elseif object:IsA('BillboardGui') then
-				active.Hidden[object] = object.Enabled;
-				object.Enabled = false;
-			end;
-		end;
-		for _: number, object: Instance in character:GetDescendants() do
-			hide(object);
-		end;
-		InfiniteFly:Clean(character.DescendantAdded:Connect(hide));
-		InfiniteFly:Clean(character.DescendantRemoving:Connect(function(object: Instance): ()
-			local twin: Instance? = active.Twins[object];
-			if twin then
-				active.Twins[object] = nil;
-				twin:Destroy();
-			end;
-			local saved: any = active.Hidden[object];
-			if saved ~= nil then
-				active.Hidden[object] = nil;
-				if type(saved) == 'boolean' then
-					object.Enabled = saved;
-				else
-					object.LocalTransparencyModifier = saved;
-				end;
-			end;
-		end));
-		gameCamera.CameraSubject = part;
-		store.infinitefly = true;
-		vape.MovementOwner = 'InfiniteFly';
-
-		local label: TextLabel?, shadow: TextLabel?;
-		if ShowDistance["Enabled"] then
-			label = Instance.new('TextLabel');
-			label.Size = UDim2.fromOffset(100, 20);
-			label.Position = UDim2.new(0.5, 6, 0.5, 60);
-			label.AnchorPoint = Vector2.new(0.5, 0);
-			label.BackgroundTransparency = 1;
-			label.Text = '0 blocks';
-			label.ZIndex = 6;
-			label.TextColor3 = Color3.new(1, 1, 1);
-			label.TextSize = 18;
-			label.FontFace = uipallet.Font;
-			shadow = label:Clone();
-			shadow.ZIndex = 5;
-			shadow.Position += UDim2.fromOffset(1, 1);
-			shadow.TextColor3 = Color3.new();
-			label.Parent = vape.gui;
-			shadow.Parent = vape.gui;
-			InfiniteFly:Clean(label);
-			InfiniteFly:Clean(shadow);
-		end;
-
-		local simTime: number, lagAverage: number?, lastView: number?, lastRoot: Vector3?, rootVelocity: Vector3 = 0, nil, nil, nil, Vector3.zero;
-		local fakeVisible: boolean = true;
-		InfiniteFly:Clean(runService.PostSimulation:Connect(function(delta: number): ()
-			if not entitylib.isAlive then
-				return;
-			end;
-			local position: Vector3 = entitylib.character.RootPart.Position;
-			simTime += delta;
-			if lastRoot and delta > 0 then
-				rootVelocity = Vector3.new(position.X - lastRoot.X, 0, position.Z - lastRoot.Z) / delta;
-			end;
-			lastRoot = position;
-		end));
-		runService:BindToRenderStep('VelocityInfiniteFly', Enum.RenderPriority.Camera.Value - 1, function(delta: number): ()
-			for object: Instance, saved: any in active.Hidden do
-				if type(saved) == 'boolean' then
-					object.Enabled = false;
-				elseif object.LocalTransparencyModifier ~= 1 then
-					object.LocalTransparencyModifier = 1;
-				end;
-			end;
-			if not entitylib.isAlive then
-				return;
-			end;
-			local now: number = os.clock();
-			local step: number = math.min(lastView and now - lastView or delta, 0.1);
-			lastView = now;
-			local lag: number = now - simTime;
-			lagAverage = lagAverage and lagAverage + (lag - lagAverage) * math.min(step / 0.25, 1) or lag;
-			local lead: Vector3 = rootVelocity * (lag - lagAverage);
-			if lead.Magnitude > 2 then
-				lead = lead.Unit * 2;
-			end;
-			local rootPosition: Vector3 = entitylib.character.RootPart.Position;
-			part.CFrame = CFrame.new(rootPosition.X + lead.X, part.Position.Y + step * (climb[1] + climb[-1]) * InfiniteVertical["Value"], rootPosition.Z + lead.Z);
-			local shift: Vector3 = Vector3.new(part.Position.X - rootPosition.X, part.Position.Y - entitylib.character.Head.Position.Y, part.Position.Z - rootPosition.Z);
-			for real: Instance, twin: BasePart in active.Twins do
-				twin.CFrame = real.CFrame + shift;
-			end;
-			local visible: boolean = (gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude > 1;
-			if visible ~= fakeVisible then
-				fakeVisible = visible;
-				for _: number, object: Instance in fake:GetDescendants() do
-					if object:IsA('BillboardGui') then
-						object.Enabled = visible;
-					elseif object:IsA('BasePart') or object:IsA('Decal') then
-						object.LocalTransparencyModifier = visible and 0 or 1;
-					end;
-				end;
-			end;
-		end);
-		InfiniteFly:Clean(function(): ()
-			runService:UnbindFromRenderStep('VelocityInfiniteFly');
-		end);
-
-		local scanDirections: {Vector3} = {Vector3.new(1, 0, 0), Vector3.new(0, 0, 1), Vector3.new(-1, 0, 0), Vector3.new(0, 0, -1)};
-		InfiniteFly:Clean(runService.PreSimulation:Connect(function(): ()
-			if vape.ThreadFix then
-				setthreadidentity(8);
-			end;
-			if not entitylib.isAlive or not root or not isnetworkowner(root) then
-				notif('InfiniteFly', 'Network ownership disowned', 10, 'alert');
-				InfiniteFly:Toggle();
-				return;
-			end;
-			if workspace:Raycast(root.Position, Vector3.new(0, -1000, 0), store.airRay) then
-				notif('InfiniteFly', 'Force landing', 3.5, 'alert');
-				InfiniteFly:Toggle();
-				return;
-			end;
-			if label and shadow then
-				label.Text = math.round((start - Vector3.new(root.Position.X, part.Position.Y, root.Position.Z)).Magnitude / 3)..' blocks';
-				shadow.Text = label.Text;
-			end;
-			local nearGround: boolean = root.Position.Y <= part.Position.Y + 4;
-			for _: number, direction: Vector3 in {entitylib.character.Humanoid.MoveDirection, table.unpack(scanDirections)} do
-				for distance: number = 1, (nearGround and 0 or 4) do
-					nearGround = nearGround or workspace:Blockcast(root.CFrame + direction * distance, Vector3.new(3, 3, 3), Vector3.new(0, -groundScan, 0), store.airRay) ~= nil;
-				end;
-			end;
-			if nearGround then
-				root.CFrame = CFrame.lookAlong(Vector3.new(root.Position.X, hoverHeight, root.Position.Z), root.CFrame.LookVector);
-			end;
-		end));
 	end;
 
 	local startHeatseeker: () -> () = function(): ()
@@ -6712,34 +6442,402 @@ velo.run(function(): ()
 	visibleIn[ShowProgress] = {'Heatseeker', 'TP Down'};
 	visibleIn[AirOnly] = {'Heatseeker', 'TP Down'};
 	refreshOptions();
+end);
+
+velo.run(function(): ()
+	local InfiniteFly: table = {["Enabled"] = false};
+	local VerticalValue: table;
+	local label: TextLabel?, shadowLabel: TextLabel? = nil, nil;
+	local up: number, down: number = 0, 0;
+	local landing: boolean = false;
+	local fake: Model?;
+	local fakeVisible: boolean = true;
+	local twins: {[Instance]: BasePart} = {};
+	local hidden: {[Instance]: any} = {};
+	local simTime: number = 0;
+	local lagAverage: number?;
+	local lastView: number?;
+	local lastRoot: Vector3?;
+	local rootVelocity: Vector3 = Vector3.zero;
+	local viewBound: boolean = false;
+
+	local hiddenPart: Part = Instance.new('Part');
+	hiddenPart.Parent = workspace;
+	hiddenPart.Transparency = 1;
+	hiddenPart.CanQuery = false;
+	hiddenPart.CanTouch = false;
+	hiddenPart.CanCollide = false;
+	hiddenPart.Anchored = true;
+	vape:Clean(hiddenPart);
+
+	local findGround: () -> RaycastResult? = function(): RaycastResult?
+		for _: number, direction: Vector3 in {entitylib.character.Humanoid.MoveDirection, Vector3.new(1, 0, 0), Vector3.new(0, 0, 1), Vector3.new(-1, 0, 0), Vector3.new(0, 0, -1)} do
+			for step: number = 1, 4 do
+				local ground: RaycastResult? = workspace:Blockcast(entitylib.character.RootPart.CFrame + (direction * step), Vector3.new(3, 3, 3), Vector3.new(0, -175, 0), store.airRay);
+				if ground then
+					return ground;
+				end;
+			end;
+		end;
+		return nil;
+	end;
+
+	local centerGround: (ground: RaycastResult) -> Vector3 = function(ground: RaycastResult): Vector3
+		local cell: Vector3 = bedwars.BlockController:getBlockPosition(ground.Position) * 3;
+		local center: RaycastResult? = workspace:Raycast(Vector3.new(cell.X, ground.Position.Y + 1, cell.Z), Vector3.new(0, -2, 0), store.airRay);
+		if center and center.Normal.Y > 0.99 and math.abs(center.Position.Y - ground.Position.Y) < 0.1 and not workspace:Raycast(center.Position + Vector3.new(0, 0.1, 0), Vector3.new(0, 6, 0), store.airRay) then
+			return center.Position;
+		end;
+		return ground.Position;
+	end;
+
+	local hide: (object: Instance) -> () = function(object: Instance): ()
+		if hidden[object] ~= nil then
+			return;
+		end;
+		if object:IsA('BasePart') or object:IsA('Decal') then
+			hidden[object] = object.LocalTransparencyModifier;
+			object.LocalTransparencyModifier = 1;
+		elseif object:IsA('BillboardGui') then
+			hidden[object] = object.Enabled;
+			object.Enabled = false;
+		end;
+	end;
+
+	local restore: (object: Instance, value: any) -> () = function(object: Instance, value: any): ()
+		if type(value) == 'boolean' then
+			(object :: BillboardGui).Enabled = value;
+		else
+			(object :: BasePart).LocalTransparencyModifier = value;
+		end;
+	end;
+
+	local release: (object: Instance) -> () = function(object: Instance): ()
+		local twin: BasePart? = twins[object];
+		if twin then
+			twins[object] = nil;
+			twin:Destroy();
+		end;
+		local value: any = hidden[object];
+		if value ~= nil then
+			hidden[object] = nil;
+			restore(object, value);
+		end;
+	end;
+
+	local match: (real: Instance, copy: Instance) -> ();
+	match = function(real: Instance, copy: Instance): ()
+		local copies: {Instance} = copy:GetChildren();
+		local index: number = 1;
+		for _: number, child: Instance in real:GetChildren() do
+			local twin: Instance? = copies[index];
+			if twin and twin.Name == child.Name and twin.ClassName == child.ClassName then
+				index += 1;
+				if child:IsA('BasePart') and twin:IsA('BasePart') then
+					twins[child] = twin;
+				end;
+				match(child, twin);
+			end;
+		end;
+	end;
+
+	local createFake: () -> () = function(): ()
+		if fake then
+			fake:Destroy();
+			fake = nil;
+		end;
+		table.clear(twins);
+		local character: Model = entitylib.character.Character;
+		local archivable: boolean = character.Archivable;
+		character.Archivable = true;
+		local clone: Model? = character:Clone();
+		character.Archivable = archivable;
+		if not clone then
+			return;
+		end;
+		match(character, clone);
+		local objects: {Instance} = clone:GetDescendants();
+		table.insert(objects, clone);
+		local removed: {Instance} = {};
+		for _: number, object: Instance in objects do
+			for _: number, tag: string in object:GetTags() do
+				object:RemoveTag(tag);
+			end;
+			if object:IsA('LuaSourceContainer') or object:IsA('JointInstance') or object:IsA('Constraint') or object:IsA('WeldConstraint') or object:IsA('ParticleEmitter') or object:IsA('Trail') or object:IsA('Beam') or object:IsA('Highlight') or object:IsA('ForceField') or object:IsA('Sound') or object:IsA('ObjectValue') then
+				table.insert(removed, object);
+			elseif object:IsA('BasePart') then
+				object.CanCollide = false;
+				object.CanQuery = false;
+				object.CanTouch = false;
+				object.Anchored = true;
+			end;
+		end;
+		for _: number, object: Instance in removed do
+			object:Destroy();
+		end;
+		local humanoid: Humanoid? = clone:FindFirstChildOfClass('Humanoid');
+		if humanoid then
+			humanoid.RequiresNeck = false;
+			humanoid.BreakJointsOnDeath = false;
+			humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None;
+			humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff;
+			humanoid.EvaluateStateMachine = false;
+		end;
+		clone.Name = 'InfiniteFlyFake';
+		clone.Parent = workspace;
+		fake = clone;
+		fakeVisible = true;
+	end;
+
+	local resetView: () -> () = function(): ()
+		simTime = 0;
+		lagAverage = nil;
+		lastView = nil;
+		lastRoot = nil;
+		rootVelocity = Vector3.zero;
+	end;
+
+	local trackRoot: (delta: number) -> () = function(delta: number): ()
+		if not entitylib.isAlive then
+			return;
+		end;
+		local position: Vector3 = entitylib.character.RootPart.Position;
+		simTime += delta;
+		if lastRoot and delta > 0 then
+			rootVelocity = Vector3.new(position.X - lastRoot.X, 0, position.Z - lastRoot.Z) / delta;
+		end;
+		lastRoot = position;
+	end;
+
+	local updateView: (delta: number) -> () = function(delta: number): ()
+		for object: Instance, value: any in hidden do
+			if type(value) == 'number' then
+				if (object :: BasePart).LocalTransparencyModifier ~= 1 then
+					(object :: BasePart).LocalTransparencyModifier = 1;
+				end;
+			elseif (object :: BillboardGui).Enabled then
+				(object :: BillboardGui).Enabled = false;
+			end;
+		end;
+		if not entitylib.isAlive then
+			return;
+		end;
+		local now: number = os.clock();
+		local step: number = math.min(lastView and now - lastView or delta, 0.1);
+		lastView = now;
+		local lag: number = now - simTime;
+		lagAverage = lagAverage and (lagAverage + (lag - lagAverage) * math.min(step / 0.25, 1)) or lag;
+		local extra: Vector3 = rootVelocity * (lag - lagAverage);
+		if extra.Magnitude > 2 then
+			extra = extra.Unit * 2;
+		end;
+		local root: Vector3 = entitylib.character.RootPart.Position;
+		hiddenPart.CFrame = CFrame.new(root.X + extra.X, hiddenPart.Position.Y + step * ((up + down) * VerticalValue["Value"]), root.Z + extra.Z);
+		if not fake then
+			return;
+		end;
+		local shift: Vector3 = Vector3.new(hiddenPart.Position.X - root.X, hiddenPart.Position.Y - entitylib.character.Head.Position.Y, hiddenPart.Position.Z - root.Z);
+		for real: Instance, twin: BasePart in twins do
+			twin.CFrame = (real :: BasePart).CFrame + shift;
+		end;
+		local visible: boolean = (gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude > 1;
+		if visible ~= fakeVisible then
+			fakeVisible = visible;
+			for _: number, object: Instance in fake:QueryDescendants('BasePart, Decal, BillboardGui') do
+				if object:IsA('BillboardGui') then
+					object.Enabled = visible;
+				else
+					(object :: BasePart).LocalTransparencyModifier = visible and 0 or 1;
+				end;
+			end;
+		end;
+	end;
+
+	local finish: () -> () = function(): ()
+		for object: Instance, value: any in hidden do
+			restore(object, value);
+		end;
+		table.clear(hidden);
+		table.clear(twins);
+		if fake then
+			fake:Destroy();
+			fake = nil;
+		end;
+		local character: Model? = lplr.Character;
+		local humanoid: Humanoid? = character and character:FindFirstChildOfClass('Humanoid');
+		if gameCamera.CameraSubject == hiddenPart and humanoid then
+			gameCamera.CameraSubject = humanoid;
+		end;
+		landing = false;
+		if vape.MovementOwner == 'InfiniteFly' then
+			vape.MovementOwner = nil;
+		end;
+	end;
+	vape:Clean(finish);
 
 	InfiniteFly = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'InfiniteFly',
 		["Function"] = function(callback: boolean): ()
-			if not callback then
-				if session and store.infinitefly then
-					landInfinite();
-				end;
-				return;
+			if label and shadowLabel then
+				label.Visible = callback;
+				shadowLabel.Visible = callback;
 			end;
-			trackClimb(InfiniteFly);
-			startInfinite();
+			if callback then
+				if not entitylib.isAlive or landing or workspace:Raycast(entitylib.character.RootPart.Position, Vector3.new(0, -1000, 0), store.airRay) then
+					notif('InfiniteFly', 'Cannot fly at this state.', 8, 'warning');
+					InfiniteFly:Toggle();
+					return;
+				end;
+				hiddenPart.CFrame = entitylib.character.Character.Head.CFrame;
+				createFake();
+				gameCamera.CameraSubject = hiddenPart;
+				for _: number, object: Instance in entitylib.character.Character:QueryDescendants('BasePart, Decal, BillboardGui') do
+					hide(object);
+				end;
+				InfiniteFly:Clean(entitylib.character.Character.DescendantAdded:Connect(hide));
+				InfiniteFly:Clean(entitylib.character.Character.DescendantRemoving:Connect(release));
+				store.infinitefly = true;
+				vape.MovementOwner = 'InfiniteFly';
+				landing = true;
+				local root: BasePart = entitylib.character.RootPart;
+				local start: CFrame = root.CFrame;
+				root.CFrame = start;
+				InfiniteFly:Clean(inputService.InputBegan:Connect(function(input: InputObject): ()
+					if not inputService:GetFocusedTextBox() then
+						if input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.ButtonA then
+							up = 1;
+						elseif input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.ButtonL2 then
+							down = -1;
+						end;
+					end;
+				end));
+				InfiniteFly:Clean(inputService.InputEnded:Connect(function(input: InputObject): ()
+					if input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.ButtonA then
+						up = 0;
+					elseif input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.ButtonL2 then
+						down = 0;
+					end;
+				end));
+				resetView();
+				InfiniteFly:Clean(runService.PostSimulation:Connect(trackRoot));
+				if viewBound then
+					runService:UnbindFromRenderStep('InfiniteFlyView');
+				end;
+				runService:BindToRenderStep('InfiniteFlyView', Enum.RenderPriority.Camera.Value - 1, updateView);
+				viewBound = true;
+				InfiniteFly:Clean(function(): ()
+					runService:UnbindFromRenderStep('InfiniteFlyView');
+					viewBound = false;
+				end);
+				InfiniteFly:Clean(runService.PreSimulation:Connect(function(): ()
+					if vape.ThreadFix then
+						setthreadidentity(8);
+					end;
+					if not entitylib.isAlive or not root or not isnetworkowner(root) then
+						notif('InfiniteFly', 'Network ownership disowned', 10, 'alert');
+						InfiniteFly:Toggle();
+						return;
+					end;
+					if workspace:Raycast(root.Position, Vector3.new(0, -1000, 0), store.airRay) then
+						notif('InfiniteFly', 'Force landing', 3.5, 'alert');
+						InfiniteFly:Toggle();
+						return;
+					end;
+					local anchor: Vector3 = Vector3.new(root.Position.X, hiddenPart.Position.Y, root.Position.Z);
+					if label and shadowLabel then
+						if vape.ThreadFix then
+							setthreadidentity(8);
+						end;
+						label.Text = math.round((start.Position - anchor).Magnitude / 3)..' blocks';
+						shadowLabel.Text = label.Text;
+					end;
+					if root.CFrame.Y <= (hiddenPart.CFrame.Y + 4) or findGround() then
+						if vape.ThreadFix then
+							setthreadidentity(8);
+						end;
+						root.CFrame = CFrame.lookAlong(Vector3.new(root.CFrame.X, 195, root.CFrame.Z), root.CFrame.LookVector);
+					end;
+				end));
+			elseif store.infinitefly then
+				store.infinitefly = false;
+				local noFall: table? = vape.Modules.NoFall;
+				if noFall and not noFall["Enabled"] then
+					noFall:Toggle();
+				end;
+				local fall: number = 0;
+				local ground: RaycastResult? = nil;
+				if entitylib.isAlive and isnetworkowner(entitylib.character.RootPart) then
+					local root: BasePart = entitylib.character.RootPart;
+					fall = 1;
+					ground = workspace:Raycast(root.Position, Vector3.new(0, -1000, 0), store.airRay);
+					if ground then
+						local height: number = math.max(root.Position.Y - ground.Position.Y - entitylib.character.Humanoid.HipHeight - (root.Size.Y / 2), 0);
+						local speed: number = math.max(-root.AssemblyLinearVelocity.Y, 0);
+						fall = (-speed + math.sqrt((speed * speed) + (2 * workspace.Gravity * height))) / workspace.Gravity;
+					end;
+				end;
+				task.wait(fall / 2.55);
+				if ground and entitylib.isAlive then
+					entitylib.character.RootPart.CFrame = CFrame.new(centerGround(ground) + Vector3.new(0, 2.5, 0));
+				end;
+				finish();
+				notif('InfiniteFly', 'Landed', 2.5, 'info');
+			end;
 		end,
-		["Tooltip"] = 'Hover over the void with your body parked out of reach.'
+		["Tooltip"] = 'Makes you go zoom',
+		["ExtraText"] = function(): string
+			return 'Heatseeker';
+		end
 	});
-	InfiniteVertical = InfiniteFly:CreateSlider({
+	VerticalValue = InfiniteFly:CreateSlider({
 		["Name"] = 'Vertical Speed',
 		["Min"] = 1,
 		["Max"] = 150,
 		["Default"] = 50,
 		["Suffix"] = function(value: number): string
-			return value == 1 and 'stud' or 'studs';
+			return value <= 1 and 'stud' or 'studs';
 		end
 	});
-	ShowDistance = InfiniteFly:CreateToggle({
+	InfiniteFly:CreateToggle({
 		["Name"] = 'Show distance',
-		["Default"] = true,
-		["Tooltip"] = 'Shows how many blocks you travelled.'
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
+				local created: TextLabel = Instance.new('TextLabel');
+				created.Size = UDim2.fromOffset(100, 20);
+				created.Position = UDim2.new(0.5, 6, 0.5, 60);
+				created.BackgroundTransparency = 1;
+				created.AnchorPoint = Vector2.new(0.5, 0);
+				created.Text = '0 blocks';
+				created.ZIndex = 6;
+				created.TextColor3 = Color3.new(1, 1, 1);
+				created.TextSize = 18;
+				created.RichText = true;
+				created.FontFace = uipallet.Font;
+				created.Visible = InfiniteFly["Enabled"];
+				created.Parent = vape.gui;
+				local shadow: TextLabel = created:Clone();
+				shadow.ZIndex = 5;
+				shadow.AnchorPoint = Vector2.new(0.5, 0);
+				shadow.Position += UDim2.fromOffset(1, 1);
+				shadow.Text = created.ContentText;
+				shadow.TextColor3 = Color3.new();
+				shadow.Parent = vape.gui;
+				label, shadowLabel = created, shadow;
+			else
+				if shadowLabel then
+					shadowLabel:Destroy();
+					shadowLabel = nil;
+				end;
+				if label then
+					label:Destroy();
+					label = nil;
+				end;
+			end;
+		end,
+		["Default"] = true
 	});
 end);
 
@@ -15393,7 +15491,7 @@ velo.run(function(): ()
 			end;
 		end;
 		local rows: number = math.clamp(math.ceil(last / columns), rowLimits.X, rowLimits.Y);
-		if rows ~= layout.Rows or ShowHotbar["Enabled"] ~= layout.Hotbar then
+		if rows ~= layout.Rows or ShowHotbar["Enabled"] ~= layout.Hotbar or #tiles < (rows + (ShowHotbar["Enabled"] and 1 or 0)) * columns then
 			layout.Rows, layout.Hotbar = rows, ShowHotbar["Enabled"];
 			local total: number = rows + (layout.Hotbar and 1 or 0);
 			for index: number = 1, math.max(total * columns, #tiles) do
