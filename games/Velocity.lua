@@ -73,7 +73,7 @@ local prediction: table = vape.Libraries.prediction;
 local getfontsize: (...any) -> Vector2 = vape.Libraries.getfontsize;
 local getcustomasset: (path: string) -> string = vape.Libraries.getcustomasset;
 
-local isnetworkowner: (part: BasePart) -> boolean = identifyexecutor and table.find({'AWP', 'Nihon'}, ({identifyexecutor()})[1]) and isnetworkowner or function(part: BasePart): boolean
+local isnetworkowner: (part: BasePart) -> boolean = isnetworkowner or function(part: BasePart): boolean
 	return true;
 end;
 
@@ -1247,7 +1247,11 @@ velo.run(function(): ()
 			refreshKits();
 		end;
 		if new.Game ~= old.Game then
+			local previous: number = store.matchState;
 			store.matchState = new.Game.matchState;
+			if previous == 0 and store.matchState ~= 0 then
+				vapeEvents.MatchStarted:Fire();
+			end;
 			store.queueType = new.Game.queueType or 'bedwars_test';
 		end;
 		if new.Inventory == old.Inventory then
@@ -1460,8 +1464,16 @@ velo.run(function(): ()
 		store.map = world;
 		local airRay: RaycastParams = RaycastParams.new();
 		airRay.FilterType = Enum.RaycastFilterType.Include;
-		airRay.FilterDescendantsInstances = {world.Parent or world};
+		airRay.FilterDescendantsInstances = {world};
 		store.airRay = airRay;
+		local worlds: Instance? = world.Parent;
+		vape:Clean(vapeEvents.MatchStarted.Event:Connect(function(): ()
+			local current: Instance? = worlds and worlds:GetChildren()[1];
+			if current then
+				store.map = current;
+				airRay.FilterDescendantsInstances = {current};
+			end;
+		end));
 		local blockFolder: Instance? = world:FindFirstChild('Blocks');
 		if blockFolder then
 			vape:Clean(blockFolder.ChildRemoved:Connect(function(): ()
@@ -5306,7 +5318,7 @@ velo.run(function(): ()
 				store.antiFallPart = part;
 				AntiFall:Clean(part);
 				AntiFall:Clean(part.Touched:Connect(function(touched: BasePart): ()
-					if touched.Parent ~= lplr.Character or not entitylib.isAlive or store.infinitefly or touchDebounce >= tick() then
+					if touched.Parent ~= lplr.Character or not entitylib.isAlive or vape.MovementOwner or touchDebounce >= tick() then
 						return;
 					end;
 					touchDebounce = tick() + 0.1;
@@ -5324,7 +5336,7 @@ velo.run(function(): ()
 					wallRay.CollisionGroup = root.CollisionGroup;
 					stopWalking();
 					walker = runService.PreSimulation:Connect(function(): ()
-						if vape.Modules.Fly["Enabled"] or vape.Modules.LongJump["Enabled"] or store.infinitefly or not entitylib.isAlive or lplr:GetAttribute('LastTeleported') ~= lastTeleport then
+						if vape.Modules.Fly["Enabled"] or vape.Modules.LongJump["Enabled"] or vape.MovementOwner or not entitylib.isAlive or lplr:GetAttribute('LastTeleported') ~= lastTeleport then
 							stopWalking();
 							return;
 						end;
@@ -5365,7 +5377,7 @@ velo.run(function(): ()
 				if Platform["Enabled"] and not platformBuilt then
 					buildPlatform();
 				end;
-				if tick() < nextVoid or not entitylib.isAlive or store.infinitefly then
+				if tick() < nextVoid or not entitylib.isAlive or vape.MovementOwner then
 					return;
 				end;
 				nextVoid = tick() + voidRate;
@@ -5529,74 +5541,66 @@ end);
 
 velo.run(function(): ()
 	local AntiVoidFlag: table = {["Enabled"] = false};
-	local groundAxes: {Vector3} = {Vector3.xAxis, Vector3.zAxis, -Vector3.xAxis, -Vector3.zAxis};
+	local replicate: ((...any) -> ())? = replicatesignal and (clonefunction and clonefunction(replicatesignal) or replicatesignal) or nil;
 
-	local nearGround: (origin: Vector3) -> Vector3? = function(origin: Vector3): Vector3?
-		local ground: Vector3?, groundDistance: number = nil, math.huge;
-		for _: number, axis: Vector3 in groundAxes do
+	local findNearGround: (origin: Vector3) -> Vector3? = function(origin: Vector3): Vector3?
+		local positions: {Vector3} = {};
+		for _: number, axis: Vector3 in {Vector3.new(1, 0, 0), Vector3.new(0, 0, 1), Vector3.new(-1, 0, 0), Vector3.new(0, 0, -1)} do
 			for step: number = 1, 18 do
-				local hit: RaycastResult? = workspace:Raycast(origin + Vector3.new(0, 500, 0) + axis * step, Vector3.new(0, -1000, 0), store.airRay);
-				local distance: number = hit and (Vector3.new(origin.X, hit.Position.Y, origin.Z) - hit.Position).Magnitude or math.huge;
-				if distance < groundDistance then
-					ground, groundDistance = hit.Position, distance;
+				local groundRay: RaycastResult? = workspace:Raycast((origin + Vector3.new(0, 500, 0)) + (axis * step), Vector3.new(0, -1000, 0), store.airRay);
+				if groundRay then
+					table.insert(positions, groundRay.Position);
 				end;
 			end;
 		end;
-		return ground;
+		table.sort(positions, function(a: Vector3, b: Vector3): boolean
+			return (Vector3.new(origin.X, a.Y, origin.Z) - a).Magnitude < (Vector3.new(origin.X, b.Y, origin.Z) - b).Magnitude;
+		end);
+		return positions[1];
 	end;
 
 	AntiVoidFlag = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'AntiVoidFlag',
 		["Function"] = function(callback: boolean): ()
+			if callback and not replicate then
+				notif('AntiVoidFlag', "This executor can't replicate the seat signal it needs", 5, 'warning');
+				AntiVoidFlag:Toggle();
+				return;
+			end;
 			if not callback then
 				return;
 			end;
-			if not replicatesignal then
-				notif('AntiVoidFlag', "This executor can't replicate the seat signal it needs", 5, 'warning');
-				task.defer(function(): ()
-					if AntiVoidFlag["Enabled"] then
-						AntiVoidFlag:Toggle();
-					end;
-				end);
-				return;
-			end;
-			local seat: Instance = replicatedStorage.Assets.Effects.snowball_rider.Handle.Seat;
-			local welded: boolean = false;
-			AntiVoidFlag:Clean(function(): ()
-				if welded then
-					replicatesignal(seat.RemoteDestroySeatWeld);
-					welded = false;
-				end;
-			end);
-			AntiVoidFlag:Clean(runService.Heartbeat:Connect(function(): ()
-				if vape.ThreadFix then
-					setthreadidentity(8);
-				end;
-				if not entitylib.isAlive then
-					if welded then
-						replicatesignal(seat.RemoteDestroySeatWeld);
+			local seat: Instance, welded: boolean = replicatedStorage.Assets.Effects.snowball_rider.Handle.Seat, false;
+			repeat
+				if entitylib.isAlive then
+					local root: BasePart? = lplr.Character:FindFirstChild('HumanoidRootPart');
+					local humanoid: Humanoid? = lplr.Character:FindFirstChildOfClass('Humanoid');
+					if root and humanoid and not isnetworkowner(root) and not workspace:Raycast(root.Position, Vector3.new(0, -1000, 0), store.airRay) then
+						root.AssemblyLinearVelocity = Vector3.zero;
+						welded = true;
+						humanoid:ChangeState(Enum.HumanoidStateType.Jumping);
+						replicate(seat.RemoteCreateSeatWeld, humanoid);
+					elseif (root and isnetworkowner(root) and welded) or (not root and welded) then
+						if root then
+							local ground: Vector3? = findNearGround(root.Position);
+							if ground then
+								notif('AntiVoidFlag', 'Teleported.', 8, 'info');
+								root.AssemblyLinearVelocity = Vector3.new(0, 2.5, 0);
+								root.CFrame = CFrame.lookAlong(ground + Vector3.new(0, 2.5, 0), root.CFrame.LookVector);
+							end;
+						end;
+						replicate(seat.RemoteDestroySeatWeld);
 						welded = false;
 					end;
-					return;
-				end;
-				local root: BasePart? = lplr.Character:FindFirstChild('HumanoidRootPart');
-				local humanoid: Humanoid? = lplr.Character:FindFirstChildOfClass('Humanoid');
-				if root and humanoid and not isnetworkowner(root) and not workspace:Raycast(root.Position, Vector3.new(0, -1000, 0), store.airRay) then
-					root.AssemblyLinearVelocity = Vector3.zero;
-					welded = true;
-					humanoid:ChangeState(Enum.HumanoidStateType.Jumping);
-					replicatesignal(seat.RemoteCreateSeatWeld, humanoid);
-				elseif welded and (not root or isnetworkowner(root)) then
-					local ground: Vector3? = root and nearGround(root.Position);
-					if root and ground then
-						notif('AntiVoidFlag', 'Teleported.', 8, 'info');
-						root.AssemblyLinearVelocity = Vector3.new(0, 2.5, 0);
-						root.CFrame = CFrame.lookAlong(ground + Vector3.new(0, 2.5, 0), root.CFrame.LookVector);
-					end;
-					replicatesignal(seat.RemoteDestroySeatWeld);
+				elseif welded then
+					replicate(seat.RemoteDestroySeatWeld);
 					welded = false;
 				end;
-			end));
+				task.wait();
+			until not AntiVoidFlag["Enabled"];
+			if welded then
+				replicate(seat.RemoteDestroySeatWeld);
+			end;
 		end,
 		["Tooltip"] = 'When the server takes your character over the void, welds you to a seat until control returns, then puts you on the nearest ground'
 	});
@@ -6271,6 +6275,9 @@ velo.run(function(): ()
 		end;
 		session.Part:Destroy();
 		session = nil;
+		if vape.MovementOwner == 'InfiniteFly' then
+			vape.MovementOwner = nil;
+		end;
 	end;
 	vape:Clean(finishInfinite);
 
@@ -6408,6 +6415,7 @@ velo.run(function(): ()
 		end));
 		gameCamera.CameraSubject = part;
 		store.infinitefly = true;
+		vape.MovementOwner = 'InfiniteFly';
 
 		local label: TextLabel?, shadow: TextLabel?;
 		if ShowDistance["Enabled"] then
@@ -6491,7 +6499,7 @@ velo.run(function(): ()
 			if vape.ThreadFix then
 				setthreadidentity(8);
 			end;
-			if not entitylib.isAlive or entitylib.character.RootPart ~= root or not isnetworkowner(root) then
+			if not entitylib.isAlive or not root or not isnetworkowner(root) then
 				notif('InfiniteFly', 'Network ownership disowned', 10, 'alert');
 				InfiniteFly:Toggle();
 				return;
@@ -6542,7 +6550,7 @@ velo.run(function(): ()
 			end));
 		end;
 		Fly:Clean(runService.PreSimulation:Connect(function(delta: number): ()
-			if not entitylib.isAlive or store.infinitefly or not isnetworkowner(entitylib.character.RootPart) then
+			if not entitylib.isAlive or vape.MovementOwner or not isnetworkowner(entitylib.character.RootPart) then
 				if bar then
 					bar.Frame.Visible = false;
 				end;
@@ -7393,8 +7401,8 @@ velo.run(function(): ()
 	LongJump = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'LongJump',
 		["Function"] = function(callback: boolean): ()
-			if callback and store.infinitefly then
-				notif('LongJump', 'Unavailable until Fly has landed', 3, 'warning');
+			if callback and vape.MovementOwner then
+				notif('LongJump', 'Unavailable until '..vape.MovementOwner..' has landed', 3, 'warning');
 				LongJump:Toggle();
 				return;
 			end;
@@ -7444,7 +7452,7 @@ velo.run(function(): ()
 			jump.Start = entitylib.character.RootPart.Position;
 			LongJump:Clean(runService.PreSimulation:Connect(function(delta: number): ()
 				local root: BasePart? = entitylib.isAlive and entitylib.character.RootPart or nil;
-				if store.infinitefly then
+				if vape.MovementOwner then
 					return;
 				end;
 				if not root or not isnetworkowner(root) then

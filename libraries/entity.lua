@@ -10,7 +10,13 @@ local entitylib = {
 		__index = function(self, ind)
 			self[ind] = {
 				Connections = {},
-				Connect = function(rself, func)
+				Connect = function(rself, callback)
+					local func = function(...)
+						if setthreadidentity then
+							setthreadidentity(8)
+						end
+						callback(...)
+					end
 					table.insert(rself.Connections, func)
 					return {
 						Disconnect = function()
