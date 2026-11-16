@@ -5620,69 +5620,55 @@ velo.run(function(): ()
 	local NoFall: table = {["Enabled"] = false};
 	local Damage: table;
 	local safeFall: number = 45;
-	local silenced: {[Humanoid]: {any}} = {};
-
-	local silence: (humanoid: Humanoid) -> () = function(humanoid: Humanoid): ()
-		if not getconnections or silenced[humanoid] then
-			return;
-		end;
-		silenced[humanoid] = {};
-		humanoid.Destroying:Once(function(): ()
-			silenced[humanoid] = nil;
-		end);
-		for _: number, connection: any in getconnections(humanoid.StateChanged) do
-			connection:Disable();
-			table.insert(silenced[humanoid], connection);
-		end;
-	end;
-
+	local Disabled: {[Humanoid]: {any}} = setmetatable({}, {__mode = "k"})
 	NoFall = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'NoFall',
 		["Function"] = function(callback: boolean): ()
-			if not callback then
-				for _: Humanoid, connections: {any} in silenced do
-					for _: number, connection: any in connections do
-						connection:Enable();
+			if callback then
+				local Humanoid = entitylib.isAlive and entitylib.character.Humanoid;
+	            if Humanoid and not Disabled[Humanoid] and getconnections then
+	                Disabled[Humanoid] = {};
+	                for _, v: any in getconnections(Humanoid.StateChanged) do
+	                    v:Disable();
+	                    table.insert(Disabled[Humanoid], v);
+	                end;
+	            end;
+				local tracked: number, lastHit: number = 0, 0;
+				NoFall:Clean(runService.PostSimulation:Connect(function(): ()
+					if not entitylib.isAlive or store.matchState ~= 1 or store.cannonFlight or store.infinitefly then
+						tracked = 0;
+						return;
 					end;
-				end;
-				table.clear(silenced);
-				return;
-			end;
-			if entitylib.isAlive then
-				silence(entitylib.character.Humanoid);
-			end;
-			local tracked: number, lastHit: number = 0, 0;
-			NoFall:Clean(runService.PostSimulation:Connect(function(): ()
-				if not entitylib.isAlive or store.matchState ~= 1 or store.cannonFlight or store.infinitefly then
-					tracked = 0;
-					return;
-				end;
-				local root: BasePart = entitylib.character.RootPart;
-				local velocity: Vector3 = root.AssemblyLinearVelocity;
-				if tracked < -(safeFall + Damage["Value"] * 0.75) then
-					local cushion: Vector3 = Vector3.new(0, 2.5, 0);
-					root.AssemblyLinearVelocity = cushion;
-					entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed);
-					runService.PreRender:Wait();
-					if root.AssemblyLinearVelocity == cushion then
-						root.AssemblyLinearVelocity = velocity;
-					end;
-					if os.clock() - lastHit >= 0.1 then
-						fire('GroundHit', 'SendToServer', nil, Vector3.new(0, tracked, 0), workspace:GetServerTimeNow());
-						lastHit = os.clock();
-					end;
-				end;
-				tracked = velocity.Y;
-			end));
-			NoFall:Clean(entitylib.Events.LocalAdded:Connect(function(ent: table): ()
-				if ent.Humanoid:WaitForChild('Animator', 5) then
-					task.delay(0.5, function(): ()
-						if NoFall["Enabled"] then
-							silence(ent.Humanoid);
+					local root: BasePart = entitylib.character.RootPart;
+					local velocity: Vector3 = root.AssemblyLinearVelocity;
+					if tracked < -(safeFall + Damage["Value"] * 0.75) then
+						local cushion: Vector3 = Vector3.new(0, 2.5, 0);
+						root.AssemblyLinearVelocity = cushion;
+						entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed);
+						runService.PreRender:Wait();
+						if root.AssemblyLinearVelocity == cushion then
+							root.AssemblyLinearVelocity = velocity;
 						end;
-					end);
-				end;
-			end));
+						if os.clock() - lastHit >= 0.1 then
+							fire('GroundHit', 'SendToServer', nil, Vector3.new(0, tracked, 0), workspace:GetServerTimeNow());
+							lastHit = os.clock();
+						end;
+					end;
+					tracked = velocity.Y;
+				end));
+				NoFall:Clean(entitylib.Events.LocalAdded:Connect(function(ent: table): ()
+					if ent.Humanoid:WaitForChild("Animator", 5) then
+						task.wait(0.5)
+						if NoFall["Enabled"] and not Disabled[ent.Humanoid] and getconnections then
+							Disabled[Ent.Humanoid] = {};
+							for _, v: any in getconnections(ent.Humanoid.StateChanged) do
+								v:Disable();
+								table.insert(Disabled[ent], v);
+							end;
+						end;
+					end;
+				end));
+			end;
 		end,
 		["Tooltip"] = 'Prevents taking fall damage.'
 	});
