@@ -6948,6 +6948,7 @@ end);
 velo.run(function(): ()
 	local NoFall: table = {["Enabled"] = false};
 	local Damage: table;
+	local Debug: table;
 	local safeFall: number = 45;
 	local Disabled: {[Humanoid]: {any}} = setmetatable({}, {__mode = "k"});
 	NoFall = vape.Categories.Blatant:CreateModule({
@@ -6975,12 +6976,22 @@ velo.run(function(): ()
 						root.AssemblyLinearVelocity = cushion;
 						entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed);
 						runService.PreRender:Wait();
-						if root.AssemblyLinearVelocity == cushion then
+						local current: Vector3 = root.AssemblyLinearVelocity;
+						local action: string = 'kept';
+						if current == cushion then
 							root.AssemblyLinearVelocity = velocity;
+							action = 'restored';
+						elseif math.abs(current.Y - cushion.Y) < 0.01 then
+							root.AssemblyLinearVelocity = Vector3.new(current.X, velocity.Y, current.Z);
+							action = 'restored fall, horizontal was changed';
 						end;
+						local sent: any = nil;
 						if os.clock() - lastHit >= 0.1 then
-							fire('GroundHit', 'SendToServer', nil, Vector3.new(0, tracked, 0), workspace:GetServerTimeNow());
+							sent = fire('GroundHit', 'SendToServer', nil, Vector3.new(0, tracked, 0), workspace:GetServerTimeNow());
 							lastHit = os.clock();
+						end;
+						if Debug["Enabled"] then
+							print(string.format('[NoFall] fall %.1f | at restore %s | %s | GroundHit %s', tracked, tostring(current), action, sent == nil and 'not due' or typeof(sent)));
 						end;
 					end;
 					tracked = velocity.Y;
@@ -7015,6 +7026,10 @@ velo.run(function(): ()
 		["Default"] = 0,
 		["Suffix"] = '%',
 		["Tooltip"] = 'How much of each fall lands on you, it only starts saving you once you are dropping faster than this lets through'
+	});
+	Debug = NoFall:CreateToggle({
+		["Name"] = 'Debug',
+		["Tooltip"] = 'Prints every cushion to the F9 console: fall speed, velocity at the restore, and what NoFall did'
 	});
 end);
 
