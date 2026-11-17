@@ -2771,6 +2771,13 @@ velo.run(function()
 		whitelist.customtags[plr.Name] = nil;
 	end));
 
+	local customSource: string = 'https://raw.githubusercontent.com/Copiums/Velocity/main/customvelo.lua';
+
+	local customFolder: () -> string? = function(): string?
+		local rank: number = whitelist.localprio or 0;
+		return rank >= 2 and 'veloprivate' or rank == 1 and 'veloplus' or nil;
+	end;
+
 	task.spawn(function(): ()
 		repeat task.wait(); until whitelist.loaded;
 		task.wait(0.1);
@@ -2778,6 +2785,19 @@ velo.run(function()
 		if rank > 0 then
 			local rankName: string = whitelist:CheckPlayerType(lplr);
 			notif('Velo', 'Authenticated. Rank: '..rankName..' ('..rank..')', 4.5, 'warning');
+			local folder: string? = customFolder();
+			if folder then
+				if not isfolder(folder) then
+					makefolder(folder);
+				end;
+				local path: string = folder..'/'..game.PlaceId..'custom.luau';
+				if not isfile(path) then
+					local fetched: boolean, source: any = pcall(game.HttpGet, game, customSource, true);
+					if fetched and type(source) == 'string' and source ~= '' and source ~= '404: Not Found' then
+						writefile(path, source);
+					end;
+				end;
+			end;
 		end;
 	end);
 	vape:Clean(function(): ()

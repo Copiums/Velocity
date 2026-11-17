@@ -144,6 +144,18 @@ end;
 
 local function finishLoading(): nil
         veloc.Init = nil;
+        for _, folder: string in {'veloprivate', 'veloplus'} do
+                local path: string = folder..'/'..game.PlaceId..'custom.luau';
+                if isfile(path) then
+                        local chunk: any, problem: string? = loadstring(readfile(path), path);
+                        if chunk then
+                                task.spawn(chunk, veloc);
+                        else
+                                veloc:CreateNotification('Velo', 'Custom file '..path..' failed to load: '..tostring(problem), 15, 'alert');
+                        end;
+                        break;
+                end;
+        end;
 	    veloc:Load();
         task.spawn(function()
 		            repeat
