@@ -30,6 +30,8 @@ end;
 local cloneref: (object: Instance) -> Instance = cloneref or function(object: Instance): Instance
 	return object;
 end;
+
+-- services, please use those because they are safe. Prevents weak tables.
 local playersService: Players = cloneref(game:GetService('Players'));
 local runService: RunService = cloneref(game:GetService('RunService'));
 local inputService: UserInputService = cloneref(game:GetService('UserInputService'));
@@ -38,57 +40,80 @@ local textService: TextService = cloneref(game:GetService('TextService'));
 local lightingService: Lighting = cloneref(game:GetService('Lighting'));
 local replicatedStorage: ReplicatedStorage = cloneref(game:GetService('ReplicatedStorage'));
 local lplr: Player = playersService.LocalPlayer;
-local gameCamera: Camera = workspace.CurrentCamera;
+local gameCamera: Camera = cloneref(workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera') or Instance.new('Camera'))
 
+-- libs
 local entitylib: table = vape.Libraries.entity;
 local whitelist: table = vape.Libraries.whitelist;
 local prediction: table = vape.Libraries.prediction;
 local targetinfo: table? = vape.Libraries.targetinfo;
 local getcustomasset: (path: string) -> string = vape.Libraries.getcustomasset or getcustomasset;
 
+-- notification
 local notif: (title: string, text: string, duration: number?, kind: string?) -> any = function(title: string, text: string, duration: number?, kind: string?): any
 	return vape:CreateNotification(title, text, duration or 5, kind);
 end;
 
 local nearestEntity: (targets: table, range: number) -> table? = function(targets: table, range: number): table?
 	return entitylib.EntityPosition({
+		-- range, how far
 		["Range"] = range,
+		-- what part of entity it targets
 		["Part"] = 'RootPart',
+		-- player check
 		["Players"] = targets.Players["Enabled"],
+		-- NPC check
 		["NPCs"] = targets.NPCs["Enabled"],
+		-- wallcheck
 		["Wallcheck"] = targets.Walls["Enabled"] or nil
 	});
 end;
 
 local entitiesInRange: (targets: table, range: number, limit: number?) -> {table} = function(targets: table, range: number, limit: number?): {table}
 	return entitylib.AllPosition({
+		-- how far like killaura range
 		["Range"] = range,
+		-- what part of the player does it attack, you can switch to head.
 		["Part"] = 'RootPart',
+		-- how many entities does it search for
 		["Limit"] = limit,
+		-- Looks for players
 		["Players"] = targets.Players["Enabled"],
+		-- looks for NPCS
 		["NPCs"] = targets.NPCs["Enabled"],
+		-- wallcheck/player visibility best for legitting
 		["Wallcheck"] = targets.Walls["Enabled"] or nil
 	});
 end;
 
+-- nearest entity to mouse
 local nearestToMouse: (targets: table, pixels: number) -> table? = function(targets: table, pixels: number): table?
 	return entitylib.EntityMouse({
+		-- distance away from player
 		["Range"] = pixels,
+		-- what part of the person, you can switch this to Head, ideally head.
 		["Part"] = 'RootPart',
+		-- targets Players
 		["Players"] = targets.Players["Enabled"],
+		-- targest NPCS
 		["NPCs"] = targets.NPCs["Enabled"],
+		-- wallcheck
 		["Wallcheck"] = targets.Walls["Enabled"] or nil,
+		-- is player visible
 		["Origin"] = entitylib.isAlive and entitylib.character.RootPart.Position or nil
 	});
 end;
 
+-- func header
 velo.run(function(): ()
+	-- enable toggle
 	local ExampleCustom: table = {["Enabled"] = false};
 	local Targets: table;
 	local Range: table;
 	local Notify: table;
 	local lastTarget: table? = nil;
 
+	-- module header, there is Combat, Velocity, Blatant, Render, Utility, Inventory to choose from
 	ExampleCustom = vape.Categories.Utility:CreateModule({
 		["Name"] = 'ExampleCustom',
 		["Function"] = function(callback: boolean): ()
@@ -96,6 +121,7 @@ velo.run(function(): ()
 			if not callback then
 				return;
 			end;
+			-- please use clean when doing this it AUTO cleans up for you via clean api
 			ExampleCustom:Clean(runService.Heartbeat:Connect(function(): ()
 				if not entitylib.isAlive then
 					return;
