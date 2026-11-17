@@ -6670,6 +6670,7 @@ velo.run(function()
 	local chairanimOwner: Humanoid?;
 	local chairanimRetry: number = 0;
 	local chairanimTries: number = 0;
+	local chairPaused: boolean = false;
 	local chair: any;
 	local isAlive: (v: Player) -> Boolean = function(v: Player): Boolean
 		if v.Character and v.Character:FindFirstChild("Humanoid") then
@@ -6723,6 +6724,7 @@ velo.run(function()
 				chairarms.CFrame = chair.CFrame * CFrame.new(-0.169, -1.129, -0.013);
 				chairarms.MeshId = 'rbxassetid://12972673898';
 				chairarms.CanCollide = false;
+				chairarms.Massless = true;
 				chairarms.Parent = chair;
 				local chairarmsweld: WeldConstraint = Instance.new('WeldConstraint');
 				chairarmsweld.Part0 = chairarms;
@@ -6769,9 +6771,33 @@ velo.run(function()
 				GamingChair:Clean(movingsound);
 				GamingChair:Clean(flyingsound);
 				chairanim = {["Stop"] = function() end};
+				chairPaused = false;
+				local chairParts: {BasePart} = {chair, chairarms, chairlegs, chairfan};
 				local oldmoving: boolean = false;
 				local oldflying: boolean = false;
 				repeat
+					local paused: boolean = vape.MovementOwner ~= nil;
+					if paused ~= chairPaused then
+						chairPaused = paused;
+						for _: number, part: BasePart in chairParts do
+							part.LocalTransparencyModifier = paused and 1 or 0;
+						end;
+						if paused then
+							chairanim:Stop();
+							movingsound:Stop();
+							flyingsound:Stop();
+							for _: number, trail: Trail in trails do
+								trail.Enabled = false;
+							end;
+						else
+							chairanimRetry, chairanimTries = 0, 0;
+							oldmoving, oldflying = false, false;
+						end;
+					end;
+					if paused then
+						task.wait();
+						continue;
+					end;
 					if entitylib.isAlive and entitylib.character.Humanoid.Health > 0 then
 						local humanoid: Humanoid = entitylib.character.Humanoid;
 						if chairanimOwner ~= humanoid then
@@ -6793,8 +6819,12 @@ velo.run(function()
 							chairanimRetry, chairanimTries = tick() + 1, chairanimTries + 1;
 							chairanim:Play();
 						end;
-						chair.CFrame = entitylib.character.RootPart.CFrame * CFrame.Angles(0, math.rad(-90), 0);
-						chairweld.Part1 = entitylib.character.RootPart;
+						local root: BasePart = entitylib.character.RootPart;
+						if chairweld.Part1 ~= root then
+							chairweld.Part1 = nil;
+							chair.CFrame = root.CFrame * CFrame.Angles(0, math.rad(-90), 0);
+							chairweld.Part1 = root;
+						end;
 						chairlegs.Velocity = Vector3.zero;
 						chairlegs.CFrame = chair.CFrame * CFrame.new(0.047, -2.324, 0);
 						chairfan.Velocity = Vector3.zero;
