@@ -119,7 +119,7 @@ end
 entitylib.IgnoreObject = RaycastParams.new()
 entitylib.IgnoreObject.RespectCanCollide = true
 entitylib.Wallcheck = function(origin, position, ignoreobject)
-	if typeof(ignoreobject) ~= 'Instance' then
+	if typeof(ignoreobject) ~= 'RaycastParams' then
 		local ignorelist = {gameCamera, lplr.Character}
 		for _, entity in entitylib.List do
 			if entity.Targetable then
@@ -166,6 +166,7 @@ entitylib.EntityMouse = function(entitysettings)
 			if entitysettings.Wallcheck then
 				if entitylib.Wallcheck(entitysettings.Origin, v.Entity[entitysettings.Part].Position, entitysettings.Wallcheck) then continue end
 			end
+			if entitysettings.Check and not entitysettings.Check(v.Entity) then continue end
 			table.clear(entitysettings)
 			table.clear(sortingTable)
 			return v.Entity

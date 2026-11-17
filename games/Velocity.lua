@@ -62,6 +62,53 @@ vape:Clean(workspace:GetPropertyChangedSignal('CurrentCamera'):Connect(function(
 	gameCamera = workspace.CurrentCamera or gameCamera;
 end));
 
+do
+	local hold: table = getgenv().veloMatchHold or {["Held"] = false};
+	getgenv().veloMatchHold = hold;
+	hold.Release = function(): ()
+		if not hold.Held then
+			return;
+		end;
+		hold.Held = false;
+		hold.Block = nil;
+		hold.Dodging = false;
+		if hold.Connect then
+			hold.Connect.Remote:FireServer(table.unpack(hold.Connect.Args, 1, hold.Connect.Args.n));
+			hold.Connect = nil;
+		end;
+		if hold.Ready then
+			hold.Ready:FireServer();
+			hold.Ready = nil;
+		end;
+	end;
+	local flagPath: string = 'velo/profiles/matchdodge.txt';
+	local executor: string = identifyexecutor and ({identifyexecutor()})[1] or '';
+	if not hold.Hooked and hookmetamethod and isfile(flagPath) and readfile(flagPath) == 'true' and not lplr:GetAttribute('PlayerConnected') and not table.find({'Madium', 'Solara', 'Xeno'}, executor) then
+		hold.Hooked, hold.Held, hold.Started = true, true, os.clock();
+		local oldNamecall: (...any) -> ...any;
+		oldNamecall = hookmetamethod(game, '__namecall', newcclosure(function(self: any, ...: any): ...any
+			if hold.Held and not checkcaller() and getnamecallmethod() == 'FireServer' then
+				local remoteName: string = tostring(self);
+				if remoteName == 'PlayerConnect' then
+					hold.Connect = {["Remote"] = self, ["Args"] = table.pack(...)};
+					hold.Dodging = true;
+					return nil;
+				elseif remoteName == 'PlayerReady' then
+					hold.Ready = self;
+					return nil;
+				end;
+			end;
+			return oldNamecall(self, ...);
+		end));
+		task.delay(45, function(): ()
+			if not hold.Claimed then
+				hold.Release();
+			end;
+		end);
+	end;
+	vape:Clean(hold.Release);
+end;
+
 local entitylib: table = vape.Libraries.entity;
 local targetinfo: table = vape.Libraries.targetinfo;
 local sessioninfo: table = vape.Libraries.sessioninfo;
@@ -69,7 +116,6 @@ local uipallet: table = vape.Libraries.uipallet;
 local tween: table = vape.Libraries.tween;
 local color: table = vape.Libraries.color;
 local whitelist: table = vape.Libraries.whitelist;
-local prediction: table = vape.Libraries.prediction;
 local getfontsize: (...any) -> Vector2 = vape.Libraries.getfontsize;
 local getcustomasset: (path: string) -> string = vape.Libraries.getcustomasset;
 
@@ -90,8 +136,11 @@ end;
 
 local navigation: table = vape.Libraries.navigation or loadstring(downloadFile('velo/libraries/navigation.lua'), 'navigation')();
 local swordtiming: table = vape.Libraries.swordtiming or loadstring(downloadFile('velo/libraries/swordtiming.lua'), 'swordtiming')();
+local trajectory: table = vape.Libraries.trajectory or loadstring(downloadFile('velo/libraries/trajectory.lua'), 'trajectory')();
+local prediction: table = trajectory;
 vape.Libraries.navigation = navigation;
 vape.Libraries.swordtiming = swordtiming;
+vape.Libraries.trajectory = trajectory;
 
 local config: table = {
 	["BreakRange"] = 30,
@@ -114,9 +163,38 @@ local config: table = {
 	["ErrorLog"] = 'velo/errors.txt'
 };
 
-local vapeEvents: {[string]: BindableEvent} = setmetatable({}, {
-	__index = function(self: table, index: string): BindableEvent
-		local event: BindableEvent = Instance.new('BindableEvent');
+local vapeEvents: {[string]: table} = setmetatable({}, {
+	__index = function(self: table, index: string): table
+		local bindable: BindableEvent = Instance.new('BindableEvent');
+		local event: table = {
+			["Event"] = {
+				["Connect"] = function(_: table, callback: (...any) -> ()): RBXScriptConnection
+					return bindable.Event:Connect(function(...: any): ()
+						if vape.ThreadFix then
+							setthreadidentity(8);
+						end;
+						callback(...);
+					end);
+				end,
+				["Once"] = function(_: table, callback: (...any) -> ()): RBXScriptConnection
+					return bindable.Event:Once(function(...: any): ()
+						if vape.ThreadFix then
+							setthreadidentity(8);
+						end;
+						callback(...);
+					end);
+				end,
+				["Wait"] = function(_: table): ...any
+					return bindable.Event:Wait();
+				end
+			},
+			["Fire"] = function(_: table, ...: any): ()
+				bindable:Fire(...);
+			end,
+			["Destroy"] = function(_: table): ()
+				bindable:Destroy();
+			end
+		};
 		rawset(self, index, event);
 		return event;
 	end
@@ -135,6 +213,7 @@ idlePromise.expect = function(self: table): ()
 end;
 
 local bedwars: table = {};
+local ballistics: table = {};
 local fire: (name: string, method: string?, ...any) -> any;
 local remoteHooks: {[string]: (remote: any, ...any) -> ...any} = {};
 local blockHitHooks: {[string]: (...any) -> ()} = {};
@@ -154,6 +233,7 @@ local store: table = {
 	["hitchance"] = {},
 	["inventory"] = {["inventory"] = {["items"] = {}, ["armor"] = {}}, ["hotbar"] = {}},
 	["inventories"] = {},
+	["lastHit"] = 0,
 	["lastInput"] = tick(),
 	["matchState"] = 0,
 	["ping"] = {["total"] = 0},
@@ -165,6 +245,7 @@ local store: table = {
 	["swordSpeeds"] = {},
 	["tools"] = {}
 };
+trajectory.Store = store;
 
 local notif: (...any) -> any = function(...: any): any
 	return vape:CreateNotification(...);
@@ -318,7 +399,7 @@ end;
 
 local getItem: (itemType: string, items: table?, partial: boolean?) -> (table?, number?) = function(itemType: string, items: table?, partial: boolean?): (table?, number?)
 	for slot: number, item: table in (items or store.inventory.inventory.items) do
-		if item.itemType == itemType or (partial and item.itemType:find(itemType, 1, true)) then
+		if item.itemType == itemType or (partial and item.itemType:find(itemType)) then
 			return item, slot;
 		end;
 	end;
@@ -378,7 +459,8 @@ end;
 local getBestArmor: (slot: number) -> table? = function(slot: number): table?
 	local best: table?, bestReduction: number = nil, 0;
 	for _: number, item: table in store.inventory.inventory.items do
-		local armor: table? = bedwars.ItemMeta[item.itemType].armor;
+		local meta: table? = bedwars.ItemMeta[item.itemType];
+		local armor: table? = meta and meta.armor;
 		if armor and armor.slot == slot and (armor.damageReductionMultiplier or 0) > bestReduction then
 			best, bestReduction = item, armor.damageReductionMultiplier;
 		end;
@@ -457,7 +539,10 @@ local switchItem: (tool: Instance, delayTime: number?) -> boolean = function(too
 	if not hand or hand.Value == tool or tool.Parent == nil then
 		return false;
 	end;
-	fire('SetInvItem', 'CallServerAsync', {["hand"] = tool});
+	task.spawn(fire, 'SetInvItem', 'CallServerAsync', {["hand"] = tool});
+	if vape.ThreadFix then
+		setthreadidentity(8);
+	end;
 	hand.Value = tool;
 	local waitTime: number = delayTime or config.SwitchDelay;
 	if waitTime > 0 then
@@ -481,8 +566,11 @@ local inventorySlots: () -> table = function(): table
 end;
 
 local moveSlot: (operation: table) -> boolean = function(operation: table): boolean
-	local success: boolean, result: any = bedwars.InventoryDraggingController:sendTransaction(operation, nil):await();
-	return success and result == true;
+	-- sendTransaction can throw before it returns a promise; catsix pcalls it so callers (ArmorSwitch's loop) just see false.
+	local called: boolean, success: any, result: any = pcall(function(): (boolean, any)
+		return bedwars.InventoryDraggingController:sendTransaction(operation, nil):await();
+	end);
+	return called and success == true and result == true;
 end;
 
 local functionRange: (callback: any, fallback: number?) -> number? = function(callback: any, fallback: number?): number?
@@ -661,6 +749,9 @@ local createProgressBar: () -> table = function(): table
 	frame.BorderSizePixel = 0;
 	frame.BackgroundColor3 = Color3.new();
 	frame.Visible = false;
+	if vape.ThreadFix then
+		setthreadidentity(8);
+	end;
 	frame.Parent = vape.gui;
 	local fill: Frame = Instance.new('Frame');
 	fill.Size = UDim2.fromScale(1, 1);
@@ -702,7 +793,7 @@ local propertyLock: () -> table = function(): table
 				saved = {["Original"] = object[property]};
 				entry.Values[property] = saved;
 				table.insert(entry.Connections, object:GetPropertyChangedSignal(property):Connect(function(): ()
-					if object[property] ~= saved.Applied then
+					if locked[object] == entry and object[property] ~= saved.Applied then
 						saved.Original = object[property];
 						object[property] = saved.Applied;
 					end;
@@ -719,7 +810,9 @@ local propertyLock: () -> table = function(): table
 			end;
 			if object.Parent then
 				for property: string, saved: table in entry.Values do
-					object[property] = saved.Original;
+					if object[property] == saved.Applied then
+						object[property] = saved.Original;
+					end;
 				end;
 			end;
 		end;
@@ -754,6 +847,23 @@ velo.run(function(): ()
 				end;
 			end;
 		end);
+	end;
+
+	local waitForPart: (object: any, name: string, timeout: number, property: boolean?) -> any = function(object: any, name: string, timeout: number, property: boolean?): any
+		local deadline: number = tick() + timeout;
+		local found: any;
+		repeat
+			found = property and object[name] or object:FindFirstChildOfClass(name);
+			if found and found.Name ~= 'UpperTorso' or deadline < tick() then
+				break;
+			end;
+			task.wait();
+		until false;
+		return found;
+	end;
+
+	local hipHeightOf: (humanoid: any, root: BasePart) -> number = function(humanoid: any, root: BasePart): number
+		return humanoid.HipHeight + (root.Size.Y / 2) + (humanoid.RigType == Enum.HumanoidRigType.R6 and 2 or 0);
 	end;
 
 	local oldStart: () -> () = entitylib.start;
@@ -800,99 +910,114 @@ velo.run(function(): ()
 		if not character then
 			return;
 		end;
-		entitylib.EntityThreads[character] = task.spawn(function(): ()
+		local thread: thread = task.spawn(function(): ()
 			local humanoid: any, root: BasePart?, head: BasePart?;
 			if plr then
-				humanoid = character:WaitForChild('Humanoid', 10);
-				root = humanoid and (humanoid.RootPart or character:WaitForChild('HumanoidRootPart', workspace.StreamingEnabled and math.huge or 10));
+				humanoid = waitForPart(character, 'Humanoid', 10);
+				root = humanoid and waitForPart(humanoid, 'RootPart', workspace.StreamingEnabled and 9e9 or 10, true);
 				head = character:WaitForChild('Head', 10) or root;
 			else
-				humanoid = {["HipHeight"] = 0.5};
-				if not character.PrimaryPart then
-					character:GetPropertyChangedSignal('PrimaryPart'):Wait();
-				end;
-				root = character.PrimaryPart;
+				humanoid = character:FindFirstChildOfClass('Humanoid') or {["HipHeight"] = 0.5};
+				root = waitForPart(character, 'PrimaryPart', 10, true);
 				head = root;
 			end;
-			entitylib.EntityThreads[character] = nil;
-			if not humanoid or not root then
-				return;
-			end;
-			local ent: table = {
-				["Connections"] = {},
-				["Character"] = character,
-				["Health"] = (character:GetAttribute('Health') or 100) + shieldOf(character),
-				["Head"] = head,
-				["Humanoid"] = humanoid,
-				["HumanoidRootPart"] = root,
-				["HipHeight"] = humanoid.HipHeight + (root.Size.Y / 2) + (humanoid.RigType == Enum.HumanoidRigType.R6 and 2 or 0),
-				["Jumps"] = 0,
-				["JumpTick"] = tick(),
-				["Jumping"] = false,
-				["LandTick"] = tick(),
-				["MaxHealth"] = character:GetAttribute('MaxHealth') or 100,
-				["NPC"] = plr == nil,
-				["Player"] = plr,
-				["RootPart"] = root,
-				["TeamCheck"] = teamCheck
-			};
-			for _: number, signal: any in entitylib.getUpdateConnections(ent) do
-				table.insert(ent.Connections, signal:Connect(function(): ()
-					ent.Health = (character:GetAttribute('Health') or 100) + shieldOf(character);
-					ent.MaxHealth = character:GetAttribute('MaxHealth') or 100;
-					entitylib.Events.EntityUpdated:Fire(ent);
-				end));
-			end;
-			if plr == lplr then
-				ent.AirTime = tick();
-				entitylib.character = ent;
-				entitylib.isAlive = true;
-				entitylib.Events.LocalAdded:Fire(ent);
-				table.insert(ent.Connections, character.AttributeChanged:Connect(function(attribute: string): ()
-					vapeEvents.AttributeChanged:Fire(attribute);
-				end));
-			else
-				ent.Targetable = entitylib.targetCheck(ent);
-				if plr then
-					for _: number, name: string in {'ArmorInvItem_0', 'ArmorInvItem_1', 'ArmorInvItem_2', 'HandInvItem'} do
-						local value: Instance? = character:WaitForChild(name, 5);
-						if value then
-							table.insert(ent.Connections, value:GetPropertyChangedSignal('Value'):Connect(function(): ()
-								refreshInventory(plr, ent);
-							end));
-						end;
+			local watched: {Instance} = {};
+			if plr and plr ~= lplr then
+				for _: number, name: string in {'ArmorInvItem_0', 'ArmorInvItem_1', 'ArmorInvItem_2', 'HandInvItem'} do
+					local value: Instance? = character:WaitForChild(name, 5);
+					if value then
+						table.insert(watched, value);
 					end;
-					local animate: Instance? = character:FindFirstChild('Animate');
-					local jump: Instance? = animate and animate:FindFirstChild('jump');
-					local jumpAnimation: Animation? = jump and jump:FindFirstChildWhichIsA('Animation');
-					local animator: Animator? = humanoid:FindFirstChildWhichIsA('Animator');
-					if jumpAnimation and animator then
-						table.insert(ent.Connections, animator.AnimationPlayed:Connect(function(track: AnimationTrack): ()
-							if track.Animation.AnimationId == jumpAnimation.AnimationId then
-								ent.JumpTick = tick();
-								ent.Jumps += 1;
-								ent.LandTick = tick() + 1;
-								ent.Jumping = ent.Jumps > 1;
-							end;
+				end;
+			end;
+			if humanoid and root then
+				local ent: table = {
+					["Connections"] = {},
+					["Character"] = character,
+					["Health"] = (character:GetAttribute('Health') or 100) + shieldOf(character),
+					["Head"] = head,
+					["Humanoid"] = humanoid,
+					["HumanoidRootPart"] = root,
+					["HipHeight"] = hipHeightOf(humanoid, root),
+					["Jumps"] = 0,
+					["JumpTick"] = tick(),
+					["Jumping"] = false,
+					["LandTick"] = tick(),
+					["MaxHealth"] = character:GetAttribute('MaxHealth') or 100,
+					["NPC"] = plr == nil,
+					["Player"] = plr,
+					["RootPart"] = root,
+					["TeamCheck"] = teamCheck
+				};
+				if plr == lplr then
+					ent.AirTime = tick();
+					entitylib.character = ent;
+					entitylib.isAlive = true;
+					entitylib.Events.LocalAdded:Fire(ent);
+					table.insert(ent.Connections, character.AttributeChanged:Connect(function(attribute: string): ()
+						vapeEvents.AttributeChanged:Fire(attribute);
+						if attribute == 'Health' or attribute == 'MaxHealth' or attribute:find('Shield') then
+							ent.Health = (character:GetAttribute('Health') or 100) + shieldOf(character);
+							ent.MaxHealth = character:GetAttribute('MaxHealth') or 100;
+						end;
+					end));
+					for _: number, signal: RBXScriptSignal in {humanoid:GetPropertyChangedSignal('HipHeight'), root:GetPropertyChangedSignal('Size')} do
+						table.insert(ent.Connections, signal:Connect(function(): ()
+							ent.HipHeight = hipHeightOf(humanoid, root);
 						end));
 					end;
-					refreshInventory(plr, nil);
-				end;
-				table.insert(entitylib.List, ent);
-				entitylib.Events.EntityAdded:Fire(ent);
-			end;
-			table.insert(ent.Connections, character.ChildRemoved:Connect(function(part: Instance): ()
-				if part == root or part == humanoid or part == head then
-					if part == root and humanoid.RootPart then
-						root = humanoid.RootPart;
-						ent.RootPart = root;
-						ent.HumanoidRootPart = root;
-						return;
+				else
+					ent.Targetable = entitylib.targetCheck(ent);
+					for _: number, signal: any in entitylib.getUpdateConnections(ent) do
+						table.insert(ent.Connections, signal:Connect(function(): ()
+							ent.Health = (character:GetAttribute('Health') or 100) + shieldOf(character);
+							ent.MaxHealth = character:GetAttribute('MaxHealth') or 100;
+							ent.HipHeight = hipHeightOf(humanoid, root);
+							entitylib.Events.EntityUpdated:Fire(ent);
+						end));
 					end;
-					entitylib.removeEntity(character, plr == lplr);
+					for _: number, value: Instance in watched do
+						table.insert(ent.Connections, value:GetPropertyChangedSignal('Value'):Connect(function(): ()
+							refreshInventory(plr, ent);
+						end));
+					end;
+					if plr then
+						local animate: Instance? = character:FindFirstChild('Animate');
+						local jump: Instance? = animate and animate:FindFirstChild('jump');
+						local jumpAnimation: Animation? = jump and jump:FindFirstChildWhichIsA('Animation');
+						local animator: Animator? = humanoid:FindFirstChildWhichIsA('Animator');
+						if jumpAnimation and animator then
+							table.insert(ent.Connections, animator.AnimationPlayed:Connect(function(track: AnimationTrack): ()
+								if track.Animation.AnimationId == jumpAnimation.AnimationId then
+									ent.JumpTick = tick();
+									ent.Jumps += 1;
+									ent.LandTick = tick() + 1;
+									ent.Jumping = ent.Jumps > 1;
+								end;
+							end));
+						end;
+						refreshInventory(plr, nil);
+					end;
+					table.insert(entitylib.List, ent);
+					entitylib.Events.EntityAdded:Fire(ent);
 				end;
-			end));
+				table.insert(ent.Connections, character.ChildRemoved:Connect(function(part: Instance): ()
+					if part == root or part == humanoid or part == head then
+						if part == root and humanoid.RootPart then
+							root = humanoid.RootPart;
+							ent.RootPart = root;
+							ent.HumanoidRootPart = root;
+							return;
+						end;
+						entitylib.removeEntity(character, plr == lplr);
+					end;
+				end));
+			end;
+			entitylib.EntityThreads[character] = nil;
 		end);
+		if coroutine.status(thread) ~= 'dead' then
+			entitylib.EntityThreads[character] = thread;
+		end;
 	end;
 
 	entitylib.getUpdateConnections = function(ent: table): table
@@ -900,7 +1025,6 @@ velo.run(function(): ()
 		local signals: table = {
 			character:GetAttributeChangedSignal('Health'),
 			character:GetAttributeChangedSignal('MaxHealth'),
-			character:GetAttributeChangedSignal('TotalShield'),
 			{
 				["Connect"] = function(): table
 					ent.Friend = ent.Player and isFriend(ent.Player) or nil;
@@ -909,6 +1033,10 @@ velo.run(function(): ()
 				end
 			}
 		};
+		if ent.Player then
+			table.insert(signals, ent.Player:GetAttributeChangedSignal('PlayingAsKits'));
+		end;
+		table.insert(signals, character:GetAttributeChangedSignal('TotalShield'));
 		return signals;
 	end;
 
@@ -925,15 +1053,60 @@ velo.run(function(): ()
 		return lplr:GetAttribute('Team') ~= ent.Player:GetAttribute('Team');
 	end;
 
-	local baseWallcheck: (origin: Vector3, position: Vector3, ignore: any) -> RaycastResult? = entitylib.Wallcheck;
+	-- catsix Targets default to Priority 'Players': its entity lib ranks players ahead of NPCs before applying Sort. ["Priority"] = false opts a query out (catsix callers that pass no Priority).
+	for _: number, name: string in {'EntityPosition', 'EntityMouse', 'AllPosition'} do
+		local query: (settings: table) -> any = entitylib[name];
+		entitylib[name] = function(settings: table): any
+			if settings.Priority ~= false then
+				local sort: (a: table, b: table) -> boolean = settings.Sort or function(a: table, b: table): boolean
+					return a.Magnitude < b.Magnitude;
+				end;
+				settings.Sort = function(a: table, b: table): boolean
+					local rankA: number, rankB: number = a.Entity.Player and 0 or 1, b.Entity.Player and 0 or 1;
+					if rankA ~= rankB then
+						return rankA < rankB;
+					end;
+					return sort(a, b);
+				end;
+			end;
+			settings.Priority = nil;
+			return query(settings);
+		end;
+		vape:Clean(function(): ()
+			entitylib[name] = query;
+		end);
+	end;
+
 	local wallParams: RaycastParams = RaycastParams.new();
 	wallParams.FilterType = Enum.RaycastFilterType.Exclude;
 	entitylib.Wallcheck = function(origin: Vector3, position: Vector3, ignore: any, ent: table?): RaycastResult?
-		local selfRoot: BasePart? = entitylib.isAlive and entitylib.character.RootPart;
-		if not ent or not ent.Character or not selfRoot then
-			return baseWallcheck(origin, position, ignore);
+		local selfCharacter: Model? = lplr.Character;
+		local character: Model? = ent and ent.Character;
+		local selfRoot: BasePart? = selfCharacter and selfCharacter.PrimaryPart;
+		local targetRoot: BasePart? = character and character.PrimaryPart;
+		if not selfRoot or not targetRoot then
+			local params: RaycastParams = typeof(ignore) == 'RaycastParams' and ignore or entitylib.IgnoreObject;
+			if params == entitylib.IgnoreObject then
+				local filter: {Instance} = {gameCamera, lplr.Character};
+				for _: number, other: table in entitylib.List do
+					if other.Targetable then
+						table.insert(filter, other.Character);
+					end;
+				end;
+				for _: number, object: Instance in (type(ignore) == 'table' and ignore or {}) do
+					table.insert(filter, object);
+				end;
+				params.FilterDescendantsInstances = filter;
+			end;
+			return bedwars.QueryUtil:raycast(origin, position - origin, params);
 		end;
-		local filter: {Instance} = {lplr.Character, ent.Character};
+		local humanoid: Humanoid? = selfCharacter:FindFirstChildWhichIsA('Humanoid');
+		local targetHumanoid: Humanoid? = character:FindFirstChildWhichIsA('Humanoid');
+		local scale: any = humanoid and humanoid:FindFirstChild('BodyHeightScale');
+		local height: Vector3 = Vector3.new(0, 5 * (scale and scale.Value or 1), 0);
+		local selfFeet: Vector3 = selfRoot.Position - Vector3.new(0, (humanoid and humanoid.HipHeight or 0) + (selfRoot.Size.Y / 2), 0);
+		local targetFeet: Vector3 = targetRoot.Position - Vector3.new(0, (targetHumanoid and targetHumanoid.HipHeight or 0) + (targetRoot.Size.Y / 2), 0);
+		local filter: {Instance} = {selfCharacter, character};
 		for _: number, object: Instance in collectionService:GetTagged('DontBlockSwordRaycast') do
 			table.insert(filter, object);
 		end;
@@ -941,18 +1114,17 @@ velo.run(function(): ()
 			table.insert(filter, object);
 		end;
 		wallParams.FilterDescendantsInstances = filter;
-		local selfFeet: Vector3 = selfRoot.Position - Vector3.new(0, entitylib.character.HipHeight, 0);
-		local targetFeet: Vector3 = ent.RootPart.Position - Vector3.new(0, ent.HipHeight, 0);
-		for _: number, height: number in {0, 2.5, 5} do
-			local from: Vector3, to: Vector3 = selfFeet + Vector3.new(0, height, 0), targetFeet + Vector3.new(0, height, 0);
-			if not bedwars.QueryUtil:raycast(from, to - from, wallParams) or not bedwars.QueryUtil:raycast(to, from - to, wallParams) then
+		local blocked: RaycastResult?;
+		for _: number, lift: number in {0, 1, 0.5} do
+			local from: Vector3, to: Vector3 = selfFeet + height * lift, targetFeet + height * lift;
+			blocked = bedwars.QueryUtil:raycast(from, to - from, wallParams) or bedwars.QueryUtil:raycast(to, from - to, wallParams);
+			if not blocked then
 				return nil;
 			end;
 		end;
-		return bedwars.QueryUtil:raycast(selfFeet, targetFeet - selfFeet, wallParams);
+		return blocked;
 	end;
 
-	vape:Clean(entitylib.Events.LocalAdded:Connect(updateFriction));
 	vape:Clean(entitylib.Events.EntityRemoved:Connect(function(ent: table): ()
 		randomLimb[ent.Character] = nil;
 	end));
@@ -1128,6 +1300,9 @@ velo.run(function(): ()
 		return meta and show and meta.image or '';
 	end;
 	store.swordDistance = bedwars.CombatConstant.RAYCAST_SWORD_CHARACTER_DISTANCE;
+	trajectory.Raycast = function(origin: Vector3, direction: Vector3, params: RaycastParams?): RaycastResult?
+		return bedwars.QueryUtil:raycast(origin, direction, params);
+	end;
 	store.blockPlacer = bedwars.BlockPlacer.new(bedwars.BlockEngine, 'wool_white');
 
 	local remoteLimits: {[string]: number} = store.remoteLimits;
@@ -1138,40 +1313,87 @@ velo.run(function(): ()
 		construct, definitions = next(registry);
 	end;
 	local globalLimits: any = construct and construct.globalMiddleware and debug.getupvalue(construct.globalMiddleware[2], 1);
-	for name: string, limit: any in (type(globalLimits) == 'table' and globalLimits or {}) do
-		if type(limit) == 'number' then
-			remoteLimits[name] = limit;
-		end;
-	end;
-	for name: string, definition: any in (type(definitions) == 'table' and definitions or {}) do
-		for _: number, middleware: any in (remoteLimits[name] == nil and type(definition) == 'table' and type(definition.ServerMiddleware) == 'table' and definition.ServerMiddleware or {}) do
-			local upvalues: table = type(middleware) == 'function' and debug.getupvalues(middleware) or {};
-			if #upvalues >= 6 and tostring(upvalues[6]):find('Request limit') and type(upvalues[3]) == 'number' then
-				remoteLimits[name] = upvalues[3];
-				break;
+	if type(globalLimits) == 'table' then
+		for name: string, limit: any in globalLimits do
+			if limit then
+				remoteLimits[name] = type(limit) == 'number' and limit or config.RemoteLimit;
 			end;
 		end;
-	end;
-	if not construct then
-		notif('Velocity', 'Remote rate limits unavailable, using '..config.RemoteLimit..'/min', 10, 'warning');
+		for name: string, definition: any in (type(definitions) == 'table' and definitions or {}) do
+			for _: number, middleware: any in (remoteLimits[name] == nil and type(definition) == 'table' and type(definition.ServerMiddleware) == 'table' and definition.ServerMiddleware or {}) do
+				local upvalues: table = type(middleware) == 'function' and debug.getupvalues(middleware) or {};
+				if #upvalues >= 6 and tostring(upvalues[6]):find('Request limit') then
+					if type(upvalues[3]) == 'number' then
+						remoteLimits[name] = upvalues[3];
+					end;
+					break;
+				end;
+			end;
+		end;
+	else
+		notif('Velocity', 'Remote rate limits unavailable, using '..config.RemoteLimit..'/min', 30, 'alert');
 	end;
 
 	local remoteBudget: {[string]: table} = {};
 	fire = function(name: string, method: string?, ...: any): any
 		local budget: table? = remoteBudget[name];
-		local now: number = os.clock();
-		if not budget or now - budget.Reset >= config.RemoteWindow then
-			budget = {["Used"] = 0, ["Reset"] = now};
+		if not budget then
+			-- net's Client:Get throws for names the game no longer defines; catsix reports those once and turns every call into a no-op.
+			local found: boolean, remote: any = pcall(client.Get, client, name);
+			budget = {["Used"] = 0, ["Reset"] = 0, ["Valid"] = found and remote ~= nil};
 			remoteBudget[name] = budget;
+			if not budget.Valid then
+				notif('Velocity', 'Tried to get remote '..name..', remote is invalid', 15, 'alert');
+			end;
 		end;
-		local remote: any = client:Get(name);
-		local call: string = method or (remote.CallServer and 'CallServer' or remote.CallServerAsync and 'CallServerAsync' or 'SendToServer');
+		if not budget.Valid then
+			return idlePromise;
+		end;
+		local now: number = os.clock();
+		if now - budget.Reset >= config.RemoteWindow then
+			budget.Used, budget.Reset = 0, now;
+		end;
 		if budget.Used >= (remoteLimits[name] or config.RemoteLimit) then
-			return call == 'CallServerAsync' and idlePromise or false;
+			return idlePromise;
 		end;
 		budget.Used += 1;
-		return remote[call](remote, ...);
+		local remote: any = client:Get(name);
+		local call: any = method and remote[method] or remote.CallServer or remote.CallServerAsync or remote.SendToServer;
+		if not call then
+			return nil;
+		end;
+		return call(remote, ...);
 	end;
+
+	local clearStaleHooks: () -> () = function(): ()
+		if not isexecutorclosure then
+			return;
+		end;
+		local seen: {[table]: boolean} = {};
+		local clear: (object: any) -> () = function(object: any): ()
+			if type(object) ~= 'table' or seen[object] or table.isfrozen(object) then
+				return;
+			end;
+			seen[object] = true;
+			local meta: any = getmetatable(object);
+			local class: any = type(meta) == 'table' and rawget(meta, '__index');
+			if type(class) ~= 'table' then
+				return;
+			end;
+			for key: any, value: any in next, object do
+				if type(value) == 'function' and isexecutorclosure(value) and type(rawget(class, key)) == 'function' then
+					rawset(object, key, nil);
+				end;
+			end;
+		end;
+		for _: any, controller: any in next, controllers do
+			clear(controller);
+		end;
+		for _: any, value: any in next, bedwars do
+			clear(value);
+		end;
+	end;
+	clearStaleHooks();
 
 	local oldGet: (self: table, name: string) -> any = client.Get;
 	client.Get = function(self: table, name: string): any
@@ -1218,9 +1440,11 @@ velo.run(function(): ()
 
 	local oldHitBlock: (...any) -> ...any = bedwars.BlockBreaker.hitBlock;
 	local hitBlock: (...any) -> ...any = function(self: table, ...: any): ...any
-		store.lastHit = tick();
-		for _: string, hook: (...any) -> () in blockHitHooks do
-			hook(self, ...);
+		if vape.Loaded ~= nil then
+			store.lastHit = tick();
+			for _: string, hook: (...any) -> () in blockHitHooks do
+				hook(self, ...);
+			end;
 		end;
 		return oldHitBlock(self, ...);
 	end;
@@ -1249,10 +1473,10 @@ velo.run(function(): ()
 		if new.Game ~= old.Game then
 			local previous: number = store.matchState;
 			store.matchState = new.Game.matchState;
+			store.queueType = new.Game.queueType or 'bedwars_test';
 			if previous == 0 and store.matchState ~= 0 then
 				vapeEvents.MatchStarted:Fire();
 			end;
-			store.queueType = new.Game.queueType or 'bedwars_test';
 		end;
 		if new.Inventory == old.Inventory then
 			return;
@@ -1339,7 +1563,7 @@ velo.run(function(): ()
 
 	vape:Clean(bedwars.ZapNetworking.EntityDamageEventZap.On(function(...: any): ()
 		local arguments: table = table.pack(...);
-		vapeEvents.EntityDamageEvent:Fire({
+		local damage: table = {
 			["entityInstance"] = arguments[1],
 			["damage"] = arguments[2],
 			["damageType"] = arguments[3],
@@ -1348,7 +1572,10 @@ velo.run(function(): ()
 			["knockbackMultiplier"] = arguments[6],
 			["knockbackId"] = arguments[7],
 			["disableDamageHighlight"] = arguments[13]
-		});
+		};
+		ballistics.markKnockback(damage);
+		ballistics.reportHit(damage);
+		vapeEvents.EntityDamageEvent:Fire(damage);
 	end));
 
 	local swordSwing: table = bedwars.SyncEvents.SwordSwing:setPriority(500):connect(function(event: table): ()
@@ -1358,6 +1585,16 @@ velo.run(function(): ()
 	end);
 	vape:Clean(function(): ()
 		swordSwing:Destroy();
+	end);
+
+	local projectileLaunched: table = bedwars.SyncEvents.ProjectileLaunched:connect(function(event: table): ()
+		if not store.matchState or typeof(event.origin) ~= 'Vector3' or typeof(event.launchVelocity) ~= 'Vector3' or event.shooter == lplr.Character then
+			return;
+		end;
+		ballistics.scanProjectile(event.origin, event.launchVelocity, event.projectileType, event.shooter);
+	end);
+	vape:Clean(function(): ()
+		projectileLaunched:Destroy();
 	end);
 
 	vape:Clean(bedwars.ZapNetworking.BreakBlockEventZap.On(function(...: any): ()
@@ -1375,8 +1612,8 @@ velo.run(function(): ()
 	end));
 
 	vape:Clean(workspace.ChildAdded:Connect(function(projectile: Instance): ()
-		task.defer(function(): ()
-			if projectile.Parent and projectile:GetAttribute('ProjectileShooter') == lplr.UserId then
+		task.delay(0, function(): ()
+			if projectile.Parent and entitylib.isAlive and projectile:GetAttribute('ProjectileShooter') == lplr.UserId then
 				table.insert(store.selfProjectiles, projectile);
 				projectile.Destroying:Once(function(): ()
 					local index: number? = table.find(store.selfProjectiles, projectile);
@@ -1469,21 +1706,16 @@ velo.run(function(): ()
 	end));
 
 	vape:Clean(task.spawn(function(): ()
-		local world: Instance = workspace:WaitForChild('Map', math.huge):WaitForChild('Worlds', math.huge):GetChildren()[1] or workspace.Map.Worlds.ChildAdded:Wait();
+		repeat
+			task.wait();
+		until store.matchState ~= 0 or vape.Loaded == nil;
+		if vape.Loaded == nil then
+			return;
+		end;
+		local worlds: Instance = workspace:WaitForChild('Map', math.huge):WaitForChild('Worlds', math.huge);
+		local world: Instance = worlds:GetChildren()[1] or worlds.ChildAdded:Wait();
 		mapName = string.gsub(string.split(world.Name, '_')[2] or world.Name, '-', '');
 		store.map = world;
-		local airRay: RaycastParams = RaycastParams.new();
-		airRay.FilterType = Enum.RaycastFilterType.Include;
-		airRay.FilterDescendantsInstances = {world};
-		store.airRay = airRay;
-		local worlds: Instance? = world.Parent;
-		vape:Clean(vapeEvents.MatchStarted.Event:Connect(function(): ()
-			local current: Instance? = worlds and worlds:GetChildren()[1];
-			if current then
-				store.map = current;
-				airRay.FilterDescendantsInstances = {current};
-			end;
-		end));
 		local blockFolder: Instance? = world:FindFirstChild('Blocks');
 		if blockFolder then
 			vape:Clean(blockFolder.ChildRemoved:Connect(function(): ()
@@ -1503,25 +1735,72 @@ velo.run(function(): ()
 				end);
 			end));
 		end;
+		local airRay: RaycastParams = RaycastParams.new();
+		airRay.FilterType = Enum.RaycastFilterType.Include;
+		airRay.FilterDescendantsInstances = {world};
+		store.airRay = airRay;
+		repeat
+			local now: number = tick();
+			if entitylib.isAlive then
+				entitylib.character.AirTime = entitylib.character.Humanoid.FloorMaterial ~= Enum.Material.Air and now or entitylib.character.AirTime;
+			end;
+			local localPosition: Vector3? = entitylib.isAlive and entitylib.character.RootPart.Position or nil;
+			local gravity: number = workspace.Gravity;
+			for _: number, ent: table in entitylib.List do
+				local velocity: Vector3 = ent.RootPart.AssemblyLinearVelocity;
+				ent.LandTick = math.abs(velocity.Y) < 0.1 and ent.LandTick or now;
+				if now - ent.LandTick > 0.2 and ent.Jumps ~= 0 then
+					ent.Jumps = 0;
+					ent.Jumping = false;
+				end;
+				local moving: boolean = velocity.Magnitude > 1;
+				if ent.Targetable and now - (ent.TrackTick or 0) >= (moving and 1 / 30 or 0.2) then
+					ent.TrackTick = now;
+					trajectory.Observe(ent.RootPart, ent.RootPart.Position, velocity, ent.Humanoid.FloorMaterial == Enum.Material.Air or math.abs(velocity.Y) > 0.01, gravity, moving and localPosition or nil, ent.HipHeight, ent.Jumping and config.JumpPower or nil);
+				end;
+			end;
+			task.wait();
+		until vape.Loaded == nil;
 	end));
 
-	local nextPing: number = 0;
-	vape:Clean(runService.Heartbeat:Connect(function(): ()
-		local now: number = tick();
-		if entitylib.isAlive then
-			entitylib.character.AirTime = entitylib.character.Humanoid.FloorMaterial ~= Enum.Material.Air and now or entitylib.character.AirTime;
-		end;
-		for _: number, ent: table in entitylib.List do
-			ent.LandTick = math.abs(ent.RootPart.AssemblyLinearVelocity.Y) < 0.1 and ent.LandTick or now;
-			if now - ent.LandTick > 0.2 and ent.Jumps ~= 0 then
-				ent.Jumps = 0;
-				ent.Jumping = false;
+	vape:Clean(task.spawn(function(): ()
+		repeat
+			local stat: Instance? = statsService.Network.ServerStatsItem:FindFirstChild('Data Ping');
+			local value: number = stat and stat:GetValue() or 0;
+			local latency: number = value > 0 and value / 1000 or lplr:GetNetworkPing() * 2;
+			store.ping.incoming = latency;
+			store.ping.total = latency;
+			task.wait(config.PingRefresh);
+		until vape.Loaded == nil;
+	end));
+
+	vape:Clean(task.spawn(function(): ()
+		task.wait(5);
+		repeat
+			for _: number, dummy: Instance in (getconnections and collectionService:GetTagged('trainingRoomDummy') or {}) do
+				local kept: {[any]: boolean} = {};
+				for index: number, connection: any in getconnections(dummy.Destroying) do
+					local callback: any = connection.Function;
+					local source: string? = callback and debug.info(callback, 's');
+					if source and source:find('training-room-entity-controller', 1, true) then
+						local key: any = debug.getupvalues(callback)[1];
+						if key == nil then
+							key = callback;
+						end;
+						if kept[key] then
+							connection:Disconnect();
+						else
+							kept[key] = true;
+						end;
+					end;
+					if index % 2000 == 0 then
+						task.wait();
+					end;
+				end;
+				task.wait();
 			end;
-		end;
-		if now >= nextPing then
-			nextPing = now + config.PingRefresh;
-			store.ping.total = statsService.Network.ServerStatsItem['Data Ping']:GetValue() / 1000;
-		end;
+			task.wait(30);
+		until vape.Loaded == nil;
 	end));
 
 	vape:Clean(function(): ()
@@ -1532,9 +1811,10 @@ velo.run(function(): ()
 		end;
 		client.Get = oldGet;
 		bedwars.BlockController.isBlockBreakable = oldBreakable;
+		clearStaleHooks();
 		store.blockPlacer:disable();
 		storeChanged:disconnect();
-		for _: string, event: BindableEvent in vapeEvents do
+		for _: string, event: table in vapeEvents do
 			event:Destroy();
 		end;
 		table.clear(vapeEvents);
@@ -1542,6 +1822,96 @@ velo.run(function(): ()
 		table.clear(store);
 	end);
 end, true);
+
+velo.run(function(): ()
+	local shop: table = require(replicatedStorage.TS.games.bedwars.shop['bedwars-shop']).BedwarsShop;
+	local shopUtil: table = require(replicatedStorage.TS.shop['shop-util']).ShopUtil;
+	local oldSuperior: (...any) -> {string} = shopUtil.getAllSuperiorItems;
+	local oldOwnsSuperior: (...any) -> boolean = shopUtil.ownsSuperiorItem;
+	local shopIndex: {[string]: table}? = nil;
+	local clearIndex: () -> () = function(): ()
+		shopIndex = nil;
+	end;
+
+	local allSuperior: (self: table, plr: Player, shopItem: table?) -> {string} = function(self: table, plr: Player, shopItem: table?): {string}
+		if plr ~= lplr then
+			return oldSuperior(self, plr, shopItem);
+		end;
+		if not shopItem or not shopItem.superiorItems then
+			return {};
+		end;
+		if not shopIndex then
+			shopIndex = {};
+			for _: number, item: table in shop.getShop(plr) do
+				shopIndex[item.itemType] = item;
+			end;
+		end;
+		local pending: {string}, seen: {[string]: boolean}, result: {string} = table.clone(shopItem.superiorItems), {}, {};
+		while #pending > 0 do
+			local itemType: string = table.remove(pending);
+			if not seen[itemType] then
+				seen[itemType] = true;
+				table.insert(result, itemType);
+				local item: table? = shopIndex[itemType];
+				for _: number, superior: string in (item and item.superiorItems or {}) do
+					if not seen[superior] then
+						table.insert(pending, superior);
+					end;
+				end;
+			end;
+		end;
+		return result;
+	end;
+
+	local ownsSuperior: (self: table, plr: Player, shopItem: table) -> boolean = function(self: table, plr: Player, shopItem: table): boolean
+		if plr ~= lplr then
+			return oldOwnsSuperior(self, plr, shopItem);
+		end;
+		local superior: {string} = self:getAllSuperiorItems(plr, shopItem);
+		for _: number, tiers: {string} in {shop.Pickaxes, shop.Axes} do
+			local tier: number? = table.find(tiers, shopItem.itemType);
+			if tier then
+				for index: number = tier + 1, #tiers do
+					table.insert(superior, tiers[index]);
+				end;
+				break;
+			end;
+		end;
+		if #superior == 0 then
+			return false;
+		end;
+		local amounts: {[string]: number}, counted: {[Instance]: boolean} = {}, {};
+		for _: number, item: table in bedwars.getInventory(plr).items do
+			if not counted[item.tool] then
+				counted[item.tool] = true;
+				amounts[item.itemType] = (amounts[item.itemType] or 0) + item.amount;
+			end;
+		end;
+		for _: number, itemType: string in superior do
+			if (amounts[itemType] or 0) >= 1 then
+				return true;
+			end;
+		end;
+		return false;
+	end;
+
+	shopUtil.getAllSuperiorItems = allSuperior;
+	shopUtil.ownsSuperiorItem = ownsSuperior;
+	vape:Clean(runService.PreSimulation:Connect(clearIndex));
+	local storeChanged: table = bedwars.Store.changed:connect(clearIndex);
+	vape:Clean(lplr.AttributeChanged:Connect(clearIndex));
+	vape:Clean(vapeEvents.AttributeChanged.Event:Connect(clearIndex));
+	vape:Clean(function(): ()
+		storeChanged:disconnect();
+		if shopUtil.getAllSuperiorItems == allSuperior then
+			shopUtil.getAllSuperiorItems = oldSuperior;
+		end;
+		if shopUtil.ownsSuperiorItem == ownsSuperior then
+			shopUtil.ownsSuperiorItem = oldOwnsSuperior;
+		end;
+		shopIndex = nil;
+	end);
+end);
 
 local placeBlock: (position: Vector3, itemType: string) -> any = function(position: Vector3, itemType: string): any
 	if not canPlace() or not getItem(itemType) then
@@ -1551,49 +1921,116 @@ local placeBlock: (position: Vector3, itemType: string) -> any = function(positi
 	return store.blockPlacer:placeBlock(bedwars.BlockController:getBlockPosition(position));
 end;
 
+local kitSources: table = {["NextSwap"] = 0, ["Order"] = {'Sophia', 'Whim', 'Nazar', 'Umeko'}};
+kitSources.unlocked = function(): table?
+	-- getUnlockedMageElements throws when the mage kit data is not replicated yet; catsix treats that as "nothing unlocked".
+	local loaded: boolean, unlocked: any = pcall(bedwars.MageKitUtil.getUnlockedMageElements, lplr);
+	return loaded and type(unlocked) == 'table' and unlocked or nil;
+end;
+kitSources.mage = function(itemType: string): table?
+	local elements: table? = itemType == 'wizard_stick' and bedwars.MageKitUtil and bedwars.MageKitUtil.MageElementMeta or nil;
+	if not elements then
+		return nil;
+	end;
+	local chosen: table? = elements.BASE;
+	for index: any, element: any in (kitSources.unlocked() or {}) do
+		local meta: table? = elements[element] or elements[index];
+		if meta and meta.projectileSource then
+			chosen = meta;
+		end;
+	end;
+	return chosen and chosen.projectileSource;
+end;
+kitSources.Whim = function(itemType: string): table?
+	local elements: table? = itemType == 'mage_spellbook' and bedwars.MageKitUtil and bedwars.MageKitUtil.MageElementMeta or nil;
+	if not elements then
+		return nil;
+	end;
+	local element: string? = bedwars.BalanceFile.MAGE_ELEMENT_CYCLE[(lplr:GetAttribute('MageElementIndex') or 0) + 1];
+	local unlocked: table? = kitSources.unlocked();
+	if not element or not unlocked or not table.find(unlocked, element) then
+		element = 'BASE';
+	end;
+	local meta: table? = elements[element];
+	return meta and meta.projectileSource;
+end;
+kitSources.Sophia = function(itemType: string): table?
+	local controller: table? = table.find({'frost_staff_3', 'frost_staff_2', 'frost_staff_1'}, itemType) and bedwars.FrostyGunController or nil;
+	if not controller then
+		return nil;
+	end;
+	if controller.projectileMode ~= bedwars.FrostyGunMode.PROJECTILE then
+		if tick() >= kitSources.NextSwap and bedwars.AbilityController:canUseAbility('frosty_gun_swap', {["disableBlockedAbilityAlert"] = true}) then
+			kitSources.NextSwap = tick() + 1;
+			bedwars.AbilityController:useAbility('frosty_gun_swap');
+		end;
+		return nil;
+	end;
+	local meta: table? = bedwars.ItemMeta[itemType];
+	return meta and meta.projectileSource;
+end;
+kitSources.Nazar = function(itemType: string): table?
+	local meta: table? = table.find({'life_bow', 'life_crossbow', 'life_headhunter'}, itemType) and bedwars.ItemMeta[itemType] or nil;
+	return meta and meta.projectileSource;
+end;
+kitSources.Umeko = function(itemType: string): table?
+	if not itemType:match('^ninja_chakram_%d+$') or (bedwars.ChakramController and bedwars.ChakramController.chakramIsLaunched) then
+		return nil;
+	end;
+	local meta: table? = bedwars.ItemMeta[itemType];
+	return meta and meta.projectileSource;
+end;
+
 local projectileSourceOf: (itemType: string, kitWeapons: boolean?) -> table? = function(itemType: string, kitWeapons: boolean?): table?
 	local meta: table? = bedwars.ItemMeta[itemType];
 	if not meta then
 		return nil;
 	end;
-	if itemType == 'wizard_stick' or itemType == 'mage_spellbook' then
-		local elements: table = bedwars.MageKitUtil.MageElementMeta;
-		local unlocked: table = bedwars.MageKitUtil.getUnlockedMageElements(lplr) or {};
-		local chosen: string = 'BASE';
-		if itemType == 'mage_spellbook' then
-			local cycled: string? = bedwars.BalanceFile.MAGE_ELEMENT_CYCLE[(lplr:GetAttribute('MageElementIndex') or 0) + 1];
-			chosen = cycled and table.find(unlocked, cycled) and cycled or 'BASE';
-		else
-			for _: number, element: string in unlocked do
-				chosen = elements[element] and elements[element].projectileSource and element or chosen;
-			end;
-		end;
-		return elements[chosen] and elements[chosen].projectileSource;
+	if itemType == 'wizard_stick' then
+		return meta.projectileSource or kitSources.mage(itemType);
+	end;
+	if itemType == 'mage_spellbook' then
+		return kitSources.Whim(itemType);
 	end;
 	if not kitWeapons then
 		return meta.projectileSource;
 	end;
-	if itemType:find('frost_staff_') then
-		local frosty: table? = bedwars.FrostyGunController;
-		if frosty and frosty.projectileMode ~= bedwars.FrostyGunMode.PROJECTILE then
-			if bedwars.AbilityController:canUseAbility('frosty_gun_swap', {["disableBlockedAbilityAlert"] = true}) then
-				bedwars.AbilityController:useAbility('frosty_gun_swap');
-			end;
-			return nil;
-		end;
-	elseif itemType:match('^ninja_chakram_%d+$') and bedwars.ChakramController and bedwars.ChakramController.chakramIsLaunched then
-		return nil;
+	if itemType:find('frost_staff_', 1, true) and bedwars.FrostyGunController and bedwars.FrostyGunController.projectileMode ~= bedwars.FrostyGunMode.PROJECTILE then
+		return kitSources.Sophia(itemType);
+	end;
+	if itemType:match('^ninja_chakram_%d+$') then
+		return kitSources.Umeko(itemType);
 	end;
 	return meta.projectileSource;
 end;
 
-local getProjectiles: (filter: {string}?, kitWeapons: boolean?) -> {table} = function(filter: {string}?, kitWeapons: boolean?): {table}
-	local list: {table} = {};
-	local normalize: (text: string) -> string = function(text: string): string
-		return ' '..tostring(text):lower():gsub('[_%s]+', ' ');
+local getProjectiles: (filter: {string}?, kitWeapons: (boolean | table)?) -> {table} = function(filter: {string}?, kitWeapons: (boolean | table)?): {table}
+	local flags: table = type(kitWeapons) == 'table' and kitWeapons or {["Sophia"] = kitWeapons == true, ["Whim"] = kitWeapons == true, ["Nazar"] = kitWeapons == true, ["Umeko"] = kitWeapons == true};
+	local normalize: (text: any) -> string = function(text: any): string
+		return (tostring(text):lower():gsub('[_%s]+', ' '));
 	end;
+	local listed: (names: {string}) -> boolean = function(names: {string}): boolean
+		for _: number, entry: string in (filter or {}) do
+			local needle: string = normalize(entry);
+			if #needle > 0 then
+				for _: number, name: string in names do
+					local candidate: string = normalize(name);
+					if candidate == needle or (' '..candidate):find(' '..needle, 1, true) then
+						return true;
+					end;
+				end;
+			end;
+		end;
+		return false;
+	end;
+	local list: {table} = {};
 	for _: number, item: table in store.inventory.inventory.items do
-		local source: table? = projectileSourceOf(item.itemType, kitWeapons);
+		local meta: table? = bedwars.ItemMeta[item.itemType];
+		local kit: table? = nil;
+		for _: number, name: string in kitSources.Order do
+			kit = kit or (flags[name] and kitSources[name](item.itemType) or nil);
+		end;
+		local source: table? = kit or (meta and (meta.projectileSource or kitSources.mage(item.itemType)));
 		if not source then
 			continue;
 		end;
@@ -1607,22 +2044,13 @@ local getProjectiles: (filter: {string}?, kitWeapons: boolean?) -> {table} = fun
 				end;
 			end;
 		end;
-		local kitWeapon: boolean = kitWeapons == true and (item.itemType == 'mage_spellbook' or item.itemType:find('frost_staff_', 1, true) ~= nil or item.itemType:find('life_', 1, true) == 1 or item.itemType:match('^ninja_chakram_%d+$') ~= nil);
-		local allowed: boolean = filter == nil or #filter == 0 or kitWeapon;
-		for _: number, entry: string in (ammo and filter or {}) do
-			local needle: string = normalize(entry);
-			for _: number, name: string in {ammo, item.itemType, bedwars.ItemMeta[item.itemType].displayName or ''} do
-				allowed = allowed or normalize(name):find(needle, 1, true) ~= nil;
-			end;
-		end;
-		if ammo and allowed then
+		if ammo and (kit or filter == nil or listed({ammo, item.itemType, meta and meta.displayName})) then
 			table.insert(list, {["Item"] = item, ["Ammo"] = ammo, ["Projectile"] = source.projectileType(ammo), ["Source"] = source});
 		end;
 	end;
 	return list;
 end;
 
-local ballistics: table = {};
 ballistics.fallGravity = function(ent: table): number
 	local gravity: number = workspace.Gravity;
 	local balloons: number? = ent.Character:GetAttribute('InflatedBalloons');
@@ -1641,43 +2069,90 @@ ballistics.fallGravity = function(ent: table): number
 	end;
 	return gravity;
 end;
-ballistics.solve = function(origin: Vector3, speed: number, gravity: number, ent: table, target: Vector3?, velocity: Vector3?, horizontal: number?, vertical: number?): (Vector3?, number?)
+-- fall nil = full fallGravity(ent); params nil = store.airRay, false = no params (catsix callers passing nil).
+ballistics.solve = function(origin: Vector3, speed: number, gravity: number, ent: table, target: Vector3?, velocity: Vector3?, horizontal: number?, vertical: number?, fall: number?, params: (RaycastParams | boolean)?): (Vector3?, number?)
 	local goal: Vector3 = target or ent.RootPart.Position;
 	local motion: Vector3 = velocity or ent.RootPart.AssemblyLinearVelocity;
 	local leadX: number, leadY: number = horizontal or 1, vertical or 1;
-	local fall: number = ballistics.fallGravity(ent);
-	local aim: Vector3?, flight: number? = nil, nil;
-	for pass: number = 1, 2 do
-		aim = prediction.SolveTrajectory(origin, speed, gravity, goal, motion, fall, ent.HipHeight, ent.Jumping and config.JumpPower or nil, store.airRay);
-		if not aim then
-			return nil, nil;
+	local playerGravity: number = fall or ballistics.fallGravity(ent);
+	local rayParams: RaycastParams? = if params == nil then store.airRay elseif params == false then nil else params;
+	local airborne: boolean = ent.Humanoid.FloorMaterial == Enum.Material.Air or math.abs(ent.RootPart.AssemblyLinearVelocity.Y) > 0.01;
+	local jump: number? = ent.Jumping and config.JumpPower or nil;
+	local aim: Vector3?, _: any, flight: number? = trajectory.SolveTrajectory(origin, speed, gravity, goal, motion, playerGravity, ent.HipHeight, jump, rayParams, airborne, ent.RootPart.Position, ent.RootPart, nil, true);
+	if aim and flight and (leadX ~= 1 or leadY ~= 1) then
+		local rise: number = motion.Y * flight - playerGravity * flight * flight * 0.5;
+		local lead: Vector3 = Vector3.new(motion.X * flight * (leadX - 1), rise * (leadY - 1), motion.Z * flight * (leadX - 1));
+		local adjusted: Vector3?, _: any, adjustedFlight: number? = trajectory.SolveTrajectory(origin, speed, gravity, goal + lead, motion, playerGravity, ent.HipHeight, jump, rayParams, airborne, ent.RootPart.Position, ent.RootPart, nil, true);
+		if adjusted then
+			aim, flight = adjusted, adjustedFlight or flight;
 		end;
-		-- SolveTrajectory returns origin + launch velocity; the intercept time comes from the horizontal closing speed.
-		local closing: Vector3 = (aim - origin - motion) * Vector3.new(1, 0, 1);
-		local offset: Vector3 = (goal - origin) * Vector3.new(1, 0, 1);
-		flight = closing:Dot(closing) > 1e-6 and offset:Dot(closing) / closing:Dot(closing) or (goal - origin).Magnitude / speed;
-		if pass == 2 or (leadX == 1 and leadY == 1) then
-			break;
-		end;
-		local rise: number = motion.Y * flight - fall * flight * flight * 0.5;
-		goal += Vector3.new(motion.X * flight * (leadX - 1), rise * (leadY - 1), motion.Z * flight * (leadX - 1));
 	end;
 	return aim, flight;
 end;
-ballistics.arcClear = function(origin: Vector3, velocity: Vector3, gravity: number, flight: number, ignore: {Instance}): boolean
-	local params: RaycastParams = RaycastParams.new();
-	params.FilterType = Enum.RaycastFilterType.Exclude;
-	params.FilterDescendantsInstances = ignore;
-	local last: Vector3 = origin;
-	for step: number = 1, config.ArcSamples do
-		local t: number = flight * step / config.ArcSamples;
-		local point: Vector3 = origin + velocity * t + Vector3.new(0, -0.5 * gravity * t * t, 0);
-		if workspace:Raycast(last, point - last, params) then
-			return false;
-		end;
-		last = point;
+ballistics.arcClear = function(origin: Vector3, velocity: Vector3, gravity: number, flight: number, ignore: any, target: Instance?): boolean
+	local params: RaycastParams = typeof(ignore) == 'RaycastParams' and ignore or RaycastParams.new();
+	if params ~= ignore then
+		params.FilterType = Enum.RaycastFilterType.Exclude;
+		params.FilterDescendantsInstances = ignore;
 	end;
-	return true;
+	return (trajectory.IsTrajectoryClear(origin, velocity, gravity, flight, params, target));
+end;
+ballistics.expectKnockback = function(root: Instance?, flight: number?, from: Vector3?, multiplier: table?): ()
+	if typeof(root) ~= 'Instance' or not flight or not from or (multiplier and multiplier.disabled) then
+		return;
+	end;
+	local direction: Vector3 = bedwars.KnockbackUtil.getDirection(root.Position, from);
+	if direction.Magnitude <= 0 then
+		return;
+	end;
+	trajectory.expectKnockback(root, workspace:GetServerTimeNow() + flight, bedwars.KnockbackUtil.calculateKnockbackVelocity(direction, 1, multiplier), multiplier);
+end;
+ballistics.markKnockback = function(damage: table): ()
+	local character: any = damage.entityInstance;
+	local multiplier: table? = damage.knockbackMultiplier;
+	if typeof(character) ~= 'Instance' or (multiplier and multiplier.disabled) then
+		return;
+	end;
+	local root: BasePart? = character:IsA('Model') and character.PrimaryPart or character:IsA('BasePart') and character or nil;
+	local impulse: Vector3? = nil;
+	if root and damage.fromPosition then
+		local direction: Vector3 = bedwars.KnockbackUtil.getDirection(root.Position, damage.fromPosition);
+		if direction.Magnitude > 0 then
+			impulse = bedwars.KnockbackUtil.calculateKnockbackVelocity(direction, 1, multiplier);
+		end;
+	end;
+	trajectory.markKnockback(character, multiplier, impulse);
+end;
+ballistics.reportHit = function(damage: table): ()
+	local character: any = damage.entityInstance;
+	if (damage.fromEntity ~= lplr.Character and damage.fromEntity ~= lplr) or typeof(character) ~= 'Instance' then
+		return;
+	end;
+	local root: BasePart? = character:IsA('Model') and character.PrimaryPart or character:IsA('BasePart') and character or nil;
+	if root then
+		trajectory.reportHit(root);
+	end;
+end;
+ballistics.scanProjectile = function(origin: Vector3, velocity: Vector3, projectileType: string, shooter: Instance?): ()
+	if not entitylib.isAlive then
+		return;
+	end;
+	local meta: table? = bedwars.ProjectileMeta[projectileType];
+	local drop: Vector3 = Vector3.new(0, -(meta and meta.gravitationalAcceleration or config.Gravity), 0);
+	for _: number, ent: table in entitylib.List do
+		if ent.Character == shooter then
+			continue;
+		end;
+		local root: BasePart = ent.RootPart;
+		local rootVelocity: Vector3, rootPosition: Vector3 = root.AssemblyLinearVelocity, root.Position;
+		for step: number = 1, 40 do
+			local flight: number = step * 0.05;
+			if (origin + velocity * flight + drop * (0.5 * flight * flight) - (rootPosition + rootVelocity * flight)).Magnitude <= ent.HipHeight then
+				ballistics.expectKnockback(root, flight, origin, meta and meta.knockback);
+				break;
+			end;
+		end;
+	end;
 end;
 ballistics.motion = {};
 vape:Clean(entitylib.Events.EntityRemoved:Connect(function(ent: table): ()
@@ -1776,16 +2251,16 @@ ballistics.fire = function(item: table, ammo: string, projectile: string, ent: t
 	end;
 	local origin: Vector3 = entitylib.character.RootPart.Position;
 	local speed: number, gravity: number = meta.launchVelocity, meta.gravitationalAcceleration or config.Gravity;
-	local rough: Vector3? = ballistics.solve(origin, speed, gravity, ent);
+	local rough: Vector3? = ballistics.solve(origin, speed, gravity, ent, nil, nil, nil, nil, workspace.Gravity, false);
 	if not rough then
 		return false;
 	end;
 	local offset: table = bedwars.BowConstantsTable;
 	local shootPosition: Vector3 = (CFrame.new(origin, rough) * CFrame.new(-offset.RelX, -offset.RelY, -offset.RelZ)).Position;
-	local aim: Vector3?, flight: number? = ballistics.solve(shootPosition, speed, gravity, ent);
+	local aim: Vector3?, flight: number? = ballistics.solve(shootPosition, speed, gravity, ent, nil, nil, nil, nil, workspace.Gravity, false);
 	aim = aim or rough;
 	local velocity: Vector3 = CFrame.lookAt(shootPosition, aim).LookVector * speed;
-	if flight and not ballistics.arcClear(shootPosition, velocity, gravity, flight, {lplr.Character, gameCamera, ent.Character}) then
+	if flight and not ballistics.arcClear(shootPosition, velocity, gravity, flight, {lplr.Character, gameCamera}, ent.Character) then
 		return false;
 	end;
 	local shotId: string = bedwars.IdUtil.generateId(8);
@@ -1795,6 +2270,7 @@ ballistics.fire = function(item: table, ammo: string, projectile: string, ent: t
 		end;
 	end);
 	ballistics.watch(shotId, shootPosition, velocity, gravity, ent, meta.lifetimeSec);
+	trajectory.trackShot(ent.RootPart);
 	return true;
 end;
 
@@ -1806,9 +2282,13 @@ vape:Clean(vapeEvents.BlocksChanged.Event:Connect(function(): ()
 	table.clear(mining.Cache);
 end));
 
-mining.health = function(block: Instance, cell: Vector3): number
+mining.rawHealth = function(block: Instance, cell: Vector3): number?
 	local data: Instance? = bedwars.BlockController:getStore():getBlockData(cell);
-	return data and (data:GetAttribute('1') or data:GetAttribute('Health')) or block:GetAttribute('Health') or 0;
+	return data and (data:GetAttribute('1') or data:GetAttribute('Health')) or block:GetAttribute('Health');
+end;
+
+mining.health = function(block: Instance, cell: Vector3): number
+	return mining.rawHealth(block, cell) or 0;
 end;
 
 mining.hits = function(block: Instance, position: Vector3): number?
@@ -1878,10 +2358,16 @@ end;
 
 mining.route = function(target: Instance, goal: Vector3, sightline: boolean, nearest: boolean): (Vector3?, number?, {[Vector3]: Vector3})
 	local origin: Vector3 = entitylib.character.RootPart.Position;
+	local originCell: Vector3 = bedwars.BlockController:getBlockPosition(origin);
+	local camera: Vector3, head: Vector3 = gameCamera.CFrame.Position, entitylib.character.Head.Position;
 	local key: string = tostring(goal)..(sightline and 'S' or 'P')..(nearest and 'N' or 'C');
 	local cached: table? = mining.Cache[key];
-	if cached and cached.Origin == bedwars.BlockController:getBlockPosition(origin) and os.clock() - cached.Clock < config.PathLifetime then
+	if cached and cached.Origin == originCell and (not sightline or (cached.Camera == camera and cached.Head == head)) and os.clock() - cached.Clock < config.PathLifetime then
 		return cached.Position, cached.Cost, cached.Path;
+	end;
+	local remember: (position: Vector3?, cost: number?, path: {[Vector3]: Vector3}) -> (Vector3?, number?, {[Vector3]: Vector3}) = function(position: Vector3?, cost: number?, path: {[Vector3]: Vector3}): (Vector3?, number?, {[Vector3]: Vector3})
+		mining.Cache[key] = {["Origin"] = originCell, ["Camera"] = camera, ["Head"] = head, ["Clock"] = os.clock(), ["Position"] = position, ["Cost"] = cost, ["Path"] = path};
+		return position, cost, path;
 	end;
 	local known: {[Vector3]: any} = {};
 	local blockAt: (cell: Vector3) -> Instance? = function(cell: Vector3): Instance?
@@ -1890,29 +2376,39 @@ mining.route = function(target: Instance, goal: Vector3, sightline: boolean, nea
 		end;
 		return known[cell] or nil;
 	end;
-	local score: (position: Vector3, cost: number) -> number = function(position: Vector3, cost: number): number
-		return nearest and cost + (position - origin).Magnitude / 6 - (position == store.breakTarget and 1.5 or 0) or cost;
+	local hitsKnown: {[Vector3]: any} = {};
+	local hitsAt: (block: Instance, cell: Vector3) -> number? = function(block: Instance, cell: Vector3): number?
+		if hitsKnown[cell] == nil then
+			hitsKnown[cell] = mining.hits(block, cell) or false;
+		end;
+		return hitsKnown[cell] or nil;
 	end;
-	local best: Vector3?, bestCost: number?, bestScore: number = nil, nil, math.huge;
-	local path: {[Vector3]: Vector3} = {};
+	local previous: Vector3? = store.breakTarget;
+	local look: Vector3 = gameCamera.CFrame.LookVector;
 
 	if sightline then
-		for _: number, eye: Vector3 in {entitylib.character.Head.Position, gameCamera.CFrame.Position} do
+		local best: Vector3?, bestCost: number?, bestScore: number?, bestDistance: number, bestFacing: number, bestDirect: boolean? = nil, nil, nil, 0, 0, nil;
+		local bestPath: {[Vector3]: Vector3} = {};
+		for _: number, eye: Vector3 in {head, camera} do
 			for x: number = -1, 1 do
 				for y: number = -1, 1 do
 					for z: number = -1, 1 do
 						local crossed: {Vector3}, cost: number, valid: boolean = {}, 0, false;
 						mining.trace(eye, goal + Vector3.new(x, y, z) * 1.35, function(cell: Vector3): boolean?
 							local block: Instance? = blockAt(cell);
-							if cell == goal or block == target then
+							if block == target and target.Name == 'bed' then
 								valid = (cell - origin).Magnitude <= config.BreakRange;
 								if cell ~= goal then
 									table.insert(crossed, cell);
 								end;
 								return true;
 							end;
+							if cell == goal then
+								valid = (cell - origin).Magnitude <= config.BreakRange;
+								return true;
+							end;
 							if block then
-								local hits: number? = mining.hits(block, cell);
+								local hits: number? = hitsAt(block, cell);
 								if not hits then
 									return true;
 								end;
@@ -1921,112 +2417,186 @@ mining.route = function(target: Instance, goal: Vector3, sightline: boolean, nea
 							end;
 							return nil;
 						end);
-						local first: Vector3 = crossed[1] or goal;
-						if valid and score(first, cost) < bestScore then
-							best, bestCost, bestScore = first, cost, score(first, cost);
-							table.clear(path);
+						local position: Vector3 = crossed[1] or goal;
+						local delta: Vector3 = position - origin;
+						local distance: number = delta.Magnitude;
+						if not valid or distance > config.BreakRange then
+							continue;
+						end;
+						local facing: number = distance > 0 and delta:Dot(look) / distance or 1;
+						local direct: boolean = blockAt(position) == target;
+						local score: number = nearest and cost + distance / 6 - (position == previous and 1.5 or 0) or cost;
+						local better: boolean = bestScore == nil or (direct and not bestDirect) or (direct == bestDirect and score < bestScore);
+						if bestScore ~= nil and direct == bestDirect and score == bestScore then
+							if not nearest and previous and (position == previous) ~= (best == previous) then
+								better = position == previous;
+							elseif distance ~= bestDistance then
+								better = distance < bestDistance;
+							else
+								better = facing > bestFacing;
+							end;
+						end;
+						if better then
+							best, bestCost, bestScore, bestDistance, bestFacing, bestDirect = position, cost, score, distance, facing, direct;
+							table.clear(bestPath);
 							for index: number, cell: Vector3 in crossed do
-								path[cell] = crossed[index + 1] or goal;
+								bestPath[cell] = crossed[index + 1] or goal;
 							end;
 						end;
 					end;
 				end;
 			end;
 		end;
-	else
-		local openCache: {[Vector3]: boolean} = {};
-		local isOpen: (cell: Vector3) -> boolean = function(cell: Vector3): boolean
-			if openCache[cell] == nil then
-				local frontier: {Vector3}, seen: {[Vector3]: boolean}, escaped: boolean = {cell}, {[cell] = true}, false;
-				for _: number = 1, 400 do
-					local current: Vector3? = table.remove(frontier);
-					if not current or (current - goal).Magnitude > config.PathRadius then
-						escaped = current ~= nil;
-						break;
-					end;
-					for _: number, side: Vector3 in sides do
-						local neighbour: Vector3 = current + side;
-						if not seen[neighbour] and not blockAt(neighbour) then
-							seen[neighbour] = true;
-							table.insert(frontier, neighbour);
-						end;
-					end;
+		return remember(best, bestCost, bestPath);
+	end;
+
+	if (goal - origin).Magnitude > config.BreakRange then
+		return nil, nil, {};
+	end;
+	local routes: {[Vector3]: boolean} = {};
+	local isOpen: (cell: Vector3) -> boolean = function(cell: Vector3): boolean
+		if routes[cell] == nil then
+			local frontier: {Vector3}, seen: {[Vector3]: boolean}, reached: boolean = {cell}, {[cell] = true}, true;
+			for _: number = 1, 400 do
+				local current: Vector3? = table.remove(frontier);
+				if not current then
+					reached = false;
+					break;
 				end;
-				for visited: Vector3 in seen do
-					openCache[visited] = escaped;
+				if (current - goal).Magnitude > config.PathRadius then
+					break;
+				end;
+				for _: number, side: Vector3 in sides do
+					local neighbour: Vector3 = current + side;
+					if not seen[neighbour] and not blockAt(neighbour) then
+						seen[neighbour] = true;
+						table.insert(frontier, neighbour);
+					end;
 				end;
 			end;
-			return openCache[cell];
-		end;
-		local heap: {table} = {{0, goal}};
-		local push: (node: table) -> () = function(node: table): ()
-			table.insert(heap, node);
-			local index: number = #heap;
-			while index > 1 and heap[index // 2][1] > node[1] do
-				heap[index], heap[index // 2] = heap[index // 2], node;
-				index //= 2;
+			for visited: Vector3 in seen do
+				routes[visited] = reached;
 			end;
 		end;
-		local pop: () -> table? = function(): table?
-			local top: table? = heap[1];
-			local last: table? = table.remove(heap);
-			if #heap > 0 then
-				heap[1] = last;
-				local index: number = 1;
-				while index * 2 <= #heap do
-					local child: number = index * 2;
-					if child < #heap and heap[child + 1][1] < heap[child][1] then
-						child += 1;
-					end;
-					if heap[index][1] <= heap[child][1] then
-						break;
-					end;
-					heap[index], heap[child] = heap[child], heap[index];
-					index = child;
-				end;
-			end;
-			return top;
-		end;
-		local distance: {[Vector3]: number}, done: {[Vector3]: boolean} = {[goal] = 0}, {};
-		for _: number = 1, config.PathBudget do
-			local node: table? = pop();
-			if not node then
-				break;
-			end;
-			local cell: Vector3 = node[2];
-			if done[cell] then
-				continue;
-			end;
-			done[cell] = true;
-			for _: number, side: Vector3 in sides do
-				local neighbour: Vector3 = cell + side;
-				local block: Instance? = blockAt(neighbour);
-				local hits: number? = 0;
-				if not block and isOpen(neighbour) then
-					if blockAt(cell) and (cell - origin).Magnitude <= config.BreakRange and score(cell, node[1]) < bestScore then
-						best, bestCost, bestScore = cell, node[1], score(cell, node[1]);
-					end;
-					continue;
-				elseif block and block ~= target then
-					hits = mining.hits(block, neighbour);
-				end;
-				if hits and not done[neighbour] and node[1] + hits < (distance[neighbour] or math.huge) then
-					distance[neighbour] = node[1] + hits;
-					path[neighbour] = cell;
-					push({node[1] + hits, neighbour});
-				end;
+		return routes[cell];
+	end;
+	if blockAt(goal) then
+		for _: number, side: Vector3 in sides do
+			local neighbour: Vector3 = goal + side;
+			if not blockAt(neighbour) and isOpen(neighbour) then
+				return remember(goal, 0, {});
 			end;
 		end;
 	end;
 
-	mining.Cache[key] = {["Origin"] = bedwars.BlockController:getBlockPosition(origin), ["Clock"] = os.clock(), ["Position"] = best, ["Cost"] = bestCost, ["Path"] = path};
-	return best, bestCost, path;
+	local heap: {table} = {{0, goal}};
+	local push: (node: table) -> () = function(node: table): ()
+		table.insert(heap, node);
+		local index: number = #heap;
+		while index > 1 and heap[index // 2][1] > node[1] do
+			heap[index], heap[index // 2] = heap[index // 2], node;
+			index //= 2;
+		end;
+	end;
+	local pop: () -> table? = function(): table?
+		local top: table? = heap[1];
+		local last: table? = table.remove(heap);
+		if #heap > 0 then
+			heap[1] = last;
+			local index: number = 1;
+			while index * 2 <= #heap do
+				local child: number = index * 2;
+				if child < #heap and heap[child + 1][1] < heap[child][1] then
+					child += 1;
+				end;
+				if heap[index][1] <= heap[child][1] then
+					break;
+				end;
+				heap[index], heap[child] = heap[child], heap[index];
+				index = child;
+			end;
+		end;
+		return top;
+	end;
+	local distance: {[Vector3]: number}, done: {[Vector3]: boolean}, exposed: {[Vector3]: {Vector3}}, path: {[Vector3]: Vector3} = {[goal] = 0}, {}, {}, {};
+	for _: number = 1, config.PathBudget do
+		local node: table? = pop();
+		if not node then
+			break;
+		end;
+		local cell: Vector3 = node[2];
+		if done[cell] then
+			continue;
+		end;
+		done[cell] = true;
+		for _: number, side: Vector3 in sides do
+			local neighbour: Vector3 = cell + side;
+			if done[neighbour] then
+				continue;
+			end;
+			local block: Instance? = blockAt(neighbour);
+			local hits: number? = block and block ~= target and hitsAt(block, neighbour) or nil;
+			if not block then
+				if blockAt(cell) then
+					exposed[cell] = exposed[cell] or {};
+					table.insert(exposed[cell], neighbour);
+				end;
+				hits = not isOpen(neighbour) and 0 or nil;
+			end;
+			if hits and node[1] + hits < (distance[neighbour] or math.huge) then
+				distance[neighbour] = node[1] + hits;
+				path[neighbour] = cell;
+				push({node[1] + hits, neighbour});
+			end;
+		end;
+	end;
+
+	local candidates: {table} = {};
+	for position: Vector3, openings: {Vector3} in exposed do
+		local delta: Vector3 = position - origin;
+		local magnitude: number = delta.Magnitude;
+		if magnitude <= config.BreakRange then
+			local facing: number = magnitude > 0 and delta:Dot(look) / magnitude or 1;
+			table.insert(candidates, {distance[position], position, openings, magnitude, facing, distance[position] + magnitude / 6 - (position == previous and 1.5 or 0)});
+		end;
+	end;
+	table.sort(candidates, function(a: table, b: table): boolean
+		if nearest then
+			if a[6] ~= b[6] then
+				return a[6] < b[6];
+			end;
+		else
+			if a[1] ~= b[1] then
+				return a[1] < b[1];
+			end;
+			if previous and (a[2] == previous) ~= (b[2] == previous) then
+				return a[2] == previous;
+			end;
+		end;
+		if a[4] ~= b[4] then
+			return a[4] < b[4];
+		end;
+		return a[5] > b[5];
+	end);
+	for _: number, candidate: table in candidates do
+		for _: number, opening: Vector3 in candidate[3] do
+			if isOpen(opening) then
+				return remember(candidate[2], candidate[1], path);
+			end;
+		end;
+	end;
+	return remember(nil, nil, path);
 end;
 
 local breakBlock: (block: Instance, options: table?) -> (Vector3?, {[Vector3]: Vector3}?, Vector3?, boolean) = function(block: Instance, options: table?): (Vector3?, {[Vector3]: Vector3}?, Vector3?, boolean)
 	options = options or {};
-	if lplr:GetAttribute('DenyBlockBreak') or not entitylib.isAlive or store.infinitefly then
+	local session: table? = options.Session;
+	local infiniteFly: table? = vape.Modules.InfiniteFly;
+	if lplr:GetAttribute('DenyBlockBreak') or not entitylib.isAlive or (infiniteFly and infiniteFly["Enabled"]) or (session and session.Cancelled) then
 		return nil, nil, nil, false;
+	end;
+	local interrupted: () -> boolean = function(): boolean
+		return not entitylib.isAlive or (session ~= nil and session.Cancelled == true);
 	end;
 	local timeout: number = math.max(1, lplr:GetNetworkPing() * 4 + 0.5);
 	for index: number = #mining.Pending, 1, -1 do
@@ -2035,29 +2605,46 @@ local breakBlock: (block: Instance, options: table?) -> (Vector3?, {[Vector3]: V
 			table.remove(mining.Pending, index);
 		end;
 	end;
-	local active: table? = mining.Pending[#mining.Pending];
-	if active and (not options.Sequential or #mining.Pending >= 4) then
-		return active.Position, active.Path, active.Target, false;
+	local pending: table? = mining.Pending[#mining.Pending];
+	if pending and (not options.Sequential or #mining.Pending >= 4) then
+		return pending.Position, pending.Path, pending.Target, false;
 	end;
 
 	local origin: Vector3 = entitylib.character.RootPart.Position;
-	local handler: table? = bedwars.BlockController:getHandlerRegistry():getHandler(block.Name);
-	local cells: {Vector3} = handler and handler:getContainedPositions(block) or {bedwars.BlockController:getBlockPosition(block.Position)};
 	local position: Vector3?, path: {[Vector3]: Vector3}?, target: Vector3?, cost: number, direct: boolean = nil, nil, nil, math.huge, false;
-	for _: number, cell: Vector3 in cells do
-		local hit: Vector3?, hitCost: number?, hitPath: {[Vector3]: Vector3} = mining.route(block, cell * 3, options.Wallcheck == true, options.Nearest == true);
-		local isDirect: boolean = hit ~= nil and getPlacedBlock(hit) == block;
-		if hit and ((isDirect and not direct) or (isDirect == direct and hitCost < cost)) then
-			position, path, target, cost, direct = hit, hitPath, cell * 3, hitCost, isDirect;
+	local focus: table? = mining.Focus;
+	if focus then
+		local focusBlock: Instance?, focusCell: Vector3? = getPlacedBlock(focus.Position);
+		if session and focus.Session == session and focus.Block == block and focusBlock and not focusBlock:GetAttribute('NoBreak') and focusBlock.Name == focus.Name and (origin - focus.Position).Magnitude <= config.BreakRange and bedwars.BlockController:isBlockBreakable({["blockPosition"] = focusCell}, lplr) and (not options.Wallcheck or mining.reachable(focus.Position)) then
+			position, target, path, direct = focus.Position, focus.Target, focus.Path, focus.Direct;
+		else
+			mining.Focus = nil;
 		end;
 	end;
+	if not position then
+		local handler: table? = bedwars.BlockController:getHandlerRegistry():getHandler(block.Name);
+		for _: number, cell: Vector3 in (handler and handler:getContainedPositions(block) or {bedwars.BlockController:getBlockPosition(block.Position)}) do
+			local hit: Vector3?, hitCost: number?, hitPath: {[Vector3]: Vector3} = mining.route(block, cell * 3, options.Wallcheck == true, options.Nearest == true);
+			local distance: number = hit and (origin - hit).Magnitude or math.huge;
+			local isDirect: boolean = hit ~= nil and getPlacedBlock(hit) == block;
+			if hit and ((isDirect and not direct) or (isDirect == direct and (hitCost < cost or (hitCost == cost and position ~= store.breakTarget and (hit == store.breakTarget or distance < (origin - position).Magnitude))))) then
+				position, path, target, cost, direct = hit, hitPath, cell * 3, hitCost, isDirect;
+			end;
+		end;
+	end;
+	if options.DirectOnly and not direct then
+		return nil, nil, nil, false;
+	end;
 	store.breakTarget = position;
-	if not position or (options.DirectOnly and not direct) or (position - origin).Magnitude > config.BreakRange then
+	if not position or (entitylib.character.RootPart.Position - position).Magnitude > config.BreakRange then
 		return nil, nil, nil, false;
 	end;
 	local hitBlock: Instance?, hitCell: Vector3? = getPlacedBlock(position);
 	if not hitBlock then
 		return nil, nil, nil, false;
+	end;
+	if pending and (pending.Block ~= hitBlock or pending.Position ~= position) then
+		return pending.Position, pending.Path, pending.Target, false;
 	end;
 	if options.OnTarget then
 		options.OnTarget(position, path, target);
@@ -2065,23 +2652,31 @@ local breakBlock: (block: Instance, options: table?) -> (Vector3?, {[Vector3]: V
 
 	if workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack > config.SwingLockout then
 		local tool: table? = store.tools[bedwars.ItemMeta[hitBlock.Name].block.breakType] or store.tools.stone;
-		local hand: ObjectValue? = lplr.Character and lplr.Character:FindFirstChild('HandInvItem');
-		if tool and hand and hand.Value ~= tool.tool then
-			if options.SwitchDelay and options.SwitchDelay > 0 then
+		if tool then
+			local hand: ObjectValue? = lplr.Character and lplr.Character:FindFirstChild('HandInvItem');
+			local changed: boolean = not store.breakTool or store.breakTool.tool ~= tool.tool or not hand or hand.Value ~= tool.tool;
+			if changed and options.SwitchDelay and options.SwitchDelay > 0 then
 				task.wait(options.SwitchDelay);
-				if not entitylib.isAlive or getPlacedBlock(position) ~= hitBlock then
+				if interrupted() or getPlacedBlock(position) ~= hitBlock or workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack <= config.SwingLockout then
 					return position, path, target, false;
 				end;
 			end;
-			store.breakTool = {["tool"] = tool.tool, ["expires"] = tick() + 0.5};
+			local equip: table = {["tool"] = tool.tool, ["expires"] = tick() + timeout, ["session"] = session};
+			store.breakTool = equip;
 			if options.AutoTool then
 				hotbarSwitch(hotbarSlotOf(tool.tool));
 			end;
-			local equipped: boolean, result: any = fire('SetInvItem', 'CallServerAsync', {["hand"] = tool.tool}):await();
-			if not equipped or result == false or not hand.Parent then
-				return position, path, target, false;
+			if changed then
+				local equipped: boolean, result: any = fire('SetInvItem', 'CallServerAsync', {["hand"] = tool.tool}):await();
+				if not equipped or result == false or interrupted() or not hand or not hand.Parent then
+					return position, path, target, false;
+				end;
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
+				hand.Value = tool.tool;
 			end;
-			hand.Value = tool.tool;
+			equip.expires = tick() + 0.5;
 		end;
 	end;
 
@@ -2089,17 +2684,30 @@ local breakBlock: (block: Instance, options: table?) -> (Vector3?, {[Vector3]: V
 		mining.Health.Value = mining.health(hitBlock, hitCell);
 		mining.Health.Cell = hitCell;
 	end;
-	local before: number = mining.health(hitBlock, hitCell);
-	local request: table = {["Position"] = position, ["Target"] = target, ["Path"] = path, ["Block"] = hitBlock, ["Sent"] = tick()};
+	if interrupted() or getPlacedBlock(position) ~= hitBlock or not bedwars.BlockController:isBlockBreakable({["blockPosition"] = hitCell}, lplr) then
+		table.clear(mining.Cache);
+		return nil, nil, nil, false;
+	end;
+	local before: number = mining.rawHealth(hitBlock, hitCell) or 0;
+	if session and not mining.Focus then
+		mining.Focus = {["Block"] = block, ["Position"] = position, ["Target"] = target, ["Path"] = path, ["Name"] = hitBlock.Name, ["Direct"] = direct, ["Session"] = session};
+	end;
+	local request: table = {["Position"] = position, ["Target"] = target, ["Path"] = path, ["Block"] = hitBlock, ["Sent"] = tick(), ["Focus"] = mining.Focus};
 	table.insert(mining.Pending, request);
+	local release: () -> () = function(): ()
+		local index: number? = table.find(mining.Pending, request);
+		if index then
+			table.remove(mining.Pending, index);
+		end;
+	end;
 	bedwars.ClientDamageBlock:Get('DamageBlock'):CallServerAsync({
 		["blockRef"] = {["blockPosition"] = hitCell},
 		["hitPosition"] = position,
 		["hitNormal"] = Vector3.FromNormalId(Enum.NormalId.Top)
 	}):andThen(function(result: any): ()
-		local index: number? = table.find(mining.Pending, request);
-		if index then
-			table.remove(mining.Pending, index);
+		release();
+		if (not result or result == 'cancelled' or result == 'destroyed') and mining.Focus == request.Focus then
+			mining.Focus = nil;
 		end;
 		if result == 'cancelled' then
 			table.clear(mining.Cache);
@@ -2107,8 +2715,9 @@ local breakBlock: (block: Instance, options: table?) -> (Vector3?, {[Vector3]: V
 			return;
 		end;
 		if result and options.Effects and store.breakTarget == position then
-			local after: number = result == 'destroyed' and 0 or mining.health(hitBlock, hitCell);
+			local after: number = result == 'destroyed' and 0 or mining.rawHealth(hitBlock, hitCell) or before;
 			local damage: number = math.max(before - after, 0);
+			mining.Health.Value, mining.Health.Cell = before, hitCell;
 			(options.Healthbar or bedwars.BlockBreaker.updateHealthbar)(bedwars.BlockBreaker, {["blockPosition"] = hitCell}, before, hitBlock:GetAttribute('MaxHealth'), damage, hitBlock);
 			mining.Health.Value = math.max(before - damage, 0);
 			if mining.Health.Value <= 0 then
@@ -2134,9 +2743,9 @@ local breakBlock: (block: Instance, options: table?) -> (Vector3?, {[Vector3]: V
 			table.clear(mining.Cache);
 		end;
 	end):catch(function(): ()
-		local index: number? = table.find(mining.Pending, request);
-		if index then
-			table.remove(mining.Pending, index);
+		release();
+		if mining.Focus == request.Focus then
+			mining.Focus = nil;
 		end;
 		table.clear(mining.Cache);
 	end);
@@ -2172,8 +2781,14 @@ velo.run(function(): ()
 	local LimitItems: table;
 	local Projectiles: table;
 	local ProjectileRange: table;
-	local ProjectileFov: table;
+	local BowAssist: table;
+	local BowSort: table;
 	local ProjectilePart: table;
+	local ProjectileFov: table;
+	local BowDistance: table;
+	local BowSpeed: table;
+	local BowSmoothness: table;
+	local BowShake: table;
 	local ClearShot: table;
 	local ProjectileBlacklist: table;
 	local swingGrace: number = 0.15;
@@ -2186,12 +2801,27 @@ velo.run(function(): ()
 	local rng: Random = Random.new();
 	local lastTarget: table?, nextSearch: number, lockStart: number, rolledSpeed: number, rotateUntil: number, drawStart: number = nil, 0, 0, 0, 0, 0;
 
-	local heldProjectile: () -> (table?, table?, table?) = function(): (table?, table?, table?)
+	local ammoFor: (tool: Instance, source: table) -> string? = function(tool: Instance, source: table): string?
+		if not source.ammoItemTypes or #source.ammoItemTypes == 0 then
+			return tool.Name;
+		end;
+		for _: number, item: table in store.inventory.inventory.items do
+			if table.find(source.ammoItemTypes, item.itemType) then
+				return item.itemType;
+			end;
+		end;
+		return nil;
+	end;
+
+	local heldProjectile: () -> (table?, table?) = function(): (table?, table?)
+		if not Projectiles["Enabled"] then
+			return nil, nil;
+		end;
 		local tool: Instance? = store.hand.tool;
 		local meta: table? = tool and bedwars.ItemMeta[tool.Name];
 		local source: any = meta and not meta.sword and meta.projectileSource;
-		if not Projectiles["Enabled"] or not source or not source.projectileType then
-			return nil, nil, nil;
+		if not source or not source.projectileType then
+			return nil, nil;
 		end;
 		local controller: table? = bedwars.DefaultProjectileSourceController;
 		local handler: table? = controller and controller.projectileHandler;
@@ -2201,46 +2831,26 @@ velo.run(function(): ()
 		end;
 		local projectile: string? = handler and handler.projectile;
 		if not projectile then
-			local ammo: string? = tool.Name;
-			if source.ammoItemTypes and #source.ammoItemTypes > 0 then
-				ammo = nil;
-				for _: number, item: table in store.inventory.inventory.items do
-					if table.find(source.ammoItemTypes, item.itemType) then
-						ammo = item.itemType;
-						break;
-					end;
-				end;
-			end;
+			local ammo: string? = ammoFor(tool, source);
 			projectile = ammo and source.projectileType(ammo);
 		end;
 		local projectileMeta: table? = projectile and bedwars.ProjectileMeta[projectile];
-		local listed: string? = (projectile == 'glue_trap' or projectile == 'glue_projectile') and 'gloop' or projectile;
-		if not projectileMeta or not projectileMeta.combat or type(projectileMeta.launchVelocity) ~= 'number' or table.find(ProjectileBlacklist.ListEnabled, listed) then
-			return nil, nil, nil;
+		if not projectileMeta or not projectileMeta.combat or type(projectileMeta.launchVelocity) ~= 'number' then
+			return nil, nil;
 		end;
-		return projectileMeta, handler, source;
+		return projectileMeta, handler;
 	end;
 
-	local projectileAim: (ent: table, projectileMeta: table, handler: table?, source: table) -> Vector3? = function(ent: table, projectileMeta: table, handler: table?, source: table): Vector3?
+	local projectileAim: (ent: table, projectileMeta: table, handler: table?) -> Vector3? = function(ent: table, projectileMeta: table, handler: table?): Vector3?
 		local tool: Instance = store.hand.tool;
+		local launch: Vector3 = (bedwars.ProjectileController:getLaunchPosition(tool) or entitylib.character.RootPart.Position) + (handler and handler.fromPositionOffset or launchLift);
 		local values: table? = handler and bedwars.ProjectileController:calculateImportantLaunchValues(handler, false, tool);
-		local charge: number = source.maxStrengthChargeSec and drawStart > 0 and math.clamp((tick() - drawStart) / source.maxStrengthChargeSec, 0, 1) or 1;
-		local scalar: number = source.minStrengthScalar or 1;
-		local speed: number = values and values.initialVelocity.Magnitude or projectileMeta.launchVelocity * (scalar + (1 - scalar) * charge);
+		local speed: number = values and values.initialVelocity.Magnitude or projectileMeta.launchVelocity;
 		local gravity: number = values and values.gravitationalAcceleration or projectileMeta.gravitationalAcceleration or config.Gravity;
-		local launch: Vector3 = values and values.positionFrom or (bedwars.ProjectileController:getLaunchPosition(tool) or entitylib.character.RootPart.Position) + (handler and handler.fromPositionOffset or launchLift);
-		local aim: Vector3?, flight: number? = ballistics.solve(launch, speed, gravity, ent, getTargetPart(ent, ProjectilePart["Value"]).Position);
+		launch = values and values.positionFrom or launch;
+		local aim: Vector3?, flight: number? = ballistics.solve(launch, speed, gravity, ent, ent.RootPart.Position, nil, nil, nil, workspace.Gravity, false);
 		if not aim or not flight or flight > (projectileMeta.lifetimeSec or 3) then
 			return nil;
-		end;
-		if ClearShot["Enabled"] then
-			local ignore: {Instance} = {gameCamera, lplr.Character};
-			for _: number, other: table in entitylib.List do
-				table.insert(ignore, other.Character);
-			end;
-			if not ballistics.arcClear(launch, (aim - launch).Unit * speed, gravity, flight, ignore) then
-				return nil;
-			end;
 		end;
 
 		local constants: table = bedwars.BowConstantsTable or {};
@@ -2307,6 +2917,66 @@ velo.run(function(): ()
 		return (origin - ent.RootPart.Position).Magnitude <= range and not (Targets.Walls["Enabled"] and entitylib.Wallcheck(origin, ent.RootPart.Position, nil, ent));
 	end;
 
+	local bowStep: (dt: number) -> () = function(dt: number): ()
+		if drawStart == 0 or not entitylib.isAlive then
+			return;
+		end;
+		local tool: Instance? = store.hand.tool;
+		local itemMeta: table? = tool and bedwars.ItemMeta[tool.Name];
+		local source: any = itemMeta and itemMeta.projectileSource;
+		if not source or not source.projectileType then
+			return;
+		end;
+		local ammo: string? = ammoFor(tool, source);
+		if not ammo then
+			return;
+		end;
+		local projectile: string = source.projectileType(ammo);
+		if table.find(ProjectileBlacklist.ListEnabled, (projectile == 'glue_trap' or projectile == 'glue_projectile') and 'gloop' or projectile) then
+			return;
+		end;
+		local projectileMeta: table? = bedwars.ProjectileMeta[projectile];
+		if not projectileMeta or type(projectileMeta.launchVelocity) ~= 'number' then
+			return;
+		end;
+		local scalar: number = source.minStrengthScalar or 1;
+		local ratio: number = source.maxStrengthChargeSec and math.clamp((tick() - drawStart) / source.maxStrengthChargeSec, 0, 1) or 1;
+		local speed: number = projectileMeta.launchVelocity * (scalar + (1 - scalar) * ratio);
+		local position: Vector3 = entitylib.character.RootPart.Position;
+		local ent: table? = entitylib.EntityMouse({
+			["Range"] = ProjectileFov["Value"],
+			["Part"] = 'RootPart',
+			["Wallcheck"] = Targets.Walls["Enabled"],
+			["Players"] = Targets.Players["Enabled"],
+			["NPCs"] = Targets.NPCs["Enabled"],
+			["Origin"] = position,
+			["Sort"] = sortMethods[BowSort["Value"]]
+		});
+		if not ent or (position - ent.RootPart.Position).Magnitude > BowDistance["Value"] then
+			return;
+		end;
+		local targetPosition: Vector3 = ent[ProjectilePart["Value"]].Position;
+		local offset: table = bedwars.BowConstantsTable;
+		local shootPosition: Vector3 = (CFrame.new(position, targetPosition) * CFrame.new(-offset.RelX, -offset.RelY, -offset.RelZ)).Position;
+		local gravity: number = projectileMeta.gravitationalAcceleration or config.Gravity;
+		local aim: Vector3?, flight: number? = ballistics.solve(shootPosition, speed, gravity, ent, targetPosition, nil, nil, nil, workspace.Gravity, false);
+		if not aim then
+			return;
+		end;
+		if ClearShot["Enabled"] and flight then
+			local ignore: {Instance} = {gameCamera, lplr.Character};
+			for _: number, other: table in entitylib.List do
+				table.insert(ignore, other.Character);
+			end;
+			if not ballistics.arcClear(shootPosition, aim - shootPosition, gravity, flight, ignore) then
+				return;
+			end;
+		end;
+		targetinfo.Targets[ent] = tick() + 1;
+		local jitter: Vector3 = Vector3.new(rng:NextNumber() - 0.5, rng:NextNumber() - 0.5, rng:NextNumber() - 0.5) * BowShake["Value"] * dt;
+		gameCamera.CFrame = gameCamera.CFrame:Lerp(CFrame.lookAt(gameCamera.CFrame.Position, aim + jitter), math.clamp(BowSpeed["Value"] / BowSmoothness["Value"] * dt, 0, 1));
+	end;
+
 	AimAssist = vape.Categories.Combat:CreateModule({
 		["Name"] = 'AimAssist',
 		["Function"] = function(callback: boolean): ()
@@ -2317,22 +2987,7 @@ velo.run(function(): ()
 				end;
 				return;
 			end;
-			local chargeController: table = bedwars.DefaultProjectileSourceController;
-			local oldStart: (...any) -> ...any, oldStop: (...any) -> ...any = chargeController.onStartCharging, chargeController.onStopCharging;
-			chargeController.onStartCharging = function(self: table, ...: any): ...any
-				drawStart = tick();
-				return oldStart(self, ...);
-			end;
-			chargeController.onStopCharging = function(self: table, ...: any): ...any
-				drawStart = 0;
-				return oldStop(self, ...);
-			end;
-			AimAssist:Clean(function(): ()
-				chargeController.onStartCharging = oldStart;
-				chargeController.onStopCharging = oldStop;
-				drawStart = 0;
-			end);
-
+			rotateUntil = 0;
 			AimAssist:Clean(runService.PostSimulation:Connect(function(dt: number): ()
 				if not entitylib.isAlive then
 					lastTarget = nil;
@@ -2342,8 +2997,8 @@ velo.run(function(): ()
 				local root: BasePart = entitylib.character.RootPart;
 				humanoid.AutoRotate = tick() > rotateUntil;
 
-				local projectileMeta: table?, handler: table?, source: table? = heldProjectile();
-				local charging: boolean = projectileMeta ~= nil and (bedwars.ProjectileController.isTargeting == true or drawStart > 0);
+				local projectileMeta: table?, handler: table? = heldProjectile();
+				local charging: boolean = projectileMeta ~= nil and bedwars.ProjectileController.isTargeting == true;
 				local range: number = projectileMeta and ProjectileRange["Value"] or Distance["Value"];
 				local sinceSwing: number = tick() - bedwars.SwordController.lastSwing;
 				if (RequireMouse["Enabled"] and not charging and not inputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) and sinceSwing > swingGrace)
@@ -2370,13 +3025,13 @@ velo.run(function(): ()
 					end;
 					lastTarget, nextSearch, rolledSpeed = ent, tick() + retargetDelay, AimSpeed:GetRandomValue();
 				end;
-				if not ent or flatAngle(ent) >= math.rad(MaxAngle["Value"]) / 2 or (projectileMeta and mouseDistance(ent) > ProjectileFov["Value"]) then
+				if not ent or flatAngle(ent) >= math.rad(MaxAngle["Value"]) / 2 then
 					return;
 				end;
 
 				local point: Vector3? = ent.RootPart.Position;
 				if projectileMeta then
-					point = projectileAim(ent, projectileMeta, handler, source);
+					point = projectileAim(ent, projectileMeta, handler);
 				elseif TargetArea["Value"] == 'Closest' then
 					point = closestPoint(ent);
 				end;
@@ -2413,9 +3068,35 @@ velo.run(function(): ()
 					end;
 				end;
 			end));
+
+			if BowAssist["Enabled"] then
+				local chargeController: table = bedwars.DefaultProjectileSourceController;
+				local oldStart: (...any) -> ...any, oldStop: (...any) -> ...any = chargeController.onStartCharging, chargeController.onStopCharging;
+				chargeController.onStartCharging = function(self: table, ...: any): ...any
+					drawStart = tick();
+					return oldStart(self, ...);
+				end;
+				chargeController.onStopCharging = function(self: table, ...: any): ...any
+					drawStart = 0;
+					return oldStop(self, ...);
+				end;
+				AimAssist:Clean(function(): ()
+					drawStart = 0;
+					chargeController.onStartCharging = oldStart;
+					chargeController.onStopCharging = oldStop;
+				end);
+				AimAssist:Clean(runService.PostSimulation:Connect(bowStep));
+			end;
 		end,
-		["Tooltip"] = 'Smoothly aims at the best target with your sword, and leads moving targets with projectiles'
+		["Tooltip"] = 'Smoothly aims to closest valid target with sword'
 	});
+
+	local reapply: () -> () = function(): ()
+		if AimAssist["Enabled"] then
+			AimAssist:Toggle();
+			AimAssist:Toggle();
+		end;
+	end;
 
 	local perspectives: {string} = {'First person', 'Third person', 'Dynamic'};
 	if mousemoverel then
@@ -2502,11 +3183,11 @@ velo.run(function(): ()
 	Projectiles = AimAssist:CreateToggle({
 		["Name"] = 'Projectiles',
 		["Function"] = function(callback: boolean): ()
-			for _: number, option: table in {ProjectileRange, ProjectileFov, ProjectilePart, ClearShot, ProjectileBlacklist} do
-				option.Object.Visible = callback;
+			if ProjectileRange then
+				ProjectileRange.Object.Visible = callback;
 			end;
 		end,
-		["Tooltip"] = 'While holding a damaging projectile weapon, aims where the shot meets a moving target (scaled by draw strength)'
+		["Tooltip"] = 'While holding a damaging projectile weapon, aims where the shot meets a moving target'
 	});
 	ProjectileRange = AimAssist:CreateSlider({
 		["Name"] = 'Projectile range',
@@ -2519,18 +3200,78 @@ velo.run(function(): ()
 			return value == 1 and 'stud' or 'studs';
 		end
 	});
-	ProjectileFov = AimAssist:CreateSlider({
-		["Name"] = 'Projectile FOV',
-		["Min"] = 1,
-		["Max"] = 1000,
-		["Default"] = 1000,
+	BowAssist = AimAssist:CreateToggle({
+		["Name"] = 'Bow assist',
+		["Function"] = function(callback: boolean): ()
+			if ProjectileBlacklist then
+				for _: number, option: table in {BowSort, ProjectilePart, ProjectileFov, BowDistance, BowSpeed, BowSmoothness, BowShake, ClearShot, ProjectileBlacklist} do
+					option.Object.Visible = callback;
+				end;
+				reapply();
+			end;
+		end,
+		["Tooltip"] = 'Eases your camera onto the arrow drop while you draw a bow (catsix BowAssist)'
+	});
+	local bowModes: {string} = {'Distance', 'Damage'};
+	for _: number, name: string in sortNames do
+		if not table.find(bowModes, name) then
+			table.insert(bowModes, name);
+		end;
+	end;
+	BowSort = AimAssist:CreateDropdown({
+		["Name"] = 'Bow target mode',
+		["List"] = bowModes,
 		["Darker"] = true,
-		["Visible"] = false,
-		["Tooltip"] = 'How far from your cursor (pixels) a projectile target may be'
+		["Visible"] = false
 	});
 	ProjectilePart = AimAssist:CreateDropdown({
 		["Name"] = 'Projectile part',
 		["List"] = {'RootPart', 'Head'},
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	ProjectileFov = AimAssist:CreateSlider({
+		["Name"] = 'Projectile FOV',
+		["Min"] = 1,
+		["Max"] = 1000,
+		["Default"] = 220,
+		["Darker"] = true,
+		["Visible"] = false,
+		["Tooltip"] = 'How far from your crosshair a target can sit before it gets ignored'
+	});
+	BowDistance = AimAssist:CreateSlider({
+		["Name"] = 'Bow distance',
+		["Min"] = 1,
+		["Max"] = 300,
+		["Default"] = 200,
+		["Darker"] = true,
+		["Visible"] = false,
+		["Suffix"] = function(value: number): string
+			return value == 1 and 'stud' or 'studs';
+		end
+	});
+	BowSpeed = AimAssist:CreateSlider({
+		["Name"] = 'Bow aim speed',
+		["Min"] = 1,
+		["Max"] = 20,
+		["Default"] = 5,
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	BowSmoothness = AimAssist:CreateSlider({
+		["Name"] = 'Bow smoothness',
+		["Min"] = 1,
+		["Max"] = 20,
+		["Default"] = 2,
+		["Decimal"] = 10,
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	BowShake = AimAssist:CreateSlider({
+		["Name"] = 'Bow shake',
+		["Min"] = 0,
+		["Max"] = 100,
+		["Default"] = 0,
 		["Darker"] = true,
 		["Visible"] = false
 	});
@@ -2539,7 +3280,7 @@ velo.run(function(): ()
 		["Default"] = true,
 		["Darker"] = true,
 		["Visible"] = false,
-		["Tooltip"] = 'Skips targets when a block is in the way of the arc'
+		["Tooltip"] = 'Stops assisting when a block is in the way of the arc'
 	});
 	ProjectileBlacklist = AimAssist:CreateTextList({
 		["Name"] = 'Projectile blacklist',
@@ -2557,7 +3298,7 @@ velo.run(function(): ()
 	local WoolOnly: table;
 	local BlockSpeed: table;
 	local stockPlaceCps: number = 12;
-	local held: boolean, nextClick: number = false, 0;
+	local held: boolean, heldInput: InputObject?, nextClick: number = false, nil, 0;
 
 	local placeCap: () -> number = function(): number
 		return bedwars.SharedConstants.BLOCK_PLACE_CPS or stockPlaceCps;
@@ -2574,26 +3315,40 @@ velo.run(function(): ()
 		gamepad = typeof(gamepad) == 'EnumItem' and gamepad or Enum.KeyCode.ButtonR2;
 		return input.UserInputType == keyboard or input.KeyCode == keyboard or input.KeyCode == gamepad;
 	end;
-	local press: (down: boolean) -> () = function(down: boolean): ()
-		held = down;
+	local stillHeld: () -> boolean = function(): boolean
+		if not heldInput then
+			return true;
+		end;
+		local kind: Enum.UserInputType = heldInput.UserInputType;
+		if kind == Enum.UserInputType.Keyboard then
+			return inputService:IsKeyDown(heldInput.KeyCode);
+		elseif kind.Name:find('MouseButton') then
+			return inputService:IsMouseButtonPressed(kind);
+		elseif kind.Name:find('Gamepad') then
+			return inputService:IsGamepadButtonDown(kind, heldInput.KeyCode);
+		end;
+		return true;
+	end;
+	local press: (down: boolean, input: InputObject?) -> () = function(down: boolean, input: InputObject?): ()
+		held, heldInput = down, input;
 		nextClick = tick() + interval();
 	end;
 
 	AutoClicker = vape.Categories.Combat:CreateModule({
 		["Name"] = 'AutoClicker',
 		["Function"] = function(callback: boolean): ()
-			held = false;
+			held, heldInput = false, nil;
 			if not callback then
 				return;
 			end;
 			AutoClicker:Clean(inputService.InputBegan:Connect(function(input: InputObject): ()
 				if isAttack(input) then
-					press(true);
+					press(true, input);
 				end;
 			end));
 			AutoClicker:Clean(inputService.InputEnded:Connect(function(input: InputObject): ()
 				if isAttack(input) then
-					press(false);
+					press(false, nil);
 				end;
 			end));
 
@@ -2601,10 +3356,10 @@ velo.run(function(): ()
 				local hookButton: (button: Instance) -> () = function(button: Instance): ()
 					if button:IsA('GuiButton') and tonumber(button.Name) then
 						AutoClicker:Clean(button.MouseButton1Down:Connect(function(): ()
-							press(true);
+							press(true, nil);
 						end));
 						AutoClicker:Clean(button.MouseButton1Up:Connect(function(): ()
-							press(false);
+							press(false, nil);
 						end));
 					end;
 				end;
@@ -2631,6 +3386,10 @@ velo.run(function(): ()
 				if not held or now < nextClick then
 					return;
 				end;
+				if not stillHeld() then
+					held, heldInput = false, nil;
+					return;
+				end;
 				nextClick = now + interval();
 				if bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN) then
 					return;
@@ -2638,22 +3397,21 @@ velo.run(function(): ()
 				local hand: table = store.hand;
 				local placer: table? = bedwars.BlockPlacementController.blockPlacer;
 				if hand.toolType == 'block' and PlaceBlocks["Enabled"] and (not WoolOnly["Enabled"] or hand.tool.Name:find('wool_')) and placer and canPlace() then
-					if workspace:GetServerTimeNow() - bedwars.BlockCpsController.lastPlaceTimestamp < 0.5 / placeCap() then
-						return;
-					end;
-					if inputService.TouchEnabled then
-						placer:autoBridge(workspace:GetServerTimeNow() - bedwars.KnockbackController:getLastKnockbackTime() >= 0.2);
-					else
-						local selector: table? = placer.clientManager:getBlockSelector();
-						local info: table? = selector and selector:getMouseInfo(0);
-						if info and info.placementPosition == info.placementPosition then
-							placer:placeBlock(info.placementPosition, info);
+					if workspace:GetServerTimeNow() - bedwars.BlockCpsController.lastPlaceTimestamp >= 0.5 / placeCap() then
+						if inputService.TouchEnabled then
+							task.spawn(placer.autoBridge, placer, workspace:GetServerTimeNow() - bedwars.KnockbackController:getLastKnockbackTime() >= 0.2);
+						else
+							local selector: table? = placer.clientManager:getBlockSelector();
+							local info: table? = selector and selector:getMouseInfo(0);
+							if info and info.placementPosition == info.placementPosition then
+								task.spawn(placer.placeBlock, placer, info.placementPosition, info);
+							end;
 						end;
 					end;
 				elseif hand.toolType == 'sword' then
 					if inputService.TouchEnabled then
 						bedwars.SwordController:mobileSwingPressed();
-					elseif canSwing() and not bedwars.SwordController.disableSwingState and (not bedwars.DaoController or bedwars.DaoController.chargingMaid == nil) then
+					elseif canSwing() and not bedwars.SwordController.disableSwingState then
 						bedwars.SwordController:swingSwordAtMouse(0.39);
 					end;
 				elseif hand.tool and bedwars.IsItemClaw(hand.tool.Name) then
@@ -2661,7 +3419,7 @@ velo.run(function(): ()
 				end;
 			end));
 		end,
-		["Tooltip"] = 'Hold attack to keep swinging, placing blocks or clawing'
+		["Tooltip"] = 'Hold attack button to automatically click'
 	});
 	ClickSpeed = AutoClicker:CreateTwoSlider({
 		["Name"] = 'CPS',
@@ -2683,7 +3441,7 @@ velo.run(function(): ()
 	WoolOnly = AutoClicker:CreateToggle({
 		["Name"] = 'Wool only',
 		["Darker"] = true,
-		["Tooltip"] = 'Only places while holding wool'
+		["Tooltip"] = 'Only clicks when you are holding wool.'
 	});
 	BlockSpeed = AutoClicker:CreateTwoSlider({
 		["Name"] = 'Block CPS',
@@ -2697,6 +3455,7 @@ end);
 
 velo.run(function(): ()
 	local NoClickDelay: table;
+	local RemoveDelay: table;
 	local SwingLock: table;
 	local Drill: table;
 	local Hitreg: table;
@@ -2720,40 +3479,42 @@ velo.run(function(): ()
 				return;
 			end;
 			local sword: table = bedwars.SwordController;
-			local oldTooFast: (...any) -> ...any = sword.isClickingTooFast;
-			sword.isClickingTooFast = function(self: table): boolean
-				self.lastSwing = tick();
-				return false;
-			end;
-			NoClickDelay:Clean(function(): ()
-				sword.isClickingTooFast = oldTooFast;
-			end);
-
-			if SwingLock["Enabled"] then
-				local oldDisabled: (...any) -> ...any = sword.getSwordSwingDisabled;
-				sword.getSwordSwingDisabled = function(): boolean
+			if RemoveDelay["Enabled"] then
+				local oldTooFast: (...any) -> ...any = sword.isClickingTooFast;
+				sword.isClickingTooFast = function(self: table): boolean
+					self.lastSwing = tick();
 					return false;
 				end;
 				NoClickDelay:Clean(function(): ()
-					sword.getSwordSwingDisabled = oldDisabled;
+					sword.isClickingTooFast = oldTooFast;
 				end);
-			end;
 
-			local drill: table? = bedwars.DrillTabletController;
-			if Drill["Enabled"] and drill then
-				local oldDrill: (...any) -> ...any = drill.isClickingTooFast;
-				drill.isClickingTooFast = function(): boolean
-					return false;
+				if SwingLock["Enabled"] then
+					local oldDisabled: (...any) -> ...any = sword.getSwordSwingDisabled;
+					sword.getSwordSwingDisabled = function(): boolean
+						return false;
+					end;
+					NoClickDelay:Clean(function(): ()
+						sword.getSwordSwingDisabled = oldDisabled;
+					end);
 				end;
-				NoClickDelay:Clean(function(): ()
-					drill.isClickingTooFast = oldDrill;
-				end);
+
+				local drill: table? = bedwars.DrillTabletController;
+				if Drill["Enabled"] and drill then
+					local oldDrill: (...any) -> ...any = drill.isClickingTooFast;
+					drill.isClickingTooFast = function(): boolean
+						return false;
+					end;
+					NoClickDelay:Clean(function(): ()
+						drill.isClickingTooFast = oldDrill;
+					end);
+				end;
 			end;
 
 			if FastPlace["Enabled"] then
 				bedwars.SharedConstants.BLOCK_PLACE_CPS = PlaceSpeed["Value"];
 				NoClickDelay:Clean(function(): ()
-					bedwars.SharedConstants.BLOCK_PLACE_CPS = stockPlaceCps;
+					bedwars.SharedConstants.BLOCK_PLACE_CPS = bedwars.DefaultPlaceCPS;
 				end);
 			end;
 
@@ -2788,17 +3549,24 @@ velo.run(function(): ()
 					adjust:Destroy();
 					restore:Destroy();
 					stamp:Destroy();
+					gamepadKey = nil;
 					if not holdDisabled then
 						sword:enableHoldAutoSwing();
 					end;
 				end);
 
+				local holdSwing: () -> () = function(): ()
+					if gamepadKey and os.clock() - lastSwing >= gap and store.hand.toolType == 'sword' and not sword.disableSwingState then
+						sword:swingSwordAtMouse();
+					end;
+				end;
 				NoClickDelay:Clean(inputService.InputBegan:Connect(function(input: InputObject): ()
 					local controller: table? = bedwars.KeybindLoadController;
 					local binds: table? = controller and type(controller.getKeybinds) == 'function' and controller:getKeybinds();
 					local attack: any = binds and binds.gamepad and binds.gamepad.controlActions.Attack;
 					if input.UserInputType == Enum.UserInputType.Gamepad1 and input.KeyCode == (typeof(attack) == 'EnumItem' and attack or Enum.KeyCode.ButtonR2) then
 						gamepadKey = input.KeyCode;
+						holdSwing();
 					end;
 				end));
 				NoClickDelay:Clean(inputService.InputEnded:Connect(function(input: InputObject): ()
@@ -2806,19 +3574,27 @@ velo.run(function(): ()
 						gamepadKey = nil;
 					end;
 				end));
-				NoClickDelay:Clean(runService.Heartbeat:Connect(function(): ()
-					if gamepadKey and os.clock() - lastSwing >= gap and store.hand.toolType == 'sword' and not sword.disableSwingState then
-						sword:swingSwordAtMouse();
-					end;
-				end));
+				NoClickDelay:Clean(runService.Heartbeat:Connect(holdSwing));
 			end;
 		end,
-		["Tooltip"] = 'Removes the client click cap, optionally re-spaces swings for hitreg and speeds up block placing'
+		["Tooltip"] = 'Removes the 9 clicks a second cap the client puts on swinging'
+	});
+	RemoveDelay = NoClickDelay:CreateToggle({
+		["Name"] = 'Remove click delay',
+		["Default"] = true,
+		["Function"] = function(callback: boolean): ()
+			if Drill then
+				SwingLock.Object.Visible = callback;
+				Drill.Object.Visible = callback;
+			end;
+			reapply();
+		end,
+		["Tooltip"] = 'The click cap removal itself; turn off to use only Hitreg adjust or Fast place'
 	});
 	SwingLock = NoClickDelay:CreateToggle({
 		["Name"] = 'Swing lock',
 		["Function"] = reapply,
-		["Tooltip"] = 'Also swings while a kit ability disables swinging'
+		["Tooltip"] = 'Also lets you swing while a kit ability has swinging turned off, like sigrid on her elk'
 	});
 	Drill = NoClickDelay:CreateToggle({
 		["Name"] = 'Drill',
@@ -2834,7 +3610,7 @@ velo.run(function(): ()
 			end;
 			reapply();
 		end,
-		["Tooltip"] = 'Replaces the swing cooldown with spacing tuned to how many hits register'
+		["Tooltip"] = 'Swaps the games attack cooldown for a hit count of your own'
 	});
 	HitregRate = NoClickDelay:CreateSlider({
 		["Name"] = 'Hitreg',
@@ -2843,7 +3619,6 @@ velo.run(function(): ()
 		["Default"] = 35,
 		["Darker"] = true,
 		["Visible"] = false,
-		["Function"] = reapply,
 		["Suffix"] = function(value: number): string
 			return value == 1 and 'hit / 10s' or 'hits / 10s';
 		end,
@@ -2857,7 +3632,7 @@ velo.run(function(): ()
 			end;
 			reapply();
 		end,
-		["Tooltip"] = 'Changes the block place rate'
+		["Tooltip"] = 'Changes the block place delay. Block-In and BedProtector keep the normal speed'
 	});
 	PlaceSpeed = NoClickDelay:CreateSlider({
 		["Name"] = 'Place CPS',
@@ -2875,7 +3650,7 @@ velo.run(function(): ()
 	NoClickDelay:CreateButton({
 		["Name"] = 'Reset to bedwars cps',
 		["Function"] = function(): ()
-			PlaceSpeed:SetValue(stockPlaceCps);
+			PlaceSpeed:SetValue(bedwars.DefaultPlaceCPS);
 		end
 	});
 end);
@@ -2929,7 +3704,7 @@ velo.run(function(): ()
 					local humanoid: Humanoid? = character:FindFirstChildWhichIsA('Humanoid');
 					local airborne: boolean = humanoid and humanoid.FloorMaterial == Enum.Material.Air or math.abs(root.AssemblyLinearVelocity.Y) > 0.01;
 					local handItem: table? = self:getHandItem();
-					if airborne and (root.Position - entitylib.character.RootPart.Position).Magnitude > getReach(handItem and handItem.tool) and rng:NextNumber(0, 100) > AirChance:GetRandomValue() then
+					if (root.Position - entitylib.character.RootPart.Position).Magnitude > getReach(handItem and handItem.tool) and airborne and rng:NextNumber(0, 100) > AirChance:GetRandomValue() then
 						return nil;
 					end;
 				end;
@@ -2941,7 +3716,7 @@ velo.run(function(): ()
 				sword.sendServerRequest = oldSend;
 			end);
 		end,
-		["Tooltip"] = 'Lets you attack, place and break further'
+		["Tooltip"] = 'Allows you to place, attack, and break further'
 	});
 	SwordReach = Reach:CreateToggle({
 		["Name"] = 'Sword Reach',
@@ -2962,7 +3737,10 @@ velo.run(function(): ()
 		["Decimal"] = 5,
 		["Darker"] = true,
 		["Suffix"] = studs,
-		["Function"] = applySwordRange
+		["Function"] = function(value: number): ()
+			-- catsix writes the raw slider value here (no hitbox padding) until the next toggle re-applies value + 2.
+			bedwars.CombatConstant.RAYCAST_SWORD_CHARACTER_DISTANCE = Reach["Enabled"] and SwordReach["Enabled"] and value or store.swordDistance;
+		end
 	});
 	AirChance = Reach:CreateTwoSlider({
 		["Name"] = 'Air reach hit chance',
@@ -3014,12 +3792,14 @@ velo.run(function(): ()
 			BreakRange:SetValue(breakDefault);
 			PlaceRange:SetValue(placeDefault);
 			SwordRange:SetValue(store.swordDistance - hitboxPadding);
-		end
+		end,
+		["Tooltip"] = 'Resets every range back to default'
 	});
 end);
 
 velo.run(function(): ()
 	local Sprint: table;
+	local AutoSprint: table;
 	local KeepSprint: table;
 	local keepConstant: number = 5;
 
@@ -3033,6 +3813,13 @@ velo.run(function(): ()
 		debug.setconstant(start, keepConstant, enabled and 'blockSprinting' or 'blockSprint');
 	end;
 
+	local reapply: () -> () = function(): ()
+		if Sprint["Enabled"] then
+			Sprint:Toggle();
+			Sprint:Toggle();
+		end;
+	end;
+
 	Sprint = vape.Categories.Combat:CreateModule({
 		["Name"] = 'Sprint',
 		["Function"] = function(callback: boolean): ()
@@ -3040,23 +3827,25 @@ velo.run(function(): ()
 			local mobileUi: Instance? = inputService.TouchEnabled and lplr.PlayerGui:FindFirstChild('MobileUI') or nil;
 			local sprintButton: Instance? = mobileUi and mobileUi:FindFirstChild('4');
 			if sprintButton and sprintButton:IsA('GuiObject') then
-				sprintButton.Visible = not callback;
+				sprintButton.Visible = not (callback and AutoSprint["Enabled"]);
 			end;
 			if callback then
-				local oldStop: (...any) -> ...any = controller.stopSprinting;
-				controller.stopSprinting = function(...: any): any
-					local result: any = oldStop(...);
-					controller:startSprinting();
-					return result;
-				end;
-				Sprint:Clean(function(): ()
-					controller.stopSprinting = oldStop;
-				end);
-				Sprint:Clean(entitylib.Events.LocalAdded:Connect(function(): ()
-					task.delay(0.1, function(): ()
-						controller:stopSprinting();
+				if AutoSprint["Enabled"] then
+					local oldStop: (...any) -> ...any = controller.stopSprinting;
+					controller.stopSprinting = function(...: any): any
+						local result: any = oldStop(...);
+						controller:startSprinting();
+						return result;
+					end;
+					Sprint:Clean(function(): ()
+						controller.stopSprinting = oldStop;
 					end);
-				end));
+					Sprint:Clean(entitylib.Events.LocalAdded:Connect(function(): ()
+						task.delay(0.1, function(): ()
+							controller:stopSprinting();
+						end);
+					end));
+				end;
 				if KeepSprint["Enabled"] then
 					setKeepSprint(true);
 					Sprint:Clean(function(): ()
@@ -3066,17 +3855,18 @@ velo.run(function(): ()
 			end;
 			controller:stopSprinting();
 		end,
-		["Tooltip"] = 'Keeps you sprinting'
+		["Tooltip"] = 'Sets your sprinting to true.'
+	});
+	AutoSprint = Sprint:CreateToggle({
+		["Name"] = 'Auto sprint',
+		["Default"] = true,
+		["Function"] = reapply,
+		["Tooltip"] = 'The sprint itself; turn off to use only Keep sprint'
 	});
 	KeepSprint = Sprint:CreateToggle({
 		["Name"] = 'Keep sprint',
-		["Function"] = function(callback: boolean): ()
-			if Sprint["Enabled"] then
-				Sprint:Toggle();
-				Sprint:Toggle();
-			end;
-		end,
-		["Tooltip"] = 'Lets you keep sprinting with a speed potion'
+		["Function"] = reapply,
+		["Tooltip"] = 'Lets you sprint with a speed potion.'
 	});
 end);
 
@@ -3099,8 +3889,17 @@ velo.run(function(): ()
 	local BoxColor: table;
 	local mouseRange: number = 200;
 	local killGrace: number = 1;
+	local idleDelay: number = 0.016;
 	local boxSize: Vector3 = Vector3.new(4, 6, 4);
 	local rayParams: RaycastParams = RaycastParams.new();
+	local box: BoxHandleAdornment?, sizeTween: Tween?, sizeGoal: Vector3? = nil, nil, nil;
+
+	local playersFirst: (a: table, b: table) -> boolean = function(a: table, b: table): boolean
+		if (a.Entity.Player ~= nil) ~= (b.Entity.Player ~= nil) then
+			return a.Entity.Player ~= nil;
+		end;
+		return a.Magnitude < b.Magnitude;
+	end;
 
 	local findTarget: (origin: Vector3, range: number) -> table? = function(origin: Vector3, range: number): table?
 		if Angle["Value"] > 0 then
@@ -3113,7 +3912,7 @@ velo.run(function(): ()
 				["Players"] = Targets.Players["Enabled"],
 				["NPCs"] = Targets.NPCs["Enabled"],
 				["Wallcheck"] = Targets.Walls["Enabled"] or nil,
-				["Sort"] = sortMethods.Distance
+				["Sort"] = playersFirst
 			}) do
 				local delta: Vector3 = ent.RootPart.Position - view.Position;
 				if delta.Magnitude < 0.001 or view.LookVector:Dot(delta.Unit) >= limit then
@@ -3134,13 +3933,6 @@ velo.run(function(): ()
 		return nil;
 	end;
 
-	local reapply: () -> () = function(): ()
-		if TriggerBot["Enabled"] then
-			TriggerBot:Toggle();
-			TriggerBot:Toggle();
-		end;
-	end;
-
 	TriggerBot = vape.Categories.Combat:CreateModule({
 		["Name"] = 'TriggerBot',
 		["Function"] = function(callback: boolean): ()
@@ -3148,24 +3940,13 @@ velo.run(function(): ()
 				return;
 			end;
 			local lastTarget: table?, lastSwing: number, killUntil: number, nextCheck: number = nil, 0, 0, 0;
-			local box: BoxHandleAdornment?, boxGoal: Vector3? = nil, nil;
-			if ShowTarget["Enabled"] then
-				if vape.ThreadFix then
-					setthreadidentity(8);
-				end;
-				box = Instance.new('BoxHandleAdornment');
-				box.AlwaysOnTop = true;
-				box.Size = Vector3.zero;
-				box.CFrame = CFrame.new(0, -0.5, 0);
-				box.ZIndex = 0;
-				box.Parent = vape.gui;
-				TriggerBot:Clean(box);
-			end;
-
 			TriggerBot:Clean(runService.Heartbeat:Connect(function(): ()
 				local now: number = tick();
 				if now < nextCheck then
 					return;
+				end;
+				if vape.ThreadFix then
+					setthreadidentity(8);
 				end;
 				local ent: table?, attack: boolean = nil, false;
 				local ready: boolean = entitylib.isAlive
@@ -3198,19 +3979,20 @@ velo.run(function(): ()
 				if box then
 					box.Adornee = ent and ent.RootPart or nil;
 					local goal: Vector3 = ent and boxSize or Vector3.zero;
-					if goal ~= boxGoal then
-						tweenService:Create(box, TweenInfo.new(BoxSpeed["Value"], Enum.EasingStyle[BoxAnimation["Value"]]), {["Size"] = goal}):Play();
-						boxGoal = goal;
+					if goal ~= sizeGoal or not sizeTween or sizeTween.PlaybackState ~= Enum.PlaybackState.Completed then
+						sizeTween = tweenService:Create(box, TweenInfo.new(BoxSpeed["Value"], Enum.EasingStyle[BoxAnimation["Value"]]), {["Size"] = goal});
+						sizeTween:Play();
+						sizeGoal = goal;
 					end;
 					if ent then
 						box.Color3 = Color3.fromHSV(BoxColor["Hue"], BoxColor["Sat"], BoxColor["Value"]);
 						box.Transparency = 1 - BoxColor["Opacity"];
 					end;
 				end;
-				nextCheck = attack and now + 1 / ClickSpeed:GetRandomValue() or now;
+				nextCheck = now + (attack and 1 / ClickSpeed:GetRandomValue() or idleDelay);
 			end));
 		end,
-		["Tooltip"] = 'Swings when your cursor or view is on a target'
+		["Tooltip"] = 'Automatically swings when hovering over a entity'
 	});
 	Targets = TriggerBot:CreateTargets({
 		["Players"] = true,
@@ -3286,7 +4068,22 @@ velo.run(function(): ()
 				BoxSpeed.Object.Visible = callback;
 				BoxColor.Object.Visible = callback;
 			end;
-			reapply();
+			if callback then
+				local adornment: BoxHandleAdornment = Instance.new('BoxHandleAdornment');
+				adornment.Adornee = nil;
+				adornment.AlwaysOnTop = true;
+				adornment.Size = Vector3.zero;
+				adornment.CFrame = CFrame.new(0, -0.5, 0);
+				adornment.ZIndex = 0;
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
+				adornment.Parent = vape.gui;
+				box, sizeTween = adornment, nil;
+			elseif box then
+				box:Destroy();
+				box = nil;
+			end;
 		end
 	});
 	local easings: {string} = {'Bounce'};
@@ -3331,8 +4128,14 @@ velo.run(function(): ()
 	local DelayChance: table;
 	local VerticalDelay: table;
 	local HorizontalDelay: table;
+	local DelayTarget: table;
 	local targetRange: number = 50;
 	local rng: Random = Random.new();
+	local lastInput: number = 0;
+
+	local playerNearby: () -> boolean = function(): boolean
+		return entitylib.EntityPosition({["Range"] = targetRange, ["Part"] = 'RootPart', ["Players"] = true}) ~= nil;
+	end;
 
 	Velocity = vape.Categories.Combat:CreateModule({
 		["Name"] = 'Velocity',
@@ -3340,26 +4143,27 @@ velo.run(function(): ()
 			if not callback then
 				return;
 			end;
+			lastInput = tick();
+			Velocity:Clean(inputService.InputBegan:Connect(function(): ()
+				lastInput = tick();
+			end));
 			local util: table = bedwars.KnockbackUtil;
 			local oldApply: (...any) -> ...any = util.applyKnockback;
 			util.applyKnockback = function(root: any, mass: any, direction: any, knockback: table?, ...: any): ...any
-				local idle: boolean = AfkCheck["Enabled"] and tick() - store.lastInput >= AfkTime["Value"] and entitylib.isAlive and entitylib.character.Humanoid.MoveDirection.Magnitude == 0;
-				local targeting: boolean = not TargetCheck["Enabled"] or entitylib.EntityPosition({["Range"] = targetRange, ["Part"] = 'RootPart', ["Players"] = true}) ~= nil;
-				if idle or not targeting then
-					return oldApply(root, mass, direction, knockback, ...);
-				end;
-				if rng:NextNumber(0, 100) <= Chance:GetRandomValue() then
+				local skipped: boolean = rng:NextNumber(0, 100) > Chance:GetRandomValue()
+					or AfkCheck["Enabled"] and tick() - lastInput >= AfkTime["Value"] and entitylib.isAlive and entitylib.character.Humanoid.MoveDirection.Magnitude == 0;
+				if not skipped and (not TargetCheck["Enabled"] or playerNearby()) then
+					knockback = knockback or {};
 					if Horizontal["Value"] == 0 and Vertical["Value"] == 0 then
 						return nil;
 					end;
-					knockback = table.clone(knockback or {});
-					knockback.horizontal = (knockback.horizontal or 1) * Horizontal["Value"] / 100;
-					knockback.vertical = (knockback.vertical or 1) * Vertical["Value"] / 100;
+					knockback.horizontal = (knockback.horizontal or 1) * (Horizontal["Value"] / 100);
+					knockback.vertical = (knockback.vertical or 1) * (Vertical["Value"] / 100);
 				end;
-				if Delay["Enabled"] and rng:NextNumber(0, 100) <= DelayChance["Value"] then
+				if Delay["Enabled"] and rng:NextNumber(0, 100) <= DelayChance["Value"] and (not DelayTarget["Enabled"] or playerNearby()) then
 					local extra: table = table.pack(...);
 					for _: number, split: table in {{'horizontal', VerticalDelay}, {'vertical', HorizontalDelay}} do
-						local part: table = table.clone(knockback or {});
+						local part: table = knockback and table.clone(knockback) or {};
 						part[split[1]] = 0;
 						task.delay(split[2]:GetRandomValue() / 1000, oldApply, root, mass, direction, part, table.unpack(extra, 1, extra.n));
 					end;
@@ -3371,7 +4175,7 @@ velo.run(function(): ()
 				util.applyKnockback = oldApply;
 			end);
 		end,
-		["Tooltip"] = 'Reduces and optionally delays knockback taken'
+		["Tooltip"] = 'Reduces knockback taken'
 	});
 	Horizontal = Velocity:CreateSlider({
 		["Name"] = 'Horizontal',
@@ -3397,7 +4201,7 @@ velo.run(function(): ()
 	});
 	TargetCheck = Velocity:CreateToggle({
 		["Name"] = 'Only when targeting',
-		["Tooltip"] = 'Only changes knockback while a player is within 50 studs'
+		["Tooltip"] = 'Only reduces knockback while a player is within 50 studs'
 	});
 	AfkCheck = Velocity:CreateToggle({
 		["Name"] = 'AFK check',
@@ -3406,7 +4210,7 @@ velo.run(function(): ()
 				AfkTime.Object.Visible = callback;
 			end;
 		end,
-		["Tooltip"] = 'Takes full knockback while you stand still without input for the AFK time'
+		["Tooltip"] = 'Takes full knockback while you stand still and have not pressed anything for the AFK time'
 	});
 	AfkTime = Velocity:CreateSlider({
 		["Name"] = 'AFK time',
@@ -3422,13 +4226,14 @@ velo.run(function(): ()
 	Delay = Velocity:CreateToggle({
 		["Name"] = 'Delay knockback',
 		["Function"] = function(callback: boolean): ()
-			if HorizontalDelay then
+			if DelayTarget then
 				DelayChance.Object.Visible = callback;
 				VerticalDelay.Object.Visible = callback;
 				HorizontalDelay.Object.Visible = callback;
+				DelayTarget.Object.Visible = callback;
 			end;
 		end,
-		["Tooltip"] = 'Splits knockback and applies the vertical and horizontal parts late'
+		["Tooltip"] = 'Delays incoming knockback packets (catsix KnockbackDelay); set Chance range to 0 to only delay'
 	});
 	DelayChance = Velocity:CreateSlider({
 		["Name"] = 'Delay chance',
@@ -3447,7 +4252,7 @@ velo.run(function(): ()
 		["DefaultMax"] = 200,
 		["Darker"] = true,
 		["Visible"] = false,
-		["Tooltip"] = 'Milliseconds before the vertical part is applied'
+		["Tooltip"] = 'catsix Air delay: milliseconds before the vertical part is applied'
 	});
 	HorizontalDelay = Velocity:CreateTwoSlider({
 		["Name"] = 'Horizontal delay',
@@ -3457,7 +4262,13 @@ velo.run(function(): ()
 		["DefaultMax"] = 200,
 		["Darker"] = true,
 		["Visible"] = false,
-		["Tooltip"] = 'Milliseconds before the horizontal part is applied'
+		["Tooltip"] = 'catsix Ground delay: milliseconds before the horizontal part is applied'
+	});
+	DelayTarget = Velocity:CreateToggle({
+		["Name"] = 'Delay target check',
+		["Darker"] = true,
+		["Visible"] = false,
+		["Tooltip"] = 'Only delays knockback while a player is within 50 studs'
 	});
 end);
 
@@ -3568,13 +4379,6 @@ velo.run(function(): ()
 		["LockGhost"] = 0.3,
 		["LockPing"] = 0.2
 	};
-	local kitAmmo: {table} = {
-		{["Option"] = 'Use sophia', ["Names"] = {'frost staff'}},
-		{["Option"] = 'Use whim', ["Names"] = {'mage spellbook'}},
-		{["Option"] = 'Use nazar', ["Names"] = {'life bow', 'life crossbow', 'life headhunter'}},
-		{["Option"] = 'Use umeko', ["Names"] = {'ninja chakram'}},
-		{["Option"] = 'Use Lasso', ["Names"] = {'lasso'}}
-	};
 
 	local auraanims: table = vape.Libraries.auraanims;
 	local swordEffect: (...any) -> ...any = rawget(rawget(getmetatable(bedwars.SwordController), '__index'), 'playSwordEffect');
@@ -3603,17 +4407,23 @@ velo.run(function(): ()
 	local serverTick: number = 1 / 60;
 	local follow: table = {["Watch"] = {}, ["Stats"] = {}};
 	local boxAnchors: {[BoxHandleAdornment]: Part} = {};
+	local hooks: table = {};
 
-	local resetHitreg: () -> () = function(): ()
+	local resetTiming: () -> () = function(): ()
 		hitreg.GhostDelay, hitreg.GhostHold, hitreg.GhostStep, hitreg.GhostCount, hitreg.GhostWindow = 0, 0, 0, 0, 0;
-		hitreg.Deadline, hitreg.TransitMin, hitreg.ConfirmMin, hitreg.Spread, hitreg.Outliers = 0, nil, nil, 0, 0;
-		for _: number, list: table in {hitreg.Ghosts, hitreg.Pending, hitreg.Transit, hitreg.Recent, hitreg.Stamps, hitreg.Lock.Sends} do
+		hitreg.Deadline, hitreg.TransitMin, hitreg.ConfirmMin, hitreg.Spread = 0, nil, nil, 0;
+		for _: number, list: table in {hitreg.Ghosts, hitreg.Pending, hitreg.Transit, hitreg.Recent} do
 			table.clear(list);
 		end;
+	end;
+	local resetHitreg: () -> () = function(): ()
+		resetTiming();
 		local lock: table = hitreg.Lock;
+		table.clear(lock.Sends);
 		lock.Target, lock.Sent, lock.Stamp, lock.Searching, lock.Offset = 0, 0, 0, true, nil;
 		lock.Space = tuning.LockTick * 17 + tuning.LockDrift;
 	end;
+	hitreg.Outliers = 0;
 	resetHitreg();
 
 	local hitLifetime: () -> number = function(): number
@@ -3667,13 +4477,12 @@ velo.run(function(): ()
 
 	local withinAngle: (delta: Vector3, facing: Vector3) -> boolean = function(delta: Vector3, facing: Vector3): boolean
 		local planar: Vector3 = delta * flat;
-		return planar.Magnitude <= 0.001 or facing.Magnitude <= 0.001 or math.acos(math.clamp(facing.Unit:Dot(planar.Unit), -1, 1)) <= math.rad(AngleSlider["Value"]) / 2;
+		return planar.Magnitude <= 0.001 or math.acos(math.clamp(facing:Dot(planar.Unit), -1, 1)) <= math.rad(AngleSlider["Value"]) / 2;
 	end;
 
-	local playSwing: (sword: table, meta: table) -> () = function(sword: table, meta: table): ()
+	local playSwing: (sword: table, meta: table, scythe: boolean) -> () = function(sword: table, meta: table, scythe: boolean): ()
 		local delay: number = PerfectSwing["Enabled"] and math.max(meta.sword and meta.sword.attackSpeed or 0.11, 0.11) or math.max(SwingTime:GetRandomValue(), 0.11);
 		state.AnimDelay = tick() + delay;
-		state.SwingGap = delay;
 		local tinker: table? = bedwars.TinkerKitController;
 		local mount: any = tinker and tinker.userMap and tinker.userMap[lplr];
 		if typeof(mount) ~= 'Instance' or not mount.Parent then
@@ -3689,20 +4498,20 @@ velo.run(function(): ()
 			state.AnimDelay = tick() + math.max(delay, 0.35);
 			bedwars.AudioManager:playAudio(bedwars.SoundList.DRILL_ATTACK_1);
 			bedwars.MountAnimationController:playAnimationInMount(mount, bedwars.AnimationType.TINKER_ATTACK, 1.85);
-			return;
+		else
+			bedwars.SwordController:playSwordEffect(meta, false, {["itemSkin"] = sword.itemSkin});
+			if scythe and (meta.displayName or ''):find(' Scythe') then
+				bedwars.ScytheController:playLocalAnimation();
+			end;
 		end;
-		bedwars.SwordController:playSwordEffect(meta, false, {["itemSkin"] = sword.itemSkin});
-		if (meta.displayName or ''):find(' Scythe') then
-			bedwars.ScytheController:playLocalAnimation();
-		end;
+		state.SwingGap = delay;
 	end;
 
 	local selectSword: () -> (table?, table?) = function(): (table?, table?)
 		if not entitylib.isAlive then
 			return nil, nil;
 		end;
-		local sinceSwing: number = tick() - bedwars.SwordController.lastSwing;
-		if Mouse["Enabled"] and not inputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) and sinceSwing > 0.3 then
+		if Mouse["Enabled"] and not inputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
 			return nil, nil;
 		end;
 		if (AfkCheck["Enabled"] and isAfk()) or (GuiCheck["Enabled"] and bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN)) then
@@ -3719,7 +4528,7 @@ velo.run(function(): ()
 		if Limit["Enabled"] and (store.hand.toolType ~= 'sword' or bedwars.DaoController.chargingMaid) then
 			return nil, nil;
 		end;
-		if SwingOnly["Enabled"] and sinceSwing > 0.2 then
+		if SwingOnly["Enabled"] and tick() - bedwars.SwordController.lastSwing > 0.2 then
 			return nil, nil;
 		end;
 		return sword, bedwars.ItemMeta[sword.tool.Name];
@@ -3850,14 +4659,19 @@ velo.run(function(): ()
 		hitreg.Deadline = math.max(hitreg.Deadline, entry.Sent + entry.Gap + math.clamp(transit - floor, 0, tuning.ExcessCap));
 	end;
 
-	local fastHit: (ent: table) -> () = function(ent: table): ()
-		local filter: {string} = table.clone(Projectiles.ListEnabled);
-		for _: number, kit: table in kitAmmo do
-			for _: number, name: string in (Killaura.Options[kit.Option]["Enabled"] and kit.Names or {}) do
-				table.insert(filter, name);
+	local fastHit: (ent: table, sendPosition: Vector3) -> () = function(ent: table, sendPosition: Vector3): ()
+		local shots: {table} = getProjectiles(Projectiles.ListEnabled, {["Sophia"] = UseSophia["Enabled"], ["Whim"] = UseWhim["Enabled"], ["Nazar"] = UseNazar["Enabled"], ["Umeko"] = UseUmeko["Enabled"]});
+		local lasso: table? = UseLasso["Enabled"] and getItem('lasso') or nil;
+		local lassoSource: table? = lasso and bedwars.ItemMeta.lasso.projectileSource;
+		for _: number, shot: table in (lassoSource and shots or {}) do
+			if shot.Item.itemType == 'lasso' then
+				lassoSource = nil;
+				break;
 			end;
 		end;
-		local shots: {table} = getProjectiles(filter, UseSophia["Enabled"] or UseUmeko["Enabled"]);
+		if lasso and lassoSource then
+			table.insert(shots, {["Item"] = lasso, ["Ammo"] = 'lasso', ["Projectile"] = lassoSource.projectileType('lasso'), ["Source"] = lassoSource});
+		end;
 		if #shots == 0 then
 			return;
 		end;
@@ -3867,32 +4681,56 @@ velo.run(function(): ()
 		if tick() <= (state.FireRates[shot.Item.itemType] or 0) or not meta or type(meta.launchVelocity) ~= 'number' then
 			return;
 		end;
-		local slot: number? = hotbarSlotOf(shot.Item.tool);
+		local session: table = state;
+		local speed: number, gravity: number = meta.launchVelocity, meta.gravitationalAcceleration or config.Gravity;
 		local oldSlot: number?, oldTool: Instance? = store.inventory.hotbarSlot, store.hand.tool;
-		state.Shooting = true;
+		local slot: number? = hotbarSlotOf(shot.Item.tool);
+		session.Shooting = true;
 		if slot then
-			switchItem(shot.Item.tool, 0);
-		end;
-		task.delay(0.1, function(): ()
-			if vape.ThreadFix then
-				setthreadidentity(8);
-			end;
-			if LegitSwitch["Enabled"] and slot then
+			switchItem(shot.Item.tool, 0.1);
+			if LegitSwitch["Enabled"] then
 				hotbarSwitch(slot);
 			end;
-			if Killaura["Enabled"] and validTarget(ent) and ballistics.fire(shot.Item, shot.Ammo, shot.Projectile, ent) then
-				ballistics.launchSound(shot.Item, shot.Source);
-				state.FireRates[shot.Item.itemType] = tick() + (shot.Source.fireDelaySec or 0.1);
-				state.LastShot = tick() + FireRate["Value"];
+		end;
+		local rootPosition: Vector3 = ent.RootPart.Position;
+		local offset: table = bedwars.BowConstantsTable;
+		local shootPosition: Vector3 = (CFrame.new(sendPosition, rootPosition) * CFrame.new(-offset.RelX, -offset.RelY, -offset.RelZ)).Position;
+		local aim: Vector3?, flight: number? = ballistics.solve(shootPosition, speed, gravity, ent, nil, nil, nil, nil, workspace.Gravity, false);
+		local clear: boolean = false;
+		if aim and flight then
+			local ignore: {Instance} = {gameCamera, lplr.Character};
+			for _: number, other: table in entitylib.List do
+				if other.Character then
+					table.insert(ignore, other.Character);
+				end;
 			end;
-			if oldTool then
-				switchItem(oldTool, 0);
-			end;
+			clear = ballistics.arcClear(shootPosition, aim - shootPosition, gravity, flight, ignore);
+		end;
+		if aim and clear then
+			local velocity: Vector3 = CFrame.lookAt(shootPosition, aim).LookVector * speed;
+			local shotId: string = bedwars.IdUtil.generateId(8);
+			session.ShotPending = true;
+			ballistics.watch(shotId, shootPosition, velocity, gravity, ent, meta.lifetimeSec);
+			trajectory.trackShot(ent.RootPart);
+			session.FireRates[shot.Item.itemType] = tick() + (shot.Source.fireDelaySec or 0.1);
+			session.LastShot = tick() + FireRate["Value"];
+			task.spawn(function(): ()
+				local response: any = fire('ProjectileFire', 'CallServer', shot.Item.tool, shot.Ammo, shot.Projectile, shootPosition, sendPosition, velocity, shotId, ballistics.shotData(shot.Item.itemType), workspace:GetServerTimeNow() - (store.ping.total or 0) / 10);
+				session.ShotPending = false;
+				if type(response) == 'table' and response.accepted then
+					ballistics.launchSound(shot.Item, shot.Source);
+				end;
+			end);
+		end;
+		if oldTool then
+			switchItem(oldTool);
+		end;
+		task.spawn(function(): ()
 			if LegitSwitch["Enabled"] then
 				hotbarSwitch(oldSlot);
 			end;
-			state.Shooting = false;
 		end);
+		session.Shooting = false;
 	end;
 
 	local hitSoundId: (name: string) -> string? = function(name: string): string?
@@ -3913,19 +4751,23 @@ velo.run(function(): ()
 		return hitSoundIds[name];
 	end;
 
-	local aimAt: (ent: table) -> (Vector3?, Vector3?, Vector3?) = function(ent: table): (Vector3?, Vector3?, Vector3?)
+	local aimAt: (ent: table) -> (Vector3?, Vector3?, Vector3?, Vector3?) = function(ent: table): (Vector3?, Vector3?, Vector3?, Vector3?)
 		local root: BasePart? = lplr.Character and lplr.Character.PrimaryPart;
-		local actual: BasePart? = ent.Character and ent.Character.PrimaryPart;
-		if not entitylib.isAlive or root ~= frame.Root or not actual or not validTarget(ent) then
-			return nil, nil, nil;
+		if not entitylib.isAlive or root ~= frame.Root or not validTarget(ent) then
+			return nil, nil, nil, nil;
 		end;
-		local claim: Vector3, serverDistance: number, selfClaim: Vector3 = serverView(actual.Position, ent.RootPart.AssemblyLinearVelocity, store.rootpart and store.rootpart.Position or root.Position);
+		local actual: BasePart? = ent.Character.PrimaryPart;
+		if not actual then
+			return nil, nil, nil, nil;
+		end;
+		local sendPosition: Vector3 = store.rootpart and store.rootpart.Position or root.Position;
+		local claim: Vector3, serverDistance: number, selfClaim: Vector3 = serverView(actual.Position, ent.RootPart.AssemblyLinearVelocity, sendPosition);
 		if serverDistance > frame.RangeLimit or not withinAngle(ent.RootPart.Position - root.Position, root.CFrame.LookVector * flat) then
-			return nil, nil, nil;
+			return nil, nil, nil, nil;
 		end;
 		local reachDelta: Vector3 = claim - selfClaim;
 		local direction: Vector3 = reachDelta.Magnitude > 0.001 and reachDelta.Unit or Vector3.new(0, -1, 0);
-		return claim, claim - direction * math.min(reachDelta.Magnitude, frame.Reach - slack.Claim), direction;
+		return claim, claim - direction * math.min(reachDelta.Magnitude, frame.Reach - slack.Claim), direction, sendPosition;
 	end;
 
 	local sendHit: (ent: table, claim: Vector3, hitPosition: Vector3, direction: Vector3, weapon: Instance?) -> () = function(ent: table, claim: Vector3, hitPosition: Vector3, direction: Vector3, weapon: Instance?): ()
@@ -4056,12 +4898,12 @@ velo.run(function(): ()
 			return;
 		end;
 
-		local claim: Vector3?, hitPosition: Vector3?, direction: Vector3? = aimAt(ent);
+		local claim: Vector3?, hitPosition: Vector3?, direction: Vector3?, sendPosition: Vector3? = aimAt(ent);
 		if not claim then
 			return;
 		end;
 		local delta: Vector3 = ent.RootPart.Position - frame.Root.Position;
-		local airborne: boolean = ent.Humanoid.FloorMaterial == Enum.Material.Air or math.abs(ent.RootPart.AssemblyLinearVelocity.Y) > 0.01;
+		local airborne: boolean = (ent.Humanoid and ent.Humanoid.FloorMaterial == Enum.Material.Air) or math.abs(ent.RootPart.AssemblyLinearVelocity.Y) > 0.01;
 
 		bedwars.SwordController.lastAttack = workspace:GetServerTimeNow();
 		state.LastAttack = tick();
@@ -4104,8 +4946,8 @@ velo.run(function(): ()
 		if DoubleHit["Enabled"] then
 			followUp(ent, state.LastHit, hitDelay);
 		end;
-		if FastHits["Enabled"] and not state.Shooting and tick() > state.LastShot then
-			fastHit(ent);
+		if FastHits["Enabled"] and not state.ShotPending and tick() > state.LastShot then
+			fastHit(ent, sendPosition);
 		end;
 	end;
 
@@ -4190,18 +5032,19 @@ velo.run(function(): ()
 			setthreadidentity(8);
 		end;
 		local now: number = tick();
+		local session: table = state;
 		hitreg.Lock.Frame = delta;
-		if state.FrameTime == 0 then
-			state.FrameTime = HighHitreg["Enabled"] and delta or 1 / 240;
-			state.FrameWindow = now;
-		end;
-		state.FrameCount += 1;
-		if now - state.FrameWindow >= 0.25 then
-			state.FrameTime += ((now - state.FrameWindow) / state.FrameCount - state.FrameTime) * 0.1;
-			state.FrameCount, state.FrameWindow = 0, now;
-		end;
-		if state.Shooting then
+		if session.Shooting then
 			return;
+		end;
+		if session.FrameTime == 0 then
+			session.FrameTime = HighHitreg["Enabled"] and delta or 1 / 240;
+			session.FrameWindow = now;
+		end;
+		session.FrameCount += 1;
+		if now - session.FrameWindow >= 0.25 then
+			session.FrameTime += ((now - session.FrameWindow) / session.FrameCount - session.FrameTime) * 0.1;
+			session.FrameCount, session.FrameWindow = 0, now;
 		end;
 
 		table.clear(attacked);
@@ -4325,12 +5168,18 @@ velo.run(function(): ()
 						end;
 						aim.Found = tick();
 						if not NoSwing["Enabled"] and state.AnimDelay < tick() and not SwingOnly["Enabled"] then
-							playSwing(sword, meta);
+							playSwing(sword, meta, true);
 							swung = true;
+							if vape.ThreadFix then
+								setthreadidentity(8);
+							end;
 						end;
 					end;
 					if target.Hittable then
 						strike(target);
+						if state ~= session or not Killaura["Enabled"] then
+							return;
+						end;
 					elseif swung then
 						fire('SwordSwingMiss', nil, {["weapon"] = sword.tool, ["chargeRatio"] = 0});
 					end;
@@ -4374,7 +5223,7 @@ velo.run(function(): ()
 		if #attacked > 0 then
 			state.ContinueUntil = tick() + ContinueSwing:GetRandomValue() / 1000;
 		elseif sword and meta and tick() < state.ContinueUntil and state.AnimDelay < tick() and not NoSwing["Enabled"] and not SwingOnly["Enabled"] then
-			playSwing(sword, meta);
+			playSwing(sword, meta, false);
 			fire('SwordSwingMiss', nil, {["weapon"] = sword.tool, ["chargeRatio"] = 0});
 		end;
 
@@ -4447,7 +5296,7 @@ velo.run(function(): ()
 			end;
 			state = {
 				["LastEffect"] = 0, ["LastAttack"] = 0, ["EffectSwing"] = 0, ["SwingGap"] = 0.11, ["AnimDelay"] = 0, ["ContinueUntil"] = 0,
-				["SwingCooldown"] = 0, ["LastHit"] = 0, ["LastShot"] = 0, ["Shooting"] = false, ["ShotIndex"] = 1, ["FireRates"] = {},
+				["SwingCooldown"] = 0, ["LastHit"] = 0, ["LastShot"] = 0, ["Shooting"] = false, ["ShotPending"] = false, ["ShotIndex"] = 1, ["FireRates"] = {},
 				["FrameTime"] = 0, ["FrameCount"] = 0, ["FrameWindow"] = 0, ["ScanClock"] = 0, ["Entities"] = {},
 				["StatSent"] = 0, ["StatLanded"] = 0, ["StatClock"] = tick()
 			};
@@ -4455,12 +5304,11 @@ velo.run(function(): ()
 			hitBudget = 60 / (store.remoteLimits.SwordHit or config.RemoteLimit);
 			table.clear(trail.Times);
 			table.clear(trail.Points);
-			setMobileSwing(Limit["Enabled"]);
 
 			local previousEffect: (...any) -> ...any = bedwars.SwordController.playSwordEffect;
 			local effectHook: (self: table, swordMeta: table, charged: boolean, settings: table?) -> ...any;
 			effectHook = function(self: table, swordMeta: table, charged: boolean, chargeSettings: table?): ...any
-				if not Killaura["Enabled"] or bedwars.SwordController.playSwordEffect ~= effectHook or (chargeSettings and chargeSettings.playAnimation == false) then
+				if not Killaura["Enabled"] or hooks.Swing ~= effectHook or (chargeSettings and chargeSettings.playAnimation == false) then
 					return previousEffect(self, swordMeta, charged, chargeSettings);
 				end;
 				if SwingOnly["Enabled"] then
@@ -4478,6 +5326,7 @@ velo.run(function(): ()
 				state.SwingGap = math.max(SwingTime:GetRandomValue(), 0.11);
 				return previousEffect(self, swordMeta, charged, chargeSettings);
 			end;
+			hooks.Swing = effectHook;
 			bedwars.SwordController.playSwordEffect = effectHook;
 
 			if Animation["Enabled"] then
@@ -4539,6 +5388,7 @@ velo.run(function(): ()
 				store.KillauraTarget = nil;
 				store.attacking = false;
 				resetHitreg();
+				table.clear(hitreg.Stamps);
 				table.clear(attacked);
 				table.clear(characterParts);
 				table.clear(targetPool);
@@ -4556,6 +5406,7 @@ velo.run(function(): ()
 				if bedwars.SwordController.playSwordEffect == effectHook then
 					bedwars.SwordController.playSwordEffect = previousEffect;
 				end;
+				hooks.Swing = nil;
 				if arm.Wrist and arm.Wrist.Parent and arm.C0 then
 					tweenService:Create(arm.Wrist, TweenInfo.new(AnimationTween["Enabled"] and 0.001 or 0.3, Enum.EasingStyle.Exponential), {["C0"] = arm.C0}):Play();
 				end;
@@ -4650,7 +5501,7 @@ velo.run(function(): ()
 	HighHitreg = Killaura:CreateToggle({
 		["Name"] = 'High hitreg',
 		["Default"] = true,
-		["Function"] = resetHitreg,
+		["Function"] = resetTiming,
 		["Tooltip"] = 'Adapts sword timing to the server tick to reduce ghost hits.'
 	});
 	DynamicHits = Killaura:CreateToggle({
@@ -4703,7 +5554,6 @@ velo.run(function(): ()
 	});
 	Focus = Killaura:CreateToggle({
 		["Name"] = 'Focus target',
-		["Default"] = true,
 		["Tooltip"] = 'Keeps hitting one target until it dies or leaves range instead of splitting hits. A target one hit from death always goes first.'
 	});
 	HitStats = Killaura:CreateToggle({
@@ -4716,11 +5566,11 @@ velo.run(function(): ()
 		["Max"] = 10,
 		["Default"] = 5
 	});
-	local sortList: {string} = {'Damage', 'Distance'};
-	for _: number, name: string in sortNames do
-		if not table.find(sortList, name) then
-			table.insert(sortList, name);
-		end;
+	local sortList: {string} = table.clone(sortNames);
+	table.sort(sortList);
+	for _: number, name: string in {'Distance', 'Damage'} do
+		table.remove(sortList, table.find(sortList, name));
+		table.insert(sortList, 1, name);
 	end;
 	Sort = Killaura:CreateDropdown({
 		["Name"] = 'Target Mode',
@@ -5082,6 +5932,469 @@ velo.run(function(): ()
 	});
 end);
 
+velo.run(function(): ()
+	local SilentAura: table = {["Enabled"] = false};
+	local Targets: table;
+	local AimSpeed: table;
+	local SwingTime: table;
+	local SwingRange: table;
+	local AngleSlider: table;
+	local AirHits: table;
+	local Sort: table;
+	local AimArea: table;
+	local PerfectSwing: table;
+	local Mouse: table;
+	local DynamicHits: table;
+	local SwingOnly: table;
+	local SilentAim: table;
+	local ShowTarget: table;
+	local TargetColor: table;
+	local AttackColor: table;
+	local Limit: table;
+
+	local rng: Random = Random.new();
+	local characterParts: {[Model]: {Instance}} = {};
+	local spacing: table = {["Safe"] = 0.296, ["High"] = 0.2925, ["Hit"] = 0.296, ["Floor"] = 0.296, ["Margin"] = 0.03, ["Correction"] = 0.017999999225139618 / 10 + 0.013412};
+	local weaponSpacing: {[number]: number} = {[0.21] = 0.229, [0.25] = 0.249, [0.35] = 0.345, [0.4] = 0.341, [0.6] = 0.63};
+	local fixedSpeeds: {[string]: number} = {["frosty_hammer"] = 0.3};
+	local tuning: table = {["Tick"] = 1 / 60, ["Drift"] = 0.004, ["Nudge"] = 0.0005, ["Phase"] = 0.0085, ["Edge"] = 0.0035, ["Floor"] = 0.25, ["Ghost"] = 0.3, ["Ping"] = 0.2};
+	local furyScale: number = 1 - (bedwars.BlackMarketeerBalance.FURY_POTION_ATTACK_SPEED_MULTIPLIER - 1);
+	local swing: table = {["Effect"] = 0, ["Attack"] = 0, ["Last"] = 0, ["Tinker"] = 0};
+	local lock: table = {["Frame"] = 0, ["Target"] = 0, ["Space"] = 0, ["Sent"] = 0, ["Stamp"] = 0, ["Sends"] = {}, ["Searching"] = true};
+	local hooks: table = {};
+	local session: table = {};
+
+	local box: BoxHandleAdornment = Instance.new('BoxHandleAdornment');
+	box.Adornee = nil;
+	box.AlwaysOnTop = true;
+	box.Size = Vector3.new(3, 5, 3);
+	box.CFrame = CFrame.new(0, -0.5, 0);
+	box.ZIndex = 0;
+	if vape.ThreadFix then
+		setthreadidentity(8);
+	end;
+	box.Parent = vape.gui;
+	vape:Clean(box);
+
+	local onDamage: (damage: table) -> () = function(damage: table): ()
+		if damage.fromEntity ~= lplr.Character or damage.damageType ~= 0 or not damage.entityInstance then
+			return;
+		end;
+		local stamp: any = damage.entityInstance:GetAttribute('LastDamageTakenTime');
+		if type(stamp) ~= 'number' or stamp <= lock.Stamp then
+			return;
+		end;
+		for index: number, send: table in lock.Sends do
+			if not send.Done and stamp >= send.Server - 0.05 and stamp <= send.Server + 0.24 then
+				send.Done = true;
+				local previous: table? = lock.Sends[index - 1];
+				local extra: number = previous and previous.Done and lock.Stamp > 0 and math.round((stamp - lock.Stamp) / tuning.Tick) - math.round((send.Server - previous.Server) / tuning.Tick) or 0;
+				local offset: number = stamp - send.Server;
+				local spike: boolean = lock.Searching and extra == 1 and lock.Offset ~= nil and (lock.Offset - tuning.Drift + tuning.Tick - offset) > tuning.Edge;
+				lock.Offset = offset - (lock.Searching and extra > 0 and extra * tuning.Tick or 0);
+				if extra == 1 and lock.Searching and not spike then
+					lock.Searching = false;
+					lock.Space = tuning.Tick * 17;
+					lock.Target += tuning.Tick - tuning.Drift * 0.5 - tuning.Phase;
+				elseif extra >= 1 and extra <= 45 then
+					lock.Target += extra * tuning.Tick - (lock.Searching and 0 or tuning.Nudge);
+				end;
+				lock.Stamp = stamp;
+				break;
+			end;
+		end;
+	end;
+
+	local aimStep: (delta: number) -> () = function(delta: number): ()
+		local target: table? = session.Target;
+		if entitylib.isAlive and target and target.RootPart and target.RootPart.Parent and tick() - session.Found < 0.5 then
+			targetinfo.Targets[target] = tick() + 0.5;
+			entitylib.character.Humanoid.AutoRotate = not SilentAim["Enabled"];
+			local progress: number = math.min((tick() - session.FoundAt) / (1 / (AimSpeed["Value"] * 0.5)), 1);
+			local speed: number = AimSpeed["Value"] * (progress < 0.5 and 4 * progress * progress * progress or 1 - math.pow(-2 * progress + 2, 3) / 2);
+			local point: Vector3 = target.RootPart.Position;
+			if AimArea["Value"] == 'Closest' then
+				local parts: {Instance} = characterParts[target.Character] or target.Character:GetChildren();
+				characterParts[target.Character] = parts;
+				local mouse: Vector2, closest: number = inputService:GetMouseLocation(), 9e9;
+				for _: number, part: Instance in parts do
+					if part.Parent and part:IsA('BasePart') then
+						local screen: Vector3, visible: boolean = gameCamera:WorldToViewportPoint(part.Position);
+						local distance: number = visible and (mouse - Vector2.new(screen.X, screen.Y)).Magnitude or math.huge;
+						if distance < closest then
+							closest, point = distance, part.Position;
+						end;
+					end;
+				end;
+			end;
+			local jitter: Vector3 = Vector3.new((rng:NextNumber() - 0.5) * 15 * delta, (rng:NextNumber() - 0.5) * 15 * delta, (rng:NextNumber() - 0.5) * 15 * delta);
+			local look: CFrame = gameCamera.CFrame:Lerp(CFrame.lookAt(gameCamera.CFrame.Position, point + jitter), speed * delta);
+			if SilentAim["Enabled"] then
+				local root: BasePart = entitylib.character.RootPart;
+				local direction: Vector3 = Vector3.new(target.RootPart.Position.X - root.Position.X, 0, target.RootPart.Position.Z - root.Position.Z);
+				if direction.Magnitude > 0 then
+					root.CFrame = root.CFrame:Lerp(CFrame.lookAlong(root.Position, direction), math.clamp((speed + 2) * delta, 0, 1));
+				end;
+			else
+				gameCamera.CFrame = look;
+			end;
+		elseif entitylib.isAlive then
+			entitylib.character.Humanoid.AutoRotate = true;
+		end;
+	end;
+
+	local selectSword: () -> (table?, table?) = function(): (table?, table?)
+		local controller: table = bedwars.SwordController;
+		local blocked: boolean = not entitylib.isAlive
+			or (Mouse["Enabled"] and not inputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) and (controller.lastSwing == session.Swung or tick() - controller.lastSwing > 0.3))
+			or (SwingOnly["Enabled"] and tick() - controller.lastSwing > 0.3)
+			or (lplr.Character:GetAttribute('StunnedUntilTime') or 0) - workspace:GetServerTimeNow() > 0
+			or bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN);
+		local sword: table? = not blocked and (Limit["Enabled"] and store.hand or store.tools.sword) or nil;
+		if not sword or not sword.tool or (Limit["Enabled"] and (store.hand.toolType ~= 'sword' or bedwars.DaoController.chargingMaid)) then
+			return nil, nil;
+		end;
+		return sword, bedwars.ItemMeta[sword.tool.Name];
+	end;
+
+	local attack: (sword: table, meta: table?, ent: table, localPosition: Vector3, delta: Vector3) -> () = function(sword: table, meta: table?, ent: table, localPosition: Vector3, delta: Vector3): ()
+		local controller: table = bedwars.SwordController;
+		local swordSpeed: number = fixedSpeeds[sword.tool.Name] or meta and meta.sword and meta.sword.attackSpeed or 0.3;
+		local fury: number = lplr.Character:GetAttribute('StatusEffect_fury_potion') and furyScale or 1;
+		local stock: boolean = swordSpeed == 0.3;
+		local gap: number = (stock and spacing.Hit or weaponSpacing[swordSpeed] or swordSpeed + spacing.Margin) * fury;
+		local cooldown: number = swordSpeed * fury - spacing.Correction;
+		local hitFloor: number = stock and spacing.Floor * fury or gap;
+		local hitDelay: number = math.max(60 / (store.remoteLimits.SwordHit or config.RemoteLimit), gap, controller.lastAttack + cooldown - workspace:GetServerTimeNow());
+		if DynamicHits["Enabled"] then
+			local reach: number = math.max(getReach(sword.tool), 0.001);
+			hitDelay = math.clamp(hitDelay * math.min((entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude, reach) / reach, hitFloor, hitDelay);
+		end;
+		local locked: boolean = stock and DynamicHits["Enabled"] and lplr:GetNetworkPing() < tuning.Ping;
+		local ready: boolean = tick() >= session.SwingCooldown + hitDelay and tick() - session.LastHit >= hitFloor;
+		if locked then
+			local latest: table? = lock.Sends[#lock.Sends];
+			if latest and not latest.Done and os.clock() - lock.Sent > 0.25 + lock.Frame * 2 then
+				latest.Done = true;
+				lock.Stamp, lock.Offset, lock.Searching = 0, nil, true;
+				lock.Space = tuning.Tick * 17 + tuning.Drift;
+				lock.Target = lock.Sent + tuning.Ghost;
+			end;
+			local behind: number = os.clock() - lock.Target;
+			if lock.Target > 0 and behind > 0.05 then
+				if behind < 10 then
+					lock.Target += math.ceil(behind / tuning.Tick) * tuning.Tick;
+				else
+					lock.Target, lock.Stamp, lock.Searching, lock.Offset = 0, 0, true, nil;
+					lock.Space = tuning.Tick * 17 + tuning.Drift;
+				end;
+			end;
+			local remaining: number = math.max(session.LastHit + tuning.Floor - tick(), lock.Target - os.clock());
+			if remaining > 0 and remaining < math.min(math.max(lock.Frame, 0.005), 0.25) then
+				local finish: number = os.clock() + remaining;
+				repeat until os.clock() >= finish;
+				remaining = 0;
+			end;
+			ready = remaining <= 0;
+		end;
+		if not ready then
+			return;
+		end;
+		local airborne: boolean = (ent.Humanoid and ent.Humanoid.FloorMaterial == Enum.Material.Air) or math.abs(ent.RootPart.AssemblyLinearVelocity.Y) > 0.01;
+		local direction: Vector3 = CFrame.lookAt(localPosition, ent.RootPart.Position).LookVector;
+		local selfPosition: Vector3 = localPosition + direction * math.max(delta.Magnitude - (getReach(sword.tool) - 0.001), 0);
+		controller.lastAttack = workspace:GetServerTimeNow();
+		swing.Attack = tick();
+		session.SwingCooldown = math.max(session.SwingCooldown + hitDelay, tick());
+		session.LastHit = tick();
+		if airborne and rng:NextNumber(0, 100) > AirHits:GetRandomValue() then
+			return;
+		end;
+		if locked then
+			local now: number = os.clock();
+			if lock.Target == 0 or math.abs(now - lock.Target) > 0.05 then
+				lock.Target = now;
+			end;
+			lock.Target += lock.Space;
+			lock.Sent = now;
+			table.insert(lock.Sends, {["Server"] = workspace:GetServerTimeNow(), ["Done"] = false});
+			if #lock.Sends > 6 then
+				table.remove(lock.Sends, 1);
+			end;
+		end;
+		fire('SwordHit', 'SendToServer', {
+			["weapon"] = sword.tool,
+			["chargedAttack"] = {["chargeRatio"] = 0},
+			["entityInstance"] = ent.Character,
+			["validate"] = {
+				["raycast"] = {
+					["cameraPosition"] = {["value"] = gameCamera.CFrame.Position},
+					["cursorDirection"] = {["value"] = direction}
+				},
+				["targetPosition"] = {["value"] = ent.Character:GetPivot().Position},
+				["selfPosition"] = {["value"] = selfPosition}
+			}
+		});
+	end;
+
+	local tickAura: () -> () = function(): ()
+		if vape.ThreadFix then
+			setthreadidentity(8);
+		end;
+		local sword: table?, meta: table? = selectSword();
+		if not sword then
+			box.Adornee = nil;
+			session.Found = 0;
+			return;
+		end;
+		local controller: table = bedwars.SwordController;
+		local localPosition: Vector3 = entitylib.character.RootPart.Position;
+		local ent: table? = entitylib.EntityPosition({
+			["Origin"] = localPosition,
+			["Range"] = bedwars.CombatConstant.RAYCAST_SWORD_CHARACTER_DISTANCE + SwingRange["Value"],
+			["Wallcheck"] = Targets.Walls["Enabled"] or nil,
+			["Part"] = 'RootPart',
+			["Players"] = Targets.Players["Enabled"],
+			["NPCs"] = Targets.NPCs["Enabled"],
+			["Sort"] = sortMethods[Sort["Value"] or 'Distance']
+		});
+		local tint: table = tick() - session.Attacked < 0.1 and AttackColor or TargetColor;
+		box.Adornee = ShowTarget["Enabled"] and ent and ent.RootPart or nil;
+		box.Transparency = 1 - tint["Opacity"];
+		box.Color3 = Color3.fromHSV(tint["Hue"], tint["Sat"], tint["Value"]);
+		if not ent then
+			session.Found = 0;
+			return;
+		end;
+		if store.hand.tool ~= sword.tool then
+			local slot: number? = hotbarSlotOf(sword.tool);
+			if not slot then
+				return;
+			end;
+			hotbarSwitch(slot);
+			if not SilentAura["Enabled"] or store.hand.tool ~= sword.tool then
+				return;
+			end;
+		end;
+		local facing: Vector3 = (inputService.KeyboardEnabled and gameCamera or entitylib.character.RootPart).CFrame.LookVector * Vector3.new(1, 0, 1);
+		local delta: Vector3 = ent.RootPart.Position - localPosition;
+		local planar: Vector3 = delta * Vector3.new(1, 0, 1);
+		local facingDot: number = planar.Magnitude > 0 and facing.Magnitude > 0 and (facing / facing.Magnitude):Dot(planar / planar.Magnitude) or 0;
+		if facingDot < math.cos(math.rad(AngleSlider["Value"]) / 2) then
+			return;
+		end;
+		if not SwingOnly["Enabled"] and tick() - controller.lastSwing >= (PerfectSwing["Enabled"] and (meta and meta.sword and meta.sword.attackSpeed or 0.11) or math.max(SwingTime["Value"], 0.11)) then
+			session.Swung = tick();
+			swing.Last = session.Swung;
+			local tinker: table? = bedwars.TinkerKitController;
+			local mount: any = tinker and tinker.userMap and tinker.userMap[lplr];
+			if typeof(mount) ~= 'Instance' or not mount.Parent then
+				mount = nil;
+				for _: number, child: Instance in lplr.Character:GetChildren() do
+					if child:IsA('Model') and child.Name:match('tinker$') then
+						mount = child;
+						break;
+					end;
+				end;
+			end;
+			if mount then
+				if tick() >= swing.Tinker + 0.35 then
+					swing.Tinker = tick();
+					bedwars.AudioManager:playAudio(bedwars.SoundList.DRILL_ATTACK_1);
+					bedwars.MountAnimationController:playAnimationInMount(mount, bedwars.AnimationType.TINKER_ATTACK, 1.85);
+				end;
+			else
+				controller:playSwordEffect(meta, false, {["itemSkin"] = sword.itemSkin});
+			end;
+			controller.lastSwing = session.Swung;
+		end;
+		if session.Target ~= ent or facingDot < -0.5 then
+			session.FoundAt = tick();
+		end;
+		session.Target, session.Found = ent, tick();
+		if delta.Magnitude > bedwars.CombatConstant.RAYCAST_SWORD_CHARACTER_DISTANCE then
+			return;
+		end;
+		session.Attacked = tick();
+		attack(sword, meta, ent, localPosition, delta);
+	end;
+
+	SilentAura = vape.Categories.Combat:CreateModule({
+		["Name"] = 'SilentAura',
+		["Function"] = function(callback: boolean): ()
+			if not callback then
+				return;
+			end;
+			local current: table = {["Found"] = 0, ["FoundAt"] = tick(), ["Attacked"] = tick(), ["SwingCooldown"] = 0, ["LastHit"] = 0};
+			session = current;
+			local previousEffect: (...any) -> ...any = bedwars.SwordController.playSwordEffect;
+			local effectHook: (self: table, swordMeta: table, charged: boolean, settings: table?) -> ...any;
+			effectHook = function(self: table, swordMeta: table, charged: boolean, chargeSettings: table?): ...any
+				if not SilentAura["Enabled"] or hooks.Swing ~= effectHook or (chargeSettings and chargeSettings.playAnimation == false) then
+					return previousEffect(self, swordMeta, charged, chargeSettings);
+				end;
+				local floor: number = PerfectSwing["Enabled"] and 0.11 or math.max(SwingTime["Value"], 0.11);
+				if (tick() - swing.Attack < 0.4 or tick() - swing.Last < 0.4) and tick() - swing.Effect < floor then
+					return nil;
+				end;
+				swing.Effect = tick();
+				return previousEffect(self, swordMeta, charged, chargeSettings);
+			end;
+			hooks.Swing = effectHook;
+			bedwars.SwordController.playSwordEffect = effectHook;
+			SilentAura:Clean(function(): ()
+				if bedwars.SwordController.playSwordEffect == effectHook then
+					bedwars.SwordController.playSwordEffect = previousEffect;
+				end;
+				hooks.Swing = nil;
+				swing.Effect, swing.Attack, swing.Last = 0, 0, 0;
+				if entitylib.isAlive then
+					entitylib.character.Humanoid.AutoRotate = true;
+				end;
+				box.Adornee = nil;
+				table.clear(characterParts);
+			end);
+
+			SilentAura:Clean(runService.PostSimulation:Connect(aimStep));
+			lock.Target, lock.Sent, lock.Stamp, lock.Searching, lock.Offset = 0, 0, 0, true, nil;
+			lock.Space = tuning.Tick * 17 + tuning.Drift;
+			table.clear(lock.Sends);
+			SilentAura:Clean(runService.Heartbeat:Connect(function(delta: number): ()
+				lock.Frame = delta;
+			end));
+			SilentAura:Clean(vapeEvents.EntityDamageEvent.Event:Connect(onDamage));
+			SilentAura:Clean(entitylib.Events.EntityRemoved:Connect(function(ent: table): ()
+				if ent.Character then
+					characterParts[ent.Character] = nil;
+				end;
+			end));
+			repeat
+				task.wait();
+				if not SilentAura["Enabled"] or session ~= current then
+					break;
+				end;
+				tickAura();
+			until not SilentAura["Enabled"] or session ~= current;
+		end,
+		["Tooltip"] = 'Automatically aims and attacks nearby target'
+	});
+
+	Targets = SilentAura:CreateTargets({
+		["Players"] = true,
+		["NPCs"] = true
+	});
+	AimSpeed = SilentAura:CreateSlider({
+		["Name"] = 'Aim speed',
+		["Min"] = 1,
+		["Max"] = 10,
+		["Default"] = 6,
+		["Decimal"] = 5,
+		["Tooltip"] = 'How fast the Aura is going to aim'
+	});
+	SwingTime = SilentAura:CreateSlider({
+		["Name"] = 'Swing time',
+		["Min"] = 0,
+		["Max"] = 0.5,
+		["Default"] = 0.42,
+		["Decimal"] = 100,
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	SwingRange = SilentAura:CreateSlider({
+		["Name"] = 'Extra swing distance',
+		["Min"] = 0,
+		["Max"] = 6,
+		["Default"] = 3,
+		["Decimal"] = 5,
+		["Suffix"] = function(value: number): string
+			return value <= 1 and 'stud' or 'studs';
+		end,
+		["Tooltip"] = 'Where you will start swinging, not attacking'
+	});
+	AngleSlider = SilentAura:CreateSlider({
+		["Name"] = 'Max angle',
+		["Min"] = 1,
+		["Max"] = 360,
+		["Default"] = 180
+	});
+	AirHits = SilentAura:CreateTwoSlider({
+		["Name"] = 'Air hit chance',
+		["Min"] = 0,
+		["Max"] = 100,
+		["DefaultMin"] = 100,
+		["DefaultMax"] = 100,
+		["Tooltip"] = 'Chance to land a hit while the target is off the ground, rolled fresh between the two values on every swing'
+	});
+	local sortList: {string} = table.clone(sortNames);
+	table.sort(sortList);
+	for _: number, name: string in {'Distance', 'Damage', 'Health'} do
+		table.remove(sortList, table.find(sortList, name));
+		table.insert(sortList, 1, name);
+	end;
+	Sort = SilentAura:CreateDropdown({
+		["Name"] = 'Target mode',
+		["List"] = sortList,
+		["Tooltip"] = 'How Aura should prioritize targets'
+	});
+	AimArea = SilentAura:CreateDropdown({
+		["Name"] = 'Target area',
+		["List"] = {'Center', 'Closest'},
+		["Visible"] = false,
+		["Tooltip"] = 'Where the Aura will aim towards'
+	});
+	PerfectSwing = SilentAura:CreateToggle({
+		["Name"] = 'Perfect Swing',
+		["Default"] = true,
+		["Function"] = function(callback: boolean): ()
+			SwingTime.Object.Visible = not callback;
+		end,
+		["Tooltip"] = 'Follows sword item\'s swing time'
+	});
+	Mouse = SilentAura:CreateToggle({["Name"] = 'Require mouse down'});
+	DynamicHits = SilentAura:CreateToggle({
+		["Name"] = 'Dynamic hits',
+		["Default"] = true,
+		["Function"] = function(callback: boolean): ()
+			spacing.Hit = callback and spacing.High or spacing.Safe;
+			spacing.Floor = callback and spacing.High or spacing.Safe;
+		end,
+		["Tooltip"] = 'Syncs your hits to the server tick for 36 hits every 10 seconds instead of a safe 34'
+	});
+	SwingOnly = SilentAura:CreateToggle({["Name"] = 'Swing only'});
+	SilentAim = SilentAura:CreateToggle({
+		["Name"] = 'Silent Aim',
+		["Default"] = true,
+		["Function"] = function(callback: boolean): ()
+			AimArea.Object.Visible = not callback;
+		end,
+		["Tooltip"] = 'Silently aims while looking legit'
+	});
+	ShowTarget = SilentAura:CreateToggle({
+		["Name"] = 'Show target',
+		["Default"] = true,
+		["Function"] = function(callback: boolean): ()
+			if TargetColor then
+				TargetColor.Object.Visible = callback;
+			end;
+			if AttackColor then
+				AttackColor.Object.Visible = callback;
+			end;
+		end
+	});
+	TargetColor = SilentAura:CreateColorSlider({
+		["Name"] = 'Target color',
+		["DefaultHue"] = 1,
+		["DefaultOpacity"] = 0.5,
+		["Darker"] = true
+	});
+	AttackColor = SilentAura:CreateColorSlider({
+		["Name"] = 'Attack color',
+		["DefaultOpacity"] = 0.5,
+		["Darker"] = true
+	});
+	Limit = SilentAura:CreateToggle({["Name"] = 'Limit to items'});
+end);
+
 
 velo.run(function(): ()
 	local AntiDeath: table = {["Enabled"] = false};
@@ -5096,31 +6409,33 @@ velo.run(function(): ()
 	local hidden: table? = nil;
 	local pausedUntil: number, lastTrigger: number, floatUntil: number = 0, 0, 0;
 
-	local reveal: (announce: boolean) -> () = function(announce: boolean): ()
+	local reveal: (restore: boolean) -> () = function(restore: boolean): ()
 		local state: table? = hidden;
 		if not state then
 			return;
 		end;
 		hidden = nil;
+		local resume: CFrame = state.Clone.CFrame;
+		if state.Root.Parent and state.Character.Parent then
+			state.Character.Parent = replicatedStorage;
+			state.Root.Parent = state.Character;
+			state.Clone:Destroy();
+			state.Character.PrimaryPart = state.Root;
+			state.Character.Parent = workspace;
+			state.Root.CanCollide = true;
+			local humanoid: Humanoid? = state.Character:FindFirstChildOfClass('Humanoid');
+			if humanoid then
+				humanoid.HipHeight = state.HipHeight;
+			end;
+			if restore then
+				state.Root.CFrame = resume;
+			end;
+		else
+			state.Clone:Destroy();
+		end;
 		store.rootpart = nil;
 		pausedUntil = tick() + revealPause;
-		if not state.Root.Parent or not state.Character.Parent then
-			state.Clone:Destroy();
-			return;
-		end;
-		local resume: CFrame = state.Clone.CFrame;
-		state.Character.Parent = replicatedStorage;
-		state.Root.Parent = state.Character;
-		state.Clone:Destroy();
-		state.Character.PrimaryPart = state.Root;
-		state.Character.Parent = workspace;
-		state.Root.CanCollide = true;
-		state.Root.CFrame = resume;
-		local humanoid: Humanoid? = state.Character:FindFirstChildOfClass('Humanoid');
-		if humanoid then
-			humanoid.HipHeight = state.HipHeight;
-		end;
-		if announce and Notify["Enabled"] then
+		if restore and Notify["Enabled"] then
 			notif('AntiDeath', 'You are visible again', 12, 'info');
 		end;
 	end;
@@ -5132,40 +6447,36 @@ velo.run(function(): ()
 				reveal(false);
 				return;
 			end;
-			AntiDeath:Clean(entitylib.Events.LocalRemoved:Connect(function(): ()
-				reveal(true);
-			end));
 			AntiDeath:Clean(runService.PreSimulation:Connect(function(): ()
+				if hidden and (not entitylib.isAlive or entitylib.character.Health / entitylib.character.MaxHealth >= StopThreshold["Value"] / 100) then
+					reveal(true);
+				end;
 				if not entitylib.isAlive then
 					return;
 				end;
-				local character: Model = lplr.Character;
-				local percent: number = entitylib.character.Health / entitylib.character.MaxHealth * 100;
-				if hidden then
-					if percent >= StopThreshold["Value"] then
-						reveal(true);
-						return;
-					end;
+				if hidden and hidden.Root.Parent then
 					if tick() - entitylib.character.AirTime > airborneLimit then
 						floatUntil = tick() + 0.2;
 					end;
 					hidden.Root.AssemblyLinearVelocity = Vector3.new(0, 1, 0);
 					hidden.Root.CFrame = hidden.Clone.CFrame - (tick() > floatUntil and sinkDepth or Vector3.zero);
-					return;
 				end;
-				if tick() <= pausedUntil or tick() - lastTrigger < Cooldown["Value"] or percent > Threshold["Value"] then
+				if tick() <= pausedUntil or entitylib.character.Health / entitylib.character.MaxHealth > Threshold["Value"] / 100 or tick() - lastTrigger < Cooldown["Value"] then
 					return;
 				end;
 				lastTrigger = tick();
 				if Notify["Enabled"] then
 					notif('AntiDeath', 'Health below '..Threshold["Value"]..'%', 12, 'warning');
 				end;
+				local character: Model? = lplr.Character;
 				if Mode["Value"] == 'Teleport' then
-					entitylib.character.RootPart.CFrame += Vector3.new(0, 100, 0);
+					if character and character.PrimaryPart then
+						character.PrimaryPart.CFrame += Vector3.new(0, 100, 0);
+					end;
 					pausedUntil = tick() + revealPause;
 					return;
 				end;
-				if store.rootpart or not character.Parent or entitylib.character.Humanoid.Health <= 0 then
+				if store.rootpart or entitylib.character.Humanoid.Health <= 0 or (hidden and hidden.Root.Parent) or not character or not character.Parent then
 					return;
 				end;
 				local root: BasePart = entitylib.character.HumanoidRootPart;
@@ -5239,9 +6550,10 @@ velo.run(function(): ()
 	local WhisperCheck: table;
 	local LassoCheck: table;
 	local voidMargin: number = 50;
-	local voidRate: number = 0.05;
+	local balloonRate: number = 0.1;
+	local dropRate: number = 0.1;
+	local resetRate: number = 0.05;
 	local resources: {string} = {'iron', 'diamond', 'emerald', 'gold'};
-	local groundAxes: {Vector3} = {Vector3.xAxis, Vector3.zAxis, -Vector3.xAxis, -Vector3.zAxis};
 	local wallRay: RaycastParams = RaycastParams.new();
 	wallRay.RespectCanCollide = true;
 
@@ -5256,10 +6568,6 @@ velo.run(function(): ()
 		ResetAfterDrop.Object.Visible = VoidDrop["Enabled"];
 		for _: number, option: table in {ResetDelay, PearlCheck, WhisperCheck, LassoCheck} do
 			option.Object.Visible = AutoReset["Enabled"];
-		end;
-		if AntiFall["Enabled"] then
-			AntiFall:Toggle();
-			AntiFall:Toggle();
 		end;
 	end;
 
@@ -5286,7 +6594,7 @@ velo.run(function(): ()
 			end;
 			local voidLine: number? = nil;
 			local platformBuilt: boolean = false;
-			local nextVoid: number, nextBalloon: number, nextReset: number, touchDebounce: number = 0, 0, 0, 0;
+			local nextBalloon: number, nextDrop: number, nextReset: number, touchDebounce: number = 0, 0, 0, 0;
 			local dropping: boolean = false;
 			local resetting: table? = nil;
 			local walker: RBXScriptConnection? = nil;
@@ -5346,7 +6654,7 @@ velo.run(function(): ()
 					wallRay.CollisionGroup = root.CollisionGroup;
 					stopWalking();
 					walker = runService.PreSimulation:Connect(function(): ()
-						if vape.Modules.Fly["Enabled"] or vape.Modules.LongJump["Enabled"] or vape.MovementOwner or not entitylib.isAlive or lplr:GetAttribute('LastTeleported') ~= lastTeleport then
+						if frictionUsers.Fly or frictionUsers.LongJump or vape.MovementOwner or not entitylib.isAlive or lplr:GetAttribute('LastTeleported') ~= lastTeleport then
 							stopWalking();
 							return;
 						end;
@@ -5387,10 +6695,9 @@ velo.run(function(): ()
 				if Platform["Enabled"] and not platformBuilt then
 					buildPlatform();
 				end;
-				if tick() < nextVoid or not entitylib.isAlive or vape.MovementOwner then
+				if not entitylib.isAlive then
 					return;
 				end;
-				nextVoid = tick() + voidRate;
 				if not voidLine then
 					local lowest: number = math.huge;
 					for _: number, block: BasePart in store.blocks do
@@ -5401,42 +6708,58 @@ velo.run(function(): ()
 					end;
 					voidLine = lowest;
 				end;
+				local now: number = tick();
 				local character: table = entitylib.character;
 				local root: BasePart = character.RootPart;
-				if root.Position.Y >= voidLine then
+				local below: boolean = root.Position.Y < voidLine;
+				local balloons: number = lplr.Character:GetAttribute('InflatedBalloons') or 0;
+				if Balloon["Enabled"] and now >= nextBalloon then
+					nextBalloon = now + balloonRate;
+					if below and balloons < 3 then
+						if getItem('balloon') then
+							for _: number = 1, 3 do
+								bedwars.BalloonController:inflateBalloon();
+							end;
+						end;
+						nextBalloon = now + balloonRate * 2;
+					end;
+				end;
+				if VoidDrop["Enabled"] and not dropping and now >= nextDrop then
+					dropping = true;
+					if below and balloons <= 0 and not getItem('balloon') and not (OwlCheck["Enabled"] and root:FindFirstChild('OwlLiftForce')) then
+						local dropped: boolean = false;
+						for _: number, resource: string in resources do
+							local item: table? = getItem(resource);
+							local result: any = item and fire('DropItem', 'CallServer', {["item"] = item.tool, ["amount"] = item.amount});
+							if result then
+								if typeof(result) == 'Instance' then
+									result:SetAttribute('ClientDropTime', tick() + 100);
+								end;
+								dropped = true;
+							end;
+						end;
+						if dropped and ResetAfterDrop["Enabled"] then
+							fire('ResetCharacter', 'SendToServer');
+						end;
+					end;
+					nextDrop = tick() + dropRate;
+					dropping = false;
+				end;
+				if not AutoReset["Enabled"] or now < nextReset then
+					return;
+				end;
+				nextReset = now + resetRate;
+				if store.matchState ~= 1 then
 					resetting = nil;
 					return;
 				end;
-				local balloons: number = lplr.Character:GetAttribute('InflatedBalloons') or 0;
-				if Balloon["Enabled"] and balloons < 3 and tick() >= nextBalloon and getItem('balloon') then
-					nextBalloon = tick() + 0.2;
-					for _: number = 1, 3 do
-						bedwars.BalloonController:inflateBalloon();
-					end;
-					return;
+				if resetting and resetting ~= character then
+					resetting = nil;
 				end;
-				if VoidDrop["Enabled"] and not dropping and balloons <= 0 and not getItem('balloon') and not (OwlCheck["Enabled"] and root:FindFirstChild('OwlLiftForce')) then
-					dropping = true;
-					for _: number, resource: string in resources do
-						local item: table? = getItem(resource);
-						local dropped: any = item and fire('DropItem', 'CallServer', {["item"] = item.tool, ["amount"] = item.amount});
-						if typeof(dropped) == 'Instance' then
-							dropped:SetAttribute('ClientDropTime', tick() + 100);
-							if ResetAfterDrop["Enabled"] and tick() >= nextReset then
-								nextReset = tick() + 1;
-								fire('ResetCharacter', 'SendToServer');
-							end;
-						end;
-					end;
-					dropping = false;
-				end;
-				if not AutoReset["Enabled"] or store.matchState ~= 1 or resetting == character then
-					return;
-				end;
-				if root.AssemblyLinearVelocity.Y < 0 and not canBeSaved() and not workspace:Raycast(root.Position, Vector3.new(0, -2000, 0), store.airRay) then
+				if not resetting and not canBeSaved() and below and root.AssemblyLinearVelocity.Y < 0 and not workspace:Raycast(root.Position, Vector3.new(0, -2000, 0), store.airRay) then
 					resetting = character;
 					task.delay(ResetDelay["Value"], function(): ()
-						if AntiFall["Enabled"] and entitylib.isAlive and entitylib.character == character and root.Parent and root.AssemblyLinearVelocity.Y < 0 and not canBeSaved() and not workspace:Raycast(root.Position, Vector3.new(0, -2000, 0), store.airRay) then
+						if AntiFall["Enabled"] and AutoReset["Enabled"] and entitylib.isAlive and entitylib.character == character and root.Parent and not canBeSaved() and root.AssemblyLinearVelocity.Y < 0 and not workspace:Raycast(root.Position, Vector3.new(0, -2000, 0), store.airRay) then
 							fire('ResetCharacter', 'SendToServer');
 						elseif resetting == character then
 							resetting = nil;
@@ -5450,7 +6773,13 @@ velo.run(function(): ()
 	Platform = AntiFall:CreateToggle({
 		["Name"] = 'Platform',
 		["Default"] = true,
-		["Function"] = refresh,
+		["Function"] = function(): ()
+			refresh();
+			if AntiFall["Enabled"] then
+				AntiFall:Toggle();
+				AntiFall:Toggle();
+			end;
+		end,
 		["Tooltip"] = 'Places an invisible floor under the lowest block'
 	});
 	MoveMode = AntiFall:CreateDropdown({
@@ -5573,7 +6902,7 @@ velo.run(function(): ()
 		["Name"] = 'AntiLagback',
 		["Function"] = function(callback: boolean): ()
 			if callback and not replicate then
-				notif('AntiLagback', "This executor can't replicate the seat signal it needs", 5, 'warning');
+				notif('AntiLagback', "This executor can't replicate the seat signal it needs", 5);
 				AntiVoidFlag:Toggle();
 				return;
 			end;
@@ -5620,19 +6949,19 @@ velo.run(function(): ()
 	local NoFall: table = {["Enabled"] = false};
 	local Damage: table;
 	local safeFall: number = 45;
-	local Disabled: {[Humanoid]: {any}} = setmetatable({}, {__mode = "k"})
+	local Disabled: {[Humanoid]: {any}} = setmetatable({}, {__mode = "k"});
 	NoFall = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'NoFall',
 		["Function"] = function(callback: boolean): ()
 			if callback then
-				local Humanoid = entitylib.isAlive and entitylib.character.Humanoid;
-	            if Humanoid and not Disabled[Humanoid] and getconnections then
-	                Disabled[Humanoid] = {};
-	                for _, v: any in getconnections(Humanoid.StateChanged) do
-	                    v:Disable();
-	                    table.insert(Disabled[Humanoid], v);
-	                end;
-	            end;
+				local Humanoid: Humanoid? = entitylib.isAlive and entitylib.character.Humanoid or nil;
+				if Humanoid and not Disabled[Humanoid] and getconnections then
+					Disabled[Humanoid] = {};
+					for _: number, v: any in getconnections(Humanoid.StateChanged) do
+						v:Disable();
+						table.insert(Disabled[Humanoid], v);
+					end;
+				end;
 				local tracked: number, lastHit: number = 0, 0;
 				NoFall:Clean(runService.PostSimulation:Connect(function(): ()
 					if not entitylib.isAlive or store.matchState ~= 1 or store.cannonFlight or store.infinitefly then
@@ -5658,16 +6987,23 @@ velo.run(function(): ()
 				end));
 				NoFall:Clean(entitylib.Events.LocalAdded:Connect(function(ent: table): ()
 					if ent.Humanoid:WaitForChild("Animator", 5) then
-						task.wait(0.5)
+						task.wait(0.5);
 						if NoFall["Enabled"] and not Disabled[ent.Humanoid] and getconnections then
-							Disabled[Ent.Humanoid] = {};
-							for _, v: any in getconnections(ent.Humanoid.StateChanged) do
+							Disabled[ent.Humanoid] = {};
+							for _: number, v: any in getconnections(ent.Humanoid.StateChanged) do
 								v:Disable();
-								table.insert(Disabled[ent], v);
+								table.insert(Disabled[ent.Humanoid], v);
 							end;
 						end;
 					end;
 				end));
+			else
+				for _: Humanoid, connections: {any} in Disabled do
+					for _: number, v: any in connections do
+						v:Enable();
+					end;
+				end;
+				table.clear(Disabled);
 			end;
 		end,
 		["Tooltip"] = 'Prevents taking fall damage.'
@@ -5689,32 +7025,28 @@ velo.run(function(): ()
 	local Push: table;
 	local wallRay: RaycastParams = RaycastParams.new();
 	wallRay.RespectCanCollide = true;
+	local stacked: number = 0;
 
 	DamageBoost = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'DamageBoost',
 		["Function"] = function(callback: boolean): ()
-			store.speedBoost = {["Amount"] = 0, ["Expires"] = 0};
 			if not callback then
 				return;
 			end;
-			local stacked: number = 0;
 			DamageBoost:Clean(vapeEvents.EntityDamageEvent.Event:Connect(function(damage: table): ()
-				if not entitylib.isAlive or tick() <= stacked or damage.entityInstance ~= lplr.Character or vape.Modules.LongJump["Enabled"] then
+				if not entitylib.isAlive or tick() <= stacked or damage.entityInstance ~= lplr.Character or frictionUsers.LongJump then
 					return;
 				end;
 				local horizontal: number = damage.knockbackMultiplier and damage.knockbackMultiplier.horizontal or 0;
-				local knockback: number = bedwars.KnockbackUtil.calculateKnockbackVelocity(Vector3.one, 1, {["vertical"] = 0, ["horizontal"] = horizontal}).Magnitude * (0.9 + store.ping.total);
+				local knockback: number = bedwars.KnockbackUtil.calculateKnockbackVelocity(Vector3.one, 1, {["vertical"] = 0, ["horizontal"] = horizontal}).Magnitude * (0.9 + (store.ping.total or 0));
 				stacked = tick() + knockback / 45;
 				store.speedBoost = {["Amount"] = knockback * Strength["Value"] / 100, ["Expires"] = tick() + horizontal / 3.5 * Duration["Value"] / 100};
 			end));
-			DamageBoost:Clean(function(): ()
-				store.speedBoost = {["Amount"] = 0, ["Expires"] = 0};
-			end);
 			DamageBoost:Clean(runService.PreSimulation:Connect(function(delta: number): ()
 				if vape.ThreadFix then
 					setthreadidentity(8);
 				end;
-				if not Push["Enabled"] or store.speedBoost.Expires <= tick() or not entitylib.isAlive or frictionUsers.Speed or frictionUsers.Fly or vape.Modules.LongJump["Enabled"] or store.infinitefly or store.antiFallDirection then
+				if not Push["Enabled"] or store.speedBoost.Expires <= tick() or not entitylib.isAlive or frictionUsers.Speed or frictionUsers.Fly or frictionUsers.LongJump or vape.MovementOwner or store.antiFallDirection then
 					return;
 				end;
 				local root: BasePart = entitylib.character.RootPart;
@@ -5731,7 +7063,7 @@ velo.run(function(): ()
 				root.CFrame += step;
 			end));
 		end,
-		["Tooltip"] = 'Makes you go faster when damaged. Works with Speed, Fly and LongJump, and on its own.'
+		["Tooltip"] = 'Makes you go slightly faster when damaged'
 	});
 	Strength = DamageBoost:CreateSlider({
 		["Name"] = 'Strength',
@@ -5751,8 +7083,7 @@ velo.run(function(): ()
 	});
 	Push = DamageBoost:CreateToggle({
 		["Name"] = 'Boost without Speed',
-		["Default"] = true,
-		["Tooltip"] = 'Pushes you forward yourself while Blatant Speed and Fly are off, so the boost works in Legit Speed or with Speed disabled'
+		["Tooltip"] = 'Velocity extra (off = catsix): pushes you forward yourself while Blatant Speed, Fly and LongJump are off'
 	});
 end);
 
@@ -5789,7 +7120,7 @@ velo.run(function(): ()
 				if blatant then
 					bedwars.StatefulEntityKnockbackController.lastImpulseTime = math.huge;
 				end;
-				if not entitylib.isAlive or vape.Modules.Fly["Enabled"] or vape.Modules.LongJump["Enabled"] or not isnetworkowner(entitylib.character.RootPart) then
+				if not entitylib.isAlive or frictionUsers.Fly or frictionUsers.LongJump or not isnetworkowner(entitylib.character.RootPart) then
 					return;
 				end;
 				local root: BasePart = entitylib.character.RootPart;
@@ -5908,13 +7239,9 @@ velo.run(function(): ()
 	local Mode: table;
 	local Expand: table;
 	local BoxColor: table;
-	local Projectiles: table;
-	local ProjectileExpand: table;
 	local swordRegionDefault: number = 3.8;
 	local baseSize: Vector3 = Vector3.new(3, 6, 3);
 	local bodies: {[table]: Part} = {};
-	local shots: {[table]: Part} = {};
-	local shotCount: number = 0;
 	local swordPatched: boolean = false;
 
 	local attach: (list: {[table]: Part}, ent: table, size: Vector3, transparency: number) -> () = function(list: {[table]: Part}, ent: table, size: Vector3, transparency: number): ()
@@ -5960,15 +7287,12 @@ velo.run(function(): ()
 					swordPatched = false;
 				end;
 				clear(bodies);
-				clear(shots);
 				return;
 			end;
 			HitBoxes:Clean(entitylib.Events.EntityRemoved:Connect(function(ent: table): ()
-				for _: number, list: {[table]: Part} in {bodies, shots} do
-					if list[ent] then
-						list[ent]:Destroy();
-						list[ent] = nil;
-					end;
+				if bodies[ent] then
+					bodies[ent]:Destroy();
+					bodies[ent] = nil;
 				end;
 			end));
 			if Mode["Value"] == 'Sword' then
@@ -5980,30 +7304,6 @@ velo.run(function(): ()
 					addBody(ent);
 				end;
 			end;
-			if not Projectiles["Enabled"] then
-				return;
-			end;
-			local launched: table = bedwars.SyncEvents.ProjectileLaunched:connect(function(event: table): ()
-				if event.shooter ~= lplr.Character then
-					return;
-				end;
-				for _: number, ent: table in entitylib.List do
-					if ent.Targetable and ent.Player and not shots[ent] then
-						attach(shots, ent, baseSize + Vector3.one * ProjectileExpand["Value"], 1);
-					end;
-				end;
-				shotCount += 1;
-				local current: number = shotCount;
-				local meta: table? = bedwars.ProjectileMeta[event.projectileType];
-				task.delay(meta and meta.lifetimeSec or 3, function(): ()
-					if shotCount == current then
-						clear(shots);
-					end;
-				end);
-			end);
-			HitBoxes:Clean(function(): ()
-				launched:Destroy();
-			end);
 		end,
 		["Tooltip"] = 'Expands attack hitbox'
 	});
@@ -6055,25 +7355,76 @@ velo.run(function(): ()
 		end,
 		["Tooltip"] = 'Color and opacity of the player hitbox parts'
 	});
-	Projectiles = HitBoxes:CreateToggle({
-		["Name"] = 'Projectiles',
+end);
+
+velo.run(function(): ()
+	local ProjectileHitbox: table = {["Enabled"] = false};
+	local Expand: table;
+	local baseSize: Vector3 = Vector3.new(3, 6, 3);
+	local shots: {[table]: Part} = {};
+	local shotCount: number = 0;
+
+	local clearShots: () -> () = function(): ()
+		for _: table, part: Part in shots do
+			part:Destroy();
+		end;
+		table.clear(shots);
+	end;
+
+	ProjectileHitbox = vape.Categories.Blatant:CreateModule({
+		["Name"] = 'ProjectileHitbox',
 		["Function"] = function(callback: boolean): ()
-			ProjectileExpand.Object.Visible = callback;
-			if HitBoxes["Enabled"] then
-				HitBoxes:Toggle();
-				HitBoxes:Toggle();
+			if not callback then
+				clearShots();
+				return;
 			end;
+			ProjectileHitbox:Clean(entitylib.Events.EntityRemoved:Connect(function(ent: table): ()
+				if shots[ent] then
+					shots[ent]:Destroy();
+					shots[ent] = nil;
+				end;
+			end));
+			local launched: table = bedwars.SyncEvents.ProjectileLaunched:connect(function(event: table): ()
+				if event.shooter ~= lplr.Character then
+					return;
+				end;
+				for _: number, ent: table in entitylib.List do
+					if ent.Targetable and ent.Player and not shots[ent] then
+						local hitbox: Part = Instance.new('Part');
+						hitbox.Size = baseSize + Vector3.one * Expand["Value"];
+						hitbox.Position = ent.RootPart.Position;
+						hitbox.CanCollide = false;
+						hitbox.Massless = true;
+						hitbox.Transparency = 1;
+						hitbox.Parent = ent.Character;
+						local weld: Motor6D = Instance.new('Motor6D');
+						weld.Part0 = hitbox;
+						weld.Part1 = ent.RootPart;
+						weld.Parent = hitbox;
+						shots[ent] = hitbox;
+					end;
+				end;
+				shotCount += 1;
+				local current: number = shotCount;
+				local meta: table? = bedwars.ProjectileMeta[event.projectileType];
+				task.delay(meta and meta.lifetimeSec or 3, function(): ()
+					if shotCount == current then
+						clearShots();
+					end;
+				end);
+			end);
+			ProjectileHitbox:Clean(function(): ()
+				launched:Destroy();
+			end);
 		end,
-		["Tooltip"] = 'Expands the hitbox your projectiles check against, only while one of your projectiles is in the air'
+		["Tooltip"] = 'Expands the hitbox your projectiles check against, only while one of ur projectiles is in the air'
 	});
-	ProjectileExpand = HitBoxes:CreateSlider({
-		["Name"] = 'Projectile Expand',
+	Expand = ProjectileHitbox:CreateSlider({
+		["Name"] = 'Expand amount',
 		["Min"] = 0,
 		["Max"] = 20,
 		["Default"] = 8,
 		["Decimal"] = 10,
-		["Visible"] = false,
-		["Darker"] = true,
 		["Function"] = function(value: number): ()
 			for _: table, part: Part in shots do
 				part.Size = baseSize + Vector3.one * value;
@@ -6083,10 +7434,10 @@ velo.run(function(): ()
 			return value == 1 and 'stud' or 'studs';
 		end
 	});
-	HitBoxes:CreateButton({
+	ProjectileHitbox:CreateButton({
 		["Name"] = 'Sync to legit hitbox',
 		["Function"] = function(): ()
-			ProjectileExpand:SetValue(0);
+			Expand:SetValue(0);
 		end
 	});
 end);
@@ -6176,7 +7527,6 @@ velo.run(function(): ()
 	local pullRetry: number = 0.2;
 	local climbKeys: {[Enum.KeyCode]: number} = {[Enum.KeyCode.Space] = 1, [Enum.KeyCode.ButtonA] = 1, [Enum.KeyCode.LeftShift] = -1, [Enum.KeyCode.ButtonL2] = -1};
 	local climb: {[number]: number} = {[1] = 0, [-1] = 0};
-	local pull: table = {["ReturnY"] = nil, ["Until"] = 0, ["Next"] = 0};
 	local wallParams: RaycastParams = RaycastParams.new();
 	wallParams.RespectCanCollide = true;
 	local filtered: Model?;
@@ -6217,54 +7567,78 @@ velo.run(function(): ()
 		end;
 	end;
 
-	local pullDown: (root: BasePart, airborne: boolean) -> boolean = function(root: BasePart, airborne: boolean): boolean
-		local now: number = tick();
-		if pull.Until > now then
-			return true;
-		end;
-		if pull.ReturnY then
-			root.CFrame = CFrame.lookAlong(Vector3.new(root.Position.X, pull.ReturnY, root.Position.Z), root.CFrame.LookVector);
-			entitylib.character.AirTime = now;
-			pull.ReturnY = nil;
-			return false;
-		end;
-		if airborne and now - entitylib.character.AirTime > AirTime["Value"] and pull.Next < now then
-			local ground: RaycastResult? = workspace:Raycast(root.Position, Vector3.new(0, -1000, 0), store.airRay or wallParams);
-			if ground then
-				pull.ReturnY = Return["Enabled"] and root.Position.Y or nil;
-				pull.Until = now + Touchdown["Value"];
-				pull.Next = pull.Until + pullRetry;
-				root.CFrame = CFrame.lookAlong(Vector3.new(root.Position.X, ground.Position.Y + entitylib.character.HipHeight, root.Position.Z), root.CFrame.LookVector);
-				return true;
+	local jumpPulling: () -> boolean = function(): boolean
+		local jump: table? = vape.Modules.InfiniteJump;
+		local jumpDown: table? = jump and jump.Options['TP Down'];
+		return jump ~= nil and jump["Enabled"] and jumpDown ~= nil and jumpDown["Enabled"];
+	end;
+
+	local startTeleportDown: () -> () = function(): ()
+		local returnY: number?, returnTick: number, nextPull: number = nil, 0, 0;
+		local updateBar: (airTime: number, airborne: boolean) -> () = function(airTime: number, airborne: boolean): ()
+			if bar then
+				bar.Frame.Visible = Fly["Enabled"] and entitylib.isAlive and (airborne or not AirOnly["Enabled"]);
+				bar.Set(AirTime["Value"] - airTime, AirTime["Value"]);
 			end;
 		end;
-		return false;
+		Fly:Clean(runService.PreSimulation:Connect(function(): ()
+			if not entitylib.isAlive or vape.MovementOwner or jumpPulling() then
+				returnY = nil;
+				updateBar(0, false);
+				return;
+			end;
+			local root: BasePart = entitylib.character.RootPart;
+			local airborne: boolean = entitylib.character.Humanoid.FloorMaterial == Enum.Material.Air;
+			local airTime: number = airborne and tick() - (entitylib.character.AirTime or tick()) or 0;
+			if returnTick > tick() then
+				root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z);
+				updateBar(0, airborne);
+				return;
+			end;
+			if returnY then
+				root.CFrame = CFrame.lookAlong(Vector3.new(root.Position.X, returnY, root.Position.Z), root.CFrame.LookVector);
+				entitylib.character.AirTime = tick();
+				returnY = nil;
+				updateBar(0, true);
+				return;
+			end;
+			updateBar(airTime, airborne);
+			if airborne and airTime > AirTime["Value"] and nextPull < tick() and isnetworkowner(root) then
+				wallParams.FilterDescendantsInstances = {lplr.Character, gameCamera, store.antiFallPart};
+				filtered, filteredFloor = nil, nil;
+				wallParams.CollisionGroup = root.CollisionGroup;
+				local ground: RaycastResult? = workspace:Raycast(root.Position, Vector3.new(0, -1000, 0), wallParams);
+				if ground then
+					returnY = Return["Enabled"] and root.Position.Y or nil;
+					returnTick = tick() + Touchdown["Value"];
+					nextPull = returnTick + pullRetry;
+					root.CFrame = CFrame.lookAlong(Vector3.new(root.Position.X, ground.Position.Y + entitylib.character.HipHeight, root.Position.Z), root.CFrame.LookVector);
+					root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z);
+				end;
+			end;
+		end));
 	end;
 
 	local startHeatseeker: () -> () = function(): ()
-		local heatseeker: boolean = Mode["Value"] == 'Heatseeker';
-		pull.ReturnY, pull.Until, pull.Next = nil, 0, 0;
-		setBar(ShowProgress["Enabled"]);
-		if heatseeker then
-			local oldDeflate: (...any) -> ...any = bedwars.BalloonController.deflateBalloon;
-			bedwars.BalloonController.deflateBalloon = function(): () end;
-			Fly:Clean(function(): ()
-				bedwars.BalloonController.deflateBalloon = oldDeflate;
-				if PopBalloons["Enabled"] and entitylib.isAlive and (lplr.Character:GetAttribute('InflatedBalloons') or 0) > 0 then
-					for _: number = 1, 3 do
-						bedwars.BalloonController:deflateBalloon();
-					end;
+		local oldDeflate: (...any) -> ...any = bedwars.BalloonController.deflateBalloon;
+		bedwars.BalloonController.deflateBalloon = function(): () end;
+		Fly:Clean(function(): ()
+			bedwars.BalloonController.deflateBalloon = oldDeflate;
+			if PopBalloons["Enabled"] and entitylib.isAlive and (lplr.Character:GetAttribute('InflatedBalloons') or 0) > 0 then
+				for _: number = 1, 3 do
+					bedwars.BalloonController:deflateBalloon();
 				end;
-			end);
-			if lplr.Character and (lplr.Character:GetAttribute('InflatedBalloons') or 0) == 0 and getItem('balloon') then
+			end;
+		end);
+		local teleportTick: number, teleportReady: boolean, returnY: number? = tick(), true, nil;
+		if lplr.Character and (lplr.Character:GetAttribute('InflatedBalloons') or 0) == 0 and getItem('balloon') then
+			bedwars.BalloonController:inflateBalloon();
+		end;
+		Fly:Clean(vapeEvents.AttributeChanged.Event:Connect(function(attribute: string): ()
+			if attribute == 'InflatedBalloons' and (lplr.Character:GetAttribute('InflatedBalloons') or 0) == 0 and getItem('balloon') then
 				bedwars.BalloonController:inflateBalloon();
 			end;
-			Fly:Clean(vapeEvents.AttributeChanged.Event:Connect(function(attribute: string): ()
-				if attribute == 'InflatedBalloons' and (lplr.Character:GetAttribute('InflatedBalloons') or 0) == 0 and getItem('balloon') then
-					bedwars.BalloonController:inflateBalloon();
-				end;
-			end));
-		end;
+		end));
 		Fly:Clean(runService.PreSimulation:Connect(function(delta: number): ()
 			if not entitylib.isAlive or vape.MovementOwner or not isnetworkowner(entitylib.character.RootPart) then
 				if bar then
@@ -6272,39 +7646,53 @@ velo.run(function(): ()
 				end;
 				return;
 			end;
+			local flyAllowed: boolean = (lplr.Character:GetAttribute('InflatedBalloons') or 0) > 0 or store.matchState == 2;
+			if bar then
+				local waiting: boolean = not flyAllowed and TeleportDown["Enabled"];
+				bar.Frame.Visible = waiting and (entitylib.character.Humanoid.FloorMaterial == Enum.Material.Air or not AirOnly["Enabled"]);
+				if waiting then
+					bar.Set(AirTime["Value"] - (tick() - entitylib.character.AirTime), AirTime["Value"]);
+				end;
+			end;
+			local mass: number = (-0.02 + (flyAllowed and 6 or 0) * (tick() % 0.4 < 0.2 and -1 or 1)) + (climb[1] + climb[-1]) * VerticalSpeed["Value"];
 			local root: BasePart = entitylib.character.RootPart;
-			local humanoid: Humanoid = entitylib.character.Humanoid;
+			local moveDirection: Vector3 = entitylib.character.Humanoid.MoveDirection;
+			local walkSpeed: number = getSpeed();
+			local destination: Vector3 = moveDirection * math.max(Speed["Value"] - walkSpeed, 0) * delta;
 			if filtered ~= lplr.Character or filteredFloor ~= store.antiFallPart then
 				filtered, filteredFloor = lplr.Character, store.antiFallPart;
 				wallParams.FilterDescendantsInstances = {filtered, gameCamera, filteredFloor};
 			end;
 			wallParams.CollisionGroup = root.CollisionGroup;
-			local airborne: boolean = humanoid.FloorMaterial == Enum.Material.Air;
-			local balloons: boolean = heatseeker and ((lplr.Character:GetAttribute('InflatedBalloons') or 0) > 0 or store.matchState == 2);
-			local pulling: boolean = not heatseeker or (TeleportDown["Enabled"] and not balloons);
-			if bar then
-				bar.Frame.Visible = pulling and (airborne or not AirOnly["Enabled"]);
-				bar.Set(AirTime["Value"] - (airborne and tick() - entitylib.character.AirTime or 0), AirTime["Value"]);
-			end;
-			local holding: boolean = pulling and pullDown(root, airborne);
-			if not heatseeker then
-				if holding then
-					root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z);
-				end;
-				return;
-			end;
-			local lift: number = holding and 0 or (-0.02 + (balloons and 6 or 0) * (tick() % 0.4 < 0.2 and -1 or 1)) + (climb[1] + climb[-1]) * VerticalSpeed["Value"];
-			local moveDirection: Vector3 = humanoid.MoveDirection;
-			local walkSpeed: number = getSpeed();
-			local destination: Vector3 = moveDirection * math.max(Speed["Value"] - walkSpeed, 0) * delta;
 			if WallCheck["Enabled"] then
 				local wall: RaycastResult? = workspace:Raycast(root.Position, destination, wallParams);
 				if wall then
 					destination = (wall.Position + wall.Normal) - root.Position;
 				end;
 			end;
+			if not flyAllowed then
+				if teleportReady and not returnY and tick() - entitylib.character.AirTime > AirTime["Value"] then
+					local ground: RaycastResult? = workspace:Raycast(root.Position, Vector3.new(0, -1000, 0), wallParams);
+					if ground and TeleportDown["Enabled"] then
+						teleportReady = false;
+						returnY = root.Position.Y;
+						teleportTick = tick() + Touchdown["Value"];
+						root.CFrame = CFrame.lookAlong(Vector3.new(root.Position.X, ground.Position.Y + entitylib.character.HipHeight, root.Position.Z), root.CFrame.LookVector);
+					end;
+				elseif not teleportReady and returnY then
+					if teleportTick < tick() then
+						if Return["Enabled"] then
+							root.CFrame = CFrame.lookAlong(Vector3.new(root.Position.X, returnY, root.Position.Z), root.CFrame.LookVector);
+						end;
+						teleportReady = true;
+						returnY = nil;
+					else
+						mass = 0;
+					end;
+				end;
+			end;
 			root.CFrame += destination;
-			root.AssemblyLinearVelocity = moveDirection * walkSpeed + Vector3.new(0, lift, 0);
+			root.AssemblyLinearVelocity = moveDirection * walkSpeed + Vector3.new(0, mass, 0);
 		end));
 	end;
 
@@ -6319,6 +7707,11 @@ velo.run(function(): ()
 			Fly:Clean(function(): ()
 				setBar(false);
 			end);
+			setBar(ShowProgress["Enabled"]);
+			if Mode["Value"] == 'TP Down' then
+				startTeleportDown();
+				return;
+			end;
 			trackClimb(Fly);
 			startHeatseeker();
 		end,
@@ -6675,7 +8068,7 @@ velo.run(function(): ()
 					return;
 				end;
 				hiddenPart.CFrame = entitylib.character.Character.Head.CFrame;
-				createFake();
+				pcall(createFake);
 				gameCamera.CameraSubject = hiddenPart;
 				for _: number, object: Instance in entitylib.character.Character:QueryDescendants('BasePart, Decal, BillboardGui') do
 					hide(object);
@@ -6868,7 +8261,6 @@ velo.run(function(): ()
 	local jump: table = {["Tick"] = tick(), ["Speed"] = 0, ["Lift"] = lift, ["Direction"] = Vector3.zero, ["Start"] = nil, ["Waiting"] = nil};
 	local arcParams: RaycastParams = RaycastParams.new();
 	arcParams.RespectCanCollide = true;
-	local cannonConstant: table?;
 	local aimSession: table?;
 	local visibleIn: {[table]: () -> boolean} = {};
 
@@ -6883,55 +8275,53 @@ velo.run(function(): ()
 		propel(look, boosts[method].Multiplier * Speed["Value"], boosts[method].Duration);
 	end;
 
-	local findCannonConstant: () -> table? = function(): table?
-		if cannonConstant then
-			return cannonConstant;
-		end;
-		local controller: table = bedwars.CannonHandController;
-		local meta: any = getmetatable(controller);
-		local launchSelf: any = type(meta) == 'table' and type(rawget(meta, '__index')) == 'table' and rawget(meta.__index, 'launchSelf') or controller.launchSelf;
+	local setCannonSpeed: (speed: number) -> () = function(speed: number): ()
+		local meta: any = getmetatable(bedwars.CannonHandController);
+		local index: any = type(meta) == 'table' and rawget(meta, '__index');
+		local launchSelf: any = type(index) == 'table' and rawget(index, 'launchSelf');
 		if type(launchSelf) ~= 'function' then
-			return nil;
+			return;
 		end;
-		local search: (func: (...any) -> ...any, depth: number) -> table?;
-		search = function(func: (...any) -> ...any, depth: number): table?
-			local constants: {any} = debug.getconstants(func);
-			if table.find(constants, 'LaunchSelfFromCannon') then
-				for index: number, value: any in constants do
-					if type(value) == 'number' and value > 0 then
-						return {["Func"] = func, ["Index"] = index, ["Original"] = value};
-					end;
-				end;
-			end;
-			for _: number, upvalue: any in (depth < 3 and debug.getupvalues(func) or {}) do
-				local found: table? = type(upvalue) == 'function' and debug.info(upvalue, 's') ~= '[C]' and search(upvalue, depth + 1) or nil;
-				if found then
-					return found;
-				end;
-			end;
-			return nil;
-		end;
-		cannonConstant = search(launchSelf, 0);
-		for index: number, value: any in (cannonConstant == nil and debug.getconstants(launchSelf) or {}) do
+		for slot: number, value: any in debug.getconstants(launchSelf) do
 			if type(value) == 'number' then
-				cannonConstant = {["Func"] = launchSelf, ["Index"] = index, ["Original"] = value};
+				debug.setconstant(launchSelf, slot, speed);
 				break;
 			end;
 		end;
-		return cannonConstant;
-	end;
-
-	local applyCannonSpeed: () -> () = function(): ()
-		local constant: table? = findCannonConstant();
-		if constant then
-			debug.setconstant(constant.Func, constant.Index, CannonSpeed["Enabled"] and CannonLaunchSpeed["Value"] or constant.Original);
-		end;
 	end;
 	vape:Clean(function(): ()
-		if cannonConstant then
-			debug.setconstant(cannonConstant.Func, cannonConstant.Index, cannonConstant.Original);
+		if CannonSpeed["Enabled"] then
+			setCannonSpeed(legitCannonSpeed);
 		end;
 	end);
+
+	local findLaunchSpeed: (func: any, depth: number) -> number?;
+	findLaunchSpeed = function(func: any, depth: number): number?
+		if type(func) ~= 'function' or debug.info(func, 's') == '[C]' then
+			return nil;
+		end;
+		local speed: number?, matched: boolean = nil, false;
+		for _: number, value: any in debug.getconstants(func) do
+			if value == 'LaunchSelfFromCannon' then
+				matched = true;
+			elseif type(value) == 'number' and value > 0 then
+				speed = speed or value;
+			end;
+		end;
+		if matched and speed then
+			return speed;
+		end;
+		if depth >= 3 then
+			return nil;
+		end;
+		for _: number, upvalue: any in debug.getupvalues(func) do
+			local result: number? = findLaunchSpeed(upvalue, depth + 1);
+			if result then
+				return result;
+			end;
+		end;
+		return nil;
+	end;
 
 	local solveArc: (origin: Vector3, delta: Vector3, velocity: Vector3, speed: number) -> number? = function(origin: Vector3, delta: Vector3, velocity: Vector3, speed: number): number?
 		local gravity: number = workspace.Gravity;
@@ -7018,7 +8408,7 @@ velo.run(function(): ()
 	local startAim: () -> () = function(): ()
 		local root: BasePart = entitylib.character.RootPart;
 		local humanoid: Humanoid = entitylib.character.Humanoid;
-		local active: table = {["Phase"] = 'plan', ["Until"] = 0};
+		local active: table = {["Phase"] = 'plan', ["Until"] = 0, ["Root"] = root};
 		aimSession = active;
 		local cannon: BasePart?, spot: Vector3?;
 		local closest: number = SearchRange["Value"];
@@ -7131,8 +8521,7 @@ velo.run(function(): ()
 			end;
 			local origin: Vector3 = root.Position;
 			local velocity: Vector3 = root.AssemblyLinearVelocity;
-			local constant: table? = findCannonConstant();
-			launchSpeed = CannonSpeed["Enabled"] and CannonLaunchSpeed["Value"] or constant and constant.Original or legitCannonSpeed;
+			launchSpeed = findLaunchSpeed(bedwars.CannonHandController.launchSelf, 0) or legitCannonSpeed;
 			targetPosition = hit.Position + Vector3.new(0, entitylib.character.HipHeight, 0);
 			local maxRange: number = launchSpeed * launchSpeed / workspace.Gravity;
 			if (targetPosition - origin).Magnitude > maxRange then
@@ -7276,25 +8665,31 @@ velo.run(function(): ()
 				end;
 			elseif active.Phase == 'settle' then
 				if now >= active.Until then
-					if AimMode["Value"] == 'Legit' and bedwars.CannonController:isAiming() then
-						bedwars.CannonController:stopAiming();
+					local controller: table = bedwars.CannonController;
+					if AimMode["Value"] == 'Legit' and type(controller.isAiming) == 'function' and controller:isAiming() and type(controller.stopAiming) == 'function' then
+						controller:stopAiming();
 					end;
 					active.Phase, active.Until = 'aim', now + 1;
 				end;
 			elseif active.Phase == 'aim' then
-				local look: any = cannon:GetAttribute('LookVector');
-				if typeof(look) == 'Vector3' and (look - direction).Magnitude < 0.0001 then
-					launch();
-				elseif now > active.Until then
-					finish('Cannon refused the aim.');
-				elseif now >= nextAim then
-					nextAim = now + 0.15;
-					fire('AimCannon', 'SendToServer', {["cannonBlockPos"] = bedwars.BlockController:getBlockPosition(cannon.Position), ["lookVector"] = direction});
+				if now >= nextAim then
+					local look: any = nextAim > 0 and cannon:GetAttribute('LookVector');
+					if typeof(look) == 'Vector3' and (look - direction).Magnitude < 0.0001 then
+						launch();
+					elseif nextAim > 0 and now > active.Until then
+						finish('Cannon refused the aim.');
+					else
+						fire('AimCannon', 'SendToServer', {["cannonBlockPos"] = bedwars.BlockController:getBlockPosition(cannon.Position), ["lookVector"] = direction});
+						nextAim = now + 0.15;
+					end;
 				end;
 			elseif active.Phase == 'flight' then
 				if active.Fired and store.cannonFlight ~= active then
 					finish(nil);
 					return;
+				end;
+				if active.Tag and not active.Fired then
+					active.Tag.Text = 'Landing ('..math.floor((targetPosition - root.Position).Magnitude)..' studs)';
 				end;
 				if not active.Fired then
 					local look: any = cannon.Parent and cannon:GetAttribute('LookVector');
@@ -7365,10 +8760,10 @@ velo.run(function(): ()
 
 	local launches: {[string]: (item: table?, look: Vector3) -> ()} = {};
 	launches.cannon = function(item: table?, look: Vector3): ()
-		local feet: Vector3 = jump.Start - Vector3.new(0, entitylib.character.HipHeight - 3, 0);
+		local feet: Vector3 = jump.Start - Vector3.new(0, entitylib.character.HipHeight + entitylib.character.RootPart.Size.Y / 2 - 3, 0);
 		local cell: Vector3 = roundPos(feet);
 		placeBlock(cell, 'cannon');
-		task.defer(function(): ()
+		task.delay(0, function(): ()
 			local block: Instance?, blockCell: Vector3? = getPlacedBlock(cell);
 			if not block or block.Name ~= 'cannon' or (entitylib.character.RootPart.Position - block.Position).Magnitude >= 20 then
 				return;
@@ -7385,9 +8780,6 @@ velo.run(function(): ()
 			end;
 			local attempt: (tries: number) -> ();
 			attempt = function(tries: number): ()
-				if not LongJump["Enabled"] then
-					return;
-				end;
 				if fire('LaunchSelfFromCannon', 'CallServer', {["cannonBlockPos"] = blockCell}) then
 					breakBlock(block, {["Effects"] = true, ["Animation"] = 'Normal'});
 					boost('cannon', look);
@@ -7429,7 +8821,7 @@ velo.run(function(): ()
 		local shot: CFrame = CFrame.lookAlong(origin, Vector3.new(0, -launchSpeed, 0)) * CFrame.new(-offset.RelX, -offset.RelY, -offset.RelZ);
 		switchItem(item.tool, 0);
 		task.delay(0.1, function(): ()
-			local result: any = fire('ProjectileFire', 'CallServer', item.tool, projectile == 'fireball' and 'fireball' or nil, projectile, shot.Position, origin, shot.LookVector * launchSpeed, bedwars.IdUtil.generateId(8), ballistics.shotData(item.itemType), workspace:GetServerTimeNow() - config.ShotLatency);
+			local result: any = bedwars.Client:Get('ProjectileFire').instance:InvokeServer(item.tool, projectile == 'fireball' and 'fireball' or nil, projectile, shot.Position, origin, shot.LookVector * launchSpeed, bedwars.IdUtil.generateId(8), ballistics.shotData(item.itemType), workspace:GetServerTimeNow() - config.ShotLatency);
 			if type(result) == 'table' and result.accepted then
 				ballistics.launchSound(item);
 			end;
@@ -7438,6 +8830,7 @@ velo.run(function(): ()
 	launches.grapple = launches.fireball;
 	launches.hammer = function(item: table?, look: Vector3): ()
 		local ability: string = (item.itemType:find('jade_hammer') and 'jade_hammer' or item.itemType)..'_jump';
+		local origin: Vector3 = jump.Start;
 		jump.Waiting = {
 			["Ready"] = function(): boolean
 				return bedwars.AbilityController:canUseAbility(ability, abilityOptions);
@@ -7445,18 +8838,16 @@ velo.run(function(): ()
 			["Go"] = function(): ()
 				switchItem(item.tool, 0);
 				entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping);
-				jump.Start = entitylib.character.RootPart.Position + Vector3.new(0, 3.1, 0);
+				jump.Start = origin + Vector3.new(0, 3.1, 0);
 				task.delay(0.1, function(): ()
-					if LongJump["Enabled"] then
-						bedwars.AbilityController:useAbility(ability);
-						boost('hammer', look);
-					end;
+					bedwars.AbilityController:useAbility(ability);
+					boost('hammer', look);
 				end);
 			end
 		};
 	end;
 	launches.tnt = function(item: table?, look: Vector3): ()
-		local cell: Vector3 = roundPos(jump.Start - Vector3.new(0, entitylib.character.HipHeight - 3, 0));
+		local cell: Vector3 = roundPos(jump.Start - Vector3.new(0, entitylib.character.HipHeight + entitylib.character.RootPart.Size.Y / 2 - 3, 0));
 		jump.Start = Vector3.new(cell.X, jump.Start.Y, cell.Z) + look * (item.itemType == 'pirate_gunpowder_barrel' and 2.6 or 0.2);
 		placeBlock(cell, item.itemType);
 	end;
@@ -7469,9 +8860,6 @@ velo.run(function(): ()
 			["Go"] = function(): ()
 				bedwars.SwordController.lastAttack = workspace:GetServerTimeNow();
 				switchItem(item.tool, 0.1);
-				if not LongJump["Enabled"] then
-					return;
-				end;
 				replicatedStorage['events-@easy-games/game-core:shared/game-core-networking@getEvents.Events'].useAbility:FireServer('dash', {
 					["direction"] = look,
 					["origin"] = origin,
@@ -7490,30 +8878,30 @@ velo.run(function(): ()
 				LongJump:Toggle();
 				return;
 			end;
-			frictionUsers.LongJump = callback or nil;
-			updateFriction();
 			if not callback then
+				frictionUsers.LongJump = nil;
+				updateFriction();
 				jump.Tick, jump.Speed, jump.Direction, jump.Start, jump.Waiting = tick(), 0, Vector3.zero, nil, nil;
 				aimSession = nil;
 				return;
 			end;
-			if not entitylib.isAlive then
-				return;
-			end;
 			local held: string? = store.hand.tool and store.hand.tool.Name;
-			local cannonInRange: boolean = false;
-			for _: number, block: Instance in store.blocks do
-				cannonInRange = cannonInRange or (block.Name == 'cannon' and (entitylib.character.RootPart.Position - block.Position).Magnitude <= SearchRange["Value"]);
-			end;
-			local aimReady: boolean = CannonMode["Value"] == 'Aim' and (not DaveyOnly["Enabled"] or hasKit('davey')) and (held == 'cannon' or not (held and methodOf[held])) and (cannonInRange or (PlaceCannon["Enabled"] and getItem('cannon') ~= nil));
-			if aimReady then
-				if store.cannonFlight then
-					LongJump:Toggle();
+			if entitylib.isAlive and CannonMode["Value"] == 'Aim' then
+				local cannonInRange: boolean = false;
+				for _: number, block: Instance in store.blocks do
+					cannonInRange = cannonInRange or (block.Name == 'cannon' and (entitylib.character.RootPart.Position - block.Position).Magnitude <= SearchRange["Value"]);
+				end;
+				if (not DaveyOnly["Enabled"] or hasKit('davey')) and (held == 'cannon' or not (held and methodOf[held])) and (cannonInRange or (PlaceCannon["Enabled"] and getItem('cannon') ~= nil)) then
+					if store.cannonFlight then
+						LongJump:Toggle();
+						return;
+					end;
+					startAim();
 					return;
 				end;
-				startAim();
-				return;
 			end;
+			frictionUsers.LongJump = true;
+			updateFriction();
 
 			LongJump:Clean(vapeEvents.EntityDamageEvent.Event:Connect(function(damage: table): ()
 				local multiplier: table? = damage.knockbackMultiplier;
@@ -7533,20 +8921,20 @@ velo.run(function(): ()
 				end;
 			end));
 
-			jump.Start = entitylib.character.RootPart.Position;
+			jump.Start = entitylib.isAlive and entitylib.character.RootPart.Position or nil;
 			LongJump:Clean(runService.PreSimulation:Connect(function(delta: number): ()
 				local root: BasePart? = entitylib.isAlive and entitylib.character.RootPart or nil;
+				local waiting: table? = jump.Waiting;
+				if waiting and root and waiting.Ready() then
+					jump.Waiting = nil;
+					waiting.Go();
+				end;
 				if vape.MovementOwner then
 					return;
 				end;
 				if not root or not isnetworkowner(root) then
 					jump.Start = nil;
 					return;
-				end;
-				local waiting: table? = jump.Waiting;
-				if waiting and waiting.Ready() then
-					jump.Waiting = nil;
-					waiting.Go();
 				end;
 				local now: number = tick();
 				if jump.Tick > now then
@@ -7562,16 +8950,20 @@ velo.run(function(): ()
 				end;
 			end));
 
+			if not entitylib.isAlive then
+				return;
+			end;
 			local look: Vector3 = (CameraDirection["Enabled"] and gameCamera or entitylib.character.RootPart).CFrame.LookVector;
-			local itemType: string? = if held and methodOf[held] then held else nil;
-			for _: number, candidate: string in (itemType and {} or methodOrder) do
-				if getItem(candidate, nil, true) or hasKit(candidate) then
-					itemType = candidate;
+			if held and methodOf[held] then
+				launches[methodOf[held]](getItem(held), look);
+				return;
+			end;
+			for _: number, candidate: string in methodOrder do
+				local item: table? = getItem(candidate, nil, true);
+				if item or store.equippedKit == candidate then
+					launches[methodOf[candidate]](item, look);
 					break;
 				end;
-			end;
-			if itemType then
-				launches[methodOf[itemType]](getItem(itemType, nil, true), look);
 			end;
 		end,
 		["ExtraText"] = function(): string
@@ -7671,7 +9063,7 @@ velo.run(function(): ()
 		["Name"] = 'Cannon Speed',
 		["Function"] = function(callback: boolean): ()
 			refreshOptions();
-			applyCannonSpeed();
+			setCannonSpeed(callback and CannonLaunchSpeed["Value"] or legitCannonSpeed);
 		end,
 		["Tooltip"] = 'Changes how hard cannons launch you. Applies to every cannon launch while on, even with LongJump off.'
 	});
@@ -7683,7 +9075,7 @@ velo.run(function(): ()
 		["Darker"] = true,
 		["Function"] = function(value: number): ()
 			if CannonSpeed["Enabled"] then
-				applyCannonSpeed();
+				setCannonSpeed(value);
 			end;
 		end,
 		["Suffix"] = function(value: number): string
@@ -7723,16 +9115,19 @@ velo.run(function(): ()
 	local CircleFilled: table;
 	local Horizontal: table;
 	local Vertical: table;
+	local SilentPrediction: table;
 	local HitChance: table;
 	local HeadshotChance: table;
 	local AutoCharge: table;
+	local AimChange: table;
+	local ChargeShots: table;
 	local ChargePercent: table;
 	local ChargeItems: table;
-	local AimChange: table;
 	local OtherProjectiles: table;
 	local AimUmeko: table;
 	local Potions: table;
 	local Blacklist: table;
+	local SilentBlacklist: table;
 	local MiloCheck: table;
 	local Terra: table;
 	local DeathAdder: table;
@@ -7754,13 +9149,15 @@ velo.run(function(): ()
 	local ChargeDelay: table;
 	local SwitchDelay: table;
 	local Owl: table;
+	local OwlWalls: table;
 	local CrossbowChain: table;
 
 	local kickSpeed: number, kickGravity: number = 100, 20;
 	local sorcererSpeed: number = 70;
 	local attemptLimit: number, attemptBudget: number = 10, 0.0015;
-	local auraInterval: number, owlInterval: number = 0.03, 0.1;
-	local swordLockout: number, swingWindow: number, swingRange: number = 0.5, 0.2, 22;
+	local fullDraw: number = 5;
+	local auraInterval: number, swingInterval: number, owlInterval: number, owlIdle: number = 0.03, 0.02, 0.1, 1;
+	local swordLockout: number, swingWindow: number, swingRange: number, swapBack: number = 0.5, 0.2, 22, 0.5;
 	local random: Random = Random.new();
 	local circle: any;
 	local namecallHooked: boolean = false;
@@ -7774,10 +9171,18 @@ velo.run(function(): ()
 		return inputService.TouchEnabled and gameCamera.ViewportSize / 2 or inputService:GetMouseLocation();
 	end;
 
-	local aimPartOf: (ent: table, mode: string, itemType: string?) -> BasePart = function(ent: table, mode: string, itemType: string?): BasePart
+	local headshot: (itemType: string?) -> boolean = function(itemType: string?): boolean
+		return itemType ~= nil and (itemType:find('headhunter', 1, true) ~= nil or itemType:find('tactical', 1, true) ~= nil or store.equippedKit == 'archer');
+	end;
+
+	local listed: (projectile: string, list: {string}) -> boolean = function(projectile: string, list: {string}): boolean
+		return table.find(list, (projectile == 'glue_trap' or projectile == 'glue_projectile') and 'gloop' or projectile) ~= nil;
+	end;
+
+	local aimPartOf: (ent: table, mode: string) -> BasePart = function(ent: table, mode: string): BasePart
 		if mode == 'Dynamic' then
-			local headshot: boolean = hasKit('archer') or (itemType ~= nil and (itemType:find('headhunter', 1, true) ~= nil or itemType:find('tactical', 1, true) ~= nil));
-			return getTargetPart(ent, headshot and 'Head' or 'RootPart');
+			local tool: Instance? = store.hand.tool;
+			return getTargetPart(ent, headshot(tool and tool.Name) and 'Head' or 'RootPart');
 		end;
 		if mode == 'Closest' then
 			local center: Vector2 = gameCamera.ViewportSize / 2;
@@ -7796,6 +9201,11 @@ velo.run(function(): ()
 		return getTargetPart(ent, mode);
 	end;
 
+	local mapRay: RaycastParams = RaycastParams.new();
+	mapRay.FilterType = Enum.RaycastFilterType.Include;
+	local auraRay: RaycastParams = RaycastParams.new();
+	auraRay.FilterType = Enum.RaycastFilterType.Exclude;
+
 	local worldOnly: () -> {Instance} = function(): {Instance}
 		local ignore: {Instance} = {gameCamera, lplr.Character, store.antiFallPart};
 		for _: number, ent: table in entitylib.List do
@@ -7804,45 +9214,138 @@ velo.run(function(): ()
 		return ignore;
 	end;
 
-	local projectileAllowed: (projectile: string) -> boolean = function(projectile: string): boolean
-		if projectile:find('splash_potion') then
-			return Potions["Enabled"];
-		end;
-		if not OtherProjectiles["Enabled"] and not projectile:find('arrow') and not (AimUmeko["Enabled"] and projectile:find('^ninja_chakram')) then
-			return false;
-		end;
-		return not table.find(Blacklist.ListEnabled, (projectile == 'glue_trap' or projectile == 'glue_projectile') and 'gloop' or projectile);
-	end;
-
-	local pickTarget: (accept: (ent: table) -> boolean) -> table? = function(accept: (ent: table) -> boolean): table?
+	local pickTarget: (settings: table) -> table? = function(settings: table): table?
+		local started: number = os.clock();
 		if not entitylib.isAlive then
 			return nil;
 		end;
-		local center: Vector2 = screenOrigin();
 		local selfPosition: Vector3 = entitylib.character.RootPart.Position;
+		local center: Vector2 = settings.Center;
 		local candidates: {table} = {};
 		for _: number, ent: table in entitylib.List do
-			local wanted: boolean = ent.Targetable and (ent.NPC and AimTargets.NPCs["Enabled"] or ent.Player ~= nil and AimTargets.Players["Enabled"]);
-			if wanted and entitylib.isVulnerable(ent) and (ent.RootPart.Position - selfPosition).Magnitude <= AimDistance["Value"] and not (MiloCheck["Enabled"] and ent.Player and bedwars.BlockDisguiseController:getPlayerBlockModel(ent.Player)) then
+			if ent.Targetable and (ent.NPC and AimTargets.NPCs["Enabled"] or ent.Player ~= nil and AimTargets.Players["Enabled"]) then
 				local point: Vector3, visible: boolean = gameCamera:WorldToViewportPoint(ent.RootPart.Position);
 				local gap: number = (center - Vector2.new(point.X, point.Y)).Magnitude;
-				if visible and gap <= AimFov["Value"] then
+				if visible and gap <= AimFov["Value"] and entitylib.isVulnerable(ent) then
 					table.insert(candidates, {["Entity"] = ent, ["Magnitude"] = ent.Target and -1 or gap});
 				end;
 			end;
 		end;
 		table.sort(candidates, sortMethods[AimSort["Value"]] or sortMethods.Distance);
-		local started: number = os.clock();
-		for index: number, candidate: table in candidates do
-			if index > attemptLimit or (index > 1 and os.clock() - started > attemptBudget) then
-				break;
+		local attempts: number = 0;
+		for _: number, candidate: table in candidates do
+			local ent: table = candidate.Entity;
+			if settings.Wallcheck and AimTargets.Walls["Enabled"] and entitylib.Wallcheck(settings.Wallcheck, ent.RootPart.Position, true) then
+				continue;
 			end;
-			if accept(candidate.Entity) then
-				targetinfo.Targets[candidate.Entity] = tick() + 1;
-				return candidate.Entity;
+			if settings.Milo and MiloCheck["Enabled"] and ent.Player and bedwars.BlockDisguiseController:getPlayerBlockModel(ent.Player) then
+				continue;
+			end;
+			if settings.Limited then
+				if (ent.RootPart.Position - selfPosition).Magnitude > AimDistance["Value"] or attempts >= attemptLimit or (attempts > 0 and os.clock() - started > attemptBudget) then
+					continue;
+				end;
+				attempts += 1;
+			end;
+			if not settings.Accept or settings.Accept(ent) then
+				return ent;
 			end;
 		end;
 		return nil;
+	end;
+
+	local aimLaunch: (controller: table, launchData: table, worldMeta: any, origin: any, shootPosition: Vector3?) -> table? = function(controller: table, launchData: table, worldMeta: any, origin: any, shootPosition: Vector3?): table?
+		local launchPosition: Vector3? = shootPosition or controller:getLaunchPosition(origin);
+		if not launchPosition then
+			return nil;
+		end;
+		local projectile: string = launchData.projectile;
+		if projectile:find('splash_potion') then
+			if not Potions["Enabled"] then
+				return nil;
+			end;
+		elseif not OtherProjectiles["Enabled"] and not projectile:find('arrow') and not (AimUmeko["Enabled"] and projectile:find('^ninja_chakram')) then
+			return nil;
+		end;
+		if listed(projectile, Blacklist.ListEnabled) then
+			return nil;
+		end;
+		local meta: table = launchData:getProjectileMeta();
+		local lifetime: number = worldMeta and meta.predictionLifetimeSec or meta.lifetimeSec or 3;
+		local gravity: number = (meta.gravitationalAcceleration or config.Gravity) * launchData.gravityMultiplier;
+		local speed: number = (meta.launchVelocity or 100) * ((AutoCharge["Enabled"] or not AimChange["Enabled"]) and 1 or launchData.velocityMultiplier);
+		local fromPosition: Vector3 = launchPosition + (projectile == 'owl_projectile' and Vector3.zero or launchData.fromPositionOffset);
+		local values: table? = nil;
+		local ent: table? = pickTarget({
+			["Center"] = screenOrigin(),
+			["Milo"] = true,
+			["Limited"] = true,
+			["Accept"] = function(target: table): boolean
+				local part: BasePart = aimPartOf(target, AimPart["Value"]);
+				local velocity: Vector3 = projectile == 'telepearl' and Vector3.zero or part.AssemblyLinearVelocity;
+				local aim: Vector3?, flight: number? = ballistics.solve(fromPosition, speed, gravity, target, part.Position, velocity, Horizontal["Value"], Vertical["Value"]);
+				if not aim or not flight or flight > lifetime then
+					return false;
+				end;
+				store.hitchance.ProjectileAimbot = {["Value"] = ballistics.hitChance(target, flight), ["Clock"] = tick()};
+				local launchVelocity: Vector3 = (aim - fromPosition).Unit * speed;
+				if AimTargets.Walls["Enabled"] and not ballistics.arcClear(fromPosition, launchVelocity, gravity, flight, worldOnly()) then
+					return false;
+				end;
+				values = {
+					["initialVelocity"] = launchVelocity,
+					["positionFrom"] = fromPosition,
+					["deltaT"] = lifetime,
+					["gravitationalAcceleration"] = gravity,
+					["drawDurationSeconds"] = AutoCharge["Enabled"] and fullDraw or launchData.drawDurationSeconds
+				};
+				return true;
+			end
+		});
+		if ent and values then
+			targetinfo.Targets[ent] = tick() + 1;
+			return values;
+		end;
+		return nil;
+	end;
+
+	local silentVelocity: (arguments: table) -> Vector3? = function(arguments: table): Vector3?
+		local projectile: any, origin: any, velocity: any = arguments[3], arguments[4], arguments[6];
+		if typeof(origin) ~= 'Vector3' or typeof(velocity) ~= 'Vector3' or type(projectile) ~= 'string' then
+			return nil;
+		end;
+		if not OtherProjectiles["Enabled"] and not projectile:find('arrow') then
+			return nil;
+		end;
+		if listed(projectile, SilentBlacklist.ListEnabled) then
+			return nil;
+		end;
+		local meta: table? = bedwars.ProjectileMeta[projectile];
+		local speed: number = velocity.Magnitude;
+		if not meta or speed <= 0 or random:NextNumber(0, 100) > HitChance:GetRandomValue() then
+			return nil;
+		end;
+		local ent: table? = pickTarget({
+			["Center"] = gameCamera.ViewportSize / 2,
+			["Wallcheck"] = origin,
+			["Milo"] = true
+		});
+		if not ent then
+			return nil;
+		end;
+		local partMode: string = random:NextNumber(0, 100) < HeadshotChance:GetRandomValue() and 'Head' or AimPart["Value"];
+		local point: Vector3 = aimPartOf(ent, partMode).Position;
+		local map: Instance? = workspace:FindFirstChild('Map');
+		if map ~= mapRay.FilterDescendantsInstances[1] then
+			mapRay.FilterDescendantsInstances = map and {map} or {};
+		end;
+		local aim: Vector3?, flight: number? = ballistics.solve(origin, speed * SilentPrediction["Value"], meta.gravitationalAcceleration or config.Gravity, ent, point, projectile == 'telepearl' and Vector3.zero or ent.RootPart.AssemblyLinearVelocity, nil, nil, nil, mapRay);
+		if not aim or not flight or flight > (meta.lifetimeSec or 3) then
+			return nil;
+		end;
+		targetinfo.Targets[ent] = tick() + 1;
+		store.hitchance.ProjectileAimbot = {["Value"] = ballistics.hitChance(ent, flight), ["Clock"] = tick()};
+		return CFrame.lookAt(origin, aim).LookVector * speed;
 	end;
 
 	ProjectileAimbot = vape.Categories.Blatant:CreateModule({
@@ -7863,49 +9366,25 @@ velo.run(function(): ()
 			local projectileController: table = bedwars.ProjectileController;
 			local oldLaunch: (...any) -> ...any = projectileController.calculateImportantLaunchValues;
 			local launchHook: (...any) -> ...any = function(self: table, launchData: table, worldMeta: any, origin: any, shootPosition: Vector3?, ...: any): ...any
-				if AutoCharge["Enabled"] and launchData.drawDurationSeconds then
+				if ChargeShots["Enabled"] then
 					local meta: table? = bedwars.ProjectileMeta[launchData.projectile];
 					local tool: Instance? = store.hand.tool;
 					local items: {string} = ChargeItems.ListEnabled;
-					if meta and meta.predictionLifetimeSec and (#items == 0 or table.find(items, launchData.projectile) or tool and table.find(items, tool.Name)) then
+					local allowed: boolean = #items == 0 or table.find(items, launchData.projectile) ~= nil or (tool ~= nil and table.find(items, tool.Name) ~= nil);
+					if allowed and meta and meta.predictionLifetimeSec and launchData.drawDurationSeconds then
 						local share: number = ChargePercent["Value"] / 100;
 						launchData.drawDurationSeconds = math.max(launchData.drawDurationSeconds, meta.predictionLifetimeSec * share);
 						launchData.velocityMultiplier = math.max(launchData.velocityMultiplier or 0, share);
 					end;
 				end;
-				local launchPosition: Vector3? = AimMode["Value"] == 'Trajectory' and (shootPosition or self:getLaunchPosition(origin)) or nil;
-				if not launchPosition or not projectileAllowed(launchData.projectile) then
-					return oldLaunch(self, launchData, worldMeta, origin, shootPosition, ...);
+				if AimMode["Value"] == 'Trajectory' then
+					-- Runs inside the game's launch code: an aim error must fall back to the normal shot, as catsix does.
+					local solved: boolean, values: any = pcall(aimLaunch, self, launchData, worldMeta, origin, shootPosition);
+					if solved and values then
+						return values;
+					end;
 				end;
-				local meta: table = launchData:getProjectileMeta();
-				local lifetime: number = worldMeta and meta.predictionLifetimeSec or meta.lifetimeSec or 3;
-				local gravity: number = (meta.gravitationalAcceleration or config.Gravity) * launchData.gravityMultiplier;
-				local speed: number = (meta.launchVelocity or 100) * (AimChange["Enabled"] and launchData.velocityMultiplier or 1);
-				local fromPosition: Vector3 = launchPosition + (launchData.projectile == 'owl_projectile' and Vector3.zero or launchData.fromPositionOffset);
-				local handName: string? = store.hand.tool and store.hand.tool.Name;
-				local values: table?;
-				pickTarget(function(ent: table): boolean
-					local part: BasePart = aimPartOf(ent, AimPart["Value"], handName);
-					local velocity: Vector3 = launchData.projectile == 'telepearl' and Vector3.zero or part.AssemblyLinearVelocity;
-					local aim: Vector3?, flight: number? = ballistics.solve(fromPosition, speed, gravity, ent, part.Position, velocity, Horizontal["Value"], Vertical["Value"]);
-					if not aim or not flight or flight > lifetime then
-						return false;
-					end;
-					local launchVelocity: Vector3 = (aim - fromPosition).Unit * speed;
-					if AimTargets.Walls["Enabled"] and not ballistics.arcClear(fromPosition, launchVelocity, gravity, flight, worldOnly()) then
-						return false;
-					end;
-					store.hitchance.ProjectileAimbot = {["Value"] = ballistics.hitChance(ent, flight), ["Clock"] = tick()};
-					values = {
-						["initialVelocity"] = launchVelocity,
-						["positionFrom"] = fromPosition,
-						["deltaT"] = lifetime,
-						["gravitationalAcceleration"] = gravity,
-						["drawDurationSeconds"] = launchData.drawDurationSeconds
-					};
-					return true;
-				end);
-				return values or oldLaunch(self, launchData, worldMeta, origin, shootPosition, ...);
+				return oldLaunch(self, launchData, worldMeta, origin, shootPosition, ...);
 			end;
 			projectileController.calculateImportantLaunchValues = launchHook;
 			ProjectileAimbot:Clean(function(): ()
@@ -7930,15 +9409,16 @@ velo.run(function(): ()
 								end;
 							end;
 						else
-							pickTarget(function(ent: table): boolean
-								if AimTargets.Walls["Enabled"] and entitylib.Wallcheck(position, ent.RootPart.Position, nil, ent) then
-									return false;
-								end;
+							local ent: table? = pickTarget({
+								["Center"] = screenOrigin(),
+								["Wallcheck"] = position
+							});
+							if ent then
+								targetinfo.Targets[ent] = tick() + 1;
 								local tier: table? = bedwars.SorcererBalance.getSorcererTierData(bedwars.SorcererBalance.getSorcererTier(lplr));
-								local point: Vector3 = aimPartOf(ent, AimPart["Value"], nil).Position;
+								local point: Vector3 = aimPartOf(ent, AimPart["Value"]).Position;
 								aim = point + ent.RootPart.AssemblyLinearVelocity * ((point - position).Magnitude / (tier and tier.projectileVelocity or sorcererSpeed));
-								return true;
-							end);
+							end;
 						end;
 						if aim and aim ~= position then
 							return (aim - position).Unit;
@@ -7963,22 +9443,28 @@ velo.run(function(): ()
 					end;
 					local origin: Vector3 = self:getKickBlockProjectileOriginPosition(entitylib.character.RootPart.Position, gameCamera.CFrame.LookVector);
 					local direction: Vector3?;
-					pickTarget(function(ent: table): boolean
-						local part: BasePart = aimPartOf(ent, AimPart["Value"], nil);
-						local aim: Vector3?, flight: number? = ballistics.solve(origin, kickSpeed, kickGravity, ent, part.Position, part.AssemblyLinearVelocity, Horizontal["Value"], Vertical["Value"]);
-						if not aim or (aim - origin).Magnitude <= 0 then
-							return false;
-						end;
-						if AimTargets.Walls["Enabled"] and flight and not ballistics.arcClear(origin, (aim - origin).Unit * kickSpeed, kickGravity, flight, worldOnly()) then
-							return false;
-						end;
-						store.hitchance.ProjectileAimbot = {["Value"] = ballistics.hitChance(ent, flight), ["Clock"] = tick()};
-						direction = (aim - origin).Unit;
-						return true;
-					end);
-					if not direction then
+					local ent: table? = pickTarget({
+						["Center"] = gameCamera.ViewportSize / 2,
+						["Accept"] = function(target: table): boolean
+							local part: BasePart = aimPartOf(target, AimPart["Value"]);
+							local balloons: number? = target.Character:GetAttribute('InflatedBalloons');
+							local fall: number = balloons and balloons > 0 and workspace.Gravity * (1 - (balloons >= 4 and 1.2 or balloons >= 3 and 1 or 0.975)) or workspace.Gravity;
+							local aim: Vector3?, flight: number? = ballistics.solve(origin, kickSpeed, kickGravity, target, part.Position, part.AssemblyLinearVelocity, Horizontal["Value"], Vertical["Value"], fall);
+							if not aim or (aim - origin).Magnitude <= 0 then
+								return false;
+							end;
+							if AimTargets.Walls["Enabled"] and flight and not ballistics.arcClear(origin, (aim - origin).Unit * kickSpeed, kickGravity, flight, worldOnly()) then
+								return false;
+							end;
+							store.hitchance.ProjectileAimbot = {["Value"] = ballistics.hitChance(target, flight), ["Clock"] = tick()};
+							direction = (aim - origin).Unit;
+							return true;
+						end
+					});
+					if not ent or not direction then
 						return oldKick(self, character, data, ...);
 					end;
+					targetinfo.Targets[ent] = tick() + 1;
 					if bedwars.CameraPerspectiveController:getCameraPerspective() == 1 then
 						local scale: number = (0.7 * direction.Y + math.sqrt(0.49 * direction.Y * direction.Y + 3.51)) / 2;
 						direction = direction * scale - Vector3.new(0, 0.35, 0);
@@ -8007,27 +9493,13 @@ velo.run(function(): ()
 					return oldNamecall(self, ...);
 				end;
 				local arguments: table = table.pack(...);
-				local projectile: any, origin: any, velocity: any = arguments[3], arguments[4], arguments[6];
-				local meta: table? = type(projectile) == 'string' and bedwars.ProjectileMeta[projectile] or nil;
-				if meta and typeof(origin) == 'Vector3' and typeof(velocity) == 'Vector3' and velocity.Magnitude > 0 and projectileAllowed(projectile) and random:NextNumber(0, 100) <= HitChance:GetRandomValue() then
-					local speed: number, gravity: number = velocity.Magnitude, meta.gravitationalAcceleration or config.Gravity;
-					local partMode: string = random:NextNumber(0, 100) < HeadshotChance:GetRandomValue() and 'Head' or AimPart["Value"];
-					local handName: string? = store.hand.tool and store.hand.tool.Name;
-					pickTarget(function(ent: table): boolean
-						local part: BasePart = aimPartOf(ent, partMode, handName);
-						if AimTargets.Walls["Enabled"] and entitylib.Wallcheck(origin, part.Position, nil, ent) then
-							return false;
-						end;
-						local aim: Vector3?, flight: number? = ballistics.solve(origin, speed, gravity, ent, part.Position, projectile == 'telepearl' and Vector3.zero or ent.RootPart.AssemblyLinearVelocity, Horizontal["Value"], Vertical["Value"]);
-						if not aim or not flight or flight > (meta.lifetimeSec or 3) then
-							return false;
-						end;
-						store.hitchance.ProjectileAimbot = {["Value"] = ballistics.hitChance(ent, flight), ["Clock"] = tick()};
-						arguments[6] = CFrame.lookAt(origin, aim).LookVector * speed;
-						return true;
-					end);
+				-- Runs inside the game's shot request: a solve error must leave the shot untouched, as catsix does.
+				local solved: boolean, redirected: any = pcall(silentVelocity, arguments);
+				if solved and typeof(redirected) == 'Vector3' then
+					arguments[6] = redirected;
 				end;
-				return oldNamecall(self, table.unpack(arguments, 1, arguments.n));
+				-- The solve ran other namecalls, so the pending namecall method is no longer InvokeServer.
+				return self.InvokeServer(self, table.unpack(arguments, 1, arguments.n));
 			end));
 		end,
 		["Tooltip"] = 'Aims your projectiles (and Terra / Death Adder abilities) at enemies.\nTrajectory bends the shot you see, Silent only redirects what the server receives.'
@@ -8036,12 +9508,14 @@ velo.run(function(): ()
 		["Name"] = 'Mode',
 		["List"] = {'Trajectory', 'Silent'},
 		["Function"] = function(value: string): ()
-			if HitChance then
-				HitChance.Object.Visible = value == 'Silent';
-				HeadshotChance.Object.Visible = value == 'Silent';
+			if SilentBlacklist then
+				for _: number, option: table in {HitChance, HeadshotChance, SilentPrediction, SilentBlacklist} do
+					option.Object.Visible = value == 'Silent';
+				end;
+				Blacklist.Object.Visible = value ~= 'Silent';
 			end;
 		end,
-		["Tooltip"] = 'Trajectory: adjusts the launch the game calculates.\nSilent: rewrites the ProjectileFire request only.'
+		["Tooltip"] = 'Trajectory: catsix ProjectileAimbot, adjusts the launch the game calculates.\nSilent: catsix SilentAim, rewrites the ProjectileFire request only.'
 	});
 	AimTargets = ProjectileAimbot:CreateTargets({
 		["Players"] = true,
@@ -8049,13 +9523,12 @@ velo.run(function(): ()
 	});
 	AimSort = ProjectileAimbot:CreateDropdown({
 		["Name"] = 'Target mode',
-		["List"] = sortNames,
-		["Default"] = 'Distance'
+		["List"] = sortNames
 	});
 	AimPart = ProjectileAimbot:CreateDropdown({
 		["Name"] = 'Part',
 		["List"] = aimPartList,
-		["Tooltip"] = 'Dynamic aims at the head with headshot bows (tactical, headhunter, Archer) and the body otherwise.\nClosest picks the part nearest your crosshair.'
+		["Tooltip"] = 'Dynamic aims at the head with headshot bows (tactical, headhunter, Archer) and the body otherwise.\nClosest picks the part nearest the middle of your screen.'
 	});
 	AimFov = ProjectileAimbot:CreateSlider({
 		["Name"] = 'FOV',
@@ -8092,6 +9565,7 @@ velo.run(function(): ()
 				circle.Transparency = 1 - CircleTransparency["Value"];
 				circle.Visible = ProjectileAimbot["Enabled"];
 			elseif circle then
+				circle.Visible = false;
 				circle:Remove();
 				circle = nil;
 			end;
@@ -8166,6 +9640,15 @@ velo.run(function(): ()
 		["Decimal"] = 100,
 		["Tooltip"] = 'How much of the target\'s rise and fall to lead, 1 is the honest amount'
 	});
+	SilentPrediction = ProjectileAimbot:CreateSlider({
+		["Name"] = 'Prediction',
+		["Min"] = 0.1,
+		["Max"] = 2,
+		["Default"] = 1,
+		["Decimal"] = 10,
+		["Visible"] = false,
+		["Tooltip"] = 'Silent: scales the projectile speed used to lead the target, lower leads more'
+	});
 	HitChance = ProjectileAimbot:CreateTwoSlider({
 		["Name"] = 'Hit Chance',
 		["Min"] = 0,
@@ -8188,30 +9671,42 @@ velo.run(function(): ()
 		["Name"] = 'Auto Charge',
 		["Default"] = true,
 		["Function"] = function(callback: boolean): ()
+			if AimChange then
+				AimChange.Object.Visible = callback;
+			end;
+		end,
+		["Tooltip"] = 'Fully charges your bow, Allowing your projectile to deal more damage'
+	});
+	AimChange = ProjectileAimbot:CreateToggle({
+		["Name"] = 'Aim change',
+		["Default"] = true,
+		["Darker"] = true,
+		["Tooltip"] = 'Changes your trajectory to match charge percentage.'
+	});
+	ChargeShots = ProjectileAimbot:CreateToggle({
+		["Name"] = 'Charge shots',
+		["Function"] = function(callback: boolean): ()
 			if ChargeItems then
 				ChargePercent.Object.Visible = callback;
 				ChargeItems.Object.Visible = callback;
 			end;
 		end,
-		["Tooltip"] = 'Charges chargeable projectiles to Charge % the moment you shoot'
+		["Tooltip"] = 'Instantly charges every shot to Charge % (catsix AutoChargeProj)'
 	});
 	ChargePercent = ProjectileAimbot:CreateSlider({
 		["Name"] = 'Charge',
 		["Min"] = 0,
 		["Max"] = 100,
-		["Default"] = 100,
+		["Default"] = 50,
 		["Darker"] = true,
+		["Visible"] = false,
 		["Suffix"] = '%'
 	});
 	ChargeItems = ProjectileAimbot:CreateTextList({
 		["Name"] = 'Charge Items',
 		["Darker"] = true,
-		["Tooltip"] = 'Item or projectile ids to charge; empty charges everything chargeable'
-	});
-	AimChange = ProjectileAimbot:CreateToggle({
-		["Name"] = 'Aim change',
-		["Default"] = true,
-		["Tooltip"] = 'Aims with the speed your current charge gives instead of a full draw'
+		["Visible"] = false,
+		["Tooltip"] = 'Item or projectile ids to charge; empty charges every chargeable projectile'
 	});
 	OtherProjectiles = ProjectileAimbot:CreateToggle({
 		["Name"] = 'Other Projectiles',
@@ -8225,12 +9720,18 @@ velo.run(function(): ()
 	Potions = ProjectileAimbot:CreateToggle({
 		["Name"] = 'Shoot pots',
 		["Default"] = true,
-		["Tooltip"] = 'Aims heal, poison and sleep splash potions'
+		["Tooltip"] = 'Aims heal, poison and sleep splash potions, separate from Other Projectiles'
 	});
 	Blacklist = ProjectileAimbot:CreateTextList({
 		["Name"] = 'Blacklist',
 		["Default"] = {'telepearl'},
 		["Placeholder"] = 'projectile'
+	});
+	SilentBlacklist = ProjectileAimbot:CreateTextList({
+		["Name"] = 'Silent blacklist',
+		["Default"] = {'gloop', 'telepearl'},
+		["Placeholder"] = 'projectile',
+		["Visible"] = false
 	});
 	MiloCheck = ProjectileAimbot:CreateToggle({
 		["Name"] = 'Milo check',
@@ -8239,24 +9740,23 @@ velo.run(function(): ()
 	});
 	Terra = ProjectileAimbot:CreateToggle({
 		["Name"] = 'Terra',
-		["Default"] = true,
-		["Tooltip"] = 'Aims Terra\'s block kick at the target'
+		["Tooltip"] = 'Aims Terra\'s block kick at the target (catsix TerraAimbot)'
 	});
 	DeathAdder = ProjectileAimbot:CreateToggle({
 		["Name"] = 'Death Adder',
-		["Default"] = true,
 		["Function"] = function(callback: boolean): ()
 			if BedRange then
 				DeathAdderMode.Object.Visible = callback;
 				BedRange.Object.Visible = callback and DeathAdderMode["Value"] == 'Bed';
 			end;
 		end,
-		["Tooltip"] = 'Aims Death Adder\'s spell at a player or the closest enemy bed'
+		["Tooltip"] = 'Aims Death Adder\'s spell at a player or the closest enemy bed (catsix DeathAdderAimbot)'
 	});
 	DeathAdderMode = ProjectileAimbot:CreateDropdown({
 		["Name"] = 'Death Adder target',
 		["List"] = {'Player', 'Bed'},
 		["Darker"] = true,
+		["Visible"] = false,
 		["Function"] = function(value: string): ()
 			if BedRange then
 				BedRange.Object.Visible = DeathAdder["Enabled"] and value == 'Bed';
@@ -8275,54 +9775,22 @@ velo.run(function(): ()
 		end
 	});
 
-	local fireDelays: {[string]: number} = {};
+	local auraDelays: {[string]: number} = {};
+	local swingDelays: {[string]: number} = {};
 	local owls: table = {};
 	local lastOwl: BasePart?;
-	local nextAura: number, nextOwl: number = 0, 0;
+	local session: number = 0;
 	local swingStart: number?, swingNeed: number = nil, 0;
 	local swapped: boolean = false;
-	local swingThread: thread?, chainThread: thread?;
-	local kitToggles: {[string]: () -> boolean} = {
-		["frost_staff"] = function(): boolean
-			return UseSophia["Enabled"];
-		end,
-		["mage_spellbook"] = function(): boolean
-			return UseWhim["Enabled"];
-		end,
-		["life_"] = function(): boolean
-			return UseNazar["Enabled"];
-		end,
-		["ninja_chakram"] = function(): boolean
-			return UseUmeko["Enabled"];
-		end
-	};
+	local chainThread: thread?;
 
 	local holding: (tool: Instance) -> boolean = function(tool: Instance): boolean
 		local hand: ObjectValue? = lplr.Character and lplr.Character:FindFirstChild('HandInvItem');
 		return store.hand.tool == tool or (hand ~= nil and hand.Value == tool);
 	end;
 
-	local auraShots: () -> {table} = function(): {table}
-		local shots: {table} = getProjectiles(AuraList.ListEnabled, true);
-		for _: number, shot: table in getProjectiles(nil, true) do
-			for prefix: string, enabled: () -> boolean in kitToggles do
-				if shot.Item.itemType:sub(1, #prefix) == prefix and enabled() and not table.find(shots, shot) then
-					local duplicate: boolean = false;
-					for _: number, existing: table in shots do
-						duplicate = duplicate or existing.Item.tool == shot.Item.tool;
-					end;
-					if not duplicate then
-						table.insert(shots, shot);
-					end;
-				end;
-			end;
-		end;
-		return shots;
-	end;
-
-	local shootAura: (now: number) -> () = function(now: number): ()
-		local longJump: table? = vape.Modules.LongJump;
-		if workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack <= swordLockout or (AfkCheck["Enabled"] and isAfk()) or (longJump and longJump["Enabled"]) then
+	local auraPass: () -> () = function(): ()
+		if workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack <= swordLockout or (AfkCheck["Enabled"] and isAfk()) then
 			return;
 		end;
 		local ent: table? = entitylib.EntityPosition({
@@ -8336,104 +9804,103 @@ velo.run(function(): ()
 		if not ent then
 			return;
 		end;
-		local origin: Vector3 = entitylib.character.RootPart.Position;
-		for _: number, shot: table in auraShots() do
+		local localPosition: Vector3 = entitylib.character.RootPart.Position;
+		for _: number, shot: table in getProjectiles(AuraList.ListEnabled, {["Sophia"] = UseSophia["Enabled"], ["Whim"] = UseWhim["Enabled"], ["Nazar"] = UseNazar["Enabled"], ["Umeko"] = UseUmeko["Enabled"]}) do
 			local itemType: string = shot.Item.itemType;
-			local meta: table? = bedwars.ProjectileMeta[shot.Projectile];
-			if not meta or (fireDelays[itemType] or 0) >= now then
-				continue;
-			end;
-			local speed: number, gravity: number = meta.launchVelocity, meta.gravitationalAcceleration or config.Gravity;
-			local part: BasePart = aimPartOf(ent, AuraPart["Value"], itemType);
-			local velocity: Vector3 = ent.RootPart.AssemblyLinearVelocity;
-			local rough: Vector3? = ballistics.solve(origin, speed, gravity, ent, part.Position, velocity, 1, 1);
-			if not rough then
-				continue;
-			end;
-			local switched: boolean = switchItem(shot.Item.tool, 0);
-			targetinfo.Targets[ent] = tick() + 1;
-			local offset: table = bedwars.BowConstantsTable;
-			local shootPosition: Vector3 = (CFrame.new(origin, rough) * CFrame.new(-offset.RelX, -offset.RelY, -offset.RelZ)).Position;
-			local aim: Vector3?, flight: number? = ballistics.solve(shootPosition, speed, gravity, ent, part.Position, velocity, 1, 1);
-			local launchVelocity: Vector3 = CFrame.lookAt(shootPosition, aim or rough).LookVector * speed;
-			store.hitchance.ProjectileAura = {["Value"] = ballistics.hitChance(ent, flight), ["Clock"] = tick()};
-			if not flight or ballistics.arcClear(shootPosition, launchVelocity, gravity, flight, {lplr.Character, gameCamera, ent.Character, store.antiFallPart}) then
-				fireDelays[itemType] = now + shot.Source.fireDelaySec;
-				local shotId: string = bedwars.IdUtil.generateId(8);
-				ballistics.watch(shotId, shootPosition, launchVelocity, gravity, ent, meta.lifetimeSec);
-				fire('ProjectileFire', 'CallServerAsync', shot.Item.tool, shot.Ammo, shot.Projectile, shootPosition, origin, launchVelocity, shotId, ballistics.shotData(itemType), workspace:GetServerTimeNow() - config.ShotLatency):andThen(function(result: any): ()
-					if type(result) == 'table' and result.accepted then
-						ballistics.launchSound(shot.Item, shot.Source);
-					else
-						fireDelays[itemType] = tick();
+			local part: BasePart = getTargetPart(ent, AuraPart["Value"] == 'Dynamic' and (headshot(itemType) and 'Head' or 'RootPart') or AuraPart["Value"]);
+			if (auraDelays[itemType] or 0) < tick() then
+				local meta: table = bedwars.ProjectileMeta[shot.Projectile];
+				local speed: number, gravity: number = meta.launchVelocity, meta.gravitationalAcceleration or config.Gravity;
+				local targetVelocity: Vector3 = ent.RootPart.AssemblyLinearVelocity;
+				auraRay.FilterDescendantsInstances = {lplr.Character, gameCamera};
+				local rough: Vector3? = ballistics.solve(localPosition, speed, gravity, ent, part.Position, targetVelocity, nil, nil, workspace.Gravity, auraRay);
+				if rough then
+					local switched: boolean = switchItem(shot.Item.tool);
+					targetinfo.Targets[ent] = tick() + 1;
+					task.spawn(function(): ()
+						local offset: table = bedwars.BowConstantsTable;
+						local shootPosition: Vector3 = (CFrame.new(localPosition, rough) * CFrame.new(-offset.RelX, -offset.RelY, -offset.RelZ)).Position;
+						local aim: Vector3?, flight: number? = ballistics.solve(shootPosition, speed, gravity, ent, part.Position, targetVelocity, nil, nil, workspace.Gravity, auraRay);
+						store.hitchance.ProjectileAura = {["Value"] = ballistics.hitChance(ent, flight), ["Clock"] = tick()};
+						local launchVelocity: Vector3 = CFrame.lookAt(shootPosition, aim or rough).LookVector * speed;
+						if flight and not ballistics.arcClear(shootPosition, launchVelocity, gravity, flight, {lplr.Character, gameCamera, store.antiFallPart}, ent.Character) then
+							auraDelays[itemType] = tick();
+							return;
+						end;
+						local shotId: string = bedwars.IdUtil.generateId(8);
+						ballistics.watch(shotId, shootPosition, launchVelocity, gravity, ent, meta.lifetimeSec);
+						local remote: any = bedwars.Client:Get('ProjectileFire');
+						local instance: any = remote and remote.instance;
+						local response: any = instance and instance:InvokeServer(shot.Item.tool, shot.Ammo, shot.Projectile, shootPosition, localPosition, launchVelocity, shotId, ballistics.shotData(itemType), workspace:GetServerTimeNow() - config.ShotLatency);
+						trajectory.trackShot(ent.RootPart);
+						ballistics.expectKnockback(ent.RootPart, flight, shootPosition, shot.Source.knockback);
+						if type(response) ~= 'table' or not response.accepted then
+							auraDelays[itemType] = tick();
+						else
+							ballistics.launchSound(shot.Item, shot.Source);
+						end;
+					end);
+					auraDelays[itemType] = tick() + shot.Source.fireDelaySec;
+					if switched then
+						task.wait(FireRate:GetRandomValue());
 					end;
-				end);
-			end;
-			if switched then
-				nextAura = now + FireRate:GetRandomValue();
-				return;
+				end;
 			end;
 		end;
 	end;
 
-	local shootSwing: (now: number) -> () = function(now: number): ()
+	local swingPass: () -> () = function(): ()
 		local swinging: boolean = entitylib.isAlive and store.hand.toolType == 'sword' and tick() - bedwars.SwordController.lastSwing < swingWindow;
 		if not swinging then
 			swingStart = nil;
-			return;
-		end;
-		if not swingStart then
+		elseif not swingStart then
 			swingStart, swingNeed = os.clock(), ChargeDelay:GetRandomValue();
-			return;
 		end;
-		if swingThread or os.clock() - swingStart < swingNeed then
+		if not swingStart or os.clock() - swingStart < swingNeed then
 			return;
 		end;
 		local legit: boolean = SwitchMode["Value"] == 'Legit';
-		for _: number, shot: table in getProjectiles(AuraList.ListEnabled, false) do
+		local oldTool: Instance?, oldSlot: number? = store.hand.tool, store.inventory.hotbarSlot;
+		for _: number, shot: table in getProjectiles(AuraList.ListEnabled) do
 			local itemType: string = shot.Item.itemType;
 			local cooldownId: string = shot.Source.cooldownId or itemType..'-proj-source';
-			local slot: number? = hotbarSlotOf(shot.Item.tool);
-			if (fireDelays[itemType] or 0) >= now or bedwars.AbilityController.cooldownController:isOnCooldown(cooldownId) or (legit and not slot) then
-				continue;
+			local ent: table? = nil;
+			if (swingDelays[itemType] or 0) < os.clock() and not bedwars.AbilityController.cooldownController:isOnCooldown(cooldownId) then
+				ent = getFacingEntity({
+					["Part"] = 'RootPart',
+					["Range"] = swingRange,
+					["Players"] = AuraTargets.Players["Enabled"],
+					["NPCs"] = AuraTargets.NPCs["Enabled"],
+					["Wallcheck"] = AuraTargets.Walls["Enabled"],
+					["Limit"] = 10
+				}, 120);
 			end;
-			local ent: table? = getFacingEntity({
-				["Part"] = 'RootPart',
-				["Range"] = swingRange,
-				["Players"] = AuraTargets.Players["Enabled"],
-				["NPCs"] = AuraTargets.NPCs["Enabled"],
-				["Wallcheck"] = AuraTargets.Walls["Enabled"],
-				["Limit"] = 10
-			}, 120);
-			if not ent then
-				return;
-			end;
-			swingThread = task.spawn(function(): ()
-				local oldTool: Instance?, oldSlot: number? = store.hand.tool, store.inventory.hotbarSlot;
+			local slot: number? = ent and hotbarSlotOf(shot.Item.tool);
+			if ent and (slot or not legit) then
 				if not holding(shot.Item.tool) then
 					swapped = true;
 					switchItem(shot.Item.tool, 0);
 					if legit then
 						hotbarSwitch(slot);
 					end;
-					task.wait(math.max(0.04, store.ping.total));
+					task.wait(math.max(0.04, store.ping.total or 0));
 				end;
 				local meta: table = bedwars.ProjectileMeta[shot.Projectile];
 				local speed: number, gravity: number = meta.launchVelocity, meta.gravitationalAcceleration or config.Gravity;
 				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local part: BasePart = aimPartOf(ent, AuraPart["Value"], itemType);
-				local rough: Vector3? = ballistics.solve(origin, speed, gravity, ent, part.Position, ent.RootPart.AssemblyLinearVelocity, 1, 1);
+				local rough: Vector3? = ballistics.solve(origin, speed, gravity, ent, nil, nil, nil, nil, workspace.Gravity, false);
 				if rough and holding(shot.Item.tool) then
 					local offset: table = bedwars.BowConstantsTable;
 					local shootPosition: Vector3 = (CFrame.new(origin, rough) * CFrame.new(-offset.RelX, -offset.RelY, -offset.RelZ)).Position;
-					local aim: Vector3? = ballistics.solve(shootPosition, speed, gravity, ent, part.Position, ent.RootPart.AssemblyLinearVelocity, 1, 1);
+					local aim: Vector3 = ballistics.solve(shootPosition, speed, gravity, ent, nil, nil, nil, nil, workspace.Gravity, false) or rough;
 					bedwars.ProjectileController:launchProjectileWithValues({
-						["initialVelocity"] = CFrame.lookAt(shootPosition, aim or rough).LookVector * speed,
+						["initialVelocity"] = CFrame.lookAt(shootPosition, aim).LookVector * speed,
 						["positionFrom"] = shootPosition,
 						["drawDurationSeconds"] = ballistics.shotData(itemType).drawDurationSec
-					}, shot.Item.tool, shot.Source, shot.Ammo, nil, shot.Projectile):await();
-					fireDelays[itemType] = tick() + shot.Source.fireDelaySec + FireRate:GetRandomValue();
+					}, shot.Item.tool, ballistics.skinnedSource(shot.Item, shot.Source), shot.Ammo, nil, shot.Projectile):await();
+					swingDelays[itemType] = os.clock() + shot.Source.fireDelaySec + FireRate:GetRandomValue();
 					bedwars.AbilityController.cooldownController:setOnCooldown(cooldownId, shot.Source.fireDelaySec, {});
+					trajectory.trackShot(ent.RootPart);
 					swingStart = nil;
 					task.wait(SwitchDelay:GetRandomValue());
 				end;
@@ -8443,36 +9910,44 @@ velo.run(function(): ()
 					else
 						switchItem(oldTool, 0);
 					end;
-					task.wait(math.max(0.04, store.ping.total));
+					local deadline: number = os.clock() + swapBack;
+					repeat
+						task.wait();
+					until not holding(shot.Item.tool) or os.clock() >= deadline;
 				end;
 				swapped = false;
-				swingThread = nil;
-			end);
-			return;
+			end;
 		end;
 	end;
 
-	local shootOwl: (now: number) -> () = function(now: number): ()
+	local stopOwl: () -> () = function(): ()
+		if lastOwl then
+			fire('OwlAiming', 'SendToServer', {["owl"] = lastOwl, ["starting"] = false});
+			lastOwl = nil;
+		end;
+	end;
+
+	local shootOwl: () -> () = function(): ()
 		local owl: Instance? = owls[1];
 		local owlPart: BasePart? = owl and owl:FindFirstChild('Part');
-		if not owlPart or not entitylib.isAlive then
+		if not entitylib.isAlive or not owlPart then
 			return;
 		end;
 		local origin: Vector3 = owlPart.Position;
 		local ent: table? = entitylib.EntityPosition({
 			["Origin"] = origin,
-			["Part"] = 'RootPart',
 			["Range"] = AuraRange["Value"],
+			["Part"] = 'RootPart',
 			["Players"] = AuraTargets.Players["Enabled"],
 			["NPCs"] = AuraTargets.NPCs["Enabled"],
-			["Wallcheck"] = AuraTargets.Walls["Enabled"],
+			["Wallcheck"] = OwlWalls["Enabled"],
 			["Sort"] = sortMethods[AuraSort["Value"]]
 		});
-		local meta: table = bedwars.ProjectileMeta.owl_projectile;
-		local aim: Vector3?, flight: number? = nil, nil;
-		if ent then
-			aim, flight = ballistics.solve(origin, meta.launchVelocity, meta.gravitationalAcceleration, ent, ent.RootPart.Position, ent.RootPart.AssemblyLinearVelocity, 1, 1);
+		if not ent then
+			return;
 		end;
+		local meta: table = bedwars.ProjectileMeta.owl_projectile;
+		local aim: Vector3?, flight: number? = ballistics.solve(origin, meta.launchVelocity, meta.gravitationalAcceleration, ent, nil, nil, nil, nil, workspace.Gravity);
 		if not aim or not flight or flight > (meta.lifetimeSec or 3) then
 			return;
 		end;
@@ -8485,17 +9960,19 @@ velo.run(function(): ()
 			["fromPosition"] = origin,
 			["initialVelocity"] = direction
 		});
-		nextOwl = now + owlInterval + store.ping.total;
+		task.wait(store.ping.total or 0);
 	end;
 
 	ProjectileAura = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'ProjectileAura',
 		["Function"] = function(callback: boolean): ()
+			session += 1;
+			swapped = false;
 			if not callback then
-				swapped = false;
-				swingStart = nil;
 				return;
 			end;
+			local current: number = session;
+			swingStart = nil;
 			owls = collection('Owl', ProjectileAura, function(list: table, object: Instance, tag: string): ()
 				task.delay(1, function(): ()
 					if object.Parent and object:GetAttribute('Owner') == lplr.UserId then
@@ -8535,35 +10012,35 @@ velo.run(function(): ()
 				if projectileController.createLocalProjectile == localHook then
 					projectileController.createLocalProjectile = oldLocal;
 				end;
-				for _: number, thread: thread? in {swingThread, chainThread} do
-					if thread then
-						task.cancel(thread);
-					end;
+				if chainThread then
+					task.cancel(chainThread);
+					chainThread = nil;
 				end;
-				swingThread, chainThread = nil, nil;
-				if lastOwl then
-					fire('OwlAiming', 'SendToServer', {["owl"] = lastOwl, ["starting"] = false});
-					lastOwl = nil;
-				end;
+				stopOwl();
 			end);
-			ProjectileAura:Clean(runService.Heartbeat:Connect(function(): ()
-				local now: number = tick();
-				if not entitylib.isAlive then
-					return;
-				end;
-				if AuraMode["Value"] == 'Swing' then
-					shootSwing(now);
-				elseif now >= nextAura then
-					nextAura = now + auraInterval;
-					shootAura(now);
-				end;
-				if Owl["Enabled"] and hasKit('owl') and now >= nextOwl then
-					nextOwl = now + owlInterval;
-					shootOwl(now);
-				end;
+			ProjectileAura:Clean(task.spawn(function(): ()
+				repeat
+					if store.equippedKit ~= 'owl' then
+						task.wait(owlIdle);
+					else
+						if Owl["Enabled"] then
+							shootOwl();
+						end;
+						task.wait(owlInterval);
+					end;
+				until not ProjectileAura["Enabled"] or session ~= current;
 			end));
+			repeat
+				if AuraMode["Value"] == 'Swing' then
+					swingPass();
+					task.wait(swingInterval);
+				else
+					auraPass();
+					task.wait(auraInterval);
+				end;
+			until not ProjectileAura["Enabled"] or session ~= current;
 		end,
-		["Tooltip"] = 'Shoots enemies around you.\nAura fires remotely, Swing swaps to a projectile while you sword fight.'
+		["Tooltip"] = 'Shoots people around you.\nAura: catsix ProjectileAura, fires remotely. Swing: catsix AutoShoot, swaps to a projectile while you sword fight.'
 	});
 	AuraMode = ProjectileAura:CreateDropdown({
 		["Name"] = 'Mode',
@@ -8573,7 +10050,7 @@ velo.run(function(): ()
 				for _: number, option: table in {SwitchMode, ChargeDelay, SwitchDelay} do
 					option.Object.Visible = value == 'Swing';
 				end;
-				for _: number, option: table in {UseSophia, UseWhim, UseNazar, UseUmeko, AfkCheck} do
+				for _: number, option: table in {UseSophia, UseWhim, UseNazar, UseUmeko, AfkCheck, AuraPart} do
 					option.Object.Visible = value == 'Aura';
 				end;
 			end;
@@ -8586,13 +10063,12 @@ velo.run(function(): ()
 	});
 	AuraSort = ProjectileAura:CreateDropdown({
 		["Name"] = 'Target mode',
-		["List"] = sortNames,
-		["Default"] = 'Distance'
+		["List"] = sortNames
 	});
 	AuraPart = ProjectileAura:CreateDropdown({
 		["Name"] = 'Part',
 		["List"] = auraPartList,
-		["Tooltip"] = 'Dynamic aims at the head with headshot bows (tactical, headhunter, Archer) and the body otherwise'
+		["Tooltip"] = 'Dynamic aims at the head with headshot-capable bows, including tactical bows and Archer, and at the body with everything else'
 	});
 	AuraList = ProjectileAura:CreateTextList({
 		["Name"] = 'Projectiles',
@@ -8604,7 +10080,7 @@ velo.run(function(): ()
 	});
 	UseWhim = ProjectileAura:CreateToggle({
 		["Name"] = 'Use whim',
-		["Tooltip"] = 'Also casts whim\'s magic book with whatever element you have cycled'
+		["Tooltip"] = 'Also casts whim\'s magic book, follows whatever element you have cycled'
 	});
 	UseNazar = ProjectileAura:CreateToggle({
 		["Name"] = 'Use nazar',
@@ -8649,7 +10125,7 @@ velo.run(function(): ()
 		["DefaultMax"] = 0.75,
 		["Decimal"] = 100,
 		["Visible"] = false,
-		["Tooltip"] = 'How long your sword has to swing before swapping'
+		["Tooltip"] = 'How long your sword has to swing for before auto swapping'
 	});
 	SwitchDelay = ProjectileAura:CreateTwoSlider({
 		["Name"] = 'Switch Delay',
@@ -8663,8 +10139,21 @@ velo.run(function(): ()
 	});
 	Owl = ProjectileAura:CreateToggle({
 		["Name"] = 'Owl',
-		["Default"] = true,
-		["Tooltip"] = 'Whisper: your owl shoots enemies within Range of it'
+		["Function"] = function(callback: boolean): ()
+			if OwlWalls then
+				OwlWalls.Object.Visible = callback;
+			end;
+			if not callback then
+				stopOwl();
+			end;
+		end,
+		["Tooltip"] = 'Whisper: your owl shoots enemies within Range of it (catsix OwlAura)'
+	});
+	OwlWalls = ProjectileAura:CreateToggle({
+		["Name"] = 'Owl wallcheck',
+		["Darker"] = true,
+		["Visible"] = false,
+		["Tooltip"] = 'Only lets the owl shoot targets it can see'
 	});
 	CrossbowChain = ProjectileAura:CreateToggle({
 		["Name"] = 'Crossbow chain',
@@ -8808,6 +10297,9 @@ velo.run(function(): ()
 		if not entry then
 			return;
 		end;
+		if vape.ThreadFix then
+			setthreadidentity(8);
+		end;
 		tracked[bed] = nil;
 		for _: number, object: any in entry.Objects do
 			if typeof(object) == 'Instance' then
@@ -8950,7 +10442,8 @@ velo.run(function(): ()
 				entry.Inner.Size = (size - Vector2.one * 2) // 1;
 			end;
 			if entry.Health then
-				local health: number = math.clamp(mining.health(bed, entry.Cell) / (bed:GetAttribute('MaxHealth') or 1), 0, 1);
+				local data: Instance? = bedwars.BlockController:getStore():getBlockData(entry.Cell);
+				local health: number = math.clamp((data and (data:GetAttribute('1') or data:GetAttribute('Health')) or bed:GetAttribute('Health') or 1) / (bed:GetAttribute('MaxHealth') or 1), 0, 1);
 				entry.Health.Color = Color3.fromHSV(health / 2.5, 0.89, 0.75);
 				entry.Health.From = Vector2.new(low.X - 6, high.Y) // 1;
 				entry.Health.To = Vector2.new(low.X - 6, high.Y - size.Y * health) // 1;
@@ -9087,27 +10580,39 @@ velo.run(function(): ()
 	local Scale: table = {["Value"] = 1};
 	local Transparency: table = {["Value"] = 0.5};
 	local TextColor: table = {["Hue"] = 0.44, ["Sat"] = 1, ["Value"] = 1};
+	local ItemDistance: table = {["Enabled"] = false};
 	local YourTraps: table = {["Enabled"] = true};
+	local TrapColor: table = {["Hue"] = 0, ["Sat"] = 0.75, ["Value"] = 1};
+	local PotBackground: table = {["Enabled"] = true};
+	local PotColor: table = {["Hue"] = 0, ["Sat"] = 0, ["Value"] = 0, ["Opacity"] = 0.5};
 	local textSize: number = 14;
-	local textRefresh: number = 0.2;
+	local panelTextSize: number = 16;
+	local panelRefresh: number = 0.25;
+	local panelRows: number = 8;
 	local voidHeight: number = -200;
 	local hoardRadius: number = 6;
-	local tracked: {[Instance]: table} = {};
-	local timers: {[Instance]: Instance} = {};
-	local drops: {Instance} = {};
-	local nextText: number = 0;
+	local timers: {[Instance]: Instance?} = {};
+	local potTemplate: (MeshPart | boolean)? = nil;
+	local panel: table? = nil;
+	local expanded: boolean = false;
 	local folder: Folder = Instance.new('Folder');
+	if vape.ThreadFix then
+		setthreadidentity(8);
+	end;
 	folder.Parent = vape.gui;
 
 	local generatorKinds: {[string]: table} = {
-		["iron"] = {["Name"] = 'Iron', ["Color"] = 'rgb(255,255,255)', ["Toggle"] = {["Enabled"] = true}},
-		["diamond"] = {["Name"] = 'Diamond', ["Color"] = 'rgb(85,170,255)', ["Toggle"] = {["Enabled"] = true}},
-		["emerald"] = {["Name"] = 'Emerald', ["Color"] = 'rgb(85,255,85)', ["Toggle"] = {["Enabled"] = false}}
+		["iron"] = {["Name"] = 'Iron', ["Color"] = 'rgb(255,255,255)', ["Toggle"] = {["Enabled"] = true}, ["Tooltip"] = "Shows your team's iron generator"},
+		["diamond"] = {["Name"] = 'Diamond', ["Color"] = 'rgb(85,170,255)', ["Toggle"] = {["Enabled"] = true}, ["Tooltip"] = 'Shows diamond generators, in blue'},
+		["emerald"] = {["Name"] = 'Emerald', ["Color"] = 'rgb(85,255,85)', ["Toggle"] = {["Enabled"] = false}, ["Tooltip"] = 'Shows emerald generators, in green'}
 	};
+	local generatorOrder: {string} = {'iron', 'diamond', 'emerald'};
 
-	local itemName: (object: Instance, tag: string) -> string? = function(object: Instance, tag: string): string?
-		local meta: table? = bedwars.ItemMeta[object.Name];
-		return meta and meta.displayName or (tag == 'ItemDrop' and object.Name or 'Crop');
+	local withDistance: (entry: table, point: Vector3, origin: Vector3?) -> string = function(entry: table, point: Vector3, origin: Vector3?): string
+		if ShowDistance["Enabled"] and origin then
+			return entry.Name..' | '..math.floor((origin - point).Magnitude)..'m';
+		end;
+		return entry.Name;
 	end;
 
 	local categories: {table} = {
@@ -9115,13 +10620,25 @@ velo.run(function(): ()
 			["Name"] = 'Beehives',
 			["Tags"] = {["beehive"] = 'Beehive'},
 			["Height"] = 1,
-			["Label"] = function(object: Instance, tag: string): string?
-				local owner: Player? = playersService:GetPlayerByUserId(object:GetAttribute('PlacedByUserId') or 0);
-				return owner and owner.Name or 'Unknown';
+			["Arial"] = true,
+			["Async"] = true,
+			["Label"] = function(object: Instance): string
+				local placer: number? = object:GetAttribute('PlacedByUserId');
+				local owner: Player? = placer and playersService:GetPlayerByUserId(placer) or nil;
+				if owner then
+					return owner.Name;
+				end;
+				if placer then
+					local success: boolean, result: any = pcall(playersService.GetNameFromUserIdAsync, playersService, placer);
+					if success and result then
+						return result;
+					end;
+				end;
+				return 'Unknown';
 			end,
-			["Detail"] = function(object: Instance, label: string): string?
-				local level: number = object:GetAttribute('Level') or 0;
-				return label.."'s beehive | "..level..' Bee'..(level >= 2 and 's' or '');
+			["Text"] = function(entry: table): string?
+				local level: number = entry.Object:GetAttribute('Level') or 0;
+				return entry.Name.."'s beehive | "..level..' Bee'..(level >= 2 and 's' or '');
 			end
 		},
 		{
@@ -9134,7 +10651,8 @@ velo.run(function(): ()
 			},
 			["Height"] = 2,
 			["ListName"] = 'Collectable List',
-			["Defaults"] = {'Coin', 'Crystal', 'Crystalheart', 'Energy', 'Ghost', 'Ingredient', 'Metal', 'Plant', 'Seed', 'Shadow Coin', 'Soul', 'Soulvine', 'Star', 'Tearbloom'}
+			["Defaults"] = {'Coin', 'Crystal', 'Crystalheart', 'Energy', 'Ghost', 'Ingredient', 'Metal', 'Plant', 'Seed', 'Shadow Coin', 'Soul', 'Soulvine', 'Star', 'Tearbloom'},
+			["Text"] = withDistance
 		},
 		{
 			["Name"] = 'Crates',
@@ -9146,70 +10664,59 @@ velo.run(function(): ()
 				["personal-chest"] = 'Personal Chest', ["smelter-block"] = 'Smelter', ["squad-launcher"] = 'Squad Launcher', ["team-crate"] = 'Team Crate'
 			},
 			["Height"] = 2,
+			["Deep"] = true,
 			["ListName"] = 'Crate List',
-			["Defaults"] = {'Cauldron', 'Chest', 'Crate', 'Crate Altar', 'Juggernaut Crate', 'Launch Pad', 'Lucky Block', 'Personal Chest', 'Reward Crate', 'Smelter', 'Squad Launcher', 'Team Crate'}
+			["Defaults"] = {'Cauldron', 'Chest', 'Crate', 'Crate Altar', 'Juggernaut Crate', 'Launch Pad', 'Lucky Block', 'Personal Chest', 'Reward Crate', 'Smelter', 'Squad Launcher', 'Team Crate'},
+			["Text"] = withDistance
 		},
 		{
 			["Name"] = 'Crops',
 			["Tags"] = {["HarvestableCrop"] = 'Crop'},
 			["Height"] = 1,
-			["Label"] = itemName
+			["Arial"] = true,
+			["Pivot"] = true,
+			["Label"] = function(object: Instance): string
+				local meta: table? = bedwars.ItemMeta[object.Name];
+				return meta and meta.displayName or 'Crop';
+			end,
+			["Text"] = function(entry: table): string?
+				return entry.Name;
+			end
 		},
 		{
 			["Name"] = 'Generators',
-			["Tags"] = {["Generator"] = 'Generator'},
-			["Height"] = 3,
-			["Detail"] = function(object: Instance, label: string): string?
-				if not object:IsA('BasePart') then
-					return nil;
-				end;
-				local id: string = object:GetAttribute('Id') or '';
-				local team: string? = id:match('^(.-)_generator$');
-				local resource: string? = team and (team == tostring(lplr:GetAttribute('Team')) and 'iron' or nil) or id:match('^(diamond)_') or id:match('^(emerald)_');
-				local kind: table? = resource and generatorKinds[resource];
-				if not kind or not kind.Toggle["Enabled"] then
-					return nil;
-				end;
-				local timer: Instance? = timers[object];
-				if not timer or not timer.Parent then
-					local app: Instance? = object:FindFirstChild('RoactTree');
-					app = app and app:FindFirstChild('TeamOreGeneratorApp');
-					timer = app and (app:FindFirstChild('Countdown', true) or app:FindFirstChild('Timer', true));
-					timers[object] = timer;
-				end;
-				local seconds: number? = timer and timer:IsA('TextLabel') and tonumber(timer.Text:match('%[([%d%.]+)%]') or timer.Text:match('([%d%.]+)'));
-				local stored: number = 0;
-				for _: number, drop: Instance in drops do
-					if drop.Name == resource and drop:IsA('BasePart') then
-						local offset: Vector3 = drop.Position - object.Position;
-						if Vector2.new(offset.X, offset.Z).Magnitude <= hoardRadius and offset.Y >= -12 and offset.Y <= 4 then
-							stored += drop:GetAttribute('Amount') or 1;
-						end;
-					end;
-				end;
-				return string.format('<font color="%s">%s T%d%s | %d stored</font>', kind.Color, kind.Name, object:GetAttribute('GeneratorLevel') or 0, seconds and ' | '..math.ceil(seconds)..'s' or '', stored);
-			end
+			["Tags"] = {},
+			["Panel"] = true
 		},
 		{
 			["Name"] = 'Items',
 			["Tags"] = {["ItemDrop"] = 'Item'},
 			["Height"] = 1,
-			["Label"] = itemName,
+			["Arial"] = true,
+			["White"] = true,
+			["Loose"] = true,
 			["ListName"] = 'Item List',
 			["Defaults"] = {},
-			["Detail"] = function(object: Instance, label: string): string?
-				if object:IsA('PVInstance') and object:GetPivot().Position.Y <= voidHeight then
+			["Label"] = function(object: Instance): string
+				local meta: table? = bedwars.ItemMeta[object.Name];
+				return meta and meta.displayName or object.Name;
+			end,
+			["Text"] = function(entry: table, point: Vector3, origin: Vector3?): string?
+				if point.Y <= voidHeight then
 					return nil;
 				end;
-				local amount: number = object:GetAttribute('Amount') or 1;
-				return amount >= 2 and label..' x'..amount or label;
+				local amount: number = entry.Object:GetAttribute('Amount') or 1;
+				local text: string = entry.Name..(amount >= 2 and ' x'..amount or '');
+				if ItemDistance["Enabled"] then
+					text = '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..(origin and math.floor((origin - point).Magnitude) or 0)..'</font><font color="rgb(85, 255, 85)">]</font> '..text;
+				end;
+				return text;
 			end
 		},
 		{
 			["Name"] = 'Pots',
 			["Tags"] = {["block"] = 'Desert Pot'},
-			["Blocks"] = {["desert_pot"] = 'Desert Pot'},
-			["Height"] = 3
+			["Blocks"] = {["desert_pot"] = 'Desert Pot'}
 		},
 		{
 			["Name"] = 'Traps',
@@ -9219,65 +10726,138 @@ velo.run(function(): ()
 				["lucky_block_trap"] = 'Lucky Trap', ["snap_trap"] = 'Snap Trap', ["spike_trap"] = 'Spikes', ["tesla_trap"] = 'Tesla'
 			},
 			["Height"] = 2,
+			["Solid"] = true,
 			["ListName"] = 'Trap List',
 			["Defaults"] = {'Gloop', 'Grave', 'Landmine', 'Lucky Trap', 'Snap Trap', 'Spikes', 'Tesla'},
-			["Detail"] = function(object: Instance, label: string): string?
-				if YourTraps["Enabled"] then
-					return label;
+			["Text"] = function(entry: table, point: Vector3, origin: Vector3?): string?
+				if not YourTraps["Enabled"] then
+					local placer: number? = entry.Object:GetAttribute('PlacedByUserId');
+					if placer and placer ~= 0 then
+						local owner: Player? = playersService:GetPlayerByUserId(placer);
+						if placer == lplr.UserId or (owner ~= nil and owner:GetAttribute('Team') == lplr:GetAttribute('Team')) then
+							return nil;
+						end;
+					end;
 				end;
-				local placer: number = object:GetAttribute('PlacedByUserId') or 0;
-				local owner: Player? = placer ~= 0 and playersService:GetPlayerByUserId(placer) or nil;
-				if placer == lplr.UserId or (owner and owner:GetAttribute('Team') == lplr:GetAttribute('Team')) then
-					return nil;
-				end;
-				return label;
+				return withDistance(entry, point, origin);
 			end
 		}
 	};
+	for _: number, category: table in categories do
+		category.Tracked = {};
+	end;
 
-	local untrack: (object: Instance) -> () = function(object: Instance): ()
-		local entry: table? = tracked[object];
-		timers[object] = nil;
+	local colorOf: (category: table) -> Color3 = function(category: table): Color3
+		local option: table? = category.Color;
+		return option and Color3.fromHSV(option["Hue"], option["Sat"], option["Value"]) or Color3.new(1, 1, 1);
+	end;
+
+	local paintPot: (entry: table) -> () = function(entry: table): ()
+		entry.Viewport.BackgroundColor3 = Color3.fromHSV(PotColor["Hue"], PotColor["Sat"], PotColor["Value"]);
+		entry.Viewport.BackgroundTransparency = 1 - (PotBackground["Enabled"] and PotColor["Opacity"] or 0);
+		entry.Blur.Visible = PotBackground["Enabled"];
+	end;
+
+	local untrack: (category: table, object: Instance) -> () = function(category: table, object: Instance): ()
+		local entry: table? = category.Tracked[object];
 		if entry then
+			category.Tracked[object] = nil;
 			entry.Label:Destroy();
-			tracked[object] = nil;
 		end;
 	end;
 
-	local track: (object: Instance, tag: string, category: table) -> () = function(object: Instance, tag: string, category: table): ()
-		if tracked[object] then
+	local track: (category: table, object: Instance, tag: string) -> () = function(category: table, object: Instance, tag: string): ()
+		if category.Tracked[object] then
 			return;
 		end;
 		local name: string?;
 		if category.Blocks then
-			name = category.Blocks[object.Name];
+			name = (not category.Solid or object:IsA('BasePart')) and category.Blocks[object.Name] or nil;
 		elseif category.Label then
-			name = category.Label(object, tag);
+			name = category.Label(object);
+			if not ObjectESP["Enabled"] or category.Tracked[object] then
+				return;
+			end;
 		else
 			name = category.Tags[tag];
 		end;
-		local anchor: Instance? = object:IsA('PVInstance') and object or object:FindFirstChildWhichIsA('BasePart');
-		if not name or not anchor then
+		if not name then
 			return;
 		end;
-		local filter: {string} = category.List and category.List.ListEnabled or {};
-		local allowed: boolean = #filter == 0;
-		for _: number, wanted: string in filter do
-			allowed = allowed or wanted:lower() == name:lower() or wanted:lower() == object.Name:lower();
+		if category.List then
+			local filter: {string} = category.List.ListEnabled;
+			local allowed: boolean = false;
+			if category.Loose then
+				allowed = #filter == 0;
+				for _: number, wanted: string in filter do
+					allowed = allowed or wanted:lower() == object.Name:lower() or wanted:lower() == name:lower();
+				end;
+			else
+				allowed = table.find(filter, name) ~= nil;
+			end;
+			if not allowed then
+				return;
+			end;
 		end;
-		if not allowed then
+		if vape.ThreadFix then
+			setthreadidentity(8);
+		end;
+		if not category.Text then
+			local billboard: BillboardGui = Instance.new('BillboardGui');
+			billboard.Parent = folder;
+			billboard.Name = object.Name;
+			billboard.StudsOffsetWorldSpace = Vector3.new(0, 3, 0);
+			billboard.Size = UDim2.fromOffset(36, 36);
+			billboard.AlwaysOnTop = true;
+			billboard.ClipsDescendants = false;
+			billboard.Adornee = object;
+			local entry: table = {["Label"] = billboard, ["Blur"] = addBlur(billboard)};
+			entry.Viewport = Instance.new('ViewportFrame');
+			entry.Viewport.Size = UDim2.fromOffset(36, 36);
+			entry.Viewport.Position = UDim2.fromScale(0.5, 0.5);
+			entry.Viewport.AnchorPoint = Vector2.new(0.5, 0.5);
+			entry.Viewport.BorderSizePixel = 0;
+			entry.Viewport.Ambient = Color3.new(1, 1, 1);
+			entry.Viewport.LightColor = Color3.new(1, 1, 1);
+			entry.Viewport.Parent = billboard;
+			paintPot(entry);
+			local corner: UICorner = Instance.new('UICorner');
+			corner.CornerRadius = UDim.new(0, 4);
+			corner.Parent = entry.Viewport;
+			if potTemplate == nil then
+				local assets: Instance? = replicatedStorage:FindFirstChild('Assets');
+				local blocks: Instance? = assets and assets:FindFirstChild('Blocks');
+				local model: Instance? = blocks and blocks:FindFirstChild('desert_pot');
+				potTemplate = model and model:FindFirstChildWhichIsA('MeshPart', true) or false;
+			end;
+			if potTemplate then
+				local mesh: MeshPart = potTemplate:Clone();
+				mesh.CFrame = CFrame.Angles(0, math.rad(25), 0);
+				mesh.Parent = entry.Viewport;
+				local camera: Camera = Instance.new('Camera');
+				camera.CFrame = CFrame.lookAt(Vector3.new(0, 0.75, 3.9), Vector3.new(0, 0.05, 0));
+				camera.Parent = entry.Viewport;
+				entry.Viewport.CurrentCamera = camera;
+			end;
+			category.Tracked[object] = entry;
 			return;
 		end;
 		local label: TextLabel = Instance.new('TextLabel');
+		label.Name = name;
+		label.Text = name;
 		label.AnchorPoint = Vector2.new(0.5, 1);
 		label.AutomaticSize = Enum.AutomaticSize.XY;
 		label.Size = UDim2.new();
 		label.BackgroundColor3 = Color3.new();
 		label.BackgroundTransparency = Transparency["Value"];
 		label.BorderSizePixel = 0;
-		label.FontFace = uipallet.Font;
+		if category.Arial then
+			label.Font = Enum.Font.Arial;
+		else
+			label.FontFace = uipallet.Font;
+		end;
 		label.TextSize = textSize * Scale["Value"];
-		label.TextColor3 = Color3.fromHSV(TextColor["Hue"], TextColor["Sat"], TextColor["Value"]);
+		label.TextColor3 = colorOf(category);
 		label.RichText = true;
 		label.Visible = false;
 		local padding: UIPadding = Instance.new('UIPadding');
@@ -9287,49 +10867,225 @@ velo.run(function(): ()
 		padding.PaddingBottom = UDim.new(0, 4);
 		padding.Parent = label;
 		label.Parent = folder;
-		tracked[object] = {["Label"] = label, ["Name"] = name, ["Anchor"] = anchor, ["Category"] = category};
-		nextText = 0;
+		category.Tracked[object] = {["Label"] = label, ["Name"] = name, ["Object"] = object};
+	end;
+
+	local pointOf: (category: table, entry: table) -> Vector3? = function(category: table, entry: table): Vector3?
+		local object: Instance = entry.Object;
+		if category.Pivot and object:IsA('Model') then
+			return object:GetPivot().Position;
+		end;
+		local part: BasePart? = entry.Part;
+		if not part then
+			part = object:IsA('Model') and object.PrimaryPart or (object:IsA('BasePart') and object or nil);
+			if category.Deep then
+				part = part or object:FindFirstChildWhichIsA('BasePart');
+				entry.Part = part;
+			end;
+		end;
+		return part and part.Position or nil;
 	end;
 
 	local render: () -> () = function(): ()
-		local now: number = os.clock();
-		local rewrite: boolean = now >= nextText;
-		if rewrite then
-			nextText = now + textRefresh;
-			drops = collectionService:GetTagged('ItemDrop');
-		end;
 		local origin: Vector3? = entitylib.isAlive and entitylib.character.RootPart.Position or nil;
-		for object: Instance, entry: table in tracked do
-			if not object.Parent or not entry.Anchor.Parent then
-				untrack(object);
+		for _: number, category: table in categories do
+			if not category.Text then
 				continue;
 			end;
-			local point: Vector3 = entry.Anchor:GetPivot().Position;
-			if rewrite then
-				local detail: ((object: Instance, label: string) -> string?)? = entry.Category.Detail;
-				local text: string? = if detail then detail(object, entry.Name) else entry.Name;
-				if text and ShowDistance["Enabled"] and origin then
-					text ..= ' | '..math.floor((origin - point).Magnitude)..'m';
+			for object: Instance, entry: table in category.Tracked do
+				local point: Vector3? = object.Parent and pointOf(category, entry) or nil;
+				if not point then
+					untrack(category, object);
+					continue;
 				end;
-				entry.Hidden = text == nil;
-				if text and entry.Label.Text ~= text then
-					entry.Label.Text = text;
+				local screen: Vector3, onScreen: boolean = gameCamera:WorldToViewportPoint(point + Vector3.new(0, category.Height, 0));
+				local text: string? = onScreen and category.Text(entry, point, origin) or nil;
+				entry.Label.Visible = text ~= nil;
+				if text then
+					if entry.Label.Text ~= text then
+						entry.Label.Text = text;
+					end;
+					entry.Label.Position = UDim2.fromOffset(screen.X, screen.Y);
 				end;
-			end;
-			local screen: Vector3, onScreen: boolean = gameCamera:WorldToViewportPoint(point + Vector3.new(0, entry.Category.Height, 0));
-			local visible: boolean = onScreen and entry.Hidden == false;
-			entry.Label.Visible = visible;
-			if visible then
-				entry.Label.Position = UDim2.fromOffset(screen.X, screen.Y);
 			end;
 		end;
 	end;
 
+	local refreshPanel: () -> () = function(): ()
+		if not panel then
+			return;
+		end;
+		local origin: Vector3 = entitylib.isAlive and entitylib.character.RootPart.Position or gameCamera.CFrame.Position;
+		local drops: {Instance} = collectionService:GetTagged('ItemDrop');
+		local entries: {table} = {};
+		for _: number, generator: Instance in collectionService:GetTagged('Generator') do
+			local resource: string? = nil;
+			if generator:IsA('BasePart') then
+				local id: string = generator:GetAttribute('Id') or '';
+				local team: string? = id:match('^(.-)_generator$');
+				if team then
+					resource = team == tostring(lplr:GetAttribute('Team')) and 'iron' or nil;
+				else
+					resource = id:match('^(diamond)_') or id:match('^(emerald)_');
+				end;
+			end;
+			local kind: table? = resource and generatorKinds[resource];
+			if kind and kind.Toggle["Enabled"] then
+				local timer: Instance? = timers[generator];
+				if not timer or not timer.Parent then
+					local app: Instance? = generator:FindFirstChild('RoactTree');
+					app = app and app:FindFirstChild('TeamOreGeneratorApp');
+					timer = app and (app:FindFirstChild('Countdown', true) or app:FindFirstChild('Timer', true));
+					timers[generator] = timer;
+				end;
+				local seconds: number? = timer and timer:IsA('TextLabel') and tonumber(timer.Text:match('%[([%d%.]+)%]') or timer.Text:match('([%d%.]+)')) or nil;
+				local stored: number = 0;
+				for _: number, drop: Instance in drops do
+					if drop.Name == resource and drop:IsA('BasePart') then
+						local offset: Vector3 = drop.Position - generator.Position;
+						if Vector2.new(offset.X, offset.Z).Magnitude <= hoardRadius and offset.Y >= -12 and offset.Y <= 4 then
+							stored += drop:GetAttribute('Amount') or 1;
+						end;
+					end;
+				end;
+				table.insert(entries, {
+					["Resource"] = resource,
+					["Kind"] = kind,
+					["Level"] = generator:GetAttribute('GeneratorLevel') or 0,
+					["Countdown"] = seconds and math.ceil(seconds),
+					["Stored"] = stored,
+					["Distance"] = (generator.Position - origin).Magnitude
+				});
+			end;
+		end;
+		table.sort(entries, function(first: table, second: table): boolean
+			return first.Distance < second.Distance;
+		end);
+		local describe: (entry: table, distance: boolean) -> string = function(entry: table, distance: boolean): string
+			local parts: {string} = {entry.Kind.Name..' T'..entry.Level};
+			if entry.Countdown then
+				table.insert(parts, entry.Countdown..'s');
+			end;
+			table.insert(parts, entry.Stored..' stored');
+			if distance then
+				table.insert(parts, math.floor(entry.Distance)..' studs');
+			end;
+			return '<font color="'..entry.Kind.Color..'">'..table.concat(parts, ' | ')..'</font>';
+		end;
+		local lines: {string} = {'<b>GeneratorESP</b>', '<font size="4"> </font>'};
+		for _: number, resource: string in generatorOrder do
+			for _: number, entry: table in entries do
+				if entry.Resource == resource then
+					table.insert(lines, describe(entry, false));
+					break;
+				end;
+			end;
+		end;
+		if #entries == 0 then
+			table.insert(lines, 'No generators');
+		end;
+		local showList: boolean = expanded and #entries > 0;
+		if showList then
+			table.insert(lines, '<font size="4"> </font>');
+			for index: number, entry: table in entries do
+				if index > panelRows then
+					break;
+				end;
+				table.insert(lines, describe(entry, true));
+			end;
+		end;
+		local info: TextLabel = panel.Info;
+		info.Text = table.concat(lines, '\n');
+		local bounds: Vector2 = getfontsize(removeTags(info.Text), info.TextSize, info.FontFace);
+		local title: Vector2 = getfontsize('GeneratorESP', info.TextSize, Font.new(info.FontFace.Family, Enum.FontWeight.Bold));
+		panel.Window.Size = UDim2.fromOffset(math.max(bounds.X, title.X) + 16, bounds.Y + (showList and -8 or 4));
+	end;
+
+	local buildPanel: () -> () = function(): ()
+		if vape.ThreadFix then
+			setthreadidentity(8);
+		end;
+		local window: TextButton = Instance.new('TextButton');
+		window.Name = 'GeneratorViewer';
+		window.Position = UDim2.fromOffset(12, 330);
+		window.BackgroundColor3 = Color3.new();
+		window.BackgroundTransparency = Transparency["Value"];
+		window.Text = '';
+		window.AutoButtonColor = false;
+		window.Visible = false;
+		window.Parent = vape.gui.ScaledGui;
+		addBlur(window);
+		local corner: UICorner = Instance.new('UICorner');
+		corner.CornerRadius = UDim.new(0, 5);
+		corner.Parent = window;
+		local info: TextLabel = Instance.new('TextLabel');
+		info.Size = UDim2.new(1, -16, 1, -16);
+		info.Position = UDim2.fromOffset(8, 8);
+		info.BackgroundTransparency = 1;
+		info.TextXAlignment = Enum.TextXAlignment.Left;
+		info.TextYAlignment = Enum.TextYAlignment.Top;
+		info.TextSize = panelTextSize * Scale["Value"];
+		info.TextColor3 = Color3.new(1, 1, 1);
+		info.TextStrokeColor3 = Color3.new();
+		info.TextStrokeTransparency = 0.8;
+		info.Font = Enum.Font.Arial;
+		info.RichText = true;
+		info.Parent = window;
+		local pressed: UDim2? = nil;
+		window.InputBegan:Connect(function(input: InputObject): ()
+			if vape.ThreadFix then
+				setthreadidentity(8);
+			end;
+			local mouse: boolean = input.UserInputType == Enum.UserInputType.MouseButton1;
+			if not (vape.gui.ScaledGui.ClickGui.Visible or vape.Legit.Window.Visible) or not (mouse or input.UserInputType == Enum.UserInputType.Touch) then
+				return;
+			end;
+			local offset: Vector2 = Vector2.new(window.AbsolutePosition.X - input.Position.X, window.AbsolutePosition.Y - input.Position.Y + guiService:GetGuiInset().Y) / vape.guiscale.Scale;
+			local moving: RBXScriptConnection = inputService.InputChanged:Connect(function(changed: InputObject): ()
+				if changed.UserInputType == (mouse and Enum.UserInputType.MouseMovement or Enum.UserInputType.Touch) then
+					local position: Vector3 = changed.Position;
+					if inputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+						offset, position = (offset // 3) * 3, (position // 3) * 3;
+					end;
+					window.Position = UDim2.fromOffset(position.X / vape.guiscale.Scale + offset.X, position.Y / vape.guiscale.Scale + offset.Y);
+				end;
+			end);
+			local released: RBXScriptConnection;
+			released = input.Changed:Connect(function(): ()
+				if input.UserInputState == Enum.UserInputState.End then
+					moving:Disconnect();
+					released:Disconnect();
+				end;
+			end);
+		end);
+		window.MouseButton1Down:Connect(function(): ()
+			pressed = window.Position;
+		end);
+		window.MouseButton1Click:Connect(function(): ()
+			if pressed == window.Position then
+				expanded = not expanded;
+				refreshPanel();
+			end;
+		end);
+		vape:Clean(window);
+		panel = {["Window"] = window, ["Info"] = info};
+	end;
+
 	local restyle: () -> () = function(): ()
-		for _: Instance, entry: table in tracked do
-			entry.Label.TextSize = textSize * Scale["Value"];
-			entry.Label.BackgroundTransparency = Transparency["Value"];
-			entry.Label.TextColor3 = Color3.fromHSV(TextColor["Hue"], TextColor["Sat"], TextColor["Value"]);
+		for _: number, category: table in categories do
+			if not category.Text then
+				continue;
+			end;
+			for _: Instance, entry: table in category.Tracked do
+				entry.Label.TextSize = textSize * Scale["Value"];
+				entry.Label.BackgroundTransparency = Transparency["Value"];
+				entry.Label.TextColor3 = colorOf(category);
+			end;
+		end;
+		if panel then
+			panel.Window.BackgroundTransparency = Transparency["Value"];
+			panel.Info.TextSize = panelTextSize * Scale["Value"];
+			task.spawn(refreshPanel);
 		end;
 	end;
 
@@ -9340,6 +11096,9 @@ velo.run(function(): ()
 					option.Object.Visible = category.Toggle["Enabled"];
 				end;
 			end;
+		end;
+		if PotColor.Object then
+			PotColor.Object.Visible = PotColor.Object.Visible and PotBackground["Enabled"];
 		end;
 	end;
 
@@ -9355,38 +11114,62 @@ velo.run(function(): ()
 		["Name"] = 'ObjectESP',
 		["Function"] = function(callback: boolean): ()
 			if not callback then
-				for object: Instance in tracked do
-					untrack(object);
+				for _: number, category: table in categories do
+					for object: Instance in category.Tracked do
+						untrack(category, object);
+					end;
 				end;
-				table.clear(drops);
 				table.clear(timers);
+				if panel then
+					panel.Window.Visible = false;
+				end;
 				return;
 			end;
 			for _: number, category: table in categories do
 				if not category.Toggle["Enabled"] then
 					continue;
 				end;
+				if category.Panel then
+					if not panel then
+						buildPanel();
+					end;
+					panel.Window.Visible = true;
+					ObjectESP:Clean(task.spawn(function(): ()
+						repeat
+							refreshPanel();
+							task.wait(panelRefresh);
+						until not ObjectESP["Enabled"];
+					end));
+					continue;
+				end;
 				for tag: string in category.Tags do
 					ObjectESP:Clean(collectionService:GetInstanceAddedSignal(tag):Connect(function(object: Instance): ()
-						track(object, tag, category);
+						track(category, object, tag);
 					end));
-					ObjectESP:Clean(collectionService:GetInstanceRemovedSignal(tag):Connect(untrack));
+					ObjectESP:Clean(collectionService:GetInstanceRemovedSignal(tag):Connect(function(object: Instance): ()
+						untrack(category, object);
+					end));
 					for _: number, object: Instance in collectionService:GetTagged(tag) do
-						track(object, tag, category);
+						if category.Async then
+							ObjectESP:Clean(task.spawn(track, category, object, tag));
+						else
+							track(category, object, tag);
+						end;
 					end;
 				end;
 			end;
 			ObjectESP:Clean(runService.PreRender:Connect(render));
 		end,
-		["Tooltip"] = 'Labels world objects through walls: beehives, kit collectables, crates & lucky blocks, crops, generators, dropped items, desert pots and traps'
+		["Tooltip"] = 'Labels world objects through walls: beehives, kit collectables, crates & lucky blocks, crops, a generator panel, dropped items, desert pots and traps'
 	});
 	ShowDistance = ObjectESP:CreateToggle({
 		["Name"] = 'Distance',
-		["Default"] = true
+		["Default"] = true,
+		["Tooltip"] = 'Distance suffix on collectables, crates and traps'
 	});
 	Scale = ObjectESP:CreateSlider({
 		["Name"] = 'Scale',
-		["Min"] = 0.5,
+		["Min"] = 0.1,
 		["Max"] = 3,
 		["Default"] = 1,
 		["Decimal"] = 10,
@@ -9412,35 +11195,82 @@ velo.run(function(): ()
 			["Function"] = rebuild
 		});
 		category.Options = {};
+		category.Color = not category.White and TextColor or nil;
 		if category.ListName then
 			category.List = ObjectESP:CreateTextList({
 				["Name"] = category.ListName,
 				["Default"] = category.Defaults,
 				["Darker"] = true,
 				["Function"] = rebuild,
-				["Tooltip"] = 'Only these are shown (display name or id). Empty shows everything.'
+				["Tooltip"] = category.Loose and 'Only shows the items in this list, by name or item id.\nLeave it empty to show every item' or nil
 			});
 			table.insert(category.Options, category.List);
 		end;
 		if category.Name == 'Generators' then
-			for _: number, resource: string in {'iron', 'diamond', 'emerald'} do
+			for _: number, resource: string in generatorOrder do
 				local kind: table = generatorKinds[resource];
 				kind.Toggle = ObjectESP:CreateToggle({
 					["Name"] = kind.Name..' Generator',
 					["Default"] = kind.Toggle["Enabled"],
 					["Darker"] = true,
-					["Tooltip"] = resource == 'iron' and "Your own team's iron generator" or nil
+					["Function"] = function(): ()
+						if panel then
+							task.spawn(refreshPanel);
+						end;
+					end,
+					["Tooltip"] = kind.Tooltip
 				});
 				table.insert(category.Options, kind.Toggle);
 			end;
+		elseif category.Name == 'Items' then
+			ItemDistance = ObjectESP:CreateToggle({
+				["Name"] = 'Item Distance',
+				["Darker"] = true,
+				["Tooltip"] = 'Shows the distance of the item'
+			});
+			table.insert(category.Options, ItemDistance);
+		elseif category.Name == 'Pots' then
+			PotBackground = ObjectESP:CreateToggle({
+				["Name"] = 'Pot Background',
+				["Default"] = true,
+				["Darker"] = true,
+				["Function"] = function(): ()
+					syncOptions();
+					for _: Instance, entry: table in category.Tracked do
+						paintPot(entry);
+					end;
+				end
+			});
+			PotColor = ObjectESP:CreateColorSlider({
+				["Name"] = 'Pot Background Color',
+				["DefaultValue"] = 0,
+				["DefaultOpacity"] = 0.5,
+				["Darker"] = true,
+				["Function"] = function(): ()
+					for _: Instance, entry: table in category.Tracked do
+						paintPot(entry);
+					end;
+				end
+			});
+			table.insert(category.Options, PotBackground);
+			table.insert(category.Options, PotColor);
 		elseif category.Name == 'Traps' then
 			YourTraps = ObjectESP:CreateToggle({
 				["Name"] = 'Your traps',
 				["Default"] = true,
 				["Darker"] = true,
-				["Tooltip"] = 'Also shows the traps your own team placed'
+				["Tooltip"] = 'Also shows the ones your own team placed'
 			});
+			TrapColor = ObjectESP:CreateColorSlider({
+				["Name"] = 'Trap Text Color',
+				["DefaultHue"] = 0,
+				["DefaultSat"] = 0.75,
+				["Darker"] = true,
+				["Function"] = restyle
+			});
+			category.Color = TrapColor;
 			table.insert(category.Options, YourTraps);
+			table.insert(category.Options, TrapColor);
 		end;
 	end;
 	syncOptions();
@@ -9529,26 +11359,14 @@ velo.run(function(): ()
 		entry.Billboard:Destroy();
 	end;
 
-	local attach: (part: Instance) -> ();
-	attach = function(part: Instance): ()
-		if tracked[part] or not StorageESP["Enabled"] then
+	local attach: (part: Instance) -> () = function(part: Instance): ()
+		local value: any = part:WaitForChild('ChestFolderValue', 3);
+		local chest: Instance? = value and value.Value;
+		if not chest or not StorageESP["Enabled"] or tracked[part] then
 			return;
 		end;
-		local value: any = part:FindFirstChild('ChestFolderValue');
-		if not value then
-			local waiting: RBXScriptConnection;
-			waiting = part.ChildAdded:Connect(function(child: Instance): ()
-				if child.Name == 'ChestFolderValue' then
-					waiting:Disconnect();
-					attach(part);
-				end;
-			end);
-			StorageESP:Clean(waiting);
-			return;
-		end;
-		local chest: Instance? = value.Value;
-		if not chest then
-			return;
+		if vape.ThreadFix then
+			setthreadidentity(8);
 		end;
 		local billboard: BillboardGui = Instance.new('BillboardGui');
 		billboard.Name = 'chest';
@@ -9596,10 +11414,12 @@ velo.run(function(): ()
 		["Name"] = 'StorageESP',
 		["Function"] = function(callback: boolean): ()
 			if callback then
-				StorageESP:Clean(collectionService:GetInstanceAddedSignal('chest'):Connect(attach));
+				StorageESP:Clean(collectionService:GetInstanceAddedSignal('chest'):Connect(function(part: Instance): ()
+					StorageESP:Clean(task.spawn(attach, part));
+				end));
 				StorageESP:Clean(collectionService:GetInstanceRemovedSignal('chest'):Connect(forget));
 				for _: number, part: Instance in collectionService:GetTagged('chest') do
-					attach(part);
+					StorageESP:Clean(task.spawn(attach, part));
 				end;
 			else
 				for part: Instance in tracked do
@@ -9666,11 +11486,17 @@ velo.run(function(): ()
 	local iconSize: number = 30;
 	local equipmentSlots: {string} = {'Hand', 'Helmet', 'Chestplate', 'Boots', 'Kit'};
 	local tags: {[table]: table} = {};
-	local rankCache: {[Player]: any} = {};
+	local rankCache: {[Player]: string} = {};
 	local folder: Folder = Instance.new('Folder');
 	folder.Name = 'NameTags';
+	if vape.ThreadFix then
+		setthreadidentity(8);
+	end;
 	folder.Parent = vape.gui;
 	vape:Clean(folder);
+	vape:Clean(playersService.PlayerRemoving:Connect(function(plr: Player): ()
+		rankCache[plr] = nil;
+	end));
 
 	local restart: () -> () = function(): ()
 		if NameTags["Enabled"] then
@@ -9689,7 +11515,7 @@ velo.run(function(): ()
 		if Health["Enabled"] then
 			local health: number = math.round(ent.Health);
 			local shade: Color3 = Color3.fromHSV(math.clamp(ent.Health / ent.MaxHealth, 0, 1) / 2.5, 0.89, 0.75);
-			text ..= rich and string.format(' <font color="#%s">%d</font>', shade:ToHex(), health) or ' '..health;
+			text ..= rich and ' <font color="rgb('..math.floor(shade.R * 255)..','..math.floor(shade.G * 255)..','..math.floor(shade.B * 255)..')">'..health..'</font>' or ' '..health;
 		end;
 		if Distance["Enabled"] then
 			text = (rich and '<font color="rgb(85,255,85)">[</font><font color="rgb(255,255,255)">%s</font><font color="rgb(85,255,85)">]</font> ' or '[%s] ')..(text:gsub('%%', '%%%%'));
@@ -9699,8 +11525,15 @@ velo.run(function(): ()
 
 	local showText: (tag: table, distance: number) -> () = function(tag: table, distance: number): ()
 		local text: string = Distance["Enabled"] and string.format(tag.Template, distance) or tag.Template;
-		if tag.Label then
-			tag.Label.Text = text;
+		local label: TextLabel? = tag.Label;
+		if label then
+			label.Text = text;
+			task.spawn(function(): ()
+				local bounds: Vector2 = getfontsize(removeTags(text), label.TextSize, label.FontFace);
+				if label.Text == text then
+					label.Size = UDim2.fromOffset(bounds.X + 8, bounds.Y + 7);
+				end;
+			end);
 			return;
 		end;
 		tag.Text.Text = text;
@@ -9732,8 +11565,12 @@ velo.run(function(): ()
 	end;
 
 	local fillInventory: (ent: table, tag: table) -> () = function(ent: table, tag: table): ()
+		local inventory: table? = store.inventories[ent.Player];
+		if not inventory then
+			return;
+		end;
 		local shown: number = 0;
-		for _: number, item: table in (store.inventories[ent.Player] or {["items"] = {}}).items do
+		for _: number, item: table in inventory.items or {} do
 			if #InventoryItems.ListEnabled > 0 and not table.find(InventoryItems.ListEnabled, item.itemType) then
 				continue;
 			end;
@@ -9795,6 +11632,9 @@ velo.run(function(): ()
 		if tag.EnchantIcon then
 			tag.EnchantIcon.Image = enchantImage(ent.Character);
 		end;
+		if tag.Text then
+			tag.Text.Color = tagColor(ent);
+		end;
 	end;
 
 	local remove: (ent: table) -> () = function(ent: table): ()
@@ -9812,6 +11652,9 @@ velo.run(function(): ()
 	end;
 
 	local build: (ent: table) -> () = function(ent: table): ()
+		if vape.ThreadFix then
+			setthreadidentity(8);
+		end;
 		remove(ent);
 		if (ent.Player and not Targets.Players["Enabled"]) or (ent.NPC and not Targets.NPCs["Enabled"]) or (PriorityOnly["Enabled"] and not ent.Targetable and not ent.Friend) then
 			return;
@@ -9846,9 +11689,6 @@ velo.run(function(): ()
 		local scaler: UIScale = Instance.new('UIScale');
 		scaler.Scale = Scale["Value"];
 		scaler.Parent = label;
-		label:GetPropertyChangedSignal('TextBounds'):Connect(function(): ()
-			label.Size = UDim2.fromOffset(label.TextBounds.X + 8, label.TextBounds.Y + 7);
-		end);
 		tag.Label = label;
 		if Equipment["Enabled"] then
 			for index: number, slot: string in equipmentSlots do
@@ -9877,29 +11717,28 @@ velo.run(function(): ()
 		end;
 		if Rank["Enabled"] and ent.Player then
 			local plr: Player = ent.Player;
-			tag.RankIcon = newIcon(label, 'RankIcon', UDim2.new(1, 2, 0, -4), iconSize);
-			local rank: any = rankCache[plr];
-			if type(rank) == 'string' then
-				tag.RankIcon.Image = bedwars.RankMeta[rank] and bedwars.RankMeta[rank].image or '';
-			elseif rank == nil then
-				rankCache[plr] = false;
-				NameTags:Clean(task.spawn(function(): ()
+			local icon: ImageLabel = newIcon(label, 'RankIcon', UDim2.fromOffset(0, -4), iconSize);
+			local first: string = removeTags(template(ent));
+			tag.RankIcon = icon;
+			task.spawn(function(): ()
+				icon.Position = UDim2.fromOffset(getfontsize(first, label.TextSize, label.FontFace).X + 10, -4);
+				local rank: string? = rankCache[plr];
+				if not rank then
 					local ranks: any = fire('FetchRanks', 'CallServer', {plr.UserId});
-					local division: any = type(ranks) == 'table' and type(ranks[1]) == 'table' and ranks[1].rankDivision;
-					rankCache[plr] = division or false;
-					for other: table, otherTag: table in tags do
-						if other.Player == plr and otherTag.RankIcon and division and bedwars.RankMeta[division] then
-							otherTag.RankIcon.Image = bedwars.RankMeta[division].image;
-						end;
-					end;
-				end));
-			end;
+					rank = type(ranks) == 'table' and type(ranks[1]) == 'table' and ranks[1].rankDivision or nil;
+					rankCache[plr] = rank;
+				end;
+				icon.Image = rank and bedwars.RankMeta[rank] and bedwars.RankMeta[rank].image or '';
+			end);
 		end;
 		label.Parent = folder;
 		refresh(ent);
 	end;
 
 	local render: () -> () = function(): ()
+		if vape.ThreadFix then
+			setthreadidentity(8);
+		end;
 		local origin: Vector3? = entitylib.isAlive and entitylib.character.RootPart.Position or nil;
 		local now: number = tick();
 		for ent: table, tag: table in tags do
@@ -9956,14 +11795,10 @@ velo.run(function(): ()
 					end;
 				end));
 				NameTags:Clean(runService.RenderStepped:Connect(render));
-				NameTags:Clean(playersService.PlayerRemoving:Connect(function(plr: Player): ()
-					rankCache[plr] = nil;
-				end));
 			else
 				for ent: table in tags do
 					remove(ent);
 				end;
-				table.clear(rankCache);
 			end;
 		end,
 		["Tooltip"] = 'Renders nametags on entities through walls.'
@@ -10097,7 +11932,14 @@ velo.run(function(): ()
 	local spyToggles: {[string]: table} = {};
 	local iconSize: number = 36;
 	local historyLength: number = 8;
+	local historyWait: number = 15;
 	local spyTick: number = 0.2;
+	local iconPoll: number = 1;
+	local partWait: number = 10;
+	local partPoll: number = 0.25;
+	local draftDelay: number = 0.3;
+	local draftPoll: number = 0.1;
+	local columnWait: number = 10;
 	local draftTween: TweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out);
 
 	local iconKits: {[string]: {string}} = {
@@ -10141,9 +11983,11 @@ velo.run(function(): ()
 	local expanded: boolean = false;
 	local folder: Folder = Instance.new('Folder');
 	folder.Name = 'KitESP';
+	if vape.ThreadFix then
+		setthreadidentity(8);
+	end;
 	folder.Parent = vape.gui;
 	vape:Clean(folder);
-
 
 	local panel: TextButton = Instance.new('TextButton');
 	panel.Name = 'KitSpyViewer';
@@ -10189,7 +12033,7 @@ velo.run(function(): ()
 		if plr == lplr then
 			return IgnoreSelf["Enabled"];
 		end;
-		return IgnoreTeam["Enabled"] and plr:GetAttribute('Team') == lplr:GetAttribute('Team');
+		return IgnoreTeam["Enabled"] and plr.Team == lplr.Team;
 	end;
 
 	local drawViewer: () -> () = function(): ()
@@ -10237,9 +12081,8 @@ velo.run(function(): ()
 	end;
 
 	local reportLoot: (plr: Player, verb: string, filtered: boolean) -> () = function(plr: Player, verb: string, filtered: boolean): ()
-		store.inventories[plr] = bedwars.getInventory(plr);
 		local now: number, found: {string} = workspace:GetServerTimeNow(), {};
-		for _: number, item: table in store.inventories[plr].items do
+		for _: number, item: table in (store.inventories[plr] or {["items"] = {}}).items do
 			local fresh: boolean = now - (item.addedToBackpackTime or 0) <= SpyWindow["Value"];
 			if fresh and (not filtered or #DigItems.ListEnabled == 0 or table.find(DigItems.ListEnabled, item.itemType)) then
 				local meta: table? = bedwars.ItemMeta[item.itemType];
@@ -10260,22 +12103,28 @@ velo.run(function(): ()
 
 	local startIcons: () -> () = function(): ()
 		local billboards: {[Instance]: BillboardGui} = {};
+		local connections: {RBXScriptConnection} = {};
 		local addIcon: (object: Instance, icon: string) -> ();
 		addIcon = function(object: Instance, icon: string): ()
-			local part: BasePart? = partOf(object);
 			if billboards[object] then
 				return;
 			end;
+			local part: BasePart? = partOf(object);
 			if not part then
-				local waiting: RBXScriptConnection;
-				waiting = object.DescendantAdded:Connect(function(child: Instance): ()
-					if child:IsA('BasePart') then
-						waiting:Disconnect();
+				KitESP:Clean(task.spawn(function(): ()
+					local deadline: number = os.clock() + partWait;
+					repeat
+						task.wait(partPoll);
+						part = partOf(object);
+					until part or not object.Parent or os.clock() > deadline or not KitESP["Enabled"];
+					if part and object.Parent and KitESP["Enabled"] and not billboards[object] then
 						addIcon(object, icon);
 					end;
-				end);
-				KitESP:Clean(waiting);
+				end));
 				return;
+			end;
+			if vape.ThreadFix then
+				setthreadidentity(8);
 			end;
 			local scale: number = IconScale["Value"];
 			local billboard: BillboardGui = Instance.new('BillboardGui');
@@ -10285,6 +12134,7 @@ velo.run(function(): ()
 			billboard.AlwaysOnTop = true;
 			billboard.ClipsDescendants = false;
 			billboard.Adornee = part;
+			billboard.Parent = folder;
 			local blur: ImageLabel = addBlur(billboard);
 			blur.Size = UDim2.new(1, 89 * scale, 1, 52 * scale);
 			blur.Position = UDim2.fromOffset(-48 * scale, -31 * scale);
@@ -10301,32 +12151,60 @@ velo.run(function(): ()
 			local corner: UICorner = Instance.new('UICorner');
 			corner.CornerRadius = UDim.new(0, 4);
 			corner.Parent = image;
-			billboard.Parent = folder;
 			billboards[object] = billboard;
 		end;
-		for _: number, kit: string in store.equippedKits do
-			local watch: {string}? = iconKits[kit];
-			if watch then
-				collection(watch[1], KitESP, function(list: table, object: Instance, tag: string): ()
-					addIcon(object, watch[2]);
-				end, function(list: table, object: Instance, tag: string): ()
-					if billboards[object] then
-						billboards[object]:Destroy();
-						billboards[object] = nil;
-					end;
-				end);
+		local clear: () -> () = function(): ()
+			for _: number, connection: RBXScriptConnection in connections do
+				connection:Disconnect();
 			end;
-		end;
-		KitESP:Clean(function(): ()
+			table.clear(connections);
 			table.clear(billboards);
 			folder:ClearAllChildren();
-		end);
+		end;
+		KitESP:Clean(clear);
+		KitESP:Clean(task.spawn(function(): ()
+			local current: string? = nil;
+			repeat
+				local kits: {string} = store.equippedKits or {};
+				local key: string = table.concat(kits, ',');
+				if key ~= current then
+					current = key;
+					clear();
+					for _: number, kit: string in kits do
+						local watch: {string}? = iconKits[kit];
+						if watch then
+							table.insert(connections, collectionService:GetInstanceAddedSignal(watch[1]):Connect(function(object: Instance): ()
+								addIcon(object, watch[2]);
+							end));
+							table.insert(connections, collectionService:GetInstanceRemovedSignal(watch[1]):Connect(function(object: Instance): ()
+								local billboard: BillboardGui? = billboards[object];
+								if billboard then
+									billboard:Destroy();
+									billboards[object] = nil;
+								end;
+							end));
+							for _: number, object: Instance in collectionService:GetTagged(watch[1]) do
+								addIcon(object, watch[2]);
+							end;
+						end;
+					end;
+				end;
+				task.wait(iconPoll);
+			until not KitESP["Enabled"];
+		end));
 	end;
 
 	local startSpy: () -> () = function(): ()
 		local watched: {[Instance]: table} = {};
 		local pending: {table} = {};
 		local counts: {[Player]: {[string]: number}} = {};
+		local animators: {[Animator]: boolean} = {};
+		local spyPart: (object: Instance) -> BasePart? = function(object: Instance): BasePart?
+			if object:IsA('Model') then
+				return object.PrimaryPart or object:FindFirstChildWhichIsA('BasePart', true);
+			end;
+			return object:IsA('BasePart') and object or nil;
+		end;
 		local itemCount: (plr: Player, itemType: string) -> number = function(plr: Player, itemType: string): number
 			local amount: number = 0;
 			for _: number, item: table in (store.inventories[plr] or {["items"] = {}}).items do
@@ -10345,7 +12223,7 @@ velo.run(function(): ()
 		end;
 		local track: (tags: {string}, label: string?, item: string?) -> () = function(tags: {string}, label: string?, item: string?): ()
 			collection(tags, KitESP, function(list: table, object: Instance, tag: string): ()
-				local part: BasePart? = partOf(object);
+				local part: BasePart? = spyPart(object);
 				watched[object] = {["Label"] = label or extraLabels[tag] or 'collectable', ["Item"] = item, ["Position"] = part and part.Position};
 			end, function(list: table, object: Instance, tag: string): ()
 				local entry: table? = watched[object];
@@ -10373,24 +12251,32 @@ velo.run(function(): ()
 				track(spec.Tags, spec.Label, spec.Item);
 				if spec.Item then
 					items[spec.Item] = true;
+					for _: number, ent: table in entitylib.List do
+						if ent.Player then
+							counts[ent.Player] = counts[ent.Player] or {};
+							counts[ent.Player][spec.Item] = itemCount(ent.Player, spec.Item);
+						end;
+					end;
 				end;
 			end;
 			if spec.Digging then
 				local digAnimation: string = bedwars.GameAnimationUtil:getAssetId(bedwars.AnimationType.SHOVEL_DIG);
 				local watchDigs: (ent: table) -> () = function(ent: table): ()
-					local animator: Animator? = ent.Player and not ignored(ent.Player) and ent.Humanoid:FindFirstChildOfClass('Animator');
-					if animator then
-						KitESP:Clean(animator.AnimationPlayed:Connect(function(track: AnimationTrack): ()
-							if track.Animation.AnimationId == digAnimation then
-								task.delay(SpyDelay["Value"], reportLoot, ent.Player, 'dug up', true);
-							end;
-						end));
+					local animator: Animator? = ent.Player and not ignored(ent.Player) and ent.Humanoid:FindFirstChildOfClass('Animator') or nil;
+					if not animator or animators[animator] then
+						return;
 					end;
+					animators[animator] = true;
+					KitESP:Clean(animator.AnimationPlayed:Connect(function(played: AnimationTrack): ()
+						if played.Animation.AnimationId == digAnimation then
+							task.delay(SpyDelay["Value"], reportLoot, ent.Player, 'dug up', true);
+						end;
+					end));
 				end;
+				KitESP:Clean(entitylib.Events.EntityAdded:Connect(watchDigs));
 				for _: number, ent: table in entitylib.List do
 					watchDigs(ent);
 				end;
-				KitESP:Clean(entitylib.Events.EntityAdded:Connect(watchDigs));
 			end;
 			if spec.Bounty then
 				local hunters: {[Player]: Player} = {};
@@ -10458,7 +12344,7 @@ velo.run(function(): ()
 			end;
 			nextScan = now + spyTick;
 			for object: Instance, entry: table in watched do
-				local part: BasePart? = partOf(object);
+				local part: BasePart? = spyPart(object);
 				entry.Position = part and part.Position or entry.Position;
 			end;
 			for index: number = #pending, 1, -1 do
@@ -10474,7 +12360,6 @@ velo.run(function(): ()
 				if not plr or ignored(plr) then
 					continue;
 				end;
-				store.inventories[plr] = bedwars.getInventory(plr);
 				local previous: {[string]: number} = counts[plr] or {};
 				counts[plr] = previous;
 				for itemType: string in items do
@@ -10494,6 +12379,7 @@ velo.run(function(): ()
 		end));
 		drawViewer();
 		KitESP:Clean(function(): ()
+			table.clear(animators);
 			panel.Visible = false;
 		end);
 	end;
@@ -10504,19 +12390,25 @@ velo.run(function(): ()
 	end;
 
 	local resolvePlayer: (entry: Instance, name: string) -> Player? = function(entry: Instance, name: string): Player?
-		local streamer: table? = bedwars.StreamerModeController;
 		for _: number, plr: Player in playersService:GetPlayers() do
 			if plr.Name == name or plr.DisplayName == name or plr:GetAttribute('DisguiseDisplayName') == name then
 				return plr;
 			end;
-			if streamer and type(streamer.getDisplayName) == 'function' and streamer:getDisplayName(plr) == name then
-				return plr;
+		end;
+		local streamer: table? = bedwars.StreamerModeController;
+		if streamer and type(streamer.getDisplayName) == 'function' then
+			for _: number, plr: Player in playersService:GetPlayers() do
+				local success: boolean, shown: any = pcall(streamer.getDisplayName, streamer, plr);
+				if success and shown == name then
+					return plr;
+				end;
 			end;
 		end;
 		local render: Instance? = entry:FindFirstChild('PlayerRender', true);
-		local userId: string? = render and render:IsA('ImageLabel') and render.Image:match('id=(%d+)');
-		if userId then
-			return playersService:GetPlayerByUserId(tonumber(userId));
+		local userId: string? = render and render:IsA('ImageLabel') and render.Image:match('id=(%d+)') or nil;
+		local rendered: Player? = userId and playersService:GetPlayerByUserId(tonumber(userId)) or nil;
+		if rendered then
+			return rendered;
 		end;
 		if name == entry:GetAttribute('KitDisplayOriginalName') then
 			return playersService:GetPlayerByUserId(entry:GetAttribute('KitDisplayUserId') or 0);
@@ -10524,35 +12416,52 @@ velo.run(function(): ()
 		return nil;
 	end;
 
-	local previousKits: (plr: Player) -> {string}? = function(plr: Player): {string}?
-		if histories[plr.UserId] or fetching[plr.UserId] then
-			return histories[plr.UserId];
+	local previousKits: (plr: Player) -> {string} = function(plr: Player): {string}
+		local userId: number = plr.UserId;
+		if histories[userId] then
+			return histories[userId];
 		end;
-		fetching[plr.UserId] = true;
-		local data: any = fire('RequestMatchHistory', 'CallServer', plr.Name);
-		fetching[plr.UserId] = nil;
-		if type(data) ~= 'table' or type(data.matchHistory) ~= 'table' then
-			return nil;
-		end;
-		table.sort(data.matchHistory, function(a: table, b: table): boolean
-			return (tonumber(a.matchStartTime) or 0) > (tonumber(b.matchStartTime) or 0);
-		end);
-		local kits: {string} = {};
-		for index: number, match: table in data.matchHistory do
-			if index > historyLength then
-				break;
+		local deadline: number = os.clock() + historyWait;
+		while fetching[userId] do
+			if not KitESP["Enabled"] or os.clock() >= deadline then
+				return {};
 			end;
-			local kit: string = 'none';
-			for _: number, member: table in match.players or {} do
-				if member.playerInfo and member.playerInfo.userId == plr.UserId then
-					kit = member.bedwars and member.bedwars.kit or 'none';
+			task.wait();
+		end;
+		if histories[userId] then
+			return histories[userId];
+		end;
+		fetching[userId] = true;
+		local success: boolean, kits: any = pcall(function(): {string}?
+			local data: any = fire('RequestMatchHistory', 'CallServer', plr.Name);
+			if type(data) ~= 'table' or type(data.matchHistory) ~= 'table' then
+				return nil;
+			end;
+			table.sort(data.matchHistory, function(a: table, b: table): boolean
+				return (tonumber(a.matchStartTime) or 0) > (tonumber(b.matchStartTime) or 0);
+			end);
+			local found: {string} = {};
+			for index: number, match: table in data.matchHistory do
+				if index > historyLength then
 					break;
 				end;
+				local kit: string = 'none';
+				for _: number, member: table in match.players or {} do
+					if member.playerInfo and member.playerInfo.userId == userId then
+						kit = member.bedwars and member.bedwars.kit or 'none';
+						break;
+					end;
+				end;
+				table.insert(found, kit);
 			end;
-			table.insert(kits, kit);
+			return found;
+		end);
+		fetching[userId] = nil;
+		if success and type(kits) == 'table' then
+			histories[userId] = kits;
+			return kits;
 		end;
-		histories[plr.UserId] = kits;
-		return kits;
+		return {};
 	end;
 
 	local drawHistory: (card: Instance, plr: Player) -> () = function(card: Instance, plr: Player): ()
@@ -10560,8 +12469,7 @@ velo.run(function(): ()
 		if old then
 			old:Destroy();
 		end;
-		local kits: {string}? = previousKits(plr);
-		if not kits or #kits == 0 or not KitESP["Enabled"] or not card.Parent then
+		if not DraftHistory["Enabled"] then
 			return;
 		end;
 		local holder: Frame = Instance.new('Frame');
@@ -10569,9 +12477,20 @@ velo.run(function(): ()
 		holder.AnchorPoint = Vector2.new(0.5, 0);
 		holder.Position = UDim2.fromScale(0.5, 0.03);
 		holder.Size = UDim2.fromScale(0.86, 0.24);
+		holder.BackgroundColor3 = Color3.new();
 		holder.BackgroundTransparency = 1;
+		holder.BorderSizePixel = 0;
 		holder.ClipsDescendants = true;
 		holder.ZIndex = 3;
+		holder.Parent = card;
+		KitESP:Clean(holder);
+		local corner: UICorner = Instance.new('UICorner');
+		corner.CornerRadius = UDim.new(0, 4);
+		corner.Parent = holder;
+		local padding: UIPadding = Instance.new('UIPadding');
+		padding.PaddingLeft = UDim.new(0, 3);
+		padding.PaddingRight = UDim.new(0, 3);
+		padding.Parent = holder;
 		local layout: UIListLayout = Instance.new('UIListLayout');
 		layout.FillDirection = Enum.FillDirection.Horizontal;
 		layout.HorizontalAlignment = Enum.HorizontalAlignment.Center;
@@ -10579,8 +12498,17 @@ velo.run(function(): ()
 		layout.Padding = UDim.new(0, 2);
 		layout.SortOrder = Enum.SortOrder.LayoutOrder;
 		layout.Parent = holder;
+		local kits: {string} = previousKits(plr);
+		if not KitESP["Enabled"] or not DraftHistory["Enabled"] or not holder.Parent then
+			return;
+		end;
+		if #kits == 0 then
+			holder:Destroy();
+			return;
+		end;
 		for index: number, kit: string in kits do
 			local icon: ImageLabel = Instance.new('ImageLabel');
+			icon.Name = 'Kit'..index;
 			icon.LayoutOrder = index;
 			icon.Size = UDim2.fromScale(1, 1);
 			icon.SizeConstraint = Enum.SizeConstraint.RelativeYY;
@@ -10590,33 +12518,47 @@ velo.run(function(): ()
 			icon.ZIndex = 4;
 			icon.Parent = holder;
 			local order: TextLabel = Instance.new('TextLabel');
+			order.Name = 'Order';
 			order.Position = UDim2.fromOffset(1, 1);
 			order.Size = UDim2.fromOffset(13, 13);
+			order.BackgroundColor3 = Color3.new();
 			order.BackgroundTransparency = 1;
-			order.FontFace = uipallet.FontSemiBold;
+			order.BorderSizePixel = 0;
+			order.FontFace = Font.new(uipallet.Font.Family, Enum.FontWeight.Bold);
 			order.Text = tostring(index);
 			order.TextColor3 = Color3.new(1, 1, 1);
 			order.TextSize = 9;
 			order.ZIndex = 5;
 			order.Parent = icon;
+			local orderCorner: UICorner = Instance.new('UICorner');
+			orderCorner.CornerRadius = UDim.new(0, 4);
+			orderCorner.Parent = order;
 		end;
-		holder.Parent = card;
-		KitESP:Clean(holder);
 	end;
 
 	local startDraft: () -> () = function(): ()
 		local entryConnections: {[Instance]: {RBXScriptConnection}} = {};
+		local active: () -> boolean = function(): boolean
+			return KitESP["Enabled"] and Draft["Enabled"];
+		end;
 		local drawEntry: (entry: Instance) -> ();
 		drawEntry = function(entry: Instance): ()
+			task.wait(draftDelay);
+			if not active() or not entry.Parent then
+				return;
+			end;
 			local nameLabel: Instance? = entry:FindFirstChild('PlayerName', true);
-			local frame: Instance? = entry:FindFirstChild('1');
-			local card: Instance? = frame and frame:FindFirstChild('MatchDraftPlayerCard');
-			if not KitESP["Enabled"] or not nameLabel or not card then
+			if not nameLabel then
 				return;
 			end;
 			local originalName: string = nameLabel:GetAttribute('NickHiderOriginalText') or nameLabel.Text;
 			local plr: Player? = resolvePlayer(entry, originalName);
-			if not plr then
+			if not active() or not entry.Parent or not plr then
+				return;
+			end;
+			local frame: Instance? = entry:FindFirstChild('1');
+			local card: Instance? = frame and frame:FindFirstChild('MatchDraftPlayerCard');
+			if not card then
 				return;
 			end;
 			for _: number, connection: RBXScriptConnection in entryConnections[entry] or {} do
@@ -10625,18 +12567,24 @@ velo.run(function(): ()
 			local image: ImageLabel? = card:FindFirstChild('KitImage');
 			if not image then
 				image = Instance.new('ImageLabel');
-				image.Name = 'KitImage';
 				image.BackgroundTransparency = 1;
 				image.AnchorPoint = Vector2.new(1, 0.5);
+				image.Position = UDim2.fromScale(1.05, 0);
+				image.Name = 'KitImage';
 				image.Size = UDim2.fromScale(1.5, 1.5);
+				image.ZIndex = 1;
 				image.ImageTransparency = 0.4;
+				image.SliceCenter = Rect.new(0, 0, 0, 0);
+				image.SliceScale = 1;
 				image.ScaleType = Enum.ScaleType.Crop;
+				image.Parent = card;
+				KitESP:Clean(image);
 				local ratio: UIAspectRatioConstraint = Instance.new('UIAspectRatioConstraint');
+				ratio.Name = '1';
+				ratio.AspectRatio = 1;
 				ratio.AspectType = Enum.AspectType.FitWithinMaxSize;
 				ratio.DominantAxis = Enum.DominantAxis.Width;
 				ratio.Parent = image;
-				image.Parent = card;
-				KitESP:Clean(image);
 			end;
 			local showKit: () -> () = function(): ()
 				image.Image = kitImage(plr:GetAttribute('PlayingAsKits'));
@@ -10644,46 +12592,56 @@ velo.run(function(): ()
 				tweenService:Create(image, draftTween, {["Position"] = UDim2.fromScale(1.05, 0.5)}):Play();
 			end;
 			showKit();
+			task.spawn(drawHistory, card, plr);
 			entry:SetAttribute('KitDisplayUserId', plr.UserId);
 			entry:SetAttribute('KitDisplayOriginalName', originalName);
-			local kitWatch: RBXScriptConnection = plr:GetAttributeChangedSignal('PlayingAsKits'):Connect(showKit);
+			local kitWatch: RBXScriptConnection = plr:GetAttributeChangedSignal('PlayingAsKits'):Connect(function(): ()
+				if active() and image.Parent then
+					showKit();
+				end;
+			end);
 			local nameWatch: RBXScriptConnection = nameLabel:GetPropertyChangedSignal('Text'):Once(function(): ()
 				kitWatch:Disconnect();
 				drawEntry(entry);
 			end);
 			entryConnections[entry] = {kitWatch, nameWatch};
-			KitESP:Clean(kitWatch);
 			KitESP:Clean(nameWatch);
-			if DraftHistory["Enabled"] then
-				drawHistory(card, plr);
-			end;
+			KitESP:Clean(kitWatch);
 		end;
-		local watchApp: (app: Instance) -> () = function(app: Instance): ()
-			if app.Name ~= 'MatchDraftApp' then
+		KitESP:Clean(task.spawn(function(): ()
+			local body: Instance? = nil;
+			repeat
+				local app: Instance? = lplr.PlayerGui:FindFirstChild('MatchDraftApp');
+				local background: Instance? = app and app:FindFirstChild('DraftAppBackground');
+				local frame: Instance? = background and background:FindFirstChild('1');
+				body = frame and frame:FindFirstChild('BodyContainer');
+				if not body then
+					task.wait(draftPoll);
+				end;
+			until body or not active();
+			if not body or not active() then
 				return;
 			end;
-			KitESP:Clean(task.spawn(function(): ()
-				local background: Instance? = app:WaitForChild('DraftAppBackground', 10);
-				local frame: Instance? = background and background:WaitForChild('1', 10);
-				local body: Instance? = frame and frame:WaitForChild('BodyContainer', 10);
-				for team: number = 1, 2 do
-					local column: Instance? = body and body:WaitForChild('Team'..team..'Column', 10);
-					if column then
-						KitESP:Clean(column.ChildAdded:Connect(function(entry: Instance): ()
-							task.delay(0.3, drawEntry, entry);
-						end));
-						for _: number, entry: Instance in column:GetChildren() do
-							task.delay(0.3, drawEntry, entry);
-						end;
+			for team: number = 1, 2 do
+				if not active() then
+					break;
+				end;
+				local column: Instance? = nil;
+				local deadline: number = tick() + columnWait;
+				repeat
+					column = body:FindFirstChild('Team'..team..'Column');
+					if not column then
+						task.wait(draftPoll);
+					end;
+				until column or not active() or tick() >= deadline;
+				if column then
+					KitESP:Clean(column.ChildAdded:Connect(drawEntry));
+					for _: number, entry: Instance in column:GetChildren() do
+						task.spawn(drawEntry, entry);
 					end;
 				end;
-			end));
-		end;
-		KitESP:Clean(lplr.PlayerGui.ChildAdded:Connect(watchApp));
-		local app: Instance? = lplr.PlayerGui:FindFirstChild('MatchDraftApp');
-		if app then
-			watchApp(app);
-		end;
+			end;
+		end));
 		KitESP:Clean(function(): ()
 			table.clear(entryConnections);
 		end);
@@ -10704,9 +12662,6 @@ velo.run(function(): ()
 			end;
 			if Icons["Enabled"] then
 				startIcons();
-				KitESP:Clean(vapeEvents.KitChanged.Event:Connect(function(): ()
-					task.defer(restart);
-				end));
 			end;
 			if Spy["Enabled"] then
 				startSpy();
@@ -10865,15 +12820,20 @@ velo.run(function(): ()
 		end
 	});
 	spyOptions = {Viewer, SpyNotify, IgnoreTeam, IgnoreSelf, SpyRange, SpyWindow, SpyDelay, DigItems, Collectables};
+	local kitName: (kit: string) -> string = function(kit: string): string
+		local meta: table? = bedwars.BedwarsKitMeta[kit];
+		return meta and meta.name or kit;
+	end;
 	local spyNames: {string} = {};
 	for kit: string in spyKits do
 		table.insert(spyNames, kit);
 	end;
-	table.sort(spyNames);
+	table.sort(spyNames, function(a: string, b: string): boolean
+		return kitName(a) < kitName(b);
+	end);
 	for _: number, kit: string in spyNames do
-		local meta: table? = bedwars.BedwarsKitMeta[kit];
 		spyToggles[kit] = KitESP:CreateToggle({
-			["Name"] = 'Spy '..(meta and meta.name or kit),
+			["Name"] = 'Spy '..kitName(kit),
 			["Default"] = true,
 			["Darker"] = true,
 			["Function"] = restart
@@ -10911,82 +12871,81 @@ velo.run(function(): ()
 	local Opacity: table;
 	local Lifetime: table;
 	local Fade: table;
-	local marchStep: number = 1 / 30;
-	local maxFlight: number = 5;
+	local rayLength: number = 2000;
 	local rayParams: RaycastParams = RaycastParams.new();
 	rayParams.FilterType = Enum.RaycastFilterType.Exclude;
-	local folder: Folder = Instance.new('Folder');
-	folder.Name = 'ProjectileTracers';
-	vape:Clean(folder);
-
-	local arcPoint: (origin: Vector3, velocity: Vector3, gravity: number, t: number) -> Vector3 = function(origin: Vector3, velocity: Vector3, gravity: number, t: number): Vector3
-		return origin + velocity * t + Vector3.new(0, -0.5 * gravity * t * t, 0);
-	end;
 
 	local drawArc: (projectile: Instance) -> () = function(projectile: Instance): ()
+		local filter: {Instance} = {projectile};
+		if lplr.Character then
+			table.insert(filter, lplr.Character);
+		end;
+		rayParams.FilterDescendantsInstances = filter;
 		local root: BasePart? = projectile:IsA('BasePart') and projectile or projectile:IsA('Model') and projectile.PrimaryPart or nil;
 		local meta: table? = bedwars.ProjectileMeta[projectile.Name];
-		if not root or not meta or root.AssemblyLinearVelocity.Magnitude <= 0 then
+		if not root or not meta then
 			return;
 		end;
 		local origin: Vector3, velocity: Vector3 = root.Position, root.AssemblyLinearVelocity;
-		local gravity: number = meta.gravitationalAcceleration or workspace.Gravity;
-		rayParams.FilterDescendantsInstances = {projectile, lplr.Character, folder};
-		local flight: number, last: Vector3 = maxFlight, origin;
-		for step: number = 1, math.floor(math.min(meta.lifetimeSec or maxFlight, maxFlight) / marchStep) do
-			local point: Vector3 = arcPoint(origin, velocity, gravity, step * marchStep);
-			local hit: RaycastResult? = workspace:Raycast(last, point - last, rayParams);
-			if hit then
-				flight = (step - 1 + (hit.Position - last).Magnitude / (point - last).Magnitude) * marchStep;
-				break;
-			end;
-			flight, last = step * marchStep, point;
+		local speed: number = velocity.Magnitude;
+		if speed <= 0 then
+			return;
 		end;
+		local direction: Vector3 = velocity / speed;
+		local gravity: Vector3 = Vector3.new(0, -(meta.gravitationalAcceleration or workspace.Gravity), 0);
+		local hit: RaycastResult? = workspace:Raycast(origin, direction * rayLength, rayParams);
+		local endpoint: Vector3 = hit and hit.Position or origin + direction * rayLength;
+		local steps: number = Curve["Value"];
+		local stepTime: number = (endpoint - origin).Magnitude / speed / steps;
+		local material: Enum.Material = Enum.Material[TracerMaterial["Value"]];
 		local arc: Model = Instance.new('Model');
-		arc.Parent = folder;
-		local segments: number = math.max(math.floor(Curve["Value"]), 1);
+		if material == Enum.Material.Glass then
+			local highlight: Highlight = Instance.new('Highlight');
+			highlight.Enabled = false;
+			highlight.Parent = arc;
+		end;
 		local from: Vector3 = origin;
-		for index: number = 1, segments do
-			local to: Vector3 = arcPoint(origin, velocity, gravity, flight * index / segments);
+		for step: number = 1, steps do
+			local t: number = step * stepTime;
+			local to: Vector3 = origin + velocity * t + 0.5 * gravity * t * t;
 			local length: number = (to - from).Magnitude;
-			local segment: Part = Instance.new('Part');
-			segment.Anchored = true;
-			segment.CanCollide = false;
-			segment.CanQuery = false;
-			segment.CanTouch = false;
-			segment.CastShadow = false;
-			segment.Material = Enum.Material[TracerMaterial["Value"]];
-			segment.Color = Color3.fromHSV(TracerColor["Hue"], TracerColor["Sat"], TracerColor["Value"]);
-			segment.Transparency = Opacity["Value"];
-			segment.Size = Vector3.new(Thickness["Value"], Thickness["Value"], length);
-			segment.CFrame = CFrame.lookAt(from, to) * CFrame.new(0, 0, -length / 2);
-			segment.Parent = arc;
-			if Fade["Enabled"] and Lifetime["Value"] > 0 then
-				tweenService:Create(segment, TweenInfo.new(Lifetime["Value"]), {["Transparency"] = 1}):Play();
+			if length >= 0.01 then
+				local segment: Part = Instance.new('Part');
+				segment.Anchored = true;
+				segment.CanCollide = false;
+				segment.CanQuery = false;
+				segment.CanTouch = false;
+				segment.CastShadow = false;
+				segment.Color = Color3.fromHSV(TracerColor["Hue"], TracerColor["Sat"], TracerColor["Value"]);
+				segment.Size = Vector3.new(Thickness["Value"], Thickness["Value"], length);
+				segment.CFrame = CFrame.lookAt(from, to) * CFrame.new(0, 0, -length / 2);
+				segment.Material = material;
+				segment.Transparency = Opacity["Value"];
+				if Fade["Enabled"] then
+					tweenService:Create(segment, TweenInfo.new(Lifetime["Value"]), {["Transparency"] = 1}):Play();
+				end;
+				segment.Parent = arc;
 			end;
 			from = to;
 		end;
-		debrisService:AddItem(arc, math.max(Lifetime["Value"], marchStep));
+		arc.Parent = workspace.Terrain;
+		task.delay(Lifetime["Value"], arc.Destroy, arc);
 	end;
 
 	ProjectileTracers = vape.Categories.Render:CreateModule({
 		["Name"] = 'ProjectileTracers',
 		["Function"] = function(callback: boolean): ()
 			if callback then
-				folder.Parent = workspace;
 				ProjectileTracers:Clean(workspace.ChildAdded:Connect(function(projectile: Instance): ()
-					task.defer(function(): ()
+					task.delay(0, function(): ()
 						if ProjectileTracers["Enabled"] and projectile.Parent and projectile:GetAttribute('ProjectileShooter') == lplr.UserId then
 							drawArc(projectile);
 						end;
 					end);
 				end));
-			else
-				folder:ClearAllChildren();
-				folder.Parent = nil;
 			end;
 		end,
-		["Tooltip"] = 'Draws the flight path of your projectiles.'
+		["Tooltip"] = 'Replacement tracers for projectiles'
 	});
 	local materials: {string} = {'SmoothPlastic'};
 	for _: number, material: EnumItem in Enum.Material:GetEnumItems() do
@@ -11014,7 +12973,7 @@ velo.run(function(): ()
 		["Min"] = 1,
 		["Max"] = 100,
 		["Default"] = 40,
-		["Tooltip"] = 'Segments used to draw the arc (more = smoother, more parts).'
+		["Tooltip"] = 'How curve the projectile is gonna be\n(More curve = more lag)'
 	});
 	Opacity = ProjectileTracers:CreateSlider({
 		["Name"] = 'Opacity',
@@ -11042,7 +13001,8 @@ velo.run(function(): ()
 	local tierPrefixes: {[string]: boolean} = {["leather"] = true, ["chainmail"] = true, ["wood"] = true, ["stone"] = true, ["gold"] = true, ["iron"] = true, ["diamond"] = true, ["emerald"] = true};
 	local kitPrefixes: {[string]: boolean} = {["tactical"] = true, ["flower"] = true, ["falconer"] = true, ["life"] = true, ["feather"] = true};
 	local clawModels: {string} = {'lobby_kaida_claw', 'bear_claws', 'summoner_claw_1', 'summoner_claw_2', 'summoner_claw_3', 'summoner_claw_4'};
-	local respawnRefresh: {number} = {0.4, 1.2, 2.4, 4};
+	local respawnPasses: number = 10;
+	local respawnGap: number = 0.4;
 	local skinsByItem: {[string]: {[string]: string}} = {};
 	local familyOf: {[string]: string} = {};
 	local familyMembers: {[string]: {string}} = {};
@@ -11173,36 +13133,44 @@ velo.run(function(): ()
 		end;
 	end;
 
+	local setToolSkin: (tool: any, skin: string?) -> () = function(tool: any, skin: string?): ()
+		if typeof(tool) ~= 'Instance' then
+			return;
+		end;
+		if skin then
+			if not originalSkins[tool] then
+				originalSkins[tool] = {["Value"] = tool:GetAttribute('ItemSkin')};
+				tool.Destroying:Once(function(): ()
+					originalSkins[tool] = nil;
+				end);
+			end;
+			if tool:GetAttribute('ItemSkin') ~= skin then
+				tool:SetAttribute('ItemSkin', skin);
+			end;
+		elseif originalSkins[tool] then
+			local original: any = originalSkins[tool].Value;
+			originalSkins[tool] = nil;
+			tool:SetAttribute('ItemSkin', original);
+		end;
+	end;
+
 	local applySkins: () -> () = function(): ()
 		local inventory: table = store.inventory.inventory;
 		local handSkin: string = inventory.hand and inventory.hand.itemSkin or '';
-		local entries: {table} = table.clone(inventory.items or {});
-		if inventory.hand then
-			table.insert(entries, inventory.hand);
-		end;
 		local changed: boolean = false;
-		for _: number, entry: table in entries do
-			local tool: any = entry.tool;
-			local skin: string? = resolve(entry.itemType);
-			if typeof(tool) == 'Instance' then
-				if skin then
-					if not originalSkins[tool] then
-						originalSkins[tool] = {["Value"] = tool:GetAttribute('ItemSkin')};
-						tool.Destroying:Once(function(): ()
-							originalSkins[tool] = nil;
-						end);
-					end;
-					if tool:GetAttribute('ItemSkin') ~= skin then
-						tool:SetAttribute('ItemSkin', skin);
-					end;
-				elseif originalSkins[tool] then
-					tool:SetAttribute('ItemSkin', originalSkins[tool].Value);
-					originalSkins[tool] = nil;
-				end;
+		for _: number, item: table in inventory.items do
+			local skin: string? = resolve(item.itemType);
+			setToolSkin(item.tool, skin);
+			if (item.itemSkin or '') ~= (skin or '') then
+				item.itemSkin = skin;
+				changed = true;
 			end;
-			local wanted: string? = skin or (typeof(tool) == 'Instance' and tool:GetAttribute('ItemSkin') or nil);
-			if (entry.itemSkin or '') ~= (wanted or '') then
-				entry.itemSkin = wanted;
+		end;
+		if inventory.hand then
+			local skin: string? = resolve(inventory.hand.itemType);
+			setToolSkin(inventory.hand.tool, skin);
+			if (inventory.hand.itemSkin or '') ~= (skin or '') then
+				inventory.hand.itemSkin = skin or '';
 				changed = true;
 			end;
 		end;
@@ -11281,7 +13249,8 @@ velo.run(function(): ()
 					end;
 					local held: table? = store.hand.toolType == 'sword' and store.hand or store.tools.sword;
 					local tool: Instance? = held and held.tool;
-					local meta: table? = tool and originalSkins[tool] and bedwars.getItemSkinMeta(tool:GetAttribute('ItemSkin'));
+					local skin: string? = tool and originalSkins[tool] and tool:GetAttribute('ItemSkin');
+					local meta: table? = skin and bedwars.getItemSkinMeta(skin);
 					local sounds: {string}? = meta and meta.sword and meta.sword.hitSounds;
 					if sounds and #sounds > 0 then
 						local root: BasePart? = damage.entityInstance and damage.entityInstance.PrimaryPart;
@@ -11291,13 +13260,15 @@ velo.run(function(): ()
 				SkinChanger:Clean(lplr.CharacterAdded:Connect(function(character: Model): ()
 					lastHand = nil;
 					watchAccessories(character);
-					for _: number, delayTime: number in respawnRefresh do
-						task.delay(delayTime, function(): ()
-							if SkinChanger["Enabled"] then
-								applySkins();
+					task.spawn(function(): ()
+						for _: number = 1, respawnPasses do
+							task.wait(respawnGap);
+							if not SkinChanger["Enabled"] then
+								return;
 							end;
-						end);
-					end;
+							applySkins();
+						end;
+					end);
 				end));
 				SkinChanger:Clean(function(): ()
 					if accessoryWatch then
@@ -11368,42 +13339,7 @@ velo.run(function(): ()
 	local Boots: table;
 	local Helmet: table;
 	local Chestplate: table;
-	local Trim: table;
-	local TrimColor: table;
-	local TrimEffect: table;
-	local TrimTier: table;
-	local armorSlots: {[number]: string} = {[0] = 'helmet', [1] = 'chestplate', [2] = 'boots'};
-	local trimLabels: {[string]: {string}} = {["Trim"] = {'None'}, ["Color"] = {}, ["Effect"] = {}};
-	local trimValues: {[string]: {[string]: any}} = {["Trim"] = {}, ["Color"] = {}, ["Effect"] = {}};
 	local highlights: {[Instance]: Highlight} = {};
-	local trimObjects: {Instance} = {};
-	local wornArmor: table?;
-
-	local prettify: (text: string) -> string = function(text: string): string
-		return (text:gsub('_', ' '):gsub('%a+', function(word: string): string
-			return word:sub(1, 1):upper()..word:sub(2):lower();
-		end));
-	end;
-
-	for _: number, source: table in {
-		{["Into"] = 'Trim', ["Enum"] = bedwars.ArmorTrimType, ["Meta"] = bedwars.ArmorTrimMeta},
-		{["Into"] = 'Color', ["Enum"] = bedwars.ArmorTrimColor},
-		{["Into"] = 'Effect', ["Enum"] = bedwars.ArmorTrimEffectType, ["Meta"] = bedwars.ArmorTrimEffectMeta}
-	} do
-		local labels: {string} = {};
-		for key: string, value: any in source.Enum do
-			local meta: table? = source.Meta and source.Meta[value];
-			local label: string = meta and meta.name or prettify(tostring(source.Meta and value or key));
-			if trimValues[source.Into][label] == nil then
-				trimValues[source.Into][label] = value;
-				table.insert(labels, label);
-			end;
-		end;
-		table.sort(labels);
-		for _: number, label: string in labels do
-			table.insert(trimLabels[source.Into], label);
-		end;
-	end;
 
 	local paint: (accessory: Instance) -> () = function(accessory: Instance): ()
 		local wanted: boolean = false;
@@ -11447,48 +13383,6 @@ velo.run(function(): ()
 		end;
 	end;
 
-	local applyTrim: () -> () = function(): ()
-		for _: number, object: Instance in trimObjects do
-			if object.Parent then
-				object:Destroy();
-			end;
-		end;
-		table.clear(trimObjects);
-		local character: Model? = lplr.Character;
-		local trimType: any = trimValues.Trim[Trim["Value"]];
-		local trimColor: any = trimValues.Color[TrimColor["Value"]];
-		local effectType: any = trimValues.Effect[TrimEffect["Value"]];
-		if not CustomArmour["Enabled"] or not character or not trimType or not trimColor or not effectType then
-			return;
-		end;
-		local worn: {[string]: boolean} = {};
-		for _: any, item: any in store.inventory.inventory.armor or {} do
-			local armor: table? = type(item) == 'table' and bedwars.ItemMeta[item.itemType] and bedwars.ItemMeta[item.itemType].armor;
-			if armor and armorSlots[armor.slot] then
-				worn[armorSlots[armor.slot]] = true;
-			end;
-		end;
-		local capture: RBXScriptConnection = character.DescendantAdded:Connect(function(object: Instance): ()
-			table.insert(trimObjects, object);
-		end);
-		bedwars.ArmorTrimController:attachArmorTrimEffects(character, trimType, trimColor, TrimTier["Value"] - 1, effectType);
-		local colorMeta: table? = bedwars.ArmorTrimColorMeta[trimColor];
-		for _: number, piece: Instance in bedwars.ArmorTrimUtil.createArmorTrims(trimType, colorMeta and colorMeta.color or Color3.new(1, 1, 1), TrimTier["Value"] - 1) do
-			local keep: boolean = false;
-			for _: number, part: string in piece.Name:split('_') do
-				keep = keep or worn[part] == true;
-			end;
-			if keep then
-				piece:SetAttribute('VeloTrim', true);
-				bedwars.AccessoryUtil:addAccessory(character, piece);
-			else
-				piece:Destroy();
-			end;
-		end;
-		bedwars.WeldTable:weldCharacterAccessories(character);
-		capture:Disconnect();
-	end;
-
 	local watchCharacter: (character: Model) -> () = function(character: Model): ()
 		CustomArmour:Clean(character.ChildAdded:Connect(function(child: Instance): ()
 			if child:IsA('Accessory') and child:WaitForChild('Handle', 3) then
@@ -11501,24 +13395,8 @@ velo.run(function(): ()
 		["Name"] = 'CustomArmour',
 		["Function"] = function(callback: boolean): ()
 			if callback then
-				wornArmor = store.inventory.inventory.armor;
-				CustomArmour:Clean(lplr.CharacterAdded:Connect(function(character: Model): ()
-					watchCharacter(character);
-					task.delay(1, applyTrim);
-				end));
-				CustomArmour:Clean(vapeEvents.InventoryChanged.Event:Connect(function(): ()
-					if store.inventory.inventory.armor ~= wornArmor then
-						wornArmor = store.inventory.inventory.armor;
-						applyTrim();
-					end;
-				end));
+				CustomArmour:Clean(lplr.CharacterAdded:Connect(watchCharacter));
 				CustomArmour:Clean(function(): ()
-					for _: number, object: Instance in trimObjects do
-						if object.Parent then
-							object:Destroy();
-						end;
-					end;
-					table.clear(trimObjects);
 					for _: Instance, highlight: Highlight in highlights do
 						highlight:Destroy();
 					end;
@@ -11528,10 +13406,9 @@ velo.run(function(): ()
 					watchCharacter(lplr.Character);
 				end;
 				paintAll();
-				applyTrim();
 			end;
 		end,
-		["Tooltip"] = 'Recolors your armour and adds an armour trim. Only you can see it.'
+		["Tooltip"] = 'Recolors your armour. Only you can see it.'
 	});
 	Color = CustomArmour:CreateColorSlider({
 		["Name"] = 'Color',
@@ -11563,33 +13440,233 @@ velo.run(function(): ()
 		["Function"] = paintAll,
 		["Tooltip"] = 'Colors the chestplate.'
 	});
-	Trim = CustomArmour:CreateDropdown({
+end);
+
+velo.run(function(): ()
+	if not bedwars.ArmorTrimType then
+		return;
+	end;
+	local ArmorChanger: table = {["Enabled"] = false};
+	local Trim: table;
+	local Color: table;
+	local Effect: table;
+	local Tier: table;
+	local slotNames: {[number]: string} = {[0] = 'helmet', [1] = 'chestplate', [2] = 'boots'};
+	local labels: {[string]: {string}} = {["Trim"] = {}, ["Color"] = {}, ["Effect"] = {}};
+	local values: {[string]: {[string]: any}} = {["Trim"] = {}, ["Color"] = {}, ["Effect"] = {}};
+	local added: {Instance} = {};
+
+	local prettify: (text: string) -> string = function(text: string): string
+		return (text:gsub('_', ' '):gsub('%a+', function(word: string): string
+			return word:sub(1, 1):upper()..word:sub(2):lower();
+		end));
+	end;
+
+	for _: number, source: table in {
+		{["Into"] = 'Trim', ["Enum"] = bedwars.ArmorTrimType, ["Meta"] = bedwars.ArmorTrimMeta},
+		{["Into"] = 'Color', ["Enum"] = bedwars.ArmorTrimColor},
+		{["Into"] = 'Effect', ["Enum"] = bedwars.ArmorTrimEffectType, ["Meta"] = bedwars.ArmorTrimEffectMeta}
+	} do
+		for key: any, value: any in source.Enum do
+			local meta: table? = source.Meta and source.Meta[value];
+			local label: string = meta and meta.name or prettify(tostring(source.Meta and value or key));
+			if values[source.Into][label] == nil then
+				values[source.Into][label] = value;
+				table.insert(labels[source.Into], label);
+			end;
+		end;
+		table.sort(labels[source.Into]);
+	end;
+
+	local clearAdded: () -> () = function(): ()
+		for _: number, object: Instance in added do
+			if object.Parent then
+				object:Destroy();
+			end;
+		end;
+		table.clear(added);
+	end;
+
+	local applyTrim: () -> () = function(): ()
+		clearAdded();
+		local character: Model? = lplr.Character;
+		if not ArmorChanger["Enabled"] or not character then
+			return;
+		end;
+		local trimType: any = values.Trim[Trim["Value"]];
+		local trimColor: any = values.Color[Color["Value"]];
+		local effectType: any = values.Effect[Effect["Value"]];
+		if not trimType or not trimColor or not effectType then
+			return;
+		end;
+		local before: {[Instance]: boolean} = {};
+		for _: number, object: Instance in character:GetDescendants() do
+			before[object] = true;
+		end;
+		bedwars.ArmorTrimController:attachArmorTrimEffects(character, trimType, trimColor, Tier["Value"] - 1, effectType);
+		local colorMeta: table? = bedwars.ArmorTrimColorMeta[trimColor];
+		local worn: {[string]: boolean} = {};
+		for _: any, item: any in store.inventory.inventory.armor or {} do
+			local meta: table? = typeof(item) == 'table' and bedwars.ItemMeta[item.itemType] or nil;
+			if meta and meta.armor and slotNames[meta.armor.slot] then
+				worn[slotNames[meta.armor.slot]] = true;
+			end;
+		end;
+		for _: number, piece: Instance in bedwars.ArmorTrimUtil.createArmorTrims(trimType, colorMeta and colorMeta.color or Color3.new(1, 1, 1), Tier["Value"] - 1) do
+			local slot: string? = nil;
+			for name: string in worn do
+				if table.find(piece.Name:split('_'), name) then
+					slot = name;
+					break;
+				end;
+			end;
+			if slot then
+				piece:SetAttribute('VeloTrim', true);
+				bedwars.AccessoryUtil:addAccessory(character, piece);
+			else
+				piece:Destroy();
+			end;
+		end;
+		bedwars.WeldTable:weldCharacterAccessories(character);
+		for _: number, object: Instance in character:GetDescendants() do
+			if not before[object] then
+				table.insert(added, object);
+			end;
+		end;
+	end;
+
+	local refresh: () -> () = function(): ()
+		if ArmorChanger["Enabled"] then
+			applyTrim();
+		end;
+	end;
+
+	ArmorChanger = vape.Categories.Render:CreateModule({
+		["Name"] = 'ArmorChanger',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				ArmorChanger:Clean(lplr.CharacterAdded:Connect(function(): ()
+					task.wait(1);
+					applyTrim();
+				end));
+				ArmorChanger:Clean(clearAdded);
+			end;
+			applyTrim();
+		end,
+		["Tooltip"] = 'Puts an armor trim on yourself, only you can see it.'
+	});
+	Trim = ArmorChanger:CreateDropdown({
 		["Name"] = 'Trim',
-		["List"] = trimLabels.Trim,
-		["Function"] = applyTrim,
-		["Tooltip"] = 'Armour trim pattern on the pieces you wear.'
+		["List"] = labels.Trim,
+		["Function"] = refresh
 	});
-	TrimColor = CustomArmour:CreateDropdown({
-		["Name"] = 'Trim Color',
-		["List"] = trimLabels.Color,
-		["Function"] = applyTrim
+	Color = ArmorChanger:CreateDropdown({
+		["Name"] = 'Color',
+		["List"] = labels.Color,
+		["Function"] = refresh
 	});
-	TrimEffect = CustomArmour:CreateDropdown({
-		["Name"] = 'Trim Effect',
-		["List"] = trimLabels.Effect,
-		["Function"] = applyTrim
+	Effect = ArmorChanger:CreateDropdown({
+		["Name"] = 'Effect',
+		["List"] = labels.Effect,
+		["Function"] = refresh
 	});
-	TrimTier = CustomArmour:CreateSlider({
-		["Name"] = 'Trim Tier',
+	Tier = ArmorChanger:CreateSlider({
+		["Name"] = 'Tier',
 		["Min"] = 1,
 		["Max"] = 7,
 		["Default"] = 7,
-		["Function"] = applyTrim,
+		["Function"] = refresh,
 		["Suffix"] = function(value: number): string
 			local rank: table? = bedwars.ArmorTrimEffectRankMeta[value - 1];
 			return rank and rank.tier and prettify(tostring(rank.tier)) or '';
 		end,
 		["Tooltip"] = 'Higher tiers use the fancier version of the effect.'
+	});
+end);
+
+velo.run(function(): ()
+	local Clouds: table = {["Enabled"] = false};
+	local Scale: table;
+	local CloudColor: table;
+	local folder: Instance?;
+	local folderWatch: RBXScriptConnection?;
+	local reference: {[Instance]: table} = {};
+
+	local restyle: (part: Instance) -> () = function(part: Instance): ()
+		if not part:IsA('BasePart') then
+			return;
+		end;
+		reference[part] = reference[part] or {["Size"] = part.Size, ["Color"] = part.Color, ["Transparency"] = part.Transparency};
+		part.Size = reference[part].Size * (Scale["Value"] / 100);
+		part.Color = Color3.fromHSV(CloudColor["Hue"], CloudColor["Sat"], CloudColor["Value"]);
+		part.Transparency = 1 - CloudColor["Opacity"];
+	end;
+
+	local applyAll: () -> () = function(): ()
+		if not Clouds["Enabled"] or not folder then
+			return;
+		end;
+		for _: number, part: Instance in folder:GetChildren() do
+			restyle(part);
+		end;
+	end;
+
+	local bindFolder: (found: Instance?) -> () = function(found: Instance?): ()
+		if folderWatch then
+			folderWatch:Disconnect();
+			folderWatch = nil;
+		end;
+		folder = found;
+		if not found then
+			return;
+		end;
+		folderWatch = found.ChildAdded:Connect(function(part: Instance): ()
+			task.defer(function(): ()
+				if Clouds["Enabled"] then
+					restyle(part);
+				end;
+			end);
+		end);
+		applyAll();
+	end;
+
+	Clouds = vape.Categories.Render:CreateModule({
+		["Name"] = 'Clouds',
+		["Function"] = function(callback: boolean): ()
+			if callback then
+				Clouds:Clean(workspace.ChildAdded:Connect(function(child: Instance): ()
+					if child.Name == 'Clouds' then
+						bindFolder(child);
+					end;
+				end));
+				bindFolder(workspace:FindFirstChild('Clouds'));
+			else
+				bindFolder(nil);
+				for part: Instance, saved: table in reference do
+					if part.Parent then
+						part.Size = saved.Size;
+						part.Color = saved.Color;
+						part.Transparency = saved.Transparency;
+					end;
+				end;
+				table.clear(reference);
+			end;
+		end,
+		["Tooltip"] = 'Restyles the clouds around the map.'
+	});
+	Scale = Clouds:CreateSlider({
+		["Name"] = 'Size',
+		["Min"] = 5,
+		["Max"] = 300,
+		["Default"] = 100,
+		["Suffix"] = '%',
+		["Function"] = applyAll
+	});
+	CloudColor = Clouds:CreateColorSlider({
+		["Name"] = 'Color',
+		["DefaultSat"] = 0,
+		["Darker"] = true,
+		["Function"] = applyAll
 	});
 end);
 
@@ -11691,144 +13768,127 @@ velo.run(function(): ()
 	local FPSBoost: table = {["Enabled"] = false};
 	local particleClasses: {string} = {'ParticleEmitter', 'Trail', 'Beam', 'Smoke', 'Fire', 'Sparkles'};
 	local sweepBudget: number = 0.002;
-	local sweepBatch: number = 50000;
-	local unlockedCap: number = 9999;
-	local saved: {[Instance]: {[string]: table}} = {};
+	local freezeInterval: number = 0.5;
+	local options: {[string]: table} = {};
+	local saved: {[Instance]: {[string]: any}} = {};
+	local effects: {[Instance]: any} = {};
 	local hidden: {[Instance]: Instance} = {};
-	local watched: {[Instance]: {RBXScriptConnection}} = {};
+	local watched: {[Instance]: RBXScriptConnection} = {};
 	local killEffects: {[string]: any} = {};
 	local visualizers: {[string]: any} = {};
 	local nametagHook: any;
-	local fpsCap: number?;
-	local wants: {[string]: boolean} = {};
-	local map: Instance?;
+	local qualityOld: any;
+	local technologyOld: EnumItem?;
+	local waterOld: {[string]: number}?;
+	local waterValues: {[string]: number} = {["WaterWaveSize"] = 0, ["WaterWaveSpeed"] = 0, ["WaterReflectance"] = 0, ["WaterTransparency"] = 1};
 
-	local set: (object: Instance, property: string, value: any) -> () = function(object: Instance, property: string, value: any): ()
-		local properties: {[string]: table} = saved[object] or {};
+	local override: (object: Instance, property: string, value: any) -> () = function(object: Instance, property: string, value: any): ()
+		local properties: {[string]: any} = saved[object] or {};
 		saved[object] = properties;
-		properties[property] = properties[property] or {["Original"] = object[property]};
-		properties[property].Applied = value;
+		if properties[property] == nil then
+			properties[property] = object[property];
+		end;
 		object[property] = value;
 	end;
 
-	local hide: (object: Instance) -> () = function(object: Instance): ()
-		if object.Parent then
-			hidden[object] = object.Parent;
-			object.Parent = nil;
-		end;
+	local pin: (object: Instance, property: string, value: any) -> () = function(object: Instance, property: string, value: any): ()
+		override(object, property, value);
+		FPSBoost:Clean(object:GetPropertyChangedSignal(property):Connect(function(): ()
+			if object[property] ~= value then
+				saved[object][property] = object[property];
+				object[property] = value;
+			end;
+		end));
 	end;
 
 	local scan: (object: Instance) -> () = function(object: Instance): ()
-		if wants.Particles and table.find(particleClasses, object.ClassName) and not (object.Parent and object.Parent.Name == 'ProjectileTargeting') then
-			set(object, 'Enabled', false);
-		elseif wants.Lights and object:IsA('Light') then
-			set(object, 'Enabled', false);
-		elseif wants.Explosions and object:IsA('Explosion') then
-			set(object, 'Visible', false);
-		elseif wants.Reflections and object:IsA('BasePart') and object.Reflectance > 0 then
-			set(object, 'Reflectance', 0);
+		if options.Particles["Enabled"] and table.find(particleClasses, object.ClassName) and not (object.Parent and object.Parent.Name == 'ProjectileTargeting') then
+			override(object, 'Enabled', false);
 		end;
-		if not (wants.Materials or wants.Decals or wants.Meshes) then
-			return;
-		end;
-		map = map or workspace:FindFirstChild('Map');
-		if not map or not object:IsDescendantOf(map) then
-			return;
-		end;
-		if object:IsA('BasePart') then
-			if wants.Meshes and object:IsA('MeshPart') then
-				set(object, 'TextureID', '');
-			end;
-			if wants.Materials then
-				set(object, 'Material', Enum.Material.SmoothPlastic);
-			end;
-		elseif wants.Decals and object:IsA('Decal') and not (object.Parent:IsA('BasePart') and object.Parent.Transparency > 0.5) then
-			set(object, 'Transparency', 1);
-		elseif wants.Decals and object:IsA('SurfaceAppearance') then
-			hide(object);
-		elseif wants.Meshes and object:IsA('SpecialMesh') then
-			set(object, 'TextureId', '');
+		if options.Lights["Enabled"] and object:IsA('Light') then
+			override(object, 'Enabled', false);
+		elseif options.Reflections["Enabled"] and object:IsA('BasePart') and object.Reflectance > 0 then
+			override(object, 'Reflectance', 0);
+		elseif options.Explosions["Enabled"] and object:IsA('Explosion') then
+			override(object, 'Visible', false);
 		end;
 	end;
 
 	local stripEffect: (effect: Instance) -> () = function(effect: Instance): ()
-		if effect:IsA('PostEffect') and not effect:IsA('BlurEffect') then
-			set(effect, 'Enabled', false);
+		if effects[effect] ~= nil or table.find(vape.BlurEffects or {}, effect) then
+			return;
+		end;
+		if effect:IsA('PostEffect') then
+			effects[effect] = effect.Enabled;
+			effect.Enabled = false;
 		elseif effect:IsA('Atmosphere') then
-			set(effect, 'Density', 0);
+			effects[effect] = effect.Density;
+			effect.Density = 0;
+		end;
+	end;
+
+	local setSpeed: (speed: number) -> () = function(speed: number): ()
+		for _: number, ent: table in entitylib.List do
+			if ent.Player ~= lplr then
+				local humanoid: Humanoid? = ent.Character:FindFirstChildWhichIsA('Humanoid');
+				local animator: Animator? = humanoid and humanoid:FindFirstChildWhichIsA('Animator');
+				for _: number, track: AnimationTrack in (animator and animator:GetPlayingAnimationTracks() or {}) do
+					track:AdjustSpeed(speed);
+				end;
+			end;
 		end;
 	end;
 
 	local strip: (ent: table, child: Instance) -> () = function(ent: table, child: Instance): ()
-		if wants.Cosmetics and (child.Name == 'Clothing' or child.Name == '3DClothing') then
-			hide(child);
-		elseif wants.Accessories and ent.Player and child:IsA('Accessory') and not bedwars.ItemMeta[child.Name] and not child:GetAttribute('ArmorSlot') and not child:GetAttribute('IsBackpack') and not child:GetAttribute('NoArmorHide') then
+		if options.Cosmetics["Enabled"] and (child.Name == 'Clothing' or child.Name == '3DClothing') then
+			hidden[child] = ent.Character;
+			child.Parent = nil;
+		elseif options.Accessories["Enabled"] and ent.Player and child:IsA('Accessory') and not bedwars.ItemMeta[child.Name] and not child:GetAttribute('ArmorSlot') and not child:GetAttribute('IsBackpack') and not child:GetAttribute('NoArmorHide') then
 			for _: number, part: Instance in child:GetDescendants() do
 				if part:IsA('BasePart') then
-					set(part, 'LocalTransparencyModifier', 1);
+					override(part, 'LocalTransparencyModifier', 1);
 				end;
 			end;
 		end;
 	end;
 
-	local watchEntity: (ent: table) -> () = function(ent: table): ()
-		if ent.Player == lplr or watched[ent.Character] then
+	local added: (ent: table) -> () = function(ent: table): ()
+		if ent.Player == lplr or not (options.Cosmetics["Enabled"] or options.Accessories["Enabled"]) then
 			return;
 		end;
-		local connections: {RBXScriptConnection} = {};
-		if wants.Cosmetics or wants.Accessories then
-			for _: number, child: Instance in ent.Character:GetChildren() do
-				strip(ent, child);
-			end;
-			table.insert(connections, ent.Character.ChildAdded:Connect(function(child: Instance): ()
+		for _: number, child: Instance in ent.Character:GetChildren() do
+			strip(ent, child);
+		end;
+		if not watched[ent.Character] then
+			watched[ent.Character] = ent.Character.ChildAdded:Connect(function(child: Instance): ()
 				task.defer(function(): ()
-					if child.Parent == ent.Character then
+					if FPSBoost["Enabled"] and child.Parent == ent.Character then
 						strip(ent, child);
 					end;
 				end);
-			end));
+			end);
 		end;
-		local animator: Animator? = typeof(ent.Humanoid) == 'Instance' and ent.Humanoid:FindFirstChildWhichIsA('Animator') or nil;
-		if wants['Freeze animations'] and animator then
-			for _: number, track: AnimationTrack in animator:GetPlayingAnimationTracks() do
-				track:AdjustSpeed(0);
-			end;
-			table.insert(connections, animator.AnimationPlayed:Connect(function(track: AnimationTrack): ()
-				track:AdjustSpeed(0);
-			end));
-		end;
-		watched[ent.Character] = connections;
 	end;
 
 	local restore: () -> () = function(): ()
-		for object: Instance, properties: {[string]: table} in saved do
-			for property: string, record: table in properties do
-				if object[property] == record.Applied then
-					object[property] = record.Original;
+		for effect: Instance, value: any in effects do
+			if effect.Parent then
+				if effect:IsA('Atmosphere') then
+					effect.Density = value;
+				else
+					effect.Enabled = value;
+				end;
+			end;
+		end;
+		table.clear(effects);
+		for object: Instance, properties: {[string]: any} in saved do
+			if object.Parent then
+				for property: string, value: any in properties do
+					object[property] = value;
 				end;
 			end;
 		end;
 		table.clear(saved);
-		for object: Instance, parent: Instance in hidden do
-			if parent.Parent or parent == workspace then
-				object.Parent = parent;
-			end;
-		end;
-		table.clear(hidden);
-		for character: Instance, connections: {RBXScriptConnection} in watched do
-			for _: number, connection: RBXScriptConnection in connections do
-				connection:Disconnect();
-			end;
-			watched[character] = nil;
-		end;
-		if wants['Freeze animations'] then
-			for _: number, ent: table in entitylib.List do
-				local animator: Animator? = typeof(ent.Humanoid) == 'Instance' and ent.Humanoid:FindFirstChildWhichIsA('Animator') or nil;
-				for _: number, track: AnimationTrack in (animator and animator:GetPlayingAnimationTracks() or {}) do
-					track:AdjustSpeed(1);
-				end;
-			end;
-		end;
 		for name: string, effect: any in killEffects do
 			bedwars.KillEffectController.killEffects[name] = effect;
 		end;
@@ -11841,25 +13901,32 @@ velo.run(function(): ()
 			bedwars.NametagController.addGameNametag = nametagHook;
 			nametagHook = nil;
 		end;
-		if wants['Unlock FPS'] then
-			if fpsCap then
-				setfpscap(fpsCap);
-			else
-				notif('FPS Boost', 'Your executor cannot read the FPS cap, rejoin to restore it.', 8, 'info');
+		if technologyOld then
+			lightingService.Technology = technologyOld;
+			technologyOld = nil;
+		end;
+		if waterOld then
+			for property: string, value: number in waterOld do
+				workspace.Terrain[property] = value;
+			end;
+			waterOld = nil;
+		end;
+		for character: Instance, connection: RBXScriptConnection in watched do
+			connection:Disconnect();
+			watched[character] = nil;
+		end;
+		for object: Instance, parent: Instance in hidden do
+			if parent.Parent then
+				object.Parent = parent;
 			end;
 		end;
-	end;
-
-	local hideNametags: () -> () = function(): ()
-		if nametagHook or store.matchState == 0 then
-			return;
-		end;
-		nametagHook = bedwars.NametagController.addGameNametag;
-		bedwars.NametagController.addGameNametag = function(): () end;
-		for _: any, app: any in bedwars.AppController:getOpenApps() do
-			if tostring(app):find('Nametag') then
-				bedwars.AppController:closeApp(tostring(app));
-			end;
+		table.clear(hidden);
+		setSpeed(1);
+		if qualityOld then
+			pcall(function(): ()
+				settings().Rendering.QualityLevel = qualityOld;
+			end);
+			qualityOld = nil;
 		end;
 	end;
 
@@ -11867,39 +13934,46 @@ velo.run(function(): ()
 		["Name"] = 'FPS Boost',
 		["Function"] = function(callback: boolean): ()
 			if not callback then
+				restore();
 				return;
 			end;
-			for name: string, option: table in FPSBoost.Options do
-				wants[name] = option["Enabled"] == true;
+			if options['Render quality']["Enabled"] then
+				pcall(function(): ()
+					qualityOld = settings().Rendering.QualityLevel;
+					settings().Rendering.QualityLevel = Enum.QualityLevel.Level01;
+				end);
 			end;
-			map = nil;
-			FPSBoost:Clean(restore);
-			if wants['Render quality'] then
-				set(settings().Rendering, 'QualityLevel', Enum.QualityLevel.Level01);
+			if options.Shadows["Enabled"] then
+				pin(lightingService, 'GlobalShadows', false);
 			end;
-			if wants.Shadows then
-				set(lightingService, 'GlobalShadows', false);
+			if options.Reflections["Enabled"] then
+				pin(lightingService, 'EnvironmentSpecularScale', 0);
 			end;
-			if wants.Reflections then
-				set(lightingService, 'EnvironmentSpecularScale', 0);
-			end;
-			if wants['Compatibility lighting'] then
-				set(lightingService, 'Technology', Enum.Technology.Compatibility);
-			end;
-			if wants.Water then
-				for property: string, value: number in {["WaterWaveSize"] = 0, ["WaterWaveSpeed"] = 0, ["WaterReflectance"] = 0, ["WaterTransparency"] = 1} do
-					set(workspace.Terrain, property, value);
-				end;
-			end;
-			if wants['Post effects'] then
+			if options['Post effects']["Enabled"] then
 				for _: number, effect: Instance in lightingService:GetChildren() do
 					stripEffect(effect);
 				end;
 				FPSBoost:Clean(lightingService.ChildAdded:Connect(function(effect: Instance): ()
-					task.defer(stripEffect, effect);
+					if FPSBoost["Enabled"] and options['Post effects']["Enabled"] then
+						task.defer(stripEffect, effect);
+					end;
 				end));
 			end;
-			if wants['Kill Effects'] then
+			if options.Water["Enabled"] then
+				local previous: {[string]: number} = {};
+				for property: string in waterValues do
+					previous[property] = workspace.Terrain[property];
+				end;
+				waterOld = previous;
+				for property: string, value: number in waterValues do
+					workspace.Terrain[property] = value;
+				end;
+			end;
+			if options['Compatibility lighting']["Enabled"] then
+				technologyOld = lightingService.Technology;
+				lightingService.Technology = Enum.Technology.Compatibility;
+			end;
+			if options['Kill Effects']["Enabled"] then
 				for name: string, effect: any in bedwars.KillEffectController.killEffects do
 					if not name:find('Custom') then
 						killEffects[name] = effect;
@@ -11916,43 +13990,69 @@ velo.run(function(): ()
 					end;
 				end;
 			end;
-			if wants.Visualizer then
+			if options.Visualizer["Enabled"] and bedwars.VisualizerUtils then
 				for name: string, utility: any in bedwars.VisualizerUtils do
 					visualizers[name] = utility;
 					bedwars.VisualizerUtils[name] = function(): () end;
 				end;
 			end;
-			if wants.Nametags then
-				hideNametags();
-				local storeWatch: table = bedwars.Store.changed:connect(hideNametags);
-				FPSBoost:Clean(function(): ()
-					storeWatch:disconnect();
-				end);
+			if options.Particles["Enabled"] or options.Lights["Enabled"] or options.Reflections["Enabled"] or options.Explosions["Enabled"] then
+				FPSBoost:Clean(workspace.DescendantAdded:Connect(scan));
+				FPSBoost:Clean(task.spawn(function(): ()
+					local clock: number = os.clock();
+					local stack: {Instance} = {workspace};
+					while #stack > 0 do
+						local container: Instance = table.remove(stack);
+						for _: number, child: Instance in container:GetChildren() do
+							scan(child);
+							table.insert(stack, child);
+							if os.clock() - clock > sweepBudget then
+								task.wait();
+								clock = os.clock();
+							end;
+						end;
+					end;
+				end));
 			end;
-			if wants.Clouds and workspace:FindFirstChild('Clouds') then
-				hide(workspace.Clouds);
-			end;
-			if wants.Explosions and workspace:FindFirstChild('Explosions') then
+			if options.Explosions["Enabled"] and workspace:FindFirstChild('Explosions') then
 				local explosions: Instance = workspace.Explosions;
 				FPSBoost:Clean(explosions.ChildAdded:Connect(function(child: Instance): ()
 					task.defer(function(): ()
-						if child.Parent == explosions then
+						if FPSBoost["Enabled"] and options.Explosions["Enabled"] and child.Parent == explosions then
 							child.Parent = nil;
 						end;
 					end);
 				end));
 			end;
-			if wants['Unlock FPS'] and setfpscap then
-				fpsCap = getfpscap and getfpscap() or nil;
-				setfpscap(unlockedCap);
-			end;
-			if wants.Cosmetics or wants.Accessories or wants['Freeze animations'] then
-				FPSBoost:Clean(entitylib.Events.EntityAdded:Connect(watchEntity));
-				FPSBoost:Clean(entitylib.Events.EntityRemoved:Connect(function(ent: table): ()
-					for _: number, connection: RBXScriptConnection in watched[ent.Character] or {} do
-						connection:Disconnect();
+			if options.Nametags["Enabled"] then
+				FPSBoost:Clean(task.spawn(function(): ()
+					repeat
+						task.wait();
+					until store.matchState ~= 0 or not FPSBoost["Enabled"];
+					if not FPSBoost["Enabled"] or not options.Nametags["Enabled"] or not bedwars.AppController then
+						return;
 					end;
-					watched[ent.Character] = nil;
+					nametagHook = bedwars.NametagController.addGameNametag;
+					bedwars.NametagController.addGameNametag = function(): () end;
+					for _: any, app: any in bedwars.AppController:getOpenApps() do
+						if tostring(app):find('Nametag') then
+							bedwars.AppController:closeApp(tostring(app));
+						end;
+					end;
+				end));
+			end;
+			if options.Clouds["Enabled"] and workspace:FindFirstChild('Clouds') then
+				local clouds: Instance = workspace.Clouds;
+				hidden[clouds] = clouds.Parent;
+				clouds.Parent = nil;
+			end;
+			if options.Cosmetics["Enabled"] or options.Accessories["Enabled"] then
+				FPSBoost:Clean(entitylib.Events.EntityAdded:Connect(added));
+				FPSBoost:Clean(entitylib.Events.EntityRemoved:Connect(function(ent: table): ()
+					if watched[ent.Character] then
+						watched[ent.Character]:Disconnect();
+						watched[ent.Character] = nil;
+					end;
 					for object: Instance, parent: Instance in hidden do
 						if parent == ent.Character then
 							hidden[object] = nil;
@@ -11960,31 +14060,16 @@ velo.run(function(): ()
 					end;
 				end));
 				for _: number, ent: table in entitylib.List do
-					watchEntity(ent);
+					added(ent);
 				end;
 			end;
-			if wants.Particles or wants.Lights or wants.Reflections or wants.Explosions or wants.Materials or wants.Decals or wants.Meshes then
-				FPSBoost:Clean(workspace.DescendantAdded:Connect(scan));
-				local queue: {Instance} = {workspace};
-				local sweep: RBXScriptConnection;
-				sweep = runService.Heartbeat:Connect(function(): ()
-					local deadline: number = os.clock() + sweepBudget;
-					for _: number = 1, sweepBatch do
-						local container: Instance? = table.remove(queue);
-						if not container then
-							sweep:Disconnect();
-							return;
-						end;
-						for _: number, child: Instance in container:GetChildren() do
-							scan(child);
-							table.insert(queue, child);
-						end;
-						if os.clock() > deadline then
-							return;
-						end;
-					end;
-				end);
-				FPSBoost:Clean(sweep);
+			if options['Freeze animations']["Enabled"] then
+				FPSBoost:Clean(task.spawn(function(): ()
+					repeat
+						setSpeed(0);
+						task.wait(freezeInterval);
+					until not FPSBoost["Enabled"] or not options['Freeze animations']["Enabled"];
+				end));
 			end;
 		end,
 		["Tooltip"] = 'Strips the parts of the scene that actually cost frames.'
@@ -11996,35 +14081,167 @@ velo.run(function(): ()
 			FPSBoost:Toggle();
 		end;
 	end;
+	local freezeChanged: (callback: boolean) -> () = function(callback: boolean): ()
+		if FPSBoost["Enabled"] and not callback then
+			setSpeed(1);
+		elseif FPSBoost["Enabled"] then
+			restart();
+		end;
+	end;
 	for _: number, entry: table in {
 		{'Cosmetics', true, "Hides everyone else's skins. Bodies and held items stay visible."},
 		{'Accessories', false, "Hides everyone else's hats, hair and other avatar accessories. Armor and held items stay visible."},
 		{'Freeze animations', false, 'Stops everyone else animating, they slide around instead.'},
 		{'Clouds', true, 'Removes the cloud decoration, around 700 parts on most maps.'},
 		{'Render quality', true, 'Drops the engine render quality to its lowest level.'},
-		{'Shadows', true, 'Turns off global shadows.'},
+		{'Shadows', true, 'Turns off global shadows and keeps them off when the game turns them back on.'},
 		{'Lights', true, 'Turns off every point, spot and surface light in the map.'},
-		{'Post effects', true, 'Turns off sun rays, depth of field, bloom and colour correction. Blur is left alone.'},
+		{'Post effects', true, 'Turns off sun rays, depth of field, bloom, blur and colour correction.'},
 		{'Water', true, 'Flattens terrain water, no waves and no reflection.'},
-		{'Reflections', true, 'Turns off sky reflections and shiny part reflections.'},
+		{'Reflections', true, 'Turns off sky reflections and shiny part reflections. Sky reflections stay off when the game turns them back on.'},
 		{'Compatibility lighting', true, 'Drops the map to compatibility lighting, the cheapest renderer Roblox has.'},
 		{'Kill Effects', true, "Stops other people's kill effects from playing."},
 		{'Visualizer', true, "Turns off the game's own visual effect helpers."},
 		{'Particles', true, 'Stops every particle, trail and beam in the map from rendering.'},
 		{'Explosions', true, 'Hides TNT, fireball and other explosion effects. The blast itself still happens.'},
-		{'Nametags', true, 'Hides the game nametags once the match starts.'},
-		{'Materials', false, 'Flattens every map part to smooth plastic.'},
-		{'Decals', false, 'Hides map decals and PBR surfaces, but keeps the textures of see-through blocks.'},
-		{'Meshes', false, 'Clears textures off map meshes.'},
-		{'Unlock FPS', false, 'Removes the frame rate cap.'}
+		{'Nametags', true, 'Hides the game nametags once the match starts.'}
 	} do
-		FPSBoost:CreateToggle({
+		options[entry[1]] = FPSBoost:CreateToggle({
 			["Name"] = entry[1],
 			["Default"] = entry[2],
-			["Function"] = restart,
+			["Function"] = entry[1] == 'Freeze animations' and freezeChanged or restart,
 			["Tooltip"] = entry[3]
 		});
 	end;
+end);
+
+velo.run(function(): ()
+	local NoTextures: table = {["Enabled"] = false};
+	local Materials: table;
+	local Decals: table;
+	local Meshes: table;
+	local scanBatch: number = 500;
+	local reference: {[Instance]: {[string]: any}} = {};
+
+	local remember: (object: Instance, property: string) -> () = function(object: Instance, property: string): ()
+		local properties: {[string]: any} = reference[object] or {};
+		reference[object] = properties;
+		if properties[property] == nil then
+			properties[property] = object[property];
+		end;
+	end;
+
+	local strip: (object: Instance) -> () = function(object: Instance): ()
+		if Decals["Enabled"] and object:IsA('Decal') then
+			local parent: Instance? = object.Parent;
+			if parent and parent:IsA('BasePart') and parent.Transparency > 0.5 then
+				return;
+			end;
+			remember(object, 'Transparency');
+			object.Transparency = 1;
+		elseif Decals["Enabled"] and object:IsA('SurfaceAppearance') then
+			remember(object, 'Parent');
+			object.Parent = nil;
+		elseif Meshes["Enabled"] and object:IsA('SpecialMesh') then
+			remember(object, 'TextureId');
+			object.TextureId = '';
+		elseif object:IsA('BasePart') then
+			if Meshes["Enabled"] and object:IsA('MeshPart') then
+				remember(object, 'TextureID');
+				object.TextureID = '';
+			end;
+			if Materials["Enabled"] then
+				remember(object, 'Material');
+				object.Material = Enum.Material.SmoothPlastic;
+			end;
+		end;
+	end;
+
+	local scan: () -> () = function(): ()
+		for index: number, object: Instance in store.map:GetDescendants() do
+			if not NoTextures["Enabled"] then
+				return;
+			end;
+			strip(object);
+			if index % scanBatch == 0 then
+				task.wait();
+			end;
+		end;
+	end;
+
+	local restoreAll: () -> () = function(): ()
+		for object: Instance, properties: {[string]: any} in reference do
+			pcall(function(): ()
+				for property: string, value: any in properties do
+					object[property] = value;
+				end;
+			end);
+		end;
+		table.clear(reference);
+	end;
+
+	local refresh: () -> () = function(): ()
+		if not NoTextures["Enabled"] then
+			return;
+		end;
+		restoreAll();
+		scan();
+	end;
+
+	NoTextures = vape.Categories.Render:CreateModule({
+		["Name"] = 'NoTextures',
+		["Function"] = function(callback: boolean): ()
+			if not callback then
+				restoreAll();
+				return;
+			end;
+			repeat
+				task.wait();
+			until store.map or not NoTextures["Enabled"];
+			if not NoTextures["Enabled"] then
+				return;
+			end;
+			NoTextures:Clean(store.map.DescendantAdded:Connect(function(object: Instance): ()
+				task.defer(strip, object);
+			end));
+			scan();
+		end,
+		["Tooltip"] = 'Removes textures and materials from the map.'
+	});
+	Materials = NoTextures:CreateToggle({
+		["Name"] = 'Materials',
+		["Default"] = true,
+		["Function"] = refresh,
+		["Tooltip"] = 'Flattens every part to smooth plastic.'
+	});
+	Decals = NoTextures:CreateToggle({
+		["Name"] = 'Decals',
+		["Default"] = true,
+		["Function"] = refresh,
+		["Tooltip"] = 'Hides decals, textures and PBR surfaces, but keeps the textures of see-through blocks.'
+	});
+	Meshes = NoTextures:CreateToggle({
+		["Name"] = 'Meshes',
+		["Default"] = true,
+		["Function"] = refresh,
+		["Tooltip"] = 'Clears textures off meshes.'
+	});
+end);
+
+velo.run(function(): ()
+	local unlockedCap: number = 9999;
+	local cap: number? = getfpscap and getfpscap() or nil;
+	vape.Legit:CreateModule({
+		["Name"] = 'FPSUnlocker',
+		["Function"] = function(callback: boolean): ()
+			if cap then
+				setfpscap(callback and unlockedCap or cap);
+			elseif callback then
+				setfpscap(unlockedCap);
+				notif('FPSUnlocker', 'You have to restart ur game inorder to disable this.', 8, 'info');
+			end;
+		end
+	});
 end);
 
 
@@ -12101,7 +14318,7 @@ velo.run(function(): ()
 				for step: number = 1, flightSteps do
 					local t: number = step * flightStep;
 					local point: Vector3 = event.origin + event.launchVelocity * t + Vector3.new(0, -0.5 * gravity * t * t, 0);
-					local hit: RaycastResult? = bedwars.QueryUtil:raycast(landing, point - landing, landingParams);
+					local hit: RaycastResult? = workspace:Raycast(landing, point - landing, landingParams);
 					landing = hit and hit.Position or point;
 					if hit then
 						break;
@@ -12121,6 +14338,9 @@ velo.run(function(): ()
 					return;
 				end;
 				nextScan = now + scanInterval;
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
 				local bed: BasePart? = entitylib.isAlive and findBed() or nil;
 				if not bed then
 					return;
@@ -12270,9 +14490,29 @@ velo.run(function(): ()
 		end
 	};
 
+	local applied: boolean = false;
+
 	local applyKillEffect: () -> () = function(): ()
 		if Mode["Value"] ~= 'None' then
+			applied = true;
 			lplr:SetAttribute('KillEffectType', Mode["Value"] == 'Bedwars' and effectIds.Kill[List["Value"]] or 'Custom'..Mode["Value"]);
+		elseif applied then
+			applied = false;
+			lplr:SetAttribute('KillEffectType', 'default');
+		end;
+	end;
+
+	local dropUnsupported: () -> () = function(): ()
+		if not KillEffect["Enabled"] then
+			return;
+		end;
+		if BedBreak["Enabled"] and not firesignal then
+			notif('Bed Break Effect', 'This executor can\'t trigger the game\'s bed break effect', 5);
+			BedBreak:Toggle();
+		end;
+		if Win["Enabled"] and not getconnections then
+			notif('WinEffect', 'This executor cannot trigger the game\'s win effect callbacks', 5);
+			Win:Toggle();
 		end;
 	end;
 
@@ -12283,7 +14523,10 @@ velo.run(function(): ()
 				for name: string in customEffects do
 					bedwars.KillEffectController.killEffects['Custom'..name] = nil;
 				end;
-				lplr:SetAttribute('KillEffectType', 'default');
+				if applied then
+					applied = false;
+					lplr:SetAttribute('KillEffectType', 'default');
+				end;
 				return;
 			end;
 			for name: string, effect: (...any) -> () in customEffects do
@@ -12302,11 +14545,7 @@ velo.run(function(): ()
 			applyKillEffect();
 
 			KillEffect:Clean(vapeEvents.BedwarsBedBreak.Event:Connect(function(data: table): ()
-				if not BedBreak["Enabled"] then
-					return;
-				end;
-				if not firesignal then
-					notif('Kill Effect', 'This executor cannot trigger the bed break effect', 5);
+				if not BedBreak["Enabled"] or not firesignal then
 					return;
 				end;
 				firesignal(bedwars.Client:Get('BedBreakEffectTriggered').instance.OnClientEvent, {
@@ -12319,11 +14558,7 @@ velo.run(function(): ()
 			end));
 
 			KillEffect:Clean(vapeEvents.MatchEndEvent.Event:Connect(function(): ()
-				if not Win["Enabled"] then
-					return;
-				end;
-				if not getconnections then
-					notif('Kill Effect', 'This executor cannot trigger the win effect', 5);
+				if not Win["Enabled"] or not getconnections then
 					return;
 				end;
 				for _: number, connection: table in getconnections(bedwars.Client:Get('WinEffectTriggered').instance.OnClientEvent) do
@@ -12332,6 +14567,7 @@ velo.run(function(): ()
 					end;
 				end;
 			end));
+			dropUnsupported();
 		end,
 		["Tooltip"] = 'Custom final kill, bed break and win effects'
 	});
@@ -12374,6 +14610,9 @@ velo.run(function(): ()
 			if BedBreakList then
 				BedBreakList.Object.Visible = callback;
 			end;
+			if callback then
+				dropUnsupported();
+			end;
 		end,
 		["Tooltip"] = 'Plays the chosen bed break effect on every bed break'
 	});
@@ -12389,6 +14628,9 @@ velo.run(function(): ()
 			if WinList then
 				WinList.Object.Visible = callback;
 			end;
+			if callback then
+				dropUnsupported();
+			end;
 		end,
 		["Tooltip"] = 'Plays the chosen clientside win effect when the match ends'
 	});
@@ -12403,32 +14645,32 @@ end);
 velo.run(function(): ()
 	local CleanKit: table = {["Enabled"] = false};
 	local oldSpawnOrb: ((...any) -> ...any)?;
-	local hidden: {GuiObject} = {};
-
-	local hideEffect: (object: Instance) -> () = function(object: Instance): ()
-		if object.Name == 'WindWalkerEffect' and object:IsA('GuiObject') then
-			object.Visible = false;
-			table.insert(hidden, object);
-		end;
-	end;
 
 	CleanKit = vape.Legit:CreateModule({
 		["Name"] = 'Clean Kit',
 		["Function"] = function(callback: boolean): ()
-			if callback then
-				oldSpawnOrb = bedwars.WindWalkerController.spawnOrb;
-				bedwars.WindWalkerController.spawnOrb = function(): () end;
-				for _: number, object: Instance in lplr.PlayerGui:GetDescendants() do
-					hideEffect(object);
-				end;
-				CleanKit:Clean(lplr.PlayerGui.DescendantAdded:Connect(hideEffect));
+			if not callback then
+				bedwars.WindWalkerController.spawnOrb = oldSpawnOrb;
 				return;
 			end;
-			bedwars.WindWalkerController.spawnOrb = oldSpawnOrb;
-			for _: number, object: GuiObject in hidden do
-				object.Visible = true;
+			oldSpawnOrb = bedwars.WindWalkerController.spawnOrb;
+			bedwars.WindWalkerController.spawnOrb = function(): () end;
+			local effect: Instance? = lplr.PlayerGui:FindFirstChild('WindWalkerEffect', true);
+			if effect then
+				effect.Visible = false;
+				return;
 			end;
-			table.clear(hidden);
+			local watcher: RBXScriptConnection;
+			watcher = lplr.PlayerGui.DescendantAdded:Connect(function(object: Instance): ()
+				if object.Name == 'WindWalkerEffect' then
+					if vape.ThreadFix then
+						setthreadidentity(8);
+					end;
+					watcher:Disconnect();
+					object.Visible = false;
+				end;
+			end);
+			CleanKit:Clean(watcher);
 		end,
 		["Tooltip"] = 'Removes zephyr status indicator'
 	});
@@ -12830,51 +15072,75 @@ velo.run(function(): ()
 	local Level: table;
 	local Speed: table;
 	local Sensitivity: table;
+	local controller: table = bedwars.FovController;
 	local oldSetFOV: ((...any) -> ...any)?;
 	local oldGetFOV: ((...any) -> ...any)?;
 	local oldSensitivity: number?;
-	local zoomed: boolean = false;
+	local zoomRender: RBXScriptConnection?;
+	local gameFov: number = 0;
 	local current: number = 0;
 
+	local baseFov: () -> number = function(): number
+		return FieldOfView["Enabled"] and Degrees["Value"] or gameFov;
+	end;
+
+	local hook: (state: boolean) -> () = function(state: boolean): ()
+		if state and not oldSetFOV then
+			local setFOV: (...any) -> ...any = controller.setFOV;
+			oldSetFOV, oldGetFOV = setFOV, controller.getFOV;
+			gameFov = controller:getFOV();
+			controller.setFOV = function(self: table, value: number?): ...any
+				gameFov = value or gameFov;
+				return setFOV(self, if zoomRender then current else baseFov());
+			end;
+			controller.getFOV = function(): number
+				return if zoomRender then current else baseFov();
+			end;
+		elseif not state and oldSetFOV then
+			controller.setFOV, controller.getFOV = oldSetFOV, oldGetFOV;
+			oldSetFOV, oldGetFOV = nil, nil;
+		end;
+	end;
+
 	local setZoom: (state: boolean) -> () = function(state: boolean): ()
-		zoomed = state and FieldOfView["Enabled"];
-		if zoomed and Sensitivity["Enabled"] and not oldSensitivity then
-			oldSensitivity = inputService.MouseDeltaSensitivity;
-			inputService.MouseDeltaSensitivity = oldSensitivity / Level["Value"];
-		elseif not zoomed and oldSensitivity then
+		if state == (zoomRender ~= nil) then
+			return;
+		end;
+		if state then
+			hook(true);
+			current = baseFov();
+			if Sensitivity["Enabled"] then
+				oldSensitivity = inputService.MouseDeltaSensitivity;
+				inputService.MouseDeltaSensitivity = oldSensitivity / Level["Value"];
+			end;
+			local setFOV: (...any) -> ...any = oldSetFOV;
+			zoomRender = runService.PreRender:Connect(function(delta: number): ()
+				current += (baseFov() / Level["Value"] - current) * math.clamp(Speed["Value"] * delta, 0, 1);
+				setFOV(controller, current);
+			end);
+			return;
+		end;
+		zoomRender:Disconnect();
+		zoomRender = nil;
+		if oldSensitivity then
 			inputService.MouseDeltaSensitivity = oldSensitivity;
 			oldSensitivity = nil;
 		end;
+		if not FieldOfView["Enabled"] then
+			hook(false);
+		end;
+		controller:setFOV(bedwars.Store:getState().Settings.fov);
 	end;
 
 	FieldOfView = vape.Legit:CreateModule({
 		["Name"] = 'FOV',
 		["Function"] = function(callback: boolean): ()
-			local controller: table = bedwars.FovController;
-			if not callback then
-				setZoom(false);
-				controller.setFOV = oldSetFOV;
-				controller.getFOV = oldGetFOV;
-				controller:setFOV(bedwars.Store:getState().Settings.fov);
-				return;
+			if callback then
+				hook(true);
+			elseif not zoomRender then
+				hook(false);
 			end;
-			oldSetFOV = controller.setFOV;
-			oldGetFOV = controller.getFOV;
-			current = Degrees["Value"];
-			controller.setFOV = function(self: table): ...any
-				return oldSetFOV(self, current);
-			end;
-			controller.getFOV = function(): number
-				return current;
-			end;
-			controller:setFOV(current);
-			FieldOfView:Clean(runService.PreRender:Connect(function(delta: number): ()
-				local target: number = Degrees["Value"] / (zoomed and Level["Value"] or 1);
-				if math.abs(target - current) > 0.01 then
-					current += (target - current) * math.clamp(Speed["Value"] * delta, 0, 1);
-					oldSetFOV(controller, current);
-				end;
-			end));
+			controller:setFOV(bedwars.Store:getState().Settings.fov);
 		end,
 		["Tooltip"] = 'Adjusts camera vision, hold the zoom key to scope in'
 	});
@@ -12888,8 +15154,11 @@ velo.run(function(): ()
 		["Hold"] = true
 	});
 	vape:Clean(ZoomKey.Triggered:Connect(function(down: boolean): ()
-		setZoom(ZoomKey.Hold and down or (not ZoomKey.Hold and not zoomed));
+		setZoom(if ZoomKey.Hold then down else zoomRender == nil);
 	end));
+	vape:Clean(function(): ()
+		setZoom(false);
+	end);
 	Level = FieldOfView:CreateSlider({
 		["Name"] = 'Zoom Level',
 		["Min"] = 1.1,
@@ -12903,7 +15172,7 @@ velo.run(function(): ()
 		["Min"] = 1,
 		["Max"] = 30,
 		["Default"] = 12,
-		["Tooltip"] = 'How fast the FOV eases in and out, higher is snappier'
+		["Tooltip"] = 'How fast the zoom eases in and out, higher is snappier'
 	});
 	Sensitivity = FieldOfView:CreateToggle({
 		["Name"] = 'Zoom Sensitivity',
@@ -12915,47 +15184,52 @@ end);
 velo.run(function(): ()
 	local HitColor: table = {["Enabled"] = false};
 	local Color: table;
-	local lock: table = propertyLock();
-	local highlightName: string = '_DamageHighlight_';
-
-	local tint: (character: Instance?) -> () = function(character: Instance?): ()
-		local highlight: Instance? = character and character ~= lplr.Character and character:FindFirstChild(highlightName);
-		if highlight then
-			lock.Apply(highlight, {
-				["FillColor"] = Color3.fromHSV(Color["Hue"], Color["Sat"], Color["Value"]),
-				["FillTransparency"] = Color["Opacity"]
-			});
-		end;
-	end;
-
-	local tintAll: () -> () = function(): ()
-		for _: number, ent: table in entitylib.List do
-			tint(ent.Character);
-		end;
-	end;
+	local scanInterval: number = 0.1;
+	local gameColor: Color3 = Color3.new(1, 0, 0);
+	local gameTransparency: number = 0.4;
+	local tinted: {Highlight} = {};
 
 	HitColor = vape.Legit:CreateModule({
 		["Name"] = 'Hit Color',
 		["Function"] = function(callback: boolean): ()
 			if not callback then
-				lock.Restore();
+				for _: number, highlight: Highlight in tinted do
+					highlight.FillColor = gameColor;
+					highlight.FillTransparency = gameTransparency;
+				end;
+				table.clear(tinted);
 				return;
 			end;
-			tintAll();
-			HitColor:Clean(vapeEvents.EntityDamageEvent.Event:Connect(function(damage: table): ()
-				task.defer(tint, damage.entityInstance);
+			local nextScan: number = 0;
+			HitColor:Clean(runService.Heartbeat:Connect(function(): ()
+				local now: number = os.clock();
+				if now < nextScan then
+					return;
+				end;
+				nextScan = now + scanInterval;
+				for _: number, ent: table in entitylib.List do
+					local highlight: Instance? = ent.Character and ent.Character:FindFirstChild('_DamageHighlight_');
+					if highlight then
+						if not table.find(tinted, highlight) then
+							table.insert(tinted, highlight);
+							highlight.Destroying:Once(function(): ()
+								local index: number? = table.find(tinted, highlight);
+								if index then
+									table.remove(tinted, index);
+								end;
+							end);
+						end;
+						highlight.FillColor = Color3.fromHSV(Color["Hue"], Color["Sat"], Color["Value"]);
+						highlight.FillTransparency = Color["Opacity"];
+					end;
+				end;
 			end));
 		end,
 		["Tooltip"] = 'Customize the hit highlight options'
 	});
 	Color = HitColor:CreateColorSlider({
 		["Name"] = 'Color',
-		["DefaultOpacity"] = 0.4,
-		["Function"] = function(): ()
-			if HitColor["Enabled"] then
-				tintAll();
-			end;
-		end
+		["DefaultOpacity"] = 0.4
 	});
 end);
 
@@ -13149,6 +15423,9 @@ velo.run(function(): ()
 				label.Parent = vape.gui;
 				Interface:Clean(label);
 				local showHealth: () -> () = function(): ()
+					if vape.ThreadFix then
+						setthreadidentity(8);
+					end;
 					local character: Model? = entitylib.isAlive and lplr.Character or nil;
 					local health: number = character and character:GetAttribute('Health') or 0;
 					label.Text = character and math.round(health)..' ❤️' or '';
@@ -13235,10 +15512,9 @@ velo.run(function(): ()
 				end);
 			end;
 			if OldTabList["Enabled"] then
-				local listed: boolean = starterGui:GetCoreGuiEnabled(Enum.CoreGuiType.PlayerList);
 				starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, true);
 				UICleanup:Clean(function(): ()
-					starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, listed);
+					starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false);
 				end);
 			end;
 		end,
@@ -13303,7 +15579,8 @@ end);
 velo.run(function(): ()
 	local ReachDisplay: table = {["Enabled"] = false};
 	local Display: table = {["Value"] = 'Reach'};
-	local refreshRate: number = 0.1;
+	local reachRate: number = 0.4;
+	local pingRate: number = 0.1;
 	local label: TextLabel = Instance.new('TextLabel');
 
 	ReachDisplay = vape.Legit:CreateModule({
@@ -13317,7 +15594,7 @@ velo.run(function(): ()
 				if tick() < nextRefresh then
 					return;
 				end;
-				nextRefresh = tick() + refreshRate;
+				nextRefresh = tick() + (Display["Value"] == 'Reach' and reachRate or pingRate);
 				local reach: string = (store.attackReachUpdate > tick() and store.attackReach or '0.00')..' studs';
 				local network: Instance? = statsService:FindFirstChild('Network');
 				local server: Instance? = network and network:FindFirstChild('ServerStatsItem');
@@ -13397,7 +15674,7 @@ velo.run(function(): ()
 		local entry: string? = pool[math.random(1, math.max(#pool, 1))];
 		local parts: {string} = entry and entry:split('/') or {};
 		if not entry or not isfile(parts[1]) then
-			notif('Song Beats', entry and 'Missing song ('..parts[1]..')' or 'No songs in the list', 10);
+			notif('SongBeats', entry and 'Missing song ('..parts[1]..')' or 'no songs', 10);
 			task.defer(function(): ()
 				if SongBeats["Enabled"] then
 					SongBeats:Toggle();
@@ -13433,7 +15710,7 @@ velo.run(function(): ()
 			sound = current;
 			SongBeats:Clean(current);
 			SongBeats:Clean(current.Ended:Connect(playNext));
-			SongBeats:Clean(runService.RenderStepped:Connect(function(): ()
+			SongBeats:Clean(runService.Heartbeat:Connect(function(): ()
 				if not BeatFov["Enabled"] or not current.IsPlaying or nextBeat > tick() then
 					return;
 				end;
@@ -13467,6 +15744,10 @@ velo.run(function(): ()
 		["Function"] = function(callback: boolean): ()
 			if Adjustment.Object then
 				Adjustment.Object.Visible = callback;
+			end;
+			if SongBeats["Enabled"] then
+				SongBeats:Toggle();
+				SongBeats:Toggle();
 			end;
 		end
 	});
@@ -13582,6 +15863,7 @@ velo.run(function(): ()
 		local fill: Color3 = Color3.fromHSV(FillColor["Hue"], FillColor["Sat"], FillColor["Value"]);
 		if mode ~= 'Classic' then
 			local highlight: Highlight = Instance.new('Highlight');
+			highlight.Name = 'ViewmodelVisuals';
 			highlight.FillColor = fill;
 			highlight.FillTransparency = FillColor["Opacity"];
 			highlight.OutlineColor = Color3.fromHSV(OutlineColor["Hue"], OutlineColor["Sat"], OutlineColor["Value"]);
@@ -13886,12 +16168,13 @@ velo.run(function(): ()
 		icon.Position = UDim2.new(0, 10, 0.5, 0);
 		icon.Size = UDim2.fromOffset(30, 30);
 		icon.Parent = frame;
+		local bold: Font = Font.new(uipallet.Font.Family, Enum.FontWeight.Bold);
 		local labels: {TextLabel} = {};
 		for index: number, text: string in {(effect:sub(1, 1):upper()..effect:sub(2):gsub('_', ' ')), '00:00'} do
 			for _: number, shadow: boolean in {true, false} do
 				local label: TextLabel = Instance.new('TextLabel');
 				label.BackgroundTransparency = 1;
-				label.FontFace = uipallet.FontSemiBold;
+				label.FontFace = bold;
 				label.Position = UDim2.fromOffset(shadow and 68 or 67, (index == 1 and 10 or 29) + (shadow and 1 or 0));
 				label.Size = UDim2.fromOffset(108, 20);
 				label.Text = text;
@@ -13904,7 +16187,7 @@ velo.run(function(): ()
 				table.insert(labels, label);
 			end;
 		end;
-		frame.Size = UDim2.fromOffset(getfontsize(labels[2].Text, 15, uipallet.FontSemiBold).X + 80, 57);
+		frame.Size = UDim2.fromOffset(getfontsize(labels[2].Text, 15, bold).X + 80, 57);
 		entry.TimeShadow, entry.Time = labels[3], labels[4];
 		return entry;
 	end;
@@ -14025,8 +16308,8 @@ velo.run(function(): ()
 	local Lighting: table = {["Enabled"] = true};
 	local Terrain: table = {["Enabled"] = true};
 	local presets: {[string]: table} = {
-		["Realistic"] = {["Brightness"] = 1, ["EnvironmentDiffuseScale"] = 0.2, ["EnvironmentSpecularScale"] = 0.82, ["Blur"] = 3.921, ["Saturation"] = 0.092, ["Cover"] = 0.4},
-		["Clean"] = {["Brightness"] = 1, ["EnvironmentDiffuseScale"] = 0.2, ["EnvironmentSpecularScale"] = 0.8, ["Blur"] = 3.9, ["Saturation"] = 0.09, ["Cover"] = 0.4}
+		["Realistic"] = {["Brightness"] = 1, ["EnvironmentDiffuseScale"] = 0.2, ["EnvironmentSpecularScale"] = 0.82, ["Blur"] = 3.921, ["Saturation"] = 0.092, ["Cover"] = 0.4, ["Effects"] = true},
+		["Clean"] = {["Brightness"] = 1, ["EnvironmentDiffuseScale"] = 0.2, ["EnvironmentSpecularScale"] = 0.8, ["Cover"] = 0.4, ["Effects"] = false}
 	};
 	local changed: {table} = {};
 
@@ -14071,13 +16354,15 @@ velo.run(function(): ()
 				for _: number, property: string in {'Brightness', 'EnvironmentDiffuseScale', 'EnvironmentSpecularScale'} do
 					assign(lightingService, property, preset[property]);
 				end;
-				local blur: BlurEffect = Instance.new('BlurEffect');
-				blur.Size = preset.Blur;
-				local colorCorrection: ColorCorrectionEffect = Instance.new('ColorCorrectionEffect');
-				colorCorrection.Saturation = preset.Saturation;
-				for _: number, effect: Instance in {blur, colorCorrection, Instance.new('SunRaysEffect'), Instance.new('Sky'), Instance.new('Atmosphere')} do
-					effect.Parent = lightingService;
-					Shaders:Clean(effect);
+				if preset.Effects then
+					local blur: BlurEffect = Instance.new('BlurEffect');
+					blur.Size = preset.Blur;
+					local colorCorrection: ColorCorrectionEffect = Instance.new('ColorCorrectionEffect');
+					colorCorrection.Saturation = preset.Saturation;
+					for _: number, effect: Instance in {blur, colorCorrection, Instance.new('SunRaysEffect'), Instance.new('Sky'), Instance.new('Atmosphere')} do
+						effect.Parent = lightingService;
+						Shaders:Clean(effect);
+					end;
 				end;
 				local clouds: Clouds = Instance.new('Clouds');
 				clouds.Cover = preset.Cover;
@@ -14200,15 +16485,18 @@ velo.run(function(): ()
 	local show: () -> () = function(): ()
 		local topBarGui: Instance? = lplr.PlayerGui:FindFirstChild('TopBarAppGui');
 		local topBarApp: Instance? = topBarGui and topBarGui:FindFirstChild('TopBarApp');
-		local timer: TextLabel?;
-		for _: number, object: Instance in (topBarApp and topBarApp:GetDescendants() or {}) do
-			if object:IsA('TextLabel') and object.ContentText:match('^%d+:%d%d$') then
-				timer = object;
-				break;
+		local matchBar: Instance? = topBarApp and topBarApp:FindFirstChild('2');
+		local timer: Instance? = matchBar and matchBar:FindFirstChild('5');
+		if not (timer and timer:IsA('TextLabel')) then
+			timer, matchBar = nil, nil;
+			for _: number, object: Instance in (topBarApp and topBarApp:GetDescendants() or {}) do
+				if object:IsA('TextLabel') and object.ContentText:match('^%d+:%d%d$') then
+					timer = object;
+					break;
+				end;
 			end;
 		end;
-		local matchBar: GuiObject?;
-		for _: number, child: Instance in (timer and topBarApp:GetChildren() or {}) do
+		for _: number, child: Instance in (timer and not matchBar and topBarApp:GetChildren() or {}) do
 			if child:IsA('GuiObject') and timer:IsDescendantOf(child) then
 				matchBar = child;
 				break;
@@ -14386,18 +16674,26 @@ velo.run(function(): ()
 				end;
 			end;
 		end;
+		local stroke: UIStroke? = card:FindFirstChildOfClass('UIStroke');
 		if Highlight["Enabled"] then
-			local stroke: UIStroke = Instance.new('UIStroke');
-			stroke.Thickness = 1.7;
-			stroke.Color = Color3.fromHSV(HighlightColor["Hue"], HighlightColor["Sat"], HighlightColor["Value"]);
-			stroke.Parent = card;
-			table.insert(created, stroke);
+			if not stroke then
+				stroke = Instance.new('UIStroke');
+				stroke.Parent = card;
+				table.insert(created, stroke);
+			end;
+			assign(stroke, 'Thickness', 1.7);
+			assign(stroke, 'Color', Color3.fromHSV(HighlightColor["Hue"], HighlightColor["Sat"], HighlightColor["Value"]));
+		elseif stroke then
+			assign(stroke, 'Enabled', false);
 		end;
 		if Gradient["Enabled"] then
-			local gradient: UIGradient = Instance.new('UIGradient');
-			gradient.Color = ColorSequence.new(primary, Color3.fromHSV(SecondColor["Hue"], SecondColor["Sat"], SecondColor["Value"]));
-			gradient.Parent = card;
-			table.insert(created, gradient);
+			local gradient: UIGradient? = card:FindFirstChildWhichIsA('UIGradient');
+			if not gradient then
+				gradient = Instance.new('UIGradient');
+				gradient.Parent = card;
+				table.insert(created, gradient);
+			end;
+			assign(gradient, 'Color', ColorSequence.new(primary, Color3.fromHSV(SecondColor["Hue"], SecondColor["Sat"], SecondColor["Value"])));
 		end;
 	end;
 
@@ -14734,7 +17030,9 @@ velo.run(function(): ()
 	local AutoRotate: table = {["Enabled"] = true};
 	local RotateSpeed: table = {["Value"] = 20, ["Object"] = {}};
 	local Transparency: table;
-	local checkRate: number = 0.2;
+	local loopRate: number = 0.1;
+	local rescanRate: number = 0.5;
+	local nearRange: number = 30;
 	local zoomRange: Vector2 = Vector2.new(0.35, 3);
 	local layerFolders: {Folder} = {};
 	local layerButtons: {[string]: TextButton} = {};
@@ -14742,7 +17040,7 @@ velo.run(function(): ()
 	local orbit: table = {["Yaw"] = 0, ["Pitch"] = math.rad(28), ["Radius"] = 12, ["Center"] = Vector3.zero, ["Zoom"] = 1};
 	local drag: table = {["Input"] = nil, ["Last"] = Vector3.zero, ["Touches"] = {}, ["Pinch"] = nil};
 	local current: BasePart?, picked: BasePart?, bedClone: Instance?;
-	local dirty: boolean, nextCheck: number, layerCount: number = false, 0, 0;
+	local pending: boolean, layerCount: number, accent: Color3? = false, 0, nil;
 
 	local holder: Frame = Instance.new('Frame');
 	holder.BackgroundColor3 = color.Dark(uipallet.Main, 0.1);
@@ -14865,9 +17163,23 @@ velo.run(function(): ()
 		viewCamera.CFrame = CFrame.new(orbit.Center) * CFrame.Angles(0, orbit.Yaw, 0) * CFrame.Angles(-orbit.Pitch, 0, 0) * CFrame.new(0, 0, distance);
 	end;
 
-	local updateView: () -> () = function(): ()
+	local selectedLayer: () -> number? = function(): number?
 		local selected: number? = tonumber(View["Value"]:match('%d+'));
-		selected = selected and selected <= layerCount and selected or nil;
+		return selected and selected <= layerCount and selected or nil;
+	end;
+
+	local paintButtons: () -> () = function(): ()
+		local selected: number? = selectedLayer();
+		accent = Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value);
+		for name: string, button: TextButton in layerButtons do
+			local active: boolean = name == (selected and 'Layer '..selected or 'All');
+			button.BackgroundColor3 = active and accent or color.Light(uipallet.Main, 0.034);
+			button.Label.TextColor3 = active and uipallet.Text or color.Dark(uipallet.Text, 0.16);
+		end;
+	end;
+
+	local updateView: () -> () = function(): ()
+		local selected: number? = selectedLayer();
 		local low: Vector3, high: Vector3, shown: number = Vector3.one * math.huge, Vector3.one * -math.huge, 0;
 		for level: number, folder: Folder in layerFolders do
 			local visible: boolean = not selected or level == selected;
@@ -14891,16 +17203,11 @@ velo.run(function(): ()
 		local queue: table? = bedwars.QueueMeta[store.queueType];
 		local team: table? = queue and teamId and queue.teams[teamId];
 		local bedPart: Instance? = current and current:FindFirstChild('Bed');
-		bedLabel.Text = current and (team and team.displayName or 'Team '..tostring(teamId))..' Bed' or 'No bed';
+		bedLabel.Text = current and (team and team.displayName or 'Team '..(teamId or '?'))..' Bed' or 'No bed';
 		bedLabel.TextColor3 = bedPart and bedPart:IsA('BasePart') and bedPart.Color or color.Dark(uipallet.Text, 0.16);
 		emptyLabel.Visible = not current or shown == 0;
 		emptyLabel.Text = not current and 'No bed found' or selected and 'Layer '..selected..' is empty' or 'No defense';
-		local accent: Color3 = Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value);
-		for name: string, button: TextButton in layerButtons do
-			local active: boolean = name == (selected and 'Layer '..selected or 'All');
-			button.BackgroundColor3 = active and accent or color.Light(uipallet.Main, 0.034);
-			button.Label.TextColor3 = active and uipallet.Text or color.Dark(uipallet.Text, 0.16);
-		end;
+		paintButtons();
 		placeCamera();
 	end;
 
@@ -14918,6 +17225,7 @@ velo.run(function(): ()
 		if vape.ThreadFix then
 			setthreadidentity(8);
 		end;
+		pending = false;
 		for _: number, folder: Folder in layerFolders do
 			folder:Destroy();
 		end;
@@ -14977,6 +17285,29 @@ velo.run(function(): ()
 		updateView();
 	end;
 
+	local unchanged: (layers: {{Instance}}) -> boolean = function(layers: {{Instance}}): boolean
+		local count: number = 0;
+		for level: number, blockList: {Instance} in layers do
+			for _: number, block: Instance in blockList do
+				if tracked[block] ~= level then
+					return false;
+				end;
+				count += 1;
+			end;
+		end;
+		for _: Instance in tracked do
+			count -= 1;
+		end;
+		return count == 0;
+	end;
+
+	local refreshNear: (data: table?) -> () = function(data: table?): ()
+		local cell: Vector3? = current and data and data.blockRef and data.blockRef.blockPosition;
+		if cell and current and (cell * 3 - current.Position).Magnitude <= nearRange then
+			pending = true;
+		end;
+	end;
+
 	BedDefense = vape:CreateOverlay({
 		["Name"] = 'Bed Defense',
 		["Icon"] = getcustomasset('velo/assets/new/world.png'),
@@ -14985,17 +17316,13 @@ velo.run(function(): ()
 		["CategorySize"] = 240,
 		["Function"] = function(callback: boolean): ()
 			if not callback then
-				drag.Input, drag.Pinch, dirty = nil, nil, false;
+				drag.Input, drag.Pinch, pending = nil, nil, false;
 				table.clear(drag.Touches);
 				rebuild(nil, {});
 				return;
 			end;
-			BedDefense:Clean(vapeEvents.BlocksChanged.Event:Connect(function(): ()
-				dirty = true;
-			end));
-			BedDefense:Clean(vapeEvents.BreakBlockEvent.Event:Connect(function(): ()
-				dirty = true;
-			end));
+			BedDefense:Clean(vapeEvents.PlaceBlockEvent.Event:Connect(refreshNear));
+			BedDefense:Clean(vapeEvents.BreakBlockEvent.Event:Connect(refreshNear));
 			BedDefense:Clean(inputService.InputChanged:Connect(function(input: InputObject): ()
 				if drag.Pinch and table.find(drag.Touches, input) then
 					local spread: number = (drag.Touches[1].Position - drag.Touches[2].Position).Magnitude;
@@ -15023,46 +17350,38 @@ velo.run(function(): ()
 				end;
 			end));
 			BedDefense:Clean(runService.RenderStepped:Connect(function(deltaTime: number): ()
-				if AutoRotate["Enabled"] and not drag.Input and not drag.Pinch and BedDefense.Object.Visible then
+				if AutoRotate["Enabled"] and not drag.Input and not drag.Pinch and holder.AbsoluteSize.X > 0 and BedDefense.Object.Visible then
 					orbit.Yaw += deltaTime * math.rad(RotateSpeed["Value"]);
 					placeCamera();
 				end;
-				local now: number = tick();
-				if now < nextCheck then
-					return;
-				end;
-				nextCheck = now + checkRate;
-				local bed: BasePart? = targetBed();
-				if bed ~= current then
-					rebuild(bed, nil);
-				elseif dirty and bed then
-					dirty = false;
-					local layers: {{Instance}} = scanLayers(bed);
-					local count: number = 0;
-					local same: boolean = true;
-					for level: number, blockList: {Instance} in layers do
-						for _: number, block: Instance in blockList do
-							same = same and tracked[block] == level;
-							count += 1;
-						end;
-					end;
-					local trackedCount: number = 0;
-					for _: Instance in tracked do
-						trackedCount += 1;
-					end;
-					if not same or count ~= trackedCount then
-						rebuild(bed, layers);
-					end;
-				end;
 			end));
 			rebuild(targetBed(), nil);
+			BedDefense:Clean(task.spawn(function(): ()
+				local checked: number = tick();
+				repeat
+					if Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value) ~= accent then
+						paintButtons();
+					end;
+					local bed: BasePart? = targetBed();
+					if pending or bed ~= current then
+						rebuild(bed, nil);
+					elseif bed and tick() - checked > rescanRate then
+						checked = tick();
+						local layers: {{Instance}} = scanLayers(bed);
+						if not unchanged(layers) then
+							rebuild(bed, layers);
+						end;
+					end;
+					task.wait(loopRate);
+				until not BedDefense.Button["Enabled"];
+			end));
 		end
 	});
 
 	local baseColor: (self: table, hue: number, sat: number, value: number, rainbow: boolean?) -> () = BedDefense.Color;
 	BedDefense.Color = function(self: table, hue: number, sat: number, value: number, rainbow: boolean?): ()
 		baseColor(self, hue, sat, value, rainbow);
-		updateView();
+		paintButtons();
 	end;
 
 	BedMode = BedDefense:CreateDropdown({
@@ -15090,10 +17409,10 @@ velo.run(function(): ()
 		["Default"] = 6,
 		["Function"] = function(): ()
 			if BedDefense.Button["Enabled"] then
-				rebuild(current, nil);
+				rebuild(targetBed(), nil);
 			end;
 		end,
-		["Tooltip"] = 'How many layers to scan outward from the bed'
+		["Tooltip"] = 'The most layers to scan out from the bed, the viewer shows a button for every layer it finds'
 	});
 	ShowBed = BedDefense:CreateToggle({
 		["Name"] = 'Show bed',
@@ -15199,15 +17518,11 @@ velo.run(function(): ()
 	local HitAccuracy: table;
 	local HideUnused: table = {["Enabled"] = true};
 	local ShowColor: table = {["Enabled"] = true};
-	local ComboCounter: table = {["Enabled"] = true};
-	local ComboComparator: table = {["Enabled"] = false};
-	local DamageComparator: table = {["Enabled"] = true};
 	local refreshRate: number = 0.05;
 	local chanceLifetime: number = 2;
 	local rowHeight: number = 20;
-	local rowOrder: {string} = {'ProjectileAimbot', 'ProjectileAura', 'Combo', 'Hits', 'Damage'};
+	local sources: {string} = {'ProjectileAura', 'ProjectileAimbot'};
 	local rows: {[string]: table} = {};
-	local fight: table = {["Opponent"] = nil, ["Combo"] = 0, ["Hits"] = 0, ["Dealt"] = 0, ["DealtHits"] = 0, ["Taken"] = 0, ["TakenHits"] = 0};
 	local nextRefresh: number = 0;
 
 	local holder: Frame = Instance.new('Frame');
@@ -15215,7 +17530,7 @@ velo.run(function(): ()
 	holder.BackgroundTransparency = 0.5;
 	holder.Size = UDim2.fromOffset(190, 32);
 	Instance.new('UICorner').Parent = holder;
-	for _: number, name: string in {'Waiting', unpack(rowOrder)} do
+	for _: number, name: string in {'Waiting', unpack(sources)} do
 		local row: Frame = Instance.new('Frame');
 		row.BackgroundTransparency = 1;
 		row.Name = name;
@@ -15245,29 +17560,16 @@ velo.run(function(): ()
 			setthreadidentity(8);
 		end;
 		local shown: number = 0;
-		local fighting: boolean = fight.Opponent ~= nil;
-		local averageGap: number = (fight.DealtHits > 0 and fight.Dealt / fight.DealtHits or 0) - (fight.TakenHits > 0 and fight.Taken / fight.TakenHits or 0);
-		local values: {[string]: table} = {
-			["Combo"] = {["Enabled"] = ComboCounter["Enabled"], ["Number"] = fight.Combo},
-			["Hits"] = {["Enabled"] = ComboComparator["Enabled"], ["Number"] = fight.Hits},
-			["Damage"] = {["Enabled"] = DamageComparator["Enabled"], ["Number"] = math.round(averageGap)}
-		};
-		for _: number, name: string in rowOrder do
+		for _: number, name: string in sources do
 			local row: table = rows[name];
-			local stat: table? = values[name];
-			local chance: table? = not stat and store.hitchance[name] or nil;
-			local live: boolean = if stat then fighting else chance ~= nil and tick() - chance.Clock < chanceLifetime;
-			row.Object.Visible = (stat == nil or stat.Enabled) and (live or not HideUnused["Enabled"]);
+			local chance: table? = store.hitchance[name];
+			local live: boolean = chance ~= nil and tick() - chance.Clock < chanceLifetime;
+			row.Object.Visible = live or not HideUnused["Enabled"];
 			if row.Object.Visible then
 				row.Object.Position = UDim2.fromOffset(0, 6 + shown * rowHeight);
+				row.Value.Text = live and math.round(chance.Value * 100)..'%' or '--';
+				row.Value.TextColor3 = live and ShowColor["Enabled"] and Color3.fromHSV(chance.Value * 0.33, 0.75, 1) or Color3.new(1, 1, 1);
 				shown += 1;
-				if stat then
-					row.Value.Text = live and (stat.Number > 0 and '+' or '')..stat.Number or '--';
-					row.Value.TextColor3 = live and ShowColor["Enabled"] and stat.Number ~= 0 and (stat.Number > 0 and Color3.fromRGB(110, 230, 110) or Color3.fromRGB(240, 90, 90)) or Color3.new(1, 1, 1);
-				else
-					row.Value.Text = live and math.round(chance.Value * 100)..'%' or '--';
-					row.Value.TextColor3 = live and ShowColor["Enabled"] and Color3.fromHSV(chance.Value * 0.33, 0.75, 1) or Color3.new(1, 1, 1);
-				end;
 			end;
 		end;
 		rows.Waiting.Object.Visible = shown == 0;
@@ -15283,29 +17585,6 @@ velo.run(function(): ()
 			if not callback then
 				return;
 			end;
-			HitAccuracy:Clean(vapeEvents.EntityDamageEvent.Event:Connect(function(damageTable: table): ()
-				local mine: Model? = lplr.Character;
-				local landed: boolean = mine ~= nil and damageTable.fromEntity == mine and damageTable.entityInstance ~= mine;
-				local received: boolean = mine ~= nil and damageTable.entityInstance == mine and damageTable.fromEntity ~= nil and damageTable.fromEntity ~= mine;
-				if not landed and not received then
-					return;
-				end;
-				local opponent: Instance = landed and damageTable.entityInstance or damageTable.fromEntity;
-				if opponent ~= fight.Opponent then
-					fight.Opponent, fight.Combo, fight.Hits, fight.Dealt, fight.DealtHits, fight.Taken, fight.TakenHits = opponent, 0, 0, 0, 0, 0, 0;
-				end;
-				if landed then
-					fight.Combo = fight.Combo >= 0 and fight.Combo + 1 or 0;
-					fight.Hits += 1;
-					fight.Dealt += damageTable.damage or 0;
-					fight.DealtHits += 1;
-				else
-					fight.Combo = fight.Combo <= 0 and fight.Combo - 1 or 0;
-					fight.Hits -= 1;
-					fight.Taken += damageTable.damage or 0;
-					fight.TakenHits += 1;
-				end;
-			end));
 			HitAccuracy:Clean(runService.Heartbeat:Connect(function(): ()
 				if tick() >= nextRefresh then
 					nextRefresh = tick() + refreshRate;
@@ -15316,7 +17595,7 @@ velo.run(function(): ()
 	});
 	HitAccuracy:CreateFont({
 		["Name"] = 'Font',
-		["Default"] = 'Arial',
+		["Default"] = 'Gotham',
 		["Function"] = function(value: Font): ()
 			for _: string, row: table in rows do
 				row.Title.FontFace = value;
@@ -15330,26 +17609,12 @@ velo.run(function(): ()
 		["Function"] = function(): ()
 			refresh();
 		end,
-		["Tooltip"] = 'Leave out a row until its module is aiming or you are in a fight'
+		["Tooltip"] = 'Leaves out a module until it is actually aiming at someone'
 	});
 	ShowColor = HitAccuracy:CreateToggle({
 		["Name"] = 'Color the number',
 		["Default"] = true,
-		["Tooltip"] = 'Hit chance goes red to green; fight stats are green when you are ahead'
-	});
-	ComboCounter = HitAccuracy:CreateToggle({
-		["Name"] = 'Combo Counter',
-		["Default"] = true,
-		["Tooltip"] = 'Hits landed (+) or taken (-) in a row against your current opponent'
-	});
-	ComboComparator = HitAccuracy:CreateToggle({
-		["Name"] = 'Combo Comparator',
-		["Tooltip"] = 'Hits you landed minus hits you took in the current fight'
-	});
-	DamageComparator = HitAccuracy:CreateToggle({
-		["Name"] = 'Damage Comparator',
-		["Default"] = true,
-		["Tooltip"] = 'Your average damage per hit minus your opponent\'s'
+		["Tooltip"] = 'Red through green as the chance climbs'
 	});
 	HitAccuracy:CreateColorSlider({
 		["Name"] = 'Background Color',
@@ -15396,7 +17661,7 @@ velo.run(function(): ()
 	local nextRefresh: number, nextCard: number = 0, 0;
 	local card: table = {["Row"] = nil, ["Cells"] = {}, ["Lifted"] = {}};
 
-	local orderedItems: (inventory: table) -> {table} = function(inventory: table): {table}
+	local orderedItems: (inventory: table, skipBackpack: boolean) -> {table} = function(inventory: table, skipBackpack: boolean): {table}
 		local worn: {[Instance]: boolean} = {};
 		local items: {table} = {};
 		for _: any, armor: any in inventory.armor do
@@ -15404,7 +17669,7 @@ velo.run(function(): ()
 				worn[armor.tool] = true;
 			end;
 		end;
-		if inventory.backpack and inventory.backpack.tool then
+		if skipBackpack and inventory.backpack and inventory.backpack.tool then
 			worn[inventory.backpack.tool] = true;
 		end;
 		for _: number, item: table in inventory.items do
@@ -15467,7 +17732,7 @@ velo.run(function(): ()
 				end;
 			end;
 		elseif target and target:IsA('Player') then
-			for index: number, item: table in orderedItems(bedwars.getInventory(target)) do
+			for index: number, item: table in orderedItems(bedwars.getInventory(target), true) do
 				if index <= columns then
 					hotbar[index] = item;
 				else
@@ -15559,19 +17824,12 @@ velo.run(function(): ()
 					Selected:Change(playerNames());
 				end);
 			end));
-			InventoryOverlay:Clean(InventoryOverlay.Object:GetPropertyChangedSignal('Visible'):Connect(refresh));
-			InventoryOverlay:Clean(vapeEvents.InventoryChanged.Event:Connect(function(): ()
-				if Selected["Value"] == 'Self' then
-					refresh();
-				end;
-			end));
 			InventoryOverlay:Clean(runService.Heartbeat:Connect(function(): ()
-				if Selected["Value"] ~= 'Self' and tick() >= nextRefresh then
+				if tick() >= nextRefresh then
 					nextRefresh = tick() + refreshRate;
 					refresh();
 				end;
 			end));
-			refresh();
 		end
 	});
 	Background = InventoryOverlay:CreateToggle({
@@ -15611,6 +17869,55 @@ velo.run(function(): ()
 	if not targetOverlay then
 		return;
 	end;
+	local statPalette: table = {["Primary"] = Color3.fromRGB(209, 209, 209), ["Danger"] = Color3.fromRGB(250, 50, 56), ["Input"] = Color3.fromRGB(20, 20, 20)};
+	local statHeight: number = 20;
+	local stats: {table} = {};
+	local fight: table = {["Target"] = nil, ["Combo"] = 0, ["Comparator"] = 0, ["Dealt"] = 0, ["DealtHits"] = 0, ["Taken"] = 0, ["TakenHits"] = 0};
+	local statAccent: Color3? = nil;
+
+	local statRow: Frame = Instance.new('Frame');
+	statRow.Name = 'Stats';
+	statRow.BackgroundTransparency = 1;
+	statRow.Size = UDim2.fromOffset(cardColumns * (cardTile + cardGap) - cardGap, statHeight);
+	statRow.Visible = false;
+	statRow.Parent = targetOverlay.Children;
+	local statLayout: UIListLayout = Instance.new('UIListLayout');
+	statLayout.FillDirection = Enum.FillDirection.Horizontal;
+	statLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right;
+	statLayout.Padding = UDim.new(0, 4);
+	statLayout.SortOrder = Enum.SortOrder.LayoutOrder;
+	statLayout.Parent = statRow;
+	vape:Clean(statRow);
+
+	local setStat: (stat: table, value: number) -> () = function(stat: table, value: number): ()
+		local shade: Color3 = value > 0 and Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value) or (value < 0 and statPalette.Danger or statPalette.Primary);
+		stat.Value = value;
+		stat.Label.Text = stat.Signed and string.format('%+d', math.clamp(value, -9, 9)) or tostring(math.abs(value));
+		if stat.Tint then
+			stat.Pill.BackgroundColor3 = value ~= 0 and shade or statPalette.Input;
+			return;
+		end;
+		stat.Label.TextColor3 = shade;
+		stat.Tag.TextColor3 = shade;
+	end;
+
+	local currentTarget: () -> table? = function(): table?
+		local target: table?, longest: number = nil, 0;
+		for ent: table, expire: any in targetinfo.Targets do
+			local remaining: number = type(expire) == 'number' and (expire > 1e8 and expire - tick() or expire - os.clock()) or 0;
+			if remaining > longest then
+				target, longest = ent, remaining;
+			end;
+		end;
+		if target and target ~= fight.Target then
+			fight.Target, fight.Combo, fight.Comparator, fight.Dealt, fight.DealtHits, fight.Taken, fight.TakenHits = target, 0, 0, 0, 0, 0, 0;
+			for _: number, stat: table in stats do
+				setStat(stat, 0);
+			end;
+		end;
+		return fight.Target;
+	end;
+
 	local clearCard: () -> () = function(): ()
 		if card.Row then
 			card.Row:Destroy();
@@ -15626,29 +17933,112 @@ velo.run(function(): ()
 				clearCard();
 			end;
 		end,
-		["Tooltip"] = 'Shows the target\'s inventory under the card. The held item is lifted and worn armor is left out.'
+		["Tooltip"] = 'Shows the target\'s inventory under the card in tiles like the BedWars hotbar. The item they are holding is lifted like your selected slot, and the armor they are wearing is left out.'
 	});
+	for index: number, spec: table in {
+		{["Name"] = 'Combo Counter', ["Tag"] = 'C', ["Default"] = true, ["Tooltip"] = 'Shows how many hits in a direct row you have landed on, or taken from, the target.'},
+		{["Name"] = 'Combo Comparator', ["Tag"] = 'H', ["Signed"] = true, ["Tooltip"] = 'Measures how many hits you have landed compared to the target.'},
+		{["Name"] = 'Damage Comparator', ["Default"] = true, ["Signed"] = true, ["Tint"] = true, ["Tooltip"] = 'Measures the strength of the target compared to yourself, from the damage each of you lands per hit.'}
+	} do
+		local pill: Frame = Instance.new('Frame');
+		pill.BackgroundColor3 = statPalette.Input;
+		pill.LayoutOrder = index;
+		pill.Size = UDim2.fromOffset(spec.Tag and 44 or 28, statHeight);
+		pill.Visible = false;
+		pill.Parent = statRow;
+		local corner: UICorner = Instance.new('UICorner');
+		corner.CornerRadius = UDim.new(0, 4);
+		corner.Parent = pill;
+		local label: TextLabel = Instance.new('TextLabel');
+		label.BackgroundTransparency = 1;
+		label.FontFace = uipallet.Font;
+		label.Position = UDim2.fromOffset(spec.Tag and 20 or 2, 0);
+		label.Size = UDim2.fromOffset(spec.Tag and 16 or 18, statHeight);
+		label.Text = spec.Signed and '+0' or '0';
+		label.TextColor3 = spec.Tint and Color3.new(1, 1, 1) or statPalette.Primary;
+		label.TextSize = 14;
+		label.TextTransparency = spec.Tint and 0.294 or 0;
+		label.TextXAlignment = Enum.TextXAlignment.Right;
+		label.Parent = pill;
+		local tag: TextLabel = label:Clone();
+		tag.Position = UDim2.fromOffset(6, 0);
+		tag.Size = UDim2.fromOffset(12, statHeight);
+		tag.Text = spec.Tag or '';
+		tag.TextSize = 12;
+		tag.TextXAlignment = Enum.TextXAlignment.Left;
+		tag.Visible = spec.Tag ~= nil;
+		tag.Parent = pill;
+		local stat: table = {["Pill"] = pill, ["Label"] = label, ["Tag"] = tag, ["Signed"] = spec.Signed == true, ["Tint"] = spec.Tint == true, ["Value"] = 0};
+		stat.Toggle = targetOverlay:CreateToggle({
+			["Name"] = spec.Name,
+			["Default"] = spec.Default,
+			["Tooltip"] = spec.Tooltip,
+			["Function"] = function(callback: boolean): ()
+				pill.Visible = callback;
+			end
+		});
+		table.insert(stats, stat);
+	end;
 	vape:Clean(clearCard);
+	vape:Clean(vapeEvents.EntityDamageEvent.Event:Connect(function(damageTable: table): ()
+		local target: table? = currentTarget();
+		if not target or not target.Character then
+			return;
+		end;
+		local landed: boolean = damageTable.fromEntity == lplr.Character and damageTable.entityInstance == target.Character;
+		local received: boolean = damageTable.entityInstance == lplr.Character and damageTable.fromEntity == target.Character;
+		if not landed and not received then
+			return;
+		end;
+		if landed then
+			fight.Combo = fight.Combo >= 0 and fight.Combo + 1 or 0;
+			fight.Comparator += 1;
+			fight.Dealt += damageTable.damage or 0;
+			fight.DealtHits += 1;
+		else
+			fight.Combo = fight.Combo <= 0 and fight.Combo - 1 or 0;
+			fight.Comparator -= 1;
+			fight.Taken += damageTable.damage or 0;
+			fight.TakenHits += 1;
+		end;
+		setStat(stats[1], fight.Combo);
+		setStat(stats[2], fight.Comparator);
+		setStat(stats[3], math.clamp(math.round((fight.DealtHits > 0 and fight.Dealt / fight.DealtHits or 0) - (fight.TakenHits > 0 and fight.Taken / fight.TakenHits or 0)), -9, 9));
+	end));
 	vape:Clean(runService.Heartbeat:Connect(function(): ()
-		if not ShowInventory["Enabled"] or tick() < nextCard then
+		if tick() < nextCard then
 			return;
 		end;
 		nextCard = tick() + refreshRate;
 		if vape.ThreadFix then
 			setthreadidentity(8);
 		end;
-		local target: table?, longest: number = nil, 0;
-		for ent: table, expire: any in targetinfo.Targets do
-			local remaining: number = type(expire) == 'number' and (expire > 1e8 and expire - tick() or expire - os.clock()) or 0;
-			if remaining > longest then
-				target, longest = ent, remaining;
+		local target: table? = currentTarget();
+		local accent: Color3 = Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value);
+		if accent ~= statAccent then
+			statAccent = accent;
+			for _: number, stat: table in stats do
+				setStat(stat, stat.Value);
 			end;
 		end;
 		local cardFrame: GuiObject? = nil;
 		for _: number, child: Instance in targetOverlay.Children:GetChildren() do
-			if child ~= card.Row and child:IsA('GuiObject') and child.Visible then
+			if child ~= card.Row and child ~= statRow and child:IsA('GuiObject') and child.Visible then
 				cardFrame = child;
 			end;
+		end;
+		local statsShown: boolean = false;
+		for _: number, stat: table in stats do
+			statsShown = statsShown or stat.Toggle["Enabled"];
+		end;
+		local below: number = cardFrame and cardFrame.Position.Y.Offset + cardFrame.Size.Y.Offset + cardGap or 0;
+		statRow.Visible = cardFrame ~= nil and statsShown;
+		if cardFrame and statsShown then
+			statRow.Position = UDim2.fromOffset(cardFrame.Position.X.Offset, below);
+			below += statHeight + cardGap;
+		end;
+		if not ShowInventory["Enabled"] then
+			return;
 		end;
 		if not card.Row then
 			local row: Frame = Instance.new('Frame');
@@ -15664,7 +18054,7 @@ velo.run(function(): ()
 			card.Row = row;
 		end;
 		local inventory: table? = target and target.Player and cardFrame and targetOverlay.Object.Visible and bedwars.getInventory(target.Player) or nil;
-		local items: {table} = inventory and orderedItems(inventory) or {};
+		local items: {table} = inventory and orderedItems(inventory, false) or {};
 		local hand: table? = inventory and inventory.hand;
 		for index: number, item: table in items do
 			local cell: Frame? = card.Cells[index];
@@ -15719,7 +18109,7 @@ velo.run(function(): ()
 		end;
 		local rows: number = math.ceil(#items / cardColumns);
 		card.Row.Size = UDim2.fromOffset(cardColumns * (cardTile + cardGap) - cardGap, math.max(rows * (cardTile + cardGap) - cardGap, 0));
-		card.Row.Position = cardFrame and UDim2.fromOffset(cardFrame.Position.X.Offset, cardFrame.Position.Y.Offset + cardFrame.Size.Y.Offset + cardGap + cardLift) or UDim2.new();
+		card.Row.Position = cardFrame and UDim2.fromOffset(cardFrame.Position.X.Offset, below + cardLift) or UDim2.new();
 		card.Row.Visible = #items > 0;
 	end));
 end);
@@ -15739,7 +18129,6 @@ velo.run(function(): ()
 	local lassoGrace: number = 1;
 	local escapeOffsets: {Vector3} = {Vector3.new(0, 3, 0), Vector3.new(3, 0, 0), Vector3.new(-3, 0, 0), Vector3.new(0, 0, 3), Vector3.new(0, 0, -3), Vector3.new(0, -3, 0)};
 	local savedVignettes: boolean? = nil;
-	local nextSuffocateCheck: number = 0;
 
 	local setVignettes: (hidden: boolean) -> () = function(hidden: boolean): ()
 		local controller: table = bedwars.VignetteController;
@@ -15810,30 +18199,26 @@ velo.run(function(): ()
 					end;
 				end);
 			end));
-			AntiEffect:Clean(runService.Heartbeat:Connect(function(): ()
-				if not Suffocate["Enabled"] or tick() < nextSuffocateCheck or not entitylib.isAlive or store.matchState ~= 1 then
-					return;
-				end;
-				nextSuffocateCheck = tick() + suffocateInterval;
-				local root: BasePart = entitylib.character.RootPart;
-				local head: Vector3 = root.Position + Vector3.new(0, SuffocateHeight["Value"], 0);
-				local block: Instance? = getPlacedBlock(head);
-				if not block then
-					return;
-				end;
-				if SuffocateMode["Value"] == 'Break' then
-					breakBlock(block, {["Effects"] = true, ["Animation"] = 'Normal'});
-					return;
-				end;
-				local cell: Vector3 = roundPos(head);
-				for _: number, offset: Vector3 in escapeOffsets do
-					local escape: Vector3 = cell + offset;
-					if not getPlacedBlock(escape) and not getPlacedBlock(escape + Vector3.new(0, 3, 0)) then
-						root.CFrame = CFrame.new(escape - Vector3.new(0, SuffocateHeight["Value"], 0)) * root.CFrame.Rotation;
-						root.AssemblyLinearVelocity = Vector3.zero;
-						break;
+			AntiEffect:Clean(task.spawn(function(): ()
+				repeat
+					local root: BasePart? = entitylib.isAlive and entitylib.character.RootPart or nil;
+					local head: Vector3 = root and root.Position + Vector3.new(0, SuffocateHeight["Value"], 0) or Vector3.zero;
+					local block: Instance? = root and Suffocate["Enabled"] and store.matchState == 1 and getPlacedBlock(head) or nil;
+					if root and block and SuffocateMode["Value"] == 'Break' then
+						breakBlock(block, {["Effects"] = true, ["Animation"] = 'Normal'});
+					elseif root and block then
+						local cell: Vector3 = roundPos(head);
+						for _: number, offset: Vector3 in escapeOffsets do
+							local escape: Vector3 = cell + offset;
+							if not getPlacedBlock(escape) and not getPlacedBlock(escape + Vector3.new(0, 3, 0)) then
+								root.CFrame = CFrame.new(escape - Vector3.new(0, SuffocateHeight["Value"], 0)) * root.CFrame.Rotation;
+								root.AssemblyLinearVelocity = Vector3.zero;
+								break;
+							end;
+						end;
 					end;
-				end;
+					task.wait(suffocateInterval);
+				until not AntiEffect["Enabled"];
 			end));
 		end,
 		["Tooltip"] = 'Strips the client side of debuffs: dizziness, werewolf fear, vignettes, lasso pulls and getting trapped inside blocks.'
@@ -15921,11 +18306,6 @@ velo.run(function(): ()
 	local Delay: table;
 	local Animation: table;
 	local Collectables: table;
-	local SpeedMushrooms: table;
-	local HealMushrooms: table;
-	local ShieldMushrooms: table;
-	local DizzyMushrooms: table;
-	local mushroomTag: string = 'forest_environment_plant';
 	local recollectDelay: number = 1;
 	local cooldowns: {[Instance]: number} = {};
 	local nextCollect: number = 0;
@@ -15938,7 +18318,7 @@ velo.run(function(): ()
 				return;
 			end;
 			AutoCollect:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCollect or not entitylib.isAlive then
+				if tick() < nextCollect then
 					return;
 				end;
 				nextCollect = tick() + Delay["Value"];
@@ -15947,28 +18327,19 @@ velo.run(function(): ()
 						cooldowns[object] = nil;
 					end;
 				end;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local character: Model = entitylib.character.Character;
-				local mushroomKinds: {[number]: boolean} = {
-					[0] = HealMushrooms["Enabled"] and (character:GetAttribute('Health') or 0) < (character:GetAttribute('MaxHealth') or 0),
-					[1] = ShieldMushrooms["Enabled"],
-					[2] = SpeedMushrooms["Enabled"],
-					[3] = DizzyMushrooms["Enabled"]
-				};
-				local tags: {string} = table.clone(Collectables.ListEnabled);
-				if not table.find(tags, mushroomTag) then
-					table.insert(tags, mushroomTag);
+				if not entitylib.isAlive then
+					return;
 				end;
-				for _: number, tag: string in tags do
+				local origin: Vector3 = entitylib.character.RootPart.Position;
+				for _: number, tag: string in Collectables.ListEnabled do
 					for _: number, object: Instance in collectionService:GetTagged(tag) do
 						local part: BasePart? = object:IsA('Model') and object.PrimaryPart or (object:IsA('BasePart') and object or nil);
 						local id: any = object:GetAttribute('Id');
-						local kind: any = object:GetAttribute('MushroomType');
-						if not part or not id or tick() < (cooldowns[object] or 0) or (origin - part.Position).Magnitude > Range["Value"] or (kind ~= nil and not mushroomKinds[kind]) then
+						if not part or not id or tick() <= (cooldowns[object] or 0) or (origin - part.Position).Magnitude > Range["Value"] then
 							continue;
 						end;
 						if Animation["Enabled"] then
-							bedwars.GameAnimationUtil:playAnimation(character, bedwars.AnimationType.PUNCH);
+							bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.PUNCH);
 							bedwars.ViewmodelController:playAnimation(bedwars.AnimationType.FP_USE_ITEM);
 						end;
 						fire('CollectCollectableEntity', 'SendToServer', {["id"] = id, ["collectableName"] = object.Name});
@@ -15977,7 +18348,7 @@ velo.run(function(): ()
 				end;
 			end));
 		end,
-		["Tooltip"] = 'Picks up kit collectables and eats forest mushrooms near you without walking into them.'
+		["Tooltip"] = 'Picks up every kit collectable near you without walking into it.'
 	});
 	Range = AutoCollect:CreateSlider({
 		["Name"] = 'Range',
@@ -16008,22 +18379,108 @@ velo.run(function(): ()
 		["Darker"] = true,
 		["Tooltip"] = 'Collectable tags to pick up (stars and hidden metal are handled by AutoKit).'
 	});
-	SpeedMushrooms = AutoCollect:CreateToggle({
-		["Name"] = 'Speed mushrooms',
-		["Default"] = true
+end);
+
+velo.run(function(): ()
+	local AutoEat: table = {["Enabled"] = false};
+	local SpeedMushrooms: table;
+	local HealMushrooms: table;
+	local ShieldMushrooms: table;
+	local DizzyMushrooms: table;
+	local Range: table;
+	local Delay: table;
+	local Animation: table;
+	local mushroomTag: string = 'forest_environment_plant';
+	local recollectDelay: number = 1;
+	local cooldowns: {[Instance]: number} = {};
+	local nextEat: number = 0;
+
+	AutoEat = vape.Categories.Inventory:CreateModule({
+		["Name"] = 'AutoEat',
+		["Function"] = function(callback: boolean): ()
+			if not callback then
+				table.clear(cooldowns);
+				return;
+			end;
+			AutoEat:Clean(runService.Heartbeat:Connect(function(): ()
+				if tick() < nextEat then
+					return;
+				end;
+				nextEat = tick() + Delay["Value"];
+				for object: Instance, expires: number in cooldowns do
+					if expires < tick() then
+						cooldowns[object] = nil;
+					end;
+				end;
+				if not entitylib.isAlive then
+					return;
+				end;
+				local origin: Vector3 = entitylib.character.RootPart.Position;
+				local character: Model = lplr.Character;
+				local edible: {[number]: boolean} = {
+					[0] = HealMushrooms["Enabled"] and (character:GetAttribute('Health') or 0) < (character:GetAttribute('MaxHealth') or 0),
+					[1] = ShieldMushrooms["Enabled"],
+					[2] = SpeedMushrooms["Enabled"],
+					[3] = DizzyMushrooms["Enabled"]
+				};
+				for _: number, object: Instance in collectionService:GetTagged(mushroomTag) do
+					local part: BasePart? = object:IsA('Model') and object.PrimaryPart or (object:IsA('BasePart') and object or nil);
+					local id: any = object:GetAttribute('Id');
+					if not part or not id or tick() <= (cooldowns[object] or 0) or (origin - part.Position).Magnitude > Range["Value"] or not edible[object:GetAttribute('MushroomType')] then
+						continue;
+					end;
+					if Animation["Enabled"] then
+						bedwars.GameAnimationUtil:playAnimation(character, bedwars.AnimationType.PUNCH);
+						bedwars.ViewmodelController:playAnimation(bedwars.AnimationType.FP_USE_ITEM);
+					end;
+					fire('CollectCollectableEntity', 'SendToServer', {["id"] = id, ["collectableName"] = object.Name});
+					cooldowns[object] = tick() + recollectDelay;
+				end;
+			end));
+		end,
+		["Tooltip"] = 'Eats the forest mushrooms near you without walking up to them, pick which kinds below.\nAutoCollect eats every kind too while forest_environment_plant is in its Collectables list.'
 	});
-	HealMushrooms = AutoCollect:CreateToggle({
-		["Name"] = 'Heal mushrooms',
+	SpeedMushrooms = AutoEat:CreateToggle({
+		["Name"] = 'Speed',
 		["Default"] = true,
-		["Tooltip"] = 'Only while you are hurt, like the game prompt.'
+		["Tooltip"] = 'Speed mushrooms'
 	});
-	ShieldMushrooms = AutoCollect:CreateToggle({
-		["Name"] = 'Shield mushrooms',
-		["Default"] = true
+	HealMushrooms = AutoEat:CreateToggle({
+		["Name"] = 'Heal',
+		["Default"] = true,
+		["Tooltip"] = 'Heal mushrooms, only while you are hurt like the game prompt.'
 	});
-	DizzyMushrooms = AutoCollect:CreateToggle({
-		["Name"] = 'Dizzy mushrooms',
-		["Tooltip"] = 'Off by default because being dizzy hurts you.'
+	ShieldMushrooms = AutoEat:CreateToggle({
+		["Name"] = 'Shield',
+		["Default"] = true,
+		["Tooltip"] = 'Shield mushrooms'
+	});
+	DizzyMushrooms = AutoEat:CreateToggle({
+		["Name"] = 'Dizzy',
+		["Tooltip"] = 'Dizzy mushrooms, off by default because being dizzy hurts you.'
+	});
+	Range = AutoEat:CreateSlider({
+		["Name"] = 'Range',
+		["Min"] = 1,
+		["Max"] = 12,
+		["Default"] = 10,
+		["Suffix"] = function(value: number): string
+			return value <= 1 and 'stud' or 'studs';
+		end,
+		["Tooltip"] = 'The server drops collects past 12 studs.'
+	});
+	Delay = AutoEat:CreateSlider({
+		["Name"] = 'Delay',
+		["Min"] = 0.05,
+		["Max"] = 1,
+		["Default"] = 0.1,
+		["Decimal"] = 100,
+		["Suffix"] = 'seconds'
+	});
+	Animation = AutoEat:CreateToggle({
+		["Name"] = 'Animation',
+		["Default"] = true,
+		["Tooltip"] = 'Plays the pickup animation.'
 	});
 end);
 
@@ -16090,21 +18547,6 @@ velo.run(function(): ()
 		end);
 	end;
 
-	local castVote: () -> () = function(): ()
-		if voted or not Vote["Enabled"] or bedwars.Store:getState().Game.matchState ~= 0 then
-			return;
-		end;
-		voted = true;
-		task.delay(VoteDelay["Value"], function(): ()
-			if AutoPlay["Enabled"] and Vote["Enabled"] and bedwars.Store:getState().Game.matchState == 0 then
-				fire('CastPregameVote', 'SendToServer', {["votingOptionIndex"] = VoteOption["Value"] - 1});
-				if VoteNotify["Enabled"] then
-					notif('AutoPlay', 'Voted for option '..VoteOption["Value"], 4);
-				end;
-			end;
-		end);
-	end;
-
 	AutoPlay = vape.Categories.Utility:CreateModule({
 		["Name"] = 'AutoPlay',
 		["Function"] = function(callback: boolean): ()
@@ -16119,18 +18561,20 @@ velo.run(function(): ()
 				end;
 			end));
 			AutoPlay:Clean(vapeEvents.MatchEndEvent.Event:Connect(matchOver));
-			local storeChanged: table = bedwars.Store.changed:connect(function(new: table, old: table): ()
-				if new.Game ~= old.Game then
-					if new.Game.matchState ~= 0 then
+			AutoPlay:Clean(task.spawn(function(): ()
+				repeat
+					if not Vote["Enabled"] or store.matchState ~= 0 then
 						voted = false;
+					elseif not voted then
+						fire('CastPregameVote', 'SendToServer', {["votingOptionIndex"] = VoteOption["Value"] - 1});
+						voted = true;
+						if VoteNotify["Enabled"] then
+							notif('AutoVote', 'Voted for option '..VoteOption["Value"], 4);
+						end;
 					end;
-					castVote();
-				end;
-			end);
-			AutoPlay:Clean(function(): ()
-				storeChanged:disconnect();
-			end);
-			castVote();
+					task.wait(VoteDelay["Value"]);
+				until not AutoPlay["Enabled"];
+			end));
 		end,
 		["Tooltip"] = 'Queues the next match, honors players and votes for maps automatically.'
 	});
@@ -16181,11 +18625,8 @@ velo.run(function(): ()
 				VoteDelay.Object.Visible = callback;
 				VoteNotify.Object.Visible = callback;
 			end;
-			if callback and AutoPlay["Enabled"] then
-				castVote();
-			end;
 		end,
-		["Tooltip"] = 'Casts your map vote when the pregame vote opens.'
+		["Tooltip"] = 'Casts your map vote the moment the pregame vote opens.'
 	});
 	VoteOption = AutoPlay:CreateSlider({
 		["Name"] = 'Vote option',
@@ -16248,7 +18689,7 @@ velo.run(function(): ()
 	local deathSaid: boolean = false;
 	local closePreset: any = nil;
 
-	local say: (text: string) -> () = function(text: string): ()
+	local say: (text: string, preset: boolean) -> () = function(text: string, preset: boolean): ()
 		if not text:match('%S') then
 			return;
 		end;
@@ -16257,7 +18698,7 @@ velo.run(function(): ()
 			return;
 		end;
 		local channel: TextChannel = textChatService.ChatInputBarConfiguration.TargetTextChannel;
-		if textChatService:CanUserChatAsync(lplr.UserId) then
+		if not preset or textChatService:CanUserChatAsync(lplr.UserId) then
 			channel:SendAsync(text);
 			return;
 		end;
@@ -16277,9 +18718,6 @@ velo.run(function(): ()
 
 	local announce: (event: table, value: string?) -> () = function(event: table, value: string?): ()
 		local control: table = controls[event.Key];
-		if not control.Toggle["Enabled"] then
-			return;
-		end;
 		local message: string = event.Default;
 		local list: {string} = control.List.ListEnabled;
 		if control.Mode["Value"] == 'Fixed' then
@@ -16300,7 +18738,7 @@ velo.run(function(): ()
 				return value or '';
 			end);
 		end;
-		say(filled);
+		say(filled, true);
 	end;
 
 	local onChat: (plr: Player?, text: string) -> () = function(plr: Player?, text: string): ()
@@ -16326,7 +18764,7 @@ velo.run(function(): ()
 		end):gsub('<name>', function(): string
 			return name;
 		end);
-		say(reply);
+		say(reply, true);
 	end;
 
 	AutoToxic = vape.Categories.Utility:CreateModule({
@@ -16341,32 +18779,37 @@ velo.run(function(): ()
 				responded[plr] = nil;
 			end));
 			AutoToxic:Clean(vapeEvents.BedwarsBedBreak.Event:Connect(function(bedTable: table): ()
-				if bedTable.brokenBedTeam.id == lplr:GetAttribute('Team') then
+				if controls.BedDestroyed.Toggle["Enabled"] and bedTable.brokenBedTeam.id == lplr:GetAttribute('Team') then
 					announce(events[4], bedTable.player.DisplayName or bedTable.player.Name);
-				elseif bedTable.player.UserId == lplr.UserId then
+				elseif controls.Bed.Toggle["Enabled"] and bedTable.player.UserId == lplr.UserId then
 					local team: table? = bedwars.QueueMeta[store.queueType].teams[tonumber(bedTable.brokenBedTeam.id)];
 					announce(events[3], team and team.displayName:lower() or 'white');
 				end;
 			end));
 			AutoToxic:Clean(vapeEvents.EntityDeathEvent.Event:Connect(function(deathTable: table): ()
-				local killer: Player? = playersService:GetPlayerFromCharacter(deathTable.fromEntity);
-				local killed: Player? = playersService:GetPlayerFromCharacter(deathTable.entityInstance);
-				if not deathTable.finalKill or not killer or not killed then
+				if not deathTable.finalKill then
 					return;
 				end;
-				if killed == lplr and killer ~= lplr and not deathSaid then
-					deathSaid = true;
-					announce(events[2], killer.DisplayName or killer.Name);
-				elseif killer == lplr and killed ~= lplr then
+				local killer: Player? = playersService:GetPlayerFromCharacter(deathTable.fromEntity);
+				local killed: Player? = playersService:GetPlayerFromCharacter(deathTable.entityInstance);
+				if not killer or not killed then
+					return;
+				end;
+				if killed == lplr then
+					if not deathSaid and killer ~= lplr and controls.Death.Toggle["Enabled"] then
+						deathSaid = true;
+						announce(events[2], killer.DisplayName or killer.Name);
+					end;
+				elseif killer == lplr and controls.Kill.Toggle["Enabled"] then
 					announce(events[1], killed.DisplayName or killed.Name);
 				end;
 			end));
 			AutoToxic:Clean(vapeEvents.MatchEndEvent.Event:Connect(function(winTable: table): ()
 				if AutoGG["Enabled"] then
-					say(GGMessage["Value"]:match('%S') and GGMessage["Value"] or 'gg');
+					say(GGMessage["Value"]:match('%S') and GGMessage["Value"] or 'gg', false);
 				end;
 				local myTeam: table? = bedwars.Store:getState().Game.myTeam;
-				if myTeam and myTeam.id == winTable.winningTeamId or lplr.Neutral then
+				if controls.Win.Toggle["Enabled"] and (myTeam and myTeam.id == winTable.winningTeamId or lplr.Neutral) then
 					announce(events[5], nil);
 				end;
 			end));
@@ -16438,7 +18881,6 @@ velo.run(function(): ()
 	end;
 	Respond = AutoToxic:CreateToggle({
 		["Name"] = 'Respond',
-		["Default"] = true,
 		["Tooltip"] = 'Answer once to players who insult you in chat.'
 	});
 	Responses = AutoToxic:CreateTextList({
@@ -16474,6 +18916,7 @@ velo.run(function(): ()
 	local playerHooks: table? = nil;
 	local deviceHook: table? = nil;
 	local refreshQueued: boolean = false;
+	local refreshing: boolean = false;
 
 	local refresh: () -> () = function(): ()
 		if refreshQueued or not NickHider["Enabled"] then
@@ -16483,10 +18926,29 @@ velo.run(function(): ()
 		task.delay(refreshDelay, function(): ()
 			refreshQueued = false;
 			if NickHider["Enabled"] then
+				refreshing = true;
 				NickHider:Toggle();
 				NickHider:Toggle();
+				refreshing = false;
 			end;
 		end);
+	end;
+
+	local spoofDevice: () -> () = function(): ()
+		local controller: table = bedwars.UserInputController;
+		deviceHook = {["Original"] = rawget(controller, 'getUserInputType'), ["Previous"] = controller:getUserInputType()};
+		controller.getUserInputType = function(): string
+			return Device["Value"]:upper();
+		end;
+		fire('SendUserInputType', 'SendToServer', {["userInputType"] = Device["Value"]:upper()});
+	end;
+
+	local restoreDevice: () -> () = function(): ()
+		if deviceHook then
+			bedwars.UserInputController.getUserInputType = deviceHook.Original;
+			fire('SendUserInputType', 'SendToServer', {["userInputType"] = deviceHook.Previous});
+			deviceHook = nil;
+		end;
 	end;
 
 	local replaceText: (object: Instance) -> ();
@@ -16571,10 +19033,8 @@ velo.run(function(): ()
 					end;
 					playerHooks = nil;
 				end;
-				if deviceHook then
-					bedwars.UserInputController.getUserInputType = deviceHook.Original;
-					fire('SendUserInputType', 'SendToServer', {["userInputType"] = deviceHook.Previous});
-					deviceHook = nil;
+				if not refreshing then
+					restoreDevice();
 				end;
 				if vape.ThreadFix then
 					setthreadidentity(8);
@@ -16611,9 +19071,12 @@ velo.run(function(): ()
 						if name ~= '' and not table.find(plainNames, lowered) then
 							table.insert(plainNames, lowered);
 							shortest = math.min(shortest, #lowered);
-							table.insert(patterns, (name:gsub('%W', '%%%0'):gsub('%a', function(letter: string): string
-								return '['..letter:lower()..letter:upper()..']';
-							end)));
+						end;
+						for _: number, variant: string in {name, lowered, name:upper()} do
+							local pattern: string = variant:gsub('%W', '%%%0');
+							if variant ~= '' and not table.find(patterns, pattern) then
+								table.insert(patterns, pattern);
+							end;
 						end;
 					end;
 				end;
@@ -16652,13 +19115,8 @@ velo.run(function(): ()
 				end;
 			end;
 
-			if Device["Value"] ~= 'Off' then
-				local controller: table = bedwars.UserInputController;
-				deviceHook = {["Original"] = rawget(controller, 'getUserInputType'), ["Previous"] = controller:getUserInputType()};
-				controller.getUserInputType = function(): string
-					return Device["Value"]:upper();
-				end;
-				fire('SendUserInputType', 'SendToServer', {["userInputType"] = Device["Value"]:upper()});
+			if Device["Value"] ~= 'Off' and not deviceHook then
+				spoofDevice();
 			end;
 
 			local roots: {Instance} = {coreGui};
@@ -16720,7 +19178,18 @@ velo.run(function(): ()
 	Device = NickHider:CreateDropdown({
 		["Name"] = 'Device',
 		["List"] = {'Off', 'Mobile', 'PC', 'Gamepad'},
-		["Function"] = refresh,
+		["Function"] = function(value: string): ()
+			if not NickHider["Enabled"] then
+				return;
+			end;
+			if value == 'Off' then
+				restoreDevice();
+			elseif deviceHook then
+				fire('SendUserInputType', 'SendToServer', {["userInputType"] = value:upper()});
+			else
+				spoofDevice();
+			end;
+		end,
 		["Tooltip"] = 'Spoofs the device you show up as to the server.'
 	});
 end);
@@ -16790,11 +19259,14 @@ velo.run(function(): ()
 	end;
 
 	local flagStaff: (plr: Player, reason: string) -> () = function(plr: Player, reason: string): ()
+		while not vape.Loaded do
+			task.wait();
+		end;
 		notif('StaffDetector', 'Staff Detected ('..reason..'): '..plr.Name..' ('..plr.UserId..')', 60, 'alert');
 		whitelist.customtags[plr.Name] = {{["text"] = 'GAME STAFF', ["color"] = Color3.new(1, 0, 0)}};
 		addEntry(plr, reason, reason == 'impossible_join' and 'Impossible' or 'Mod');
 		if Mode["Value"] == 'Uninject' then
-			task.defer(function(): ()
+			task.spawn(function(): ()
 				vape:Uninject();
 			end);
 			starterGui:SetCore('SendNotification', {["Title"] = 'StaffDetector', ["Text"] = 'Staff Detected ('..reason..')\n'..plr.Name..' ('..plr.UserId..')', ["Duration"] = 60});
@@ -16848,19 +19320,28 @@ velo.run(function(): ()
 			noteSpectator(plr, 'following '..joinedNames[plr.FollowUserId]);
 			return false;
 		end;
-		local pages: FriendPages = playersService:GetFriendsAsync(plr.UserId);
+		local fetched: boolean, pages: any = pcall(playersService.GetFriendsAsync, playersService, plr.UserId);
+		if not fetched then
+			return false;
+		end;
+		local friend: string?, finished: boolean = nil, pages.IsFinished;
 		for _: number = 1, friendPages do
-			for _: number, friend: table in pages:GetCurrentPage() do
-				if joinedNames[friend.Id] then
-					noteSpectator(plr, 'from '..joinedNames[friend.Id]);
-					return false;
-				end;
+			for _: number, entry: table in pages:GetCurrentPage() do
+				friend = friend or joinedNames[entry.Id];
 			end;
-			if pages.IsFinished then
-				flagStaff(plr, 'impossible_join');
-				return true;
+			if friend or finished then
+				break;
 			end;
-			pages:AdvanceToNextPageAsync();
+			if not pcall(pages.AdvanceToNextPageAsync, pages) then
+				return false;
+			end;
+			finished = pages.IsFinished;
+		end;
+		if friend then
+			noteSpectator(plr, 'from '..friend);
+		elseif finished then
+			flagStaff(plr, 'impossible_join');
+			return true;
 		end;
 		return false;
 	end;
@@ -16877,7 +19358,11 @@ velo.run(function(): ()
 			flagStaff(plr, 'blacklisted_user');
 			return;
 		end;
-		if plr:GetRankInGroup(staffGroup) >= staffRank then
+		local ranked: boolean, rank: any = pcall(plr.GetRankInGroup, plr, staffGroup);
+		if not ranked then
+			notif('StaffDetector', rank, 30, 'alert');
+		end;
+		if (ranked and rank or 0) >= staffRank then
 			flagStaff(plr, 'staff_role');
 			return;
 		end;
@@ -16892,31 +19377,9 @@ velo.run(function(): ()
 			plr:GetAttributeChangedSignal('ClanTag'):Wait();
 		end;
 		local clan: string = plr:GetAttribute('ClanTag');
-		if Clans["Enabled"] and table.find(blacklistedClans, clan) then
+		if table.find(blacklistedClans, clan) and vape.Loaded and Clans["Enabled"] then
 			dropWatch(plr);
 			flagStaff(plr, 'blacklisted_clan_'..clan:lower());
-		end;
-	end;
-
-	local startScan: () -> () = function(): ()
-		StaffDetector:Clean(playersService.PlayerAdded:Connect(function(plr: Player): ()
-			StaffDetector:Clean(task.spawn(checkPlayer, plr));
-		end));
-		StaffDetector:Clean(playersService.PlayerRemoving:Connect(function(plr: Player): ()
-			dropWatch(plr);
-			for index: number = #entries, 1, -1 do
-				local entry: table = entries[index];
-				if entry.UserId == plr.UserId then
-					table.remove(entries, index);
-					if leaveNotify[entry.Category]["Enabled"] then
-						notif('StaffDetector', entry.Name..' left ('..entry.Reason..')', 10, 'info');
-					end;
-				end;
-			end;
-			refreshViewer();
-		end));
-		for _: number, plr: Player in playersService:GetPlayers() do
-			StaffDetector:Clean(task.spawn(checkPlayer, plr));
 		end;
 	end;
 
@@ -16932,18 +19395,25 @@ velo.run(function(): ()
 				refreshViewer();
 				return;
 			end;
-			if vape.Loaded then
-				startScan();
-				return;
-			end;
-			local loadWatch: RBXScriptConnection;
-			loadWatch = runService.Heartbeat:Connect(function(): ()
-				if vape.Loaded then
-					loadWatch:Disconnect();
-					startScan();
+			StaffDetector:Clean(playersService.PlayerAdded:Connect(function(plr: Player): ()
+				StaffDetector:Clean(task.spawn(checkPlayer, plr));
+			end));
+			StaffDetector:Clean(playersService.PlayerRemoving:Connect(function(plr: Player): ()
+				dropWatch(plr);
+				for index: number = #entries, 1, -1 do
+					local entry: table = entries[index];
+					if entry.UserId == plr.UserId then
+						table.remove(entries, index);
+						if leaveNotify[entry.Category]["Enabled"] then
+							notif('StaffDetector', entry.Name..' left ('..entry.Reason..')', 10, 'info');
+						end;
+					end;
 				end;
-			end);
-			StaffDetector:Clean(loadWatch);
+				refreshViewer();
+			end));
+			for _: number, plr: Player in playersService:GetPlayers() do
+				StaffDetector:Clean(task.spawn(checkPlayer, plr));
+			end;
 		end,
 		["Tooltip"] = 'Detects people with a staff rank ingame'
 	});
@@ -17258,7 +19728,7 @@ velo.run(function(): ()
 				return;
 			end;
 			MissileTP:Toggle();
-			local ent: table? = entitylib.EntityMouse({["Range"] = 1000, ["Players"] = true, ["Part"] = 'RootPart'});
+			local ent: table? = entitylib.EntityMouse({["Range"] = 1000, ["Players"] = true, ["Part"] = 'RootPart', ["Priority"] = false});
 			if not ent then
 				return;
 			end;
@@ -17293,7 +19763,8 @@ velo.run(function(): ()
 	Projectile = MissileTP:CreateDropdown({
 		["Name"] = 'Projectile',
 		["List"] = {'Auto', 'Missile', 'Raven'},
-		["Tooltip"] = 'Auto - missile when you have one, otherwise your raven.'
+		["Default"] = 'Missile',
+		["Tooltip"] = 'Missile - your guided missile\nRaven - your raven\nAuto - missile when you have one, otherwise your raven.'
 	});
 end);
 
@@ -17383,7 +19854,6 @@ velo.run(function(): ()
 	local Regions: table;
 
 	local flagPath: string = 'velo/profiles/matchdodge.txt';
-	local unclaimedRelease: number = 45;
 	local checkInterval: number = 0.1;
 	local regionTimeout: number = 30;
 	local priorMatches: number = 10;
@@ -17432,50 +19902,7 @@ velo.run(function(): ()
 		end;
 	end;
 
-	local hold: table = getgenv().veloMatchHold or {["Held"] = false};
-	getgenv().veloMatchHold = hold;
-	hold.Release = function(): ()
-		if not hold.Held then
-			return;
-		end;
-		hold.Held = false;
-		hold.Block = nil;
-		hold.Dodging = false;
-		if hold.Connect then
-			hold.Connect.Remote:FireServer(table.unpack(hold.Connect.Args, 1, hold.Connect.Args.n));
-			hold.Connect = nil;
-		end;
-		if hold.Ready then
-			hold.Ready:FireServer();
-			hold.Ready = nil;
-		end;
-	end;
-	local executor: string = identifyexecutor and ({identifyexecutor()})[1] or '';
-	if not hold.Hooked and hookmetamethod and isfile(flagPath) and readfile(flagPath) == 'true' and not lplr:GetAttribute('PlayerConnected') and not table.find({'Madium', 'Solara', 'Xeno'}, executor) then
-		hold.Hooked, hold.Held, hold.Started = true, true, os.clock();
-		local oldNamecall: (...any) -> ...any;
-		oldNamecall = hookmetamethod(game, '__namecall', newcclosure(function(self: any, ...: any): ...any
-			if hold.Held and not checkcaller() and getnamecallmethod() == 'FireServer' then
-				local remoteName: string = tostring(self);
-				if remoteName == 'PlayerConnect' then
-					hold.Connect = {["Remote"] = self, ["Args"] = table.pack(...)};
-					hold.Dodging = true;
-					return nil;
-				elseif remoteName == 'PlayerReady' then
-					hold.Ready = self;
-					hold.Dodging = true;
-					return nil;
-				end;
-			end;
-			return oldNamecall(self, ...);
-		end));
-		task.delay(unclaimedRelease, function(): ()
-			if not hold.Claimed then
-				hold.Release();
-			end;
-		end);
-	end;
-	vape:Clean(hold.Release);
+	local hold: table = getgenv().veloMatchHold;
 
 	local profiles: {[Player]: table} = {};
 	vape:Clean(playersService.PlayerRemoving:Connect(function(plr: Player): ()
@@ -17495,15 +19922,17 @@ velo.run(function(): ()
 		entry.Pending, entry.Started, entry.Tries = true, now, entry.Tries + 1;
 		local attempt: number = entry.Tries;
 		AutoMatchDodge:Clean(task.spawn(function(): ()
-			local data: any = fire('RequestProfileData', 'CallServer', plr);
-			local ranks: any = fire('FetchRanks', 'CallServer', {plr.UserId});
+			-- CallServer rethrows server-side handler errors; catsix treats a failed fetch as "no data, retry in 5s".
+			local fetched: boolean, data: any = pcall(fire, 'RequestProfileData', 'CallServer', plr);
+			local ranked: boolean, ranks: any = pcall(fire, 'FetchRanks', 'CallServer', {plr.UserId});
 			if entry.Tries ~= attempt then
 				return;
 			end;
 			entry.Pending, entry.Retry = false, os.clock() + 5;
-			if type(data) ~= 'table' or type(data.queues) ~= 'table' then
+			if not fetched or type(data) ~= 'table' or type(data.queues) ~= 'table' then
 				return;
 			end;
+			ranks = ranked and ranks or nil;
 			local rows: {table} = {};
 			for _: number, match: table in data.matchHistory or {} do
 				for _: number, row: table in (not match.matchCancelled and match.players or {}) do
@@ -17686,11 +20115,11 @@ velo.run(function(): ()
 			end;
 		end;
 		if not anySelected then
-			notif('AutoMatchDodge', 'No valid region is turned on, loading every region', 8, 'warning');
+			notif('RegionLock', 'No valid region is turned on, loading every region', 8, 'warning');
 		elseif not region then
-			notif('AutoMatchDodge', 'Unknown region '..code..', loading anyway', 8, 'warning');
+			notif('RegionLock', 'Unknown region '..code..', loading anyway', 8, 'warning');
 		elseif not selected[region] then
-			notif('AutoMatchDodge', 'Dodging '..code..' ('..region..'), it is not in your regions', 12, 'info');
+			notif('RegionLock', 'Dodging '..code..' ('..region..'), it is not in your regions', 12, 'info');
 			return false;
 		end;
 		return true;
@@ -17709,7 +20138,10 @@ velo.run(function(): ()
 				return;
 			end;
 			hold.Claimed = true;
-			local regionDone: boolean = not RegionLock["Enabled"];
+			local claimed: number = os.clock();
+			local loadAt: number = hold.Started + Timeout["Value"];
+			local regionDone: boolean = false;
+			local checking: boolean = true;
 			local nextCheck: number = 0;
 			local watcher: RBXScriptConnection;
 			watcher = runService.Heartbeat:Connect(function(): ()
@@ -17722,28 +20154,36 @@ velo.run(function(): ()
 					return;
 				end;
 				nextCheck = now + checkInterval;
-				if not regionDone then
+				local regionOnly: boolean = Mode["Value"] == 'Region only';
+				if not regionDone and (RegionLock["Enabled"] or regionOnly) then
 					local display: Instance? = lplr.PlayerGui:FindFirstChild('ServerRegionDisplay');
 					local label: Instance? = display and display:FindFirstChild('ServerRegionText');
 					local code: string? = label and label.Text:gsub('<[^>]*>', ''):gsub('REGION:%s*', ''):match('%S+');
 					if code then
 						regionDone = true;
 						hold.Block = not regionVerdict(code) and 'RegionLock' or nil;
-					elseif now - hold.Started > regionTimeout then
+					elseif now - claimed > regionTimeout then
 						regionDone = true;
-						notif('AutoMatchDodge', 'Could not read the server region, loading anyway', 8, 'warning');
+						notif('RegionLock', 'Could not read the server region, loading anyway', 8, 'warning');
 					end;
 				end;
-				if Mode["Value"] ~= 'Auto' then
+				if regionOnly then
+					if regionDone and not hold.Block then
+						watcher:Disconnect();
+						hold.Release();
+					end;
+					return;
+				end;
+				if Mode["Value"] ~= 'Auto' or not checking then
 					return;
 				end;
 				local reason: string? = dodgeReason();
 				if reason then
 					notif('AutoMatchDodge', reason, 12, 'info');
+					checking = false;
+				elseif now > loadAt and not hold.Block then
 					watcher:Disconnect();
-				elseif regionDone and not hold.Block and now > hold.Started + Timeout["Value"] then
-					watcher:Disconnect();
-					hold.Release();
+					task.spawn(hold.Release);
 				end;
 			end);
 			AutoMatchDodge:Clean(watcher);
@@ -17755,14 +20195,18 @@ velo.run(function(): ()
 	});
 	Mode = AutoMatchDodge:CreateDropdown({
 		["Name"] = 'Mode',
-		["List"] = {'Auto', 'Manual'},
+		["List"] = {'Auto', 'Manual', 'Region only'},
 		["Function"] = function(value: string): ()
 			for _: number, option: table? in {Timeout, SkillCheck, RankCheck, PlayerCheck} do
 				if option then
 					option.Object.Visible = value == 'Auto';
 				end;
 			end;
-		end
+			if Regions and RegionLock then
+				Regions.Object.Visible = RegionLock["Enabled"] or value == 'Region only';
+			end;
+		end,
+		["Tooltip"] = 'Auto loads after the timeout unless a check dodges, Manual waits for Load, Region only loads as soon as the server region is accepted'
 	});
 	AutoMatchDodge:CreateButton({
 		["Name"] = 'Load',
@@ -17812,7 +20256,7 @@ velo.run(function(): ()
 		["Name"] = 'Region lock',
 		["Function"] = function(callback: boolean): ()
 			if Regions then
-				Regions.Object.Visible = callback;
+				Regions.Object.Visible = callback or Mode["Value"] == 'Region only';
 			end;
 			if not callback and hold.Block == 'RegionLock' then
 				hold.Block = nil;
@@ -17862,11 +20306,9 @@ velo.run(function(): ()
 	local maxFlight: number = 4;
 	local landTimeout: number = 10;
 	local pearlBox: Vector3 = Vector3.new(3, 1, 3);
-	local anchor: Vector3?;
-	local fallHandled: boolean = false;
-	local throwing: boolean = false;
 	local inFlight: Instance?;
 	local nextThrow: number = 0;
+	local session: table? = nil;
 
 	local landingOf: (origin: Vector3, velocity: Vector3, gravity: number) -> Vector3? = function(origin: Vector3, velocity: Vector3, gravity: number): Vector3?
 		local last: Vector3 = origin;
@@ -17888,9 +20330,7 @@ velo.run(function(): ()
 		local offset: Vector3 = spot - from;
 		local flat: Vector3 = offset * Vector3.new(1, 0, 1);
 		local candidates: {Vector3} = {};
-		if flat.Magnitude < 1 then
-			table.insert(candidates, Vector3.new(0, offset.Y < 0 and -speed or speed, 0));
-		else
+		if flat.Magnitude >= 1 then
 			local discriminant: number = speed ^ 4 - gravity * (gravity * flat.Magnitude ^ 2 + 2 * offset.Y * speed ^ 2);
 			for _: number, sign: number in (discriminant >= 0 and {-1, 1} or {}) do
 				local angle: number = math.atan((speed ^ 2 + sign * math.sqrt(discriminant)) / (gravity * flat.Magnitude));
@@ -17906,97 +20346,175 @@ velo.run(function(): ()
 		return nil;
 	end;
 
-	local voidThrow: (from: Vector3) -> Vector3? = function(from: Vector3): Vector3?
+	local voidThrow: (from: Vector3, anchor: Vector3) -> Vector3? = function(from: Vector3, anchor: Vector3): Vector3?
+		local meta: table = bedwars.ProjectileMeta.telepearl;
+		local gravity: number = meta.gravitationalAcceleration or config.Gravity;
 		for _: number, radius: number in searchRadii do
 			for slice: number = 0, radius > 0 and 7 or 0 do
 				local direction: Vector3 = Vector3.new(math.cos(slice * math.pi / 4), 0, math.sin(slice * math.pi / 4));
 				local ground: RaycastResult? = workspace:Raycast(Vector3.new(from.X, anchor.Y + 3, from.Z) + direction * radius, Vector3.new(0, -groundDepth, 0), store.airRay);
-				local velocity: Vector3? = ground and launchTo(from, ground.Position, voidTolerance);
-				if velocity then
-					return velocity;
+				if not ground then
+					continue;
+				end;
+				local aim: Vector3?, _: any, flight: number? = trajectory.SolveTrajectory(from, meta.launchVelocity, gravity, ground.Position, Vector3.zero, workspace.Gravity, 0, nil, nil, false, ground.Position, nil, nil, true);
+				if aim and flight then
+					local velocity: Vector3 = aim - from;
+					local clear: boolean, hit: RaycastResult? = trajectory.IsTrajectoryClear(from, velocity, gravity, flight, store.airRay);
+					if clear or (hit and (hit.Position - ground.Position).Magnitude < voidTolerance) then
+						return velocity;
+					end;
 				end;
 			end;
 		end;
 		return nil;
 	end;
 
-	local pearlActive: () -> boolean = function(): boolean
-		if inFlight and inFlight.Parent then
-			return true;
-		end;
-		for _: number, projectile: Instance in store.selfProjectiles do
-			if projectile.Name == 'telepearl' then
-				return true;
-			end;
-		end;
-		return false;
-	end;
-
 	local holdingPearl: () -> boolean = function(): boolean
 		return store.hand.tool ~= nil and store.hand.tool.Name == 'telepearl';
 	end;
 
-	local throwPearl: (item: table, solve: (from: Vector3) -> Vector3?, rejected: (() -> ())?) -> () = function(item: table, solve: (from: Vector3) -> Vector3?, rejected: (() -> ())?): ()
-		throwing = true;
-		local previous: Instance? = store.hand.tool;
+	local switchBack: (previous: Instance) -> () = function(previous: Instance): ()
+		task.wait(BackDelay:GetRandomValue());
+		switchItem(previous);
+		local previousSlot: number? = hotbarSlotOf(previous);
+		if LegitSwitch["Enabled"] and previousSlot then
+			hotbarSwitch(previousSlot);
+		end;
+	end;
+
+	local launch: (item: table, position: Vector3, velocity: Vector3) -> (Instance?, any) = function(item: table, position: Vector3, velocity: Vector3): (Instance?, any)
+		local shotId: string = bedwars.IdUtil.generateId(8);
+		local shot: table = ballistics.shotData('telepearl');
+		local projectile: Instance? = bedwars.ProjectileController:createLocalProjectile(bedwars.ProjectileMeta.telepearl, 'telepearl', 'telepearl', position, shotId, velocity, shot);
+		return projectile, fire('ProjectileFire', 'CallServerAsync', item.tool, 'telepearl', 'telepearl', position, position, velocity, shotId, shot, workspace:GetServerTimeNow() - config.ShotLatency);
+	end;
+
+	local voidPearl: (anchor: Vector3, item: table) -> () = function(anchor: Vector3, item: table): ()
+		if PearlCheck["Enabled"] then
+			for _: number, projectile: Instance in store.selfProjectiles do
+				if projectile.Name == 'telepearl' then
+					return;
+				end;
+			end;
+		end;
+		if not voidThrow(entitylib.character.RootPart.Position, anchor) then
+			return;
+		end;
 		local slot: number? = hotbarSlotOf(item.tool);
+		local previous: Instance? = store.hand.tool;
 		switchItem(item.tool, 0);
 		if LegitSwitch["Enabled"] and slot then
 			hotbarSwitch(slot);
 		end;
-		task.wait(math.max(0.04, store.ping.total));
-		local position: Vector3? = entitylib.isAlive and entitylib.character.RootPart.Position or nil;
-		local velocity: Vector3? = position and solve(position);
-		local projectile: Instance?;
-		if position and velocity then
-			local meta: table = bedwars.ProjectileMeta.telepearl;
-			local shotId: string = bedwars.IdUtil.generateId(8);
-			local shot: table = ballistics.shotData('telepearl');
-			projectile = bedwars.ProjectileController:createLocalProjectile(meta, 'telepearl', 'telepearl', position, shotId, velocity, shot);
+		task.wait(math.max(0.04, store.ping.total or 0));
+		if not entitylib.isAlive then
+			return;
+		end;
+		local position: Vector3 = entitylib.character.RootPart.Position;
+		local velocity: Vector3? = voidThrow(position, anchor);
+		local projectile: Instance? = nil;
+		if velocity then
+			local request: any;
+			projectile, request = launch(item, position, velocity);
+			request:andThen(function(result: any): ()
+				if type(result) == 'table' and result.accepted and result.model then
+					result.model.Parent = replicatedStorage;
+				end;
+			end);
+		end;
+		if SwitchBack["Enabled"] and LandCheck["Enabled"] and projectile then
+			local timeout: number = tick() + landTimeout;
+			repeat
+				task.wait();
+			until not AutoPearl["Enabled"] or tick() >= timeout or not projectile.Parent;
+		end;
+		if SwitchBack["Enabled"] and previous then
+			switchBack(previous);
+		end;
+	end;
+
+	local aggroPearl: (spot: Vector3, item: table) -> () = function(spot: Vector3, item: table): ()
+		if not entitylib.isAlive or not launchTo(entitylib.character.RootPart.Position, spot, aggroTolerance) then
+			return;
+		end;
+		local slot: number? = hotbarSlotOf(item.tool);
+		local previous: Instance? = store.hand.tool;
+		local previousThrow: number = nextThrow;
+		local reserved: number = tick() + Cooldown["Value"];
+		nextThrow = reserved;
+		switchItem(item.tool);
+		if LegitSwitch["Enabled"] and slot then
+			hotbarSwitch(slot);
+		end;
+		local position: Vector3 = entitylib.character.RootPart.Position;
+		local velocity: Vector3? = entitylib.isAlive and launchTo(position, spot, aggroTolerance) or nil;
+		local landed: boolean = false;
+		if velocity then
+			local projectile: Instance?, request: any = launch(item, position, velocity);
 			inFlight = projectile;
-			fire('ProjectileFire', 'CallServerAsync', item.tool, 'telepearl', 'telepearl', position, position, velocity, shotId, shot, workspace:GetServerTimeNow() - config.ShotLatency):andThen(function(result: any): ()
+			local tracked: Instance?, waiting: boolean = projectile, projectile == nil;
+			request:andThen(function(result: any): ()
+				waiting = false;
 				if type(result) == 'table' and result.accepted then
-					if not projectile and typeof(result.model) == 'Instance' then
-						inFlight = result.model;
+					if projectile == nil and typeof(result.model) == 'Instance' then
+						tracked, inFlight = result.model, result.model;
 					elseif result.model then
 						result.model.Parent = replicatedStorage;
 					end;
-				elseif rejected then
-					rejected();
+					return;
+				end;
+				if nextThrow == reserved then
+					nextThrow = previousThrow;
+				end;
+				if inFlight == projectile then
+					inFlight = nil;
 				end;
 			end);
-		elseif rejected then
-			rejected();
+			task.spawn(function(): ()
+				local timeout: number = tick() + landTimeout;
+				repeat
+					task.wait();
+				until not AutoPearl["Enabled"] or tick() >= timeout or (not waiting and (not tracked or not tracked.Parent));
+				landed = true;
+			end);
+		else
+			if nextThrow == reserved then
+				nextThrow = previousThrow;
+			end;
+			landed = true;
 		end;
-		throwing = false;
-		if not SwitchBack["Enabled"] or not previous then
+		if SwitchBack["Enabled"] and LandCheck["Enabled"] then
+			repeat
+				task.wait();
+			until landed or not AutoPearl["Enabled"];
+		end;
+		if SwitchBack["Enabled"] and previous then
+			switchBack(previous);
+		end;
+	end;
+
+	local follow: (origin: Vector3, launchVelocity: Vector3) -> () = function(origin: Vector3, launchVelocity: Vector3): ()
+		if not entitylib.isAlive or not store.airRay then
 			return;
 		end;
-		local switched: boolean = false;
-		local restore: () -> () = function(): ()
-			if switched then
-				return;
-			end;
-			switched = true;
-			task.delay(BackDelay:GetRandomValue(), function(): ()
-				switchItem(previous);
-				local previousSlot: number? = hotbarSlotOf(previous);
-				if LegitSwitch["Enabled"] and previousSlot then
-					hotbarSwitch(previousSlot);
-				end;
-			end);
+		local spot: Vector3? = landingOf(origin, launchVelocity, bedwars.ProjectileMeta.telepearl.gravitationalAcceleration or config.Gravity);
+		if not spot or not AutoPearl["Enabled"] or not Aggro["Enabled"] or not entitylib.isAlive then
+			return;
 		end;
-		if LandCheck["Enabled"] and projectile and projectile.Parent then
-			local landing: RBXScriptConnection;
-			landing = projectile.AncestryChanged:Connect(function(): ()
-				if not projectile.Parent then
-					landing:Disconnect();
-					restore();
-				end;
-			end);
-			task.delay(landTimeout, restore);
-		else
-			restore();
+		local position: Vector3 = entitylib.character.RootPart.Position;
+		local gap: number = (spot - position).Magnitude;
+		if gap > DistanceLimit["Value"] or gap < followMinimum or gap < (origin - position).Magnitude then
+			return;
+		end;
+		if tick() < nextThrow or (PearlCheck["Enabled"] and inFlight and inFlight.Parent) then
+			return;
+		end;
+		if (MinHealth["Value"] > 0 and entitylib.character.Health < MinHealth["Value"]) or (LimitItem["Enabled"] and not holdingPearl()) then
+			return;
+		end;
+		local item: table? = getItem('telepearl');
+		if item then
+			aggroPearl(spot, item);
 		end;
 	end;
 
@@ -18010,80 +20528,54 @@ velo.run(function(): ()
 			end;
 			return;
 		end;
-		if not Aggro["Enabled"] or not store.airRay or typeof(event.origin) ~= 'Vector3' or typeof(event.launchVelocity) ~= 'Vector3' then
+		if not Aggro["Enabled"] or typeof(event.origin) ~= 'Vector3' or typeof(event.launchVelocity) ~= 'Vector3' then
 			return;
 		end;
-		local shooter: table?;
 		for _: number, ent: table in entitylib.List do
 			if ent.Character == event.shooter then
-				shooter = ent;
+				if ent.Targetable then
+					task.spawn(follow, event.origin, event.launchVelocity);
+				end;
 				break;
 			end;
 		end;
-		if not shooter or not shooter.Targetable then
-			return;
-		end;
-		local meta: table = bedwars.ProjectileMeta.telepearl;
-		local spot: Vector3? = landingOf(event.origin, event.launchVelocity, meta.gravitationalAcceleration or config.Gravity);
-		local position: Vector3 = entitylib.character.RootPart.Position;
-		local gap: number = spot and (spot - position).Magnitude or math.huge;
-		if not spot or gap > DistanceLimit["Value"] or gap < followMinimum or gap < (event.origin - position).Magnitude then
-			return;
-		end;
-		if tick() < nextThrow or throwing or (PearlCheck["Enabled"] and pearlActive()) or (LimitItem["Enabled"] and not holdingPearl()) then
-			return;
-		end;
-		if MinHealth["Value"] > 0 and entitylib.character.Health < MinHealth["Value"] then
-			return;
-		end;
-		local item: table? = getItem('telepearl');
-		if not item or not launchTo(position, spot, aggroTolerance) then
-			return;
-		end;
-		local previousThrow: number = nextThrow;
-		local reserved: number = tick() + Cooldown["Value"];
-		nextThrow = reserved;
-		task.spawn(throwPearl, item, function(from: Vector3): Vector3?
-			return launchTo(from, spot, aggroTolerance);
-		end, function(): ()
-			if nextThrow == reserved then
-				nextThrow = previousThrow;
-			end;
-		end);
 	end;
 
 	AutoPearl = vape.Categories.Utility:CreateModule({
 		["Name"] = 'AutoPearl',
 		["Function"] = function(callback: boolean): ()
 			if not callback then
-				anchor, inFlight, fallHandled = nil, nil, false;
+				inFlight, session = nil, nil;
 				return;
 			end;
 			local launches: table = bedwars.SyncEvents.ProjectileLaunched:connect(onLaunch);
 			AutoPearl:Clean(function(): ()
 				launches:Destroy();
 			end);
-			AutoPearl:Clean(runService.Heartbeat:Connect(function(): ()
-				if not VoidSave["Enabled"] or throwing or not entitylib.isAlive or not store.airRay or (LimitItem["Enabled"] and not holdingPearl()) then
-					return;
+			local current: table = {};
+			session = current;
+			local thrown: boolean = false;
+			local anchor: Vector3? = nil;
+			repeat
+				task.wait();
+				if VoidSave["Enabled"] and entitylib.isAlive and (not LimitItem["Enabled"] or holdingPearl()) then
+					local root: BasePart = entitylib.character.RootPart;
+					if entitylib.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
+						anchor = root.Position;
+					end;
+					if anchor and root.AssemblyLinearVelocity.Y <= fallVelocity and not workspace:Raycast(root.Position, Vector3.new(0, -voidDepth, 0), store.airRay) then
+						if not thrown then
+							thrown = true;
+							local item: table? = getItem('telepearl');
+							if item then
+								voidPearl(anchor, item);
+							end;
+						end;
+					else
+						thrown = false;
+					end;
 				end;
-				local root: BasePart = entitylib.character.RootPart;
-				if entitylib.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
-					anchor = root.Position;
-				end;
-				if not anchor or root.AssemblyLinearVelocity.Y > fallVelocity or workspace:Raycast(root.Position, Vector3.new(0, -voidDepth, 0), store.airRay) then
-					fallHandled = false;
-					return;
-				end;
-				if fallHandled then
-					return;
-				end;
-				fallHandled = true;
-				local item: table? = getItem('telepearl');
-				if item and not (PearlCheck["Enabled"] and pearlActive()) and voidThrow(root.Position) then
-					throwPearl(item, voidThrow, nil);
-				end;
-			end));
+			until not AutoPearl["Enabled"] or session ~= current;
 		end,
 		["Tooltip"] = 'Pearls you back to ground when falling into the void, and can follow enemy pearls to where they land.'
 	});
@@ -18219,29 +20711,48 @@ velo.run(function(): ()
 	local hud: table?;
 	local tower: table = {["Started"] = false, ["Held"] = false, ["LastPlace"] = 0, ["Cooldown"] = 0};
 
-	local pickBlock: (towering: boolean) -> (string?, number, number?) = function(towering: boolean): (string?, number, number?)
+	local scaffoldBlock: () -> (string?, number) = function(): (string?, number)
+		if store.hand.toolType == 'block' and store.hand.tool then
+			return store.hand.tool.Name, store.hand.amount or 0;
+		end;
+		if LimitItem["Enabled"] then
+			return nil, 0;
+		end;
+		local wool: string?, amount: number? = getWool();
+		if wool then
+			return wool, amount or 0;
+		end;
+		for _: number, item: table in store.inventory.inventory.items do
+			if bedwars.ItemMeta[item.itemType].block then
+				return item.itemType, item.amount or 0;
+			end;
+		end;
+		return nil, 0;
+	end;
+
+	local towerBlock: () -> (string?, number?) = function(): (string?, number?)
 		local blacklisted: (itemType: string) -> boolean = function(itemType: string): boolean
 			return table.find(Blacklist.ListEnabled, itemType) ~= nil or (itemType:find('wool') ~= nil and table.find(Blacklist.ListEnabled, 'wool') ~= nil);
 		end;
 		local hand: table = store.hand;
 		if hand.toolType == 'block' and hand.tool and (hand.amount or 0) > 0 and not blacklisted(hand.tool.Name) then
-			return hand.tool.Name, hand.amount, nil;
+			return hand.tool.Name, nil;
 		end;
 		if LimitItem["Enabled"] then
-			return nil, 0, nil;
+			return nil, nil;
 		end;
-		local best: table?, bestSlot: number?, bestRank: number, bestHealth: number = nil, nil, math.huge, math.huge;
+		local best: string?, bestSlot: number?, bestRank: number, bestHealth: number = nil, nil, math.huge, math.huge;
 		for _: number, item: table in store.inventory.inventory.items do
 			local block: table? = bedwars.ItemMeta[item.itemType] and bedwars.ItemMeta[item.itemType].block;
-			if block and (item.amount or 0) > 0 and not blacklisted(item.itemType) and (not towering or (block.health or 0) >= towerMinHealth) then
+			if block and (block.health or 0) >= towerMinHealth and (item.amount or 0) > 0 and not blacklisted(item.itemType) then
 				local slot: number? = hotbarSlotOf(item.tool);
-				local rank: number = (towering and not slot and 2 or 0) + (item.itemType:find('wool') and 0 or 1);
-				if rank < bestRank or (rank == bestRank and (block.health or 0) < bestHealth) then
-					best, bestSlot, bestRank, bestHealth = item, slot, rank, block.health or 0;
+				local rank: number = (slot and 0 or 2) + (item.itemType:find('wool') and 0 or 1);
+				if rank < bestRank or (rank == bestRank and block.health < bestHealth) then
+					best, bestSlot, bestRank, bestHealth = item.itemType, slot, rank, block.health;
 				end;
 			end;
 		end;
-		return best and best.itemType, best and best.amount or 0, bestSlot;
+		return best, bestSlot;
 	end;
 
 	local supportFor: (position: Vector3, cell: Vector3) -> Vector3? = function(position: Vector3, cell: Vector3): Vector3?
@@ -18269,6 +20780,9 @@ velo.run(function(): ()
 	end;
 
 	local updateHud: (block: string?, count: number) -> () = function(block: string?, count: number): ()
+		if vape.ThreadFix then
+			setthreadidentity(8);
+		end;
 		local now: number = os.clock();
 		local delta: number = math.max(now - hud.Clock, 0.001);
 		if block ~= hud.Block then
@@ -18306,9 +20820,12 @@ velo.run(function(): ()
 		if not hud then
 			return;
 		end;
+		if vape.ThreadFix then
+			setthreadidentity(8);
+		end;
 		hud.Frame.Visible = Scaffold["Enabled"] or clickGui.Visible;
 		if hud.Frame.Visible and not Scaffold["Enabled"] then
-			local block: string?, count: number = pickBlock(false);
+			local block: string?, count: number = scaffoldBlock();
 			updateHud(block, count);
 		end;
 	end;
@@ -18322,6 +20839,9 @@ velo.run(function(): ()
 	end;
 
 	local buildHud: () -> () = function(): ()
+		if vape.ThreadFix then
+			setthreadidentity(8);
+		end;
 		local make: (className: string, parent: Instance, props: {[string]: any}, rounded: boolean?) -> any = function(className: string, parent: Instance, props: {[string]: any}, rounded: boolean?): any
 			local object: any = Instance.new(className);
 			for property: string, value: any in props do
@@ -18353,6 +20873,9 @@ velo.run(function(): ()
 			["Connection"] = clickGui:GetPropertyChangedSignal('Visible'):Connect(refreshHud)
 		};
 		frame.InputBegan:Connect(function(input: InputObject): ()
+			if vape.ThreadFix then
+				setthreadidentity(8);
+			end;
 			if not clickGui.Visible or (input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch) then
 				return;
 			end;
@@ -18361,6 +20884,9 @@ velo.run(function(): ()
 			local moveType: Enum.UserInputType = input.UserInputType == Enum.UserInputType.Touch and Enum.UserInputType.Touch or Enum.UserInputType.MouseMovement;
 			local moving: RBXScriptConnection = inputService.InputChanged:Connect(function(change: InputObject): ()
 				if change.UserInputType == moveType then
+					if vape.ThreadFix then
+						setthreadidentity(8);
+					end;
 					local viewport: Vector2 = gameCamera.ViewportSize;
 					local limitX: number = (viewport.X - frame.AbsoluteSize.X) / 2;
 					frame.Position = UDim2.new(0.5, math.clamp(origin.X.Offset + change.Position.X - start.X, -limitX, limitX), 0.5, math.clamp(origin.Y.Offset + change.Position.Y - start.Y, -viewport.Y / 2, viewport.Y / 2 - frame.AbsoluteSize.Y));
@@ -18382,15 +20908,16 @@ velo.run(function(): ()
 	local warnOnce: (text: string) -> () = function(text: string): ()
 		if tower.Warned ~= text then
 			tower.Warned = text;
-			notif('Scaffold', text, 3, 'warning');
+			notif('AutoBlockUp', text, 3, 'warning');
 		end;
 	end;
 
 	local suppressJump: (enable: boolean) -> () = function(enable: boolean): ()
 		if enable then
-			if tower.Humanoid or not entitylib.isAlive then
+			if tower.Humanoid or vape.MovementOwner or not entitylib.isAlive then
 				return;
 			end;
+			vape.MovementOwner, tower.Owned = 'AutoBlockUp', true;
 			tower.Humanoid = entitylib.character.Humanoid;
 			tower.JumpHeight = tower.Humanoid.JumpHeight;
 			tower.Humanoid.JumpHeight = 0;
@@ -18399,12 +20926,15 @@ velo.run(function(): ()
 		if tower.Humanoid and tower.JumpHeight and tower.Humanoid.JumpHeight == 0 then
 			tower.Humanoid.JumpHeight = tower.JumpHeight;
 		end;
-		tower.Humanoid, tower.JumpHeight = nil, nil;
+		if tower.Owned and vape.MovementOwner == 'AutoBlockUp' then
+			vape.MovementOwner = nil;
+		end;
+		tower.Humanoid, tower.JumpHeight, tower.Owned = nil, nil, false;
 	end;
 
 	local stopTower: () -> () = function(): ()
 		if ReturnSlot["Enabled"] and tower.Previous and tower.Equipped == store.inventory.hotbarSlot and entitylib.isAlive then
-			task.defer(hotbarSwitch, tower.Previous);
+			task.spawn(hotbarSwitch, tower.Previous);
 		end;
 		suppressJump(false);
 		tower.Started, tower.Warned, tower.Previous, tower.Equipped, tower.LostAt = false, nil, nil, nil, nil;
@@ -18412,6 +20942,9 @@ velo.run(function(): ()
 	end;
 
 	local towerTarget: () -> (Vector3?, string?, string?) = function(): (Vector3?, string?, string?)
+		if not entitylib.isAlive then
+			return nil, nil, nil;
+		end;
 		local position: Vector3 = entitylib.character.RootPart.Position;
 		local feet: number = position.Y - entitylib.character.HipHeight;
 		local target: Vector3 = roundPos(Vector3.new(position.X, feet - 1.5, position.Z));
@@ -18431,14 +20964,22 @@ velo.run(function(): ()
 		if not anchored then
 			return nil, nil, nil;
 		end;
-		local itemType: string? = pickBlock(true);
+		local itemType: string? = towerBlock();
 		if not itemType then
 			return nil, nil, 'No blocks to place';
 		end;
-		local map: table? = bedwars.MapController;
-		local cell: Vector3 = bedwars.BlockController:getBlockPosition(target);
-		if lplr:GetAttribute('DenyBlockPlace') or (map and ((type(map.isInDenyRegion) == 'function' and map:isInDenyRegion(cell)) or (type(map.isOutOfBounds) == 'function' and map:isOutOfBounds(cell)))) then
+		if lplr:GetAttribute('DenyBlockPlace') then
 			return nil, nil, "Can't place blocks here";
+		end;
+		local map: table? = bedwars.MapController;
+		if map then
+			local cell: Vector3 = bedwars.BlockController:getBlockPosition(target);
+			-- MapController lookups can throw while the map data is still loading; catsix counts a failed lookup as allowed.
+			local checkedDeny: boolean, denied: any = pcall(map.isInDenyRegion, map, cell);
+			local checkedBounds: boolean, outside: any = pcall(map.isOutOfBounds, map, cell);
+			if (checkedDeny and denied) or (checkedBounds and outside) then
+				return nil, nil, "Can't place blocks here";
+			end;
 		end;
 		return target, itemType, nil;
 	end;
@@ -18449,9 +20990,10 @@ velo.run(function(): ()
 			tower.Started, tower.Warned, tower.Previous, tower.Equipped, tower.LostAt = false, nil, nil, nil, nil;
 			return;
 		end;
+		local owner: string? = vape.MovementOwner;
 		local jumpMode: boolean = BlockUp["Value"] == 'Holding jump';
-		if jumpMode and not tower.Held then
-			if tower.Started or tower.Humanoid then
+		if (owner and owner ~= 'AutoBlockUp') or (jumpMode and not tower.Held) then
+			if tower.Started or tower.Owned then
 				stopTower();
 			end;
 			return;
@@ -18461,12 +21003,12 @@ velo.run(function(): ()
 				return;
 			end;
 			tower.Started = true;
-			local itemType: string?, _: number, slot: number? = pickBlock(true);
+			local itemType: string?, slot: number? = towerBlock();
 			if not itemType then
 				warnOnce('No blocks to place');
 			elseif slot and slot ~= store.inventory.hotbarSlot then
 				tower.Previous, tower.Equipped = store.inventory.hotbarSlot, slot;
-				task.defer(hotbarSwitch, slot);
+				task.spawn(hotbarSwitch, slot);
 			end;
 			if jumpMode then
 				suppressJump(true);
@@ -18481,7 +21023,7 @@ velo.run(function(): ()
 			end;
 		end;
 		local now: number = workspace:GetServerTimeNow();
-		local placeDelay: number = 1 / math.max(bedwars.SharedConstants.BLOCK_PLACE_CPS, 1);
+		local placeDelay: number = 1 / math.max(math.min(bedwars.DefaultPlaceCPS or math.huge, bedwars.SharedConstants.BLOCK_PLACE_CPS), 1);
 		if now - math.max(tower.LastPlace, bedwars.BlockCpsController.lastPlaceTimestamp) < placeDelay or not canPlace() then
 			return;
 		end;
@@ -18504,24 +21046,27 @@ velo.run(function(): ()
 		end;
 		tower.Warned = nil;
 		tower.LastPlace, tower.LastTarget = now, target;
-		task.defer(placeBlock, target, itemType);
+		task.spawn(placeBlock, target, itemType);
 	end;
 
 	local bridgeStep: () -> () = function(): ()
-		local held: string?, amount: number = pickBlock(false);
-		if hud then
-			updateHud(held, amount);
+		if vape.MovementOwner then
+			return;
 		end;
+		local held: string?, amount: number = scaffoldBlock();
 		local itemType: string? = held;
 		if (MouseDown["Enabled"] and not inputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)) or BlockUp["Value"] == 'When enabled' then
 			itemType = nil;
+		end;
+		if hud then
+			updateHud(held, amount);
 		end;
 		if not itemType then
 			return;
 		end;
 		local root: BasePart = entitylib.character.RootPart;
 		local humanoid: Humanoid = entitylib.character.Humanoid;
-		if Tower["Enabled"] and BlockUp["Value"] == 'Off' and inputService:IsKeyDown(Enum.KeyCode.Space) and not inputService:GetFocusedTextBox() then
+		if Tower["Enabled"] and inputService:IsKeyDown(Enum.KeyCode.Space) and not inputService:GetFocusedTextBox() then
 			root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, towerVelocity, root.AssemblyLinearVelocity.Z);
 		end;
 		local drop: number = entitylib.character.HipHeight + (Downwards["Enabled"] and inputService:IsKeyDown(Enum.KeyCode.LeftShift) and 4.5 or 1.5);
@@ -18538,6 +21083,7 @@ velo.run(function(): ()
 				if previewCell ~= shown then
 					if previewTween then
 						previewTween:Cancel();
+						previewTween = nil;
 					end;
 					if preview.Parent == gameCamera then
 						previewTween = tweenService:Create(preview, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {["CFrame"] = CFrame.new(shown)});
@@ -18552,7 +21098,7 @@ velo.run(function(): ()
 			local block: Instance?, blockCell: Vector3? = getPlacedBlock(cell);
 			local spot: Vector3? = not block and supportFor(cell, blockCell * 3) or nil;
 			if spot then
-				task.defer(placeBlock, spot, itemType);
+				task.delay(0, placeBlock, spot, itemType);
 			end;
 			lastCell = cell;
 		end;
@@ -18560,7 +21106,7 @@ velo.run(function(): ()
 
 	local setHeld: (down: boolean) -> () = function(down: boolean): ()
 		tower.Held = down;
-		if down and BlockUp["Value"] == 'Holding jump' and entitylib.isAlive and towerTarget() then
+		if down and BlockUp["Value"] == 'Holding jump' and towerTarget() then
 			suppressJump(true);
 		end;
 	end;
@@ -18568,6 +21114,9 @@ velo.run(function(): ()
 	Scaffold = vape.Categories.Utility:CreateModule({
 		["Name"] = 'Scaffold',
 		["Function"] = function(callback: boolean): ()
+			if vape.ThreadFix then
+				setthreadidentity(8);
+			end;
 			refreshHud();
 			if not callback then
 				stopTower();
@@ -18612,6 +21161,9 @@ velo.run(function(): ()
 				end));
 			end;
 			Scaffold:Clean(runService.Heartbeat:Connect(function(): ()
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
 				if BlockUp["Value"] ~= 'Off' then
 					towerStep();
 				end;
@@ -18633,7 +21185,7 @@ velo.run(function(): ()
 	Tower = Scaffold:CreateToggle({
 		["Name"] = 'Tower',
 		["Default"] = true,
-		["Tooltip"] = 'Boosts you upward while holding jump (when Block up is off)'
+		["Tooltip"] = 'Boosts you upward while holding jump'
 	});
 	Downwards = Scaffold:CreateToggle({
 		["Name"] = 'Downwards',
@@ -18682,11 +21234,14 @@ velo.run(function(): ()
 	Blacklist = Scaffold:CreateTextList({
 		["Name"] = 'Blacklist',
 		["Default"] = {'ballista', 'cannon', 'siege_tnt', 'tnt'},
-		["Tooltip"] = 'Block types it will never place'
+		["Tooltip"] = 'Block types Block up will never place'
 	});
 	Scaffold:CreateToggle({
 		["Name"] = 'Visual',
 		["Function"] = function(callback: boolean): ()
+			if vape.ThreadFix then
+				setthreadidentity(8);
+			end;
 			for _: number, option: table? in {FillColor, OutlineColor} do
 				if option then
 					option.Object.Visible = callback;
@@ -18732,6 +21287,9 @@ velo.run(function(): ()
 		["Visible"] = false,
 		["Function"] = function(hue: number, sat: number, val: number, opacity: number): ()
 			if preview then
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
 				preview.SelectionBox.SurfaceColor3 = Color3.fromHSV(hue, sat, val);
 				preview.SelectionBox.SurfaceTransparency = 1 - opacity;
 			end;
@@ -18744,6 +21302,9 @@ velo.run(function(): ()
 		["Visible"] = false,
 		["Function"] = function(hue: number, sat: number, val: number, opacity: number): ()
 			if preview then
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
 				preview.SelectionBox.Color3 = Color3.fromHSV(hue, sat, val);
 				preview.SelectionBox.Transparency = 1 - opacity;
 			end;
@@ -18752,6 +21313,9 @@ velo.run(function(): ()
 	Scaffold:CreateToggle({
 		["Name"] = 'Block Count',
 		["Function"] = function(callback: boolean): ()
+			if vape.ThreadFix then
+				setthreadidentity(8);
+			end;
 			destroyHud();
 			if callback then
 				buildHud();
@@ -18765,6 +21329,9 @@ velo.run(function(): ()
 		["Visible"] = false,
 		["Function"] = function(): ()
 			if hud then
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
 				hud.Frame.Position = hudOffset();
 			end;
 		end
@@ -18796,6 +21363,7 @@ velo.run(function(): ()
 	local LimitItem: table = {["Enabled"] = false};
 	local PlayerCheck: table = {["Enabled"] = false};
 	local FastBreak: table = {["Enabled"] = false};
+	local FastSpeed: table = {["Value"] = 0.25};
 	local BedCheck: table = {["Enabled"] = false};
 	local HiveCheck: table = {["Enabled"] = false};
 	local UseBlacklist: table = {["Enabled"] = false};
@@ -18805,7 +21373,9 @@ velo.run(function(): ()
 	local AssistAim: table = {["Value"] = 'Camera'};
 	local AssistSpeed: table = {["Value"] = 7};
 	local AssistRange: table = {["Value"] = 18};
+	local AssistAngle: table = {["Value"] = 60};
 	local AssistShake: table = {["Value"] = 3};
+	local AssistLimit: table = {["Enabled"] = true};
 	local AutoMine: table = {["Enabled"] = true};
 	local MineBed: table = {["Enabled"] = true};
 	local PhaseMine: table = {["Enabled"] = false};
@@ -18815,7 +21385,9 @@ velo.run(function(): ()
 	local healthbarLifetime: number = 5;
 	local assistSearchInterval: number = 0.15;
 	local assistDepthRadius: number = 18;
+	local assistSearchBudget: number = 512;
 	local aimOffsets: {Vector3} = {Vector3.zero, Vector3.xAxis * 1.35, -Vector3.xAxis * 1.35, Vector3.yAxis * 1.35, -Vector3.yAxis * 1.35, Vector3.zAxis * 1.35, -Vector3.zAxis * 1.35};
+	local cellSides: {Vector3} = {Vector3.xAxis, -Vector3.xAxis, Vector3.yAxis, -Vector3.yAxis, Vector3.zAxis, -Vector3.zAxis};
 	local pathColors: {[string]: Color3} = {["Target"] = Color3.new(1, 0.2, 0.2), ["Hit"] = Color3.new(0.2, 0.2, 1), ["Path"] = Color3.new(0.2, 1, 0.2)};
 
 	local customBlocks: {Instance} = {};
@@ -18827,6 +21399,10 @@ velo.run(function(): ()
 	local fastActive: boolean = false;
 	local healthbar: table = {};
 	local phased: {[Model]: table} = {};
+	local assist: table = {["Search"] = 0, ["Started"] = 0};
+	local session: table = {};
+	local assistParams: RaycastParams = RaycastParams.new();
+	assistParams.FilterType = Enum.RaycastFilterType.Exclude;
 	local shield: (block: Instance) -> boolean = function(block: Instance): boolean
 		return (block:GetAttribute('BedShieldEndTime') or 0) > workspace:GetServerTimeNow();
 	end;
@@ -18853,65 +21429,73 @@ velo.run(function(): ()
 		end;
 	end;
 
+	local clearHealthbar: () -> () = function(): ()
+		if healthbar.Anchor then
+			healthbar.Anchor:Destroy();
+		end;
+		table.clear(healthbar);
+	end;
+
 	local drawHealthbar: (_: table, blockRef: table, health: number, maxHealth: number?, change: number, block: Instance) -> () = function(_: table, blockRef: table, health: number, maxHealth: number?, change: number, block: Instance): ()
-		if block:GetAttribute('NoHealthbar') then
+		if block:GetAttribute('NoHealthbar') or not maxHealth then
 			return;
 		end;
-		local maximum: number = maxHealth or math.max(health, 1);
 		if healthbar.Cell ~= blockRef.blockPosition then
-			if healthbar.Anchor then
-				healthbar.Anchor:Destroy();
-			end;
+			clearHealthbar();
 			local anchor: Attachment = Instance.new('Attachment');
 			anchor.WorldPosition = bedwars.BlockController:getWorldPosition(blockRef.blockPosition);
 			anchor.Parent = workspace.Terrain;
 			local gui: BillboardGui = Instance.new('BillboardGui');
-			gui.Size = UDim2.fromOffset(160, 50);
+			gui.Size = UDim2.fromOffset(249, 102);
 			gui.StudsOffset = Vector3.new(0, 2.5, 0);
 			gui.MaxDistance = 40;
 			gui.AlwaysOnTop = true;
 			gui.Adornee = anchor;
 			gui.Parent = anchor;
 			local frame: Frame = Instance.new('Frame');
-			frame.Size = UDim2.fromScale(1, 1);
+			frame.Size = UDim2.fromOffset(160, 50);
+			frame.Position = UDim2.fromOffset(44, 32);
 			frame.BackgroundColor3 = Color3.new();
 			frame.BackgroundTransparency = 0.5;
 			frame.Parent = gui;
 			Instance.new('UICorner', frame).CornerRadius = UDim.new(0, 5);
-			local title: TextLabel = Instance.new('TextLabel');
-			title.Size = UDim2.fromOffset(145, 14);
-			title.Position = UDim2.fromOffset(12, 11);
-			title.BackgroundTransparency = 1;
-			title.Text = bedwars.ItemMeta[block.Name] and bedwars.ItemMeta[block.Name].displayName or block.Name;
-			title.TextXAlignment = Enum.TextXAlignment.Left;
-			title.TextColor3 = color.Dark(uipallet.Text, 0.16);
-			title.TextStrokeTransparency = 0.6;
-			title.TextScaled = true;
-			title.Font = Enum.Font.Arial;
-			title.Parent = frame;
+			addBlur(frame);
+			local meta: table? = bedwars.ItemMeta[block.Name];
+			for _: number, shade: table in {{["Offset"] = 13, ["Color"] = Color3.new()}, {["Offset"] = 12, ["Color"] = color.Dark(uipallet.Text, 0.16)}} do
+				local title: TextLabel = Instance.new('TextLabel');
+				title.Size = UDim2.fromOffset(145, 14);
+				title.Position = UDim2.fromOffset(shade.Offset, shade.Offset - 1);
+				title.BackgroundTransparency = 1;
+				title.Text = meta and meta.displayName or block.Name;
+				title.TextXAlignment = Enum.TextXAlignment.Left;
+				title.TextYAlignment = Enum.TextYAlignment.Top;
+				title.TextColor3 = shade.Color;
+				title.TextScaled = true;
+				title.Font = Enum.Font.Arial;
+				title.Parent = frame;
+			end;
 			local bar: Frame = Instance.new('Frame');
 			bar.Size = UDim2.fromOffset(138, 4);
 			bar.Position = UDim2.fromOffset(12, 32);
 			bar.BackgroundColor3 = uipallet.Main;
 			bar.Parent = frame;
 			Instance.new('UICorner', bar).CornerRadius = UDim.new(1, 0);
+			local start: number = math.clamp(health / maxHealth, 0, 1);
 			local fill: Frame = Instance.new('Frame');
-			fill.Size = UDim2.fromScale(math.clamp(health / maximum, 0, 1), 1);
-			fill.BackgroundColor3 = Color3.fromHSV(math.clamp(health / maximum / 2.5, 0, 1), 0.89, 0.75);
+			fill.Size = UDim2.fromScale(start, 1);
+			fill.BackgroundColor3 = Color3.fromHSV(math.clamp(start / 2.5, 0, 1), 0.89, 0.75);
 			fill.Parent = bar;
 			Instance.new('UICorner', fill).CornerRadius = UDim.new(1, 0);
-			healthbar.Anchor, healthbar.Fill, healthbar.Cell = anchor, fill, blockRef.blockPosition;
+			local token: table = {};
+			healthbar.Anchor, healthbar.Fill, healthbar.Cell, healthbar.Token = anchor, fill, blockRef.blockPosition, token;
+			task.delay(healthbarLifetime, function(): ()
+				if healthbar.Token == token then
+					clearHealthbar();
+				end;
+			end);
 		end;
-		local token: table = {};
-		healthbar.Token = token;
-		local percent: number = math.clamp((health - change) / maximum, 0, 1);
+		local percent: number = math.clamp((health - change) / maxHealth, 0, 1);
 		tweenService:Create(healthbar.Fill, TweenInfo.new(0.3), {["Size"] = UDim2.fromScale(percent, 1), ["BackgroundColor3"] = Color3.fromHSV(math.clamp(percent / 2.5, 0, 1), 0.89, 0.75)}):Play();
-		task.delay(healthbarLifetime, function(): ()
-			if healthbar.Token == token and healthbar.Anchor then
-				healthbar.Anchor:Destroy();
-				table.clear(healthbar);
-			end;
-		end);
 	end;
 
 	local fastAllowed: (block: Instance?) -> boolean = function(block: Instance?): boolean
@@ -18941,7 +21525,7 @@ velo.run(function(): ()
 		for _: number, part: Instance in character:GetDescendants() do
 			ignore(part);
 		end;
-		table.insert(entry.Connections, character.DescendantAdded:Connect(ignore));
+		table.insert(entry.Connections, character.ChildAdded:Connect(ignore));
 		table.insert(entry.Connections, character.Destroying:Connect(function(): ()
 			for _: number, connection: RBXScriptConnection in entry.Connections do
 				connection:Disconnect();
@@ -18964,7 +21548,7 @@ velo.run(function(): ()
 	end;
 	local phaseEveryone: () -> () = function(): ()
 		for _: number, ent: table in entitylib.List do
-			if ent.Player and ent.Character then
+			if ent.Player and ent.Player ~= lplr and ent.Character then
 				phaseCharacter(ent.Character);
 			end;
 		end;
@@ -19006,10 +21590,10 @@ velo.run(function(): ()
 				return block;
 			end;
 			local score: number = distance;
-			if ClosestBreak["Enabled"] then
+			if ClosestBreak["Enabled"] and block ~= mouseHit then
 				local offset: Vector3 = block.Position - mouseRay.Origin;
 				local along: number = offset:Dot(mouseRay.Direction);
-				score = block == mouseHit and 0 or along > 0 and (offset - mouseRay.Direction * along).Magnitude or offset.Magnitude;
+				score = along > 0 and (offset - mouseRay.Direction * along).Magnitude or offset.Magnitude;
 			end;
 			if score < best then
 				chosen, best = block, score;
@@ -19018,17 +21602,17 @@ velo.run(function(): ()
 		return chosen;
 	end;
 
-	local aimAt: (block: Instance, position: Vector3, direction: Vector3, params: RaycastParams) -> Vector3? = function(block: Instance, position: Vector3, direction: Vector3, params: RaycastParams): Vector3?
+	local aimAt: (block: Instance, position: Vector3, direction: Vector3) -> Vector3? = function(block: Instance, position: Vector3, direction: Vector3): Vector3?
 		local eye: Vector3 = gameCamera.CFrame.Position;
 		for _: number, offset: Vector3 in aimOffsets do
 			if block.Name == 'bed' and (offset == Vector3.zero or getPlacedBlock(position + offset.Unit * 3)) then
 				continue;
 			end;
 			local delta: Vector3 = position + offset - eye;
-			if delta.Magnitude <= 0.001 or delta.Unit:Dot(direction) < math.cos(math.rad(ViewAngle["Value"])) then
+			if delta.Magnitude <= 0.001 or delta.Unit:Dot(direction) < math.cos(math.rad(AssistAngle["Value"])) then
 				continue;
 			end;
-			local hit: RaycastResult? = bedwars.QueryUtil:raycast(eye, delta.Unit * (delta.Magnitude + 3), params);
+			local hit: RaycastResult? = bedwars.QueryUtil:raycast(eye, delta.Unit * (delta.Magnitude + 3), assistParams);
 			if not hit or (hit.Instance ~= block and not hit.Instance:IsDescendantOf(block)) then
 				continue;
 			end;
@@ -19049,13 +21633,74 @@ velo.run(function(): ()
 		return nil;
 	end;
 
+	local assistRoute: (bed: Instance, direction: Vector3, reach: number) -> (Instance?, Vector3?, number, number, number) = function(bed: Instance, direction: Vector3, reach: number): (Instance?, Vector3?, number, number, number)
+		local blockStore: table = bedwars.BlockController:getStore();
+		local cells: {Vector3} = containedCells(bed);
+		local origin: Vector3 = entitylib.character.RootPart.Position;
+		local queue: {table}, costs: {[Vector3]: number}, depths: {[Vector3]: number}, visited: {[Vector3]: boolean} = {}, {}, {}, {};
+		local chosen: Instance?, chosenPosition: Vector3? = nil, nil;
+		local cost: number, depth: number, spread: number, gap: number = math.huge, math.huge, math.huge, math.huge;
+		for _: number, cell: Vector3 in cells do
+			if blockStore:getBlockAt(cell) == bed then
+				costs[cell], depths[cell] = 0, 0;
+				table.insert(queue, {["Cell"] = cell, ["Cost"] = 0, ["Depth"] = 0});
+			end;
+		end;
+		for _: number = 1, assistSearchBudget do
+			local index: number?, node: table? = nil, nil;
+			for slot: number, entry: table in queue do
+				if not node or entry.Cost < node.Cost or (entry.Cost == node.Cost and entry.Depth < node.Depth) then
+					index, node = slot, entry;
+				end;
+			end;
+			if not node or node.Cost > cost then
+				break;
+			end;
+			table.remove(queue, index);
+			if visited[node.Cell] then
+				continue;
+			end;
+			visited[node.Cell] = true;
+			local current: Instance? = blockStore:getBlockAt(node.Cell);
+			local position: Vector3 = node.Cell * 3;
+			local distance: number = (origin - position).Magnitude;
+			local nodeSpread: number = math.huge;
+			for _: number, cell: Vector3 in cells do
+				nodeSpread = math.min(nodeSpread, (node.Cell - cell).Magnitude);
+			end;
+			if current and distance <= reach and aimAt(current, position, direction) and (node.Cost < cost or node.Depth < depth or (node.Depth == depth and (nodeSpread < spread or (nodeSpread == spread and ((current == assist.Target and chosen ~= assist.Target) or ((current == assist.Target) == (chosen == assist.Target) and distance < gap)))))) then
+				chosen, chosenPosition, cost, depth, spread, gap = current, position, node.Cost, node.Depth, nodeSpread, distance;
+			end;
+			for _: number, side: Vector3 in cellSides do
+				local nextCell: Vector3 = node.Cell + side;
+				local nextBlock: Instance? = not visited[nextCell] and (nextCell * 3 - bed.Position).Magnitude <= assistDepthRadius and blockStore:getBlockAt(nextCell) or nil;
+				local meta: table? = nextBlock and bedwars.ItemMeta[nextBlock.Name];
+				if meta and meta.block and not nextBlock:GetAttribute('NoBreak') and not ownTeamNoBreak(nextBlock) and bedwars.BlockController:isBlockBreakable({["blockPosition"] = nextCell}, lplr) then
+					local data: Instance? = blockStore:getBlockData(nextCell);
+					local health: number? = data and data:GetAttribute(bedwars.BlockBreaker.blockHealthbar:getHealthKey(nextBlock)) or nextBlock:GetAttribute('Health') or meta.block.health;
+					local damage: number = bedwars.BlockController:calculateBlockDamage(lplr, {["blockPosition"] = nextCell});
+					if damage > 0 then
+						local hits: number = node.Cost + math.max(math.ceil((health or 10) / damage), 1);
+						if hits < (costs[nextCell] or math.huge) or (hits == costs[nextCell] and node.Depth + 1 < depths[nextCell]) then
+							costs[nextCell], depths[nextCell] = hits, node.Depth + 1;
+							table.insert(queue, {["Cell"] = nextCell, ["Cost"] = hits, ["Depth"] = node.Depth + 1});
+						end;
+					end;
+				end;
+			end;
+		end;
+		return chosen, chosenPosition, cost, depth, gap;
+	end;
+
 	Nuker = vape.Categories.World:CreateModule({
 		["Name"] = 'Nuker',
 		["Function"] = function(callback: boolean): ()
 			if not callback then
 				return;
 			end;
-			activeBlock, nextBreak, fastActive = nil, 0, false;
+			activeBlock, nextBreak, fastActive, pathShown = nil, 0, false, false;
+			session = {};
+			assist.Target, assist.Bed, assist.Position, assist.Search, assist.Started = nil, nil, nil, 0, 0;
 			for _: number = 1, pathLength do
 				local part: Part = Instance.new('Part');
 				part.Anchored = true;
@@ -19091,22 +21736,18 @@ velo.run(function(): ()
 			mouseParams.FilterType = Enum.RaycastFilterType.Exclude;
 			local playerParams: RaycastParams = RaycastParams.new();
 			playerParams.FilterType = Enum.RaycastFilterType.Include;
-			local assistParams: RaycastParams = RaycastParams.new();
-			assistParams.FilterType = Enum.RaycastFilterType.Exclude;
 			local assistMaid: table = rawget(getmetatable(bedwars.BlockBreaker.maid), 'new')();
 			local random: Random = Random.new();
-			local busy: boolean, nextUpdate: number = false, 0;
-			local assist: table = {["Search"] = 0, ["Started"] = 0};
 
 			Nuker:Clean(function(): ()
+				session.Cancelled = true;
+				if store.breakTool and store.breakTool.session == session then
+					store.breakTool = nil;
+				end;
 				assistMaid:DoCleaning();
 				table.clear(pathParts);
-				activeBlock = nil;
-				store.breakTool = nil;
-				if healthbar.Anchor then
-					healthbar.Anchor:Destroy();
-				end;
-				table.clear(healthbar);
+				activeBlock, pathShown = nil, false;
+				clearHealthbar();
 				if fastActive then
 					bedwars.BlockBreaker:setCooldown(legitCooldown);
 				end;
@@ -19120,7 +21761,7 @@ velo.run(function(): ()
 				local info: table? = breaker.clientManager:getBlockSelector():getMouseInfo(1, {["ray"] = mouseRay});
 				if fastAllowed(info and info.target and info.target.blockInstance) then
 					fastActive = true;
-					breaker:setCooldown(BreakSpeed["Value"]);
+					breaker:setCooldown(FastSpeed["Value"]);
 				end;
 			end;
 			Nuker:Clean(function(): ()
@@ -19170,7 +21811,7 @@ velo.run(function(): ()
 					if pending == request then
 						pending = nil;
 					end;
-					if not Nuker["Enabled"] then
+					if not Nuker["Enabled"] or not BedAssist["Enabled"] then
 						return;
 					end;
 					if result == 'destroyed' then
@@ -19190,7 +21831,9 @@ velo.run(function(): ()
 					if pending == request then
 						pending = nil;
 					end;
-					assist.Search = 0;
+					if Nuker["Enabled"] and BedAssist["Enabled"] then
+						assist.Search = 0;
+					end;
 				end);
 				return nil;
 			end;
@@ -19215,74 +21858,14 @@ velo.run(function(): ()
 			end));
 
 			Nuker:Clean(runService.Heartbeat:Connect(function(): ()
-				local now: number = tick();
-				if fastActive and (not FastBreak["Enabled"] or now - (store.lastHit or 0) > legitCooldown) then
+				if fastActive and (not FastBreak["Enabled"] or tick() - (store.lastHit or 0) > legitCooldown) then
 					fastActive = false;
 					bedwars.BlockBreaker:setCooldown(legitCooldown);
 				end;
-				if not AutoBreak["Enabled"] or busy or now < nextUpdate or not entitylib.isAlive or store.damageBlockFail > now then
-					return;
-				end;
-				nextUpdate = now + 1 / UpdateRate["Value"];
-				local ignore: {Instance} = {lplr.Character, gameCamera};
-				local players: {Instance} = {};
-				for _: number, ent: table in entitylib.List do
-					if ent.Character then
-						table.insert(ignore, ent.Character);
-						if ent.Player then
-							table.insert(players, ent.Character);
-						end;
-					end;
-				end;
-				mouseParams.FilterDescendantsInstances = ignore;
-				playerParams.FilterDescendantsInstances = players;
-				local mouse: Vector2 = inputService:GetMouseLocation();
-				local mouseRay: Ray = gameCamera:ViewportPointToRay(mouse.X, mouse.Y);
-				local mouseResult: RaycastResult? = ClosestBreak["Enabled"] and workspace:Raycast(mouseRay.Origin, mouseRay.Direction * 999, mouseParams) or nil;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				for _: number, entry: table in targets do
-					if entry.Option and not entry.Option["Enabled"] then
-						continue;
-					end;
-					local block: Instance? = pickBlock(entry, origin, mouseRay, mouseResult and mouseResult.Instance, playerParams);
-					if not block then
-						continue;
-					end;
-					activeBlock = block;
-					if now < nextBreak then
-						return;
-					end;
-					busy = true;
-					local position: Vector3?, path: {[Vector3]: Vector3}?, target: Vector3?, sent: boolean = breakBlock(block, {
-						["Effects"] = Effect["Enabled"],
-						["Animation"] = Animation["Value"] ~= 'No Animation' and Animation["Value"] or nil,
-						["Healthbar"] = Effect["Enabled"] and CustomHealth["Enabled"] and drawHealthbar or nil,
-						["AutoTool"] = AutoTool["Enabled"],
-						["Wallcheck"] = Wallcheck["Enabled"],
-						["Nearest"] = ClosestBreak["Enabled"] or Mode["Value"] == 'Distance',
-						["DirectOnly"] = not entry.Route,
-						["Sequential"] = true,
-						["SwitchDelay"] = SwitchDelay:GetRandomValue(),
-						["OnTarget"] = showPath
-					});
-					busy = false;
-					if sent then
-						nextBreak = tick() + BreakSpeed["Value"];
-					end;
-					showPath(position, path, target);
-					if position then
-						return;
-					end;
-				end;
-				activeBlock = nil;
-				showPath(nil, nil, nil);
 			end));
 
 			Nuker:Clean(runService.PostSimulation:Connect(function(delta: number): ()
-				if not BedAssist["Enabled"] then
-					return;
-				end;
-				if not entitylib.isAlive or store.matchState ~= 1 or lplr:GetAttribute('Spectator') or lplr:GetAttribute('DenyBlockBreak') or inputService:GetFocusedTextBox() or guiService.MenuIsOpen or bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN) or (LimitItem["Enabled"] and not holdingBreaker()) then
+				if not BedAssist["Enabled"] or not entitylib.isAlive or store.matchState ~= 1 or lplr:GetAttribute('Spectator') or lplr:GetAttribute('DenyBlockBreak') or inputService:GetFocusedTextBox() or guiService.MenuIsOpen or bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN) or (AssistLimit["Enabled"] and not holdingBreaker()) then
 					assist.Target, assist.Bed, assist.Position, assist.Search = nil, nil, nil, 0;
 					return;
 				end;
@@ -19292,17 +21875,15 @@ velo.run(function(): ()
 				local origin: Vector3 = entitylib.character.RootPart.Position;
 				assistParams.FilterDescendantsInstances = {lplr.Character, gameCamera};
 				if tick() >= assist.Search or (assist.Target and not assist.Target.Parent) then
-					local chosen: Instance?, chosenBed: Instance?, chosenPosition: Vector3?, cost: number, gap: number = nil, nil, nil, math.huge, math.huge;
+					local chosen: Instance?, chosenBed: Instance?, chosenPosition: Vector3? = nil, nil, nil;
+					local cost: number, depth: number, gap: number = math.huge, math.huge, math.huge;
 					for _: number, bed: Instance in beds do
-						if not bed.Parent or ownTeamNoBreak(bed) or shield(bed) or (bed.Position - origin).Magnitude > reach + 3 then
+						if not bed.Parent or ownTeamNoBreak(bed) or shield(bed) or (bed.Position - origin).Magnitude > AssistRange["Value"] + 3 or not bedwars.BlockController:isBlockBreakable({["blockPosition"] = bedwars.BlockController:getBlockPosition(bed.Position)}, lplr) then
 							continue;
 						end;
-						for _: number, cell: Vector3 in containedCells(bed) do
-							local position: Vector3?, routeCost: number? = mining.route(bed, cell * 3, true, false);
-							local hit: Instance? = position and getPlacedBlock(position);
-							if hit and (position - bed.Position).Magnitude <= assistDepthRadius and (position - origin).Magnitude <= reach and (routeCost < cost or (routeCost == cost and (position - origin).Magnitude < gap)) then
-								chosen, chosenBed, chosenPosition, cost, gap = hit, bed, position, routeCost, (position - origin).Magnitude;
-							end;
+						local block: Instance?, position: Vector3?, routeCost: number, routeDepth: number, routeGap: number = assistRoute(bed, mouseRay.Direction, reach);
+						if block and (routeCost < cost or (routeCost == cost and (routeDepth < depth or (routeDepth == depth and routeGap < gap)))) then
+							chosen, chosenBed, chosenPosition, cost, depth, gap = block, bed, position, routeCost, routeDepth, routeGap;
 						end;
 					end;
 					if chosen ~= assist.Target then
@@ -19314,7 +21895,7 @@ velo.run(function(): ()
 				if not target or not target.Parent or not assist.Bed.Parent or ownTeamNoBreak(assist.Bed) or shield(assist.Bed) or (target == assist.Bed and not MineBed["Enabled"]) or (origin - assist.Position).Magnitude > reach then
 					return;
 				end;
-				local aimPoint: Vector3? = aimAt(target, assist.Position, mouseRay.Direction, assistParams);
+				local aimPoint: Vector3? = aimAt(target, assist.Position, mouseRay.Direction);
 				if not aimPoint then
 					return;
 				end;
@@ -19347,6 +21928,77 @@ velo.run(function(): ()
 						bedwars.BlockBreaker:hitBlock(assistMaid, ray);
 					end;
 				end;
+			end));
+
+			Nuker:Clean(task.spawn(function(): ()
+				repeat
+					task.wait(1 / UpdateRate["Value"]);
+					if not AutoBreak["Enabled"] or not entitylib.isAlive then
+						if not AutoBreak["Enabled"] then
+							activeBlock = nil;
+							showPath(nil, nil, nil);
+						end;
+						continue;
+					end;
+					local mouseRay: Ray = gameCamera:ViewportPointToRay(inputService:GetMouseLocation().X, inputService:GetMouseLocation().Y);
+					local mouseHit: Instance? = nil;
+					if ClosestBreak["Enabled"] then
+						local ignore: {Instance} = {lplr.Character, gameCamera};
+						for _: number, ent: table in entitylib.List do
+							if ent.Character then
+								table.insert(ignore, ent.Character);
+							end;
+						end;
+						mouseParams.FilterDescendantsInstances = ignore;
+						local result: RaycastResult? = workspace:Raycast(mouseRay.Origin, mouseRay.Direction * 999, mouseParams);
+						mouseHit = result and result.Instance or nil;
+					end;
+					if PlayerCheck["Enabled"] then
+						local players: {Instance} = {};
+						for _: number, ent: table in entitylib.List do
+							if ent.Player and ent.Character then
+								table.insert(players, ent.Character);
+							end;
+						end;
+						playerParams.FilterDescendantsInstances = players;
+					end;
+					local origin: Vector3 = entitylib.character.RootPart.Position;
+					local handled: boolean = false;
+					for _: number, entry: table in targets do
+						local block: Instance? = (not entry.Option or entry.Option["Enabled"]) and pickBlock(entry, origin, mouseRay, mouseHit, playerParams) or nil;
+						if block then
+							activeBlock = block;
+							handled = tick() < nextBreak;
+							if not handled then
+								local position: Vector3?, path: {[Vector3]: Vector3}?, target: Vector3?, sent: boolean = breakBlock(block, {
+									["Effects"] = Effect["Enabled"],
+									["Animation"] = Animation["Value"] ~= 'No Animation' and Animation["Value"] or nil,
+									["Healthbar"] = CustomHealth["Enabled"] and drawHealthbar or nil,
+									["AutoTool"] = AutoTool["Enabled"],
+									["Wallcheck"] = Wallcheck["Enabled"],
+									["Nearest"] = ClosestBreak["Enabled"] or Mode["Value"] == 'Distance',
+									["DirectOnly"] = not entry.Route,
+									["Sequential"] = true,
+									["Session"] = session,
+									["SwitchDelay"] = SwitchDelay:GetRandomValue(),
+									["OnTarget"] = showPath
+								});
+								if sent then
+									nextBreak = tick() + BreakSpeed["Value"];
+								end;
+								showPath(position, path, target);
+								handled = position ~= nil;
+							end;
+							if handled then
+								break;
+							end;
+						end;
+					end;
+					if not handled then
+						activeBlock = nil;
+						showPath(nil, nil, nil);
+					end;
+				until not Nuker["Enabled"];
 			end));
 		end,
 		["Tooltip"] = 'Breaks beds and blocks around you, speeds up manual mining and assists aiming into beds.'
@@ -19384,13 +22036,7 @@ velo.run(function(): ()
 		["Default"] = 0.25,
 		["Decimal"] = 100,
 		["Suffix"] = 'seconds',
-		["Tooltip"] = 'Seconds between hits, for auto break and for fast break'
-	});
-	Nuker:CreateButton({
-		["Name"] = 'Sync to legit speed',
-		["Function"] = function(): ()
-			BreakSpeed:SetValue(legitCooldown);
-		end
+		["Tooltip"] = 'Seconds between auto break hits'
 	});
 	UpdateRate = Nuker:CreateSlider({
 		["Name"] = 'Update rate',
@@ -19438,6 +22084,11 @@ velo.run(function(): ()
 	Wallcheck = Nuker:CreateToggle({
 		["Name"] = 'Legit mode',
 		["Default"] = true,
+		["Function"] = function(callback: boolean): ()
+			if ViewAngle.Object then
+				ViewAngle.Object.Visible = callback;
+			end;
+		end,
 		["Tooltip"] = 'Breaks through what is in front of the bed instead of targeting it directly, and only what you are looking at'
 	});
 	ViewAngle = Nuker:CreateSlider({
@@ -19446,7 +22097,8 @@ velo.run(function(): ()
 		["Max"] = 180,
 		["Default"] = 60,
 		["Suffix"] = 'degrees',
-		["Tooltip"] = 'How far off your crosshair a block may be for legit mode and bed assist, 180 allows anything'
+		["Darker"] = true,
+		["Tooltip"] = 'How far off your crosshair a block may be in legit mode, 180 breaks anything in range'
 	});
 	AutoTool = Nuker:CreateToggle({
 		["Name"] = 'Auto Tool',
@@ -19463,7 +22115,7 @@ velo.run(function(): ()
 	});
 	LimitItem = Nuker:CreateToggle({
 		["Name"] = 'Limit to items',
-		["Tooltip"] = 'Only breaks and assists while a tool is held'
+		["Tooltip"] = 'Only breaks while a tool is held'
 	});
 	PlayerCheck = Nuker:CreateToggle({
 		["Name"] = 'Player check',
@@ -19472,12 +22124,28 @@ velo.run(function(): ()
 	FastBreak = Nuker:CreateToggle({
 		["Name"] = 'Fast break',
 		["Function"] = function(callback: boolean): ()
-			for _: number, option: table in {BedCheck, HiveCheck, UseBlacklist} do
+			for _: number, option: table in {FastSpeed, BedCheck, HiveCheck, UseBlacklist} do
 				option.Object.Visible = callback;
 			end;
 			Blacklist.Object.Visible = callback and UseBlacklist["Enabled"];
 		end,
-		["Tooltip"] = 'Lowers the cooldown between your own block hits to the break speed'
+		["Tooltip"] = 'Lowers the cooldown between your own block hits to the fast break speed'
+	});
+	FastSpeed = Nuker:CreateSlider({
+		["Name"] = 'Fast break speed',
+		["Min"] = 0,
+		["Max"] = legitCooldown,
+		["Default"] = 0.25,
+		["Decimal"] = 100,
+		["Suffix"] = 'seconds',
+		["Darker"] = true,
+		["Visible"] = false
+	});
+	Nuker:CreateButton({
+		["Name"] = 'Sync to legit speed',
+		["Function"] = function(): ()
+			FastSpeed:SetValue(legitCooldown);
+		end
 	});
 	BedCheck = Nuker:CreateToggle({["Name"] = 'Bed Check', ["Darker"] = true, ["Visible"] = false, ["Tooltip"] = 'Keeps the normal speed while breaking a bed'});
 	HiveCheck = Nuker:CreateToggle({["Name"] = 'Blacklist Beehive', ["Darker"] = true, ["Visible"] = false, ["Tooltip"] = 'Keeps the normal speed while breaking a beehive'});
@@ -19503,7 +22171,7 @@ velo.run(function(): ()
 	BedAssist = Nuker:CreateToggle({
 		["Name"] = 'Bed assist',
 		["Function"] = function(callback: boolean): ()
-			for _: number, option: table in {AssistCurve, AssistAim, AssistSpeed, AssistRange, AssistShake, AutoMine, MineBed} do
+			for _: number, option: table in {AssistCurve, AssistAim, AssistSpeed, AssistRange, AssistAngle, AssistShake, AssistLimit, AutoMine, MineBed} do
 				option.Object.Visible = callback;
 			end;
 		end,
@@ -19530,7 +22198,24 @@ velo.run(function(): ()
 		end,
 		["Tooltip"] = 'Never exceeds the game\'s normal mining reach'
 	});
+	AssistAngle = Nuker:CreateSlider({
+		["Name"] = 'Assist view angle',
+		["Min"] = 5,
+		["Max"] = 180,
+		["Default"] = 60,
+		["Suffix"] = 'degrees',
+		["Darker"] = true,
+		["Visible"] = false,
+		["Tooltip"] = 'Maximum angle away from your crosshair, 180 allows every direction'
+	});
 	AssistShake = Nuker:CreateSlider({["Name"] = 'Assist shake', ["Min"] = 0, ["Max"] = 100, ["Default"] = 3, ["Darker"] = true, ["Visible"] = false});
+	AssistLimit = Nuker:CreateToggle({
+		["Name"] = 'Assist limit to item',
+		["Default"] = true,
+		["Darker"] = true,
+		["Visible"] = false,
+		["Tooltip"] = 'Only assists while a tool is held'
+	});
 	AutoMine = Nuker:CreateToggle({
 		["Name"] = 'Assist auto mine',
 		["Default"] = true,
@@ -19572,7 +22257,8 @@ velo.run(function(): ()
 	local switching: boolean = false;
 
 	local isMining: () -> boolean = function(): boolean
-		return store.breakTool ~= nil and store.breakTool.expires > tick();
+		local equip: table? = store.breakTool;
+		return equip ~= nil and equip.expires > tick() and not (equip.session and equip.session.Cancelled);
 	end;
 
 	local toolSlotFor: (block: Instance?) -> number? = function(block: Instance?): number?
@@ -19587,17 +22273,16 @@ velo.run(function(): ()
 		return hotbarSlotOf(tool.tool);
 	end;
 
-	local switchTo: (slot: number, retrigger: BindableEvent?) -> () = function(slot: number, retrigger: BindableEvent?): ()
+	local lookSwitch: (slot: number) -> () = function(slot: number): ()
 		if switching then
 			return;
 		end;
 		switching = true;
-		task.defer(function(): ()
-			local switched: boolean = AutoTool["Enabled"] and not isMining() and hotbarSwitch(slot);
-			switching = false;
-			if switched and retrigger and AutoTool["Enabled"] and inputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
-				retrigger:Fire();
+		task.spawn(function(): ()
+			if not isMining() then
+				hotbarSwitch(slot);
 			end;
+			switching = false;
 		end);
 	end;
 
@@ -19620,14 +22305,24 @@ velo.run(function(): ()
 				local info: table? = breaker.clientManager:getBlockSelector():getMouseInfo(1, {["ray"] = mouseRay});
 				local slot: number? = toolSlotFor(info and info.target and info.target.blockInstance);
 				if slot then
-					switchTo(slot, retrigger);
+					task.spawn(function(): ()
+						if not AutoTool["Enabled"] or not retrigger.Parent or isMining() then
+							return;
+						end;
+						if hotbarSwitch(slot) and AutoTool["Enabled"] and retrigger.Parent and inputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+							retrigger:Fire();
+						end;
+					end);
 				end;
 			end;
 			AutoTool:Clean(function(): ()
 				blockHitHooks.AutoTool = nil;
 			end);
 			AutoTool:Clean(runService.Heartbeat:Connect(function(): ()
-				if Mode["Value"] ~= 'Look' or not entitylib.isAlive or isMining() then
+				if not entitylib.isAlive or isMining() then
+					return;
+				end;
+				if Mode["Value"] ~= 'Look' then
 					looking = nil;
 					return;
 				end;
@@ -19642,7 +22337,7 @@ velo.run(function(): ()
 				if not block then
 					looking = nil;
 					if SwitchBack["Enabled"] and previous then
-						switchTo(previous, nil);
+						lookSwitch(previous);
 						previous = nil;
 					end;
 					return;
@@ -19653,8 +22348,8 @@ velo.run(function(): ()
 				end;
 				local slot: number? = if tick() >= deadline then toolSlotFor(block) else nil;
 				if slot then
-					previous = previous or hotbarSlotOf(store.hand.tool);
-					switchTo(slot, nil);
+					previous = previous or (store.hand.tool and hotbarSlotOf(store.hand.tool) or nil);
+					lookSwitch(slot);
 				end;
 			end));
 		end,
@@ -19701,6 +22396,7 @@ velo.run(function(): ()
 	local refreshRadius: number = 30;
 	local plates: {[Instance]: BillboardGui} = {};
 	local signatures: {[BillboardGui]: string} = {};
+	local itemPlates: {[BillboardGui]: boolean} = {};
 	local folder: Folder = Instance.new('Folder');
 	folder.Parent = vape.gui;
 
@@ -19710,13 +22406,14 @@ velo.run(function(): ()
 			plate.Enabled = false;
 			return;
 		end;
+		local item: boolean = itemPlates[plate] == true;
 		local layers: {[string]: number} = {};
 		for _: number, start: Vector3 in {adornee.Position, adornee.Position + Vector3.new(0, 0, 3)} do
 			for _: number, side: Vector3 in sides do
 				local found: {[string]: number} = {};
 				for depth: number = 1, scanDepth do
 					local block: Instance? = getPlacedBlock(start + side * depth);
-					if not block or block == adornee or block.Name == 'bed' then
+					if not block or block == adornee or (not item and block.Name == 'bed') then
 						break;
 					end;
 					if not block:GetAttribute('NoBreak') then
@@ -19736,10 +22433,14 @@ velo.run(function(): ()
 			local metaA: table?, metaB: table? = bedwars.ItemMeta[a], bedwars.ItemMeta[b];
 			local healthA: number = metaA and metaA.block and metaA.block.health or 0;
 			local healthB: number = metaB and metaB.block and metaB.block.health or 0;
+			if item then
+				return healthA > healthB;
+			end;
 			return healthA == healthB and a < b or healthA > healthB;
 		end);
 		plate.Enabled = #order > 0;
-		local signature: string = tostring(LayerCounter["Enabled"]);
+		local counted: boolean = not item and LayerCounter["Enabled"];
+		local signature: string = tostring(counted);
 		for _: number, name: string in order do
 			signature ..= ','..name..':'..layers[name];
 		end;
@@ -19758,7 +22459,7 @@ velo.run(function(): ()
 			icon.BackgroundTransparency = 1;
 			icon.Image = bedwars.getIcon({["itemType"] = name}, true);
 			icon.Parent = plate.Frame;
-			if layers[name] > 1 and LayerCounter["Enabled"] then
+			if layers[name] > 1 and counted then
 				local amount: TextLabel = Instance.new('TextLabel');
 				amount.Name = 'Amount';
 				amount.Size = UDim2.fromScale(1, 1);
@@ -19773,7 +22474,7 @@ velo.run(function(): ()
 		end;
 	end;
 
-	local attach: (part: Instance) -> () = function(part: Instance): ()
+	local attach: (part: Instance, item: boolean) -> () = function(part: Instance, item: boolean): ()
 		if plates[part] then
 			return;
 		end;
@@ -19784,6 +22485,7 @@ velo.run(function(): ()
 		plate.AlwaysOnTop = true;
 		plate.ClipsDescendants = false;
 		plate.Adornee = part;
+		itemPlates[plate] = item;
 		addBlur(plate).Visible = Background["Enabled"];
 		local frame: Frame = Instance.new('Frame');
 		frame.Size = UDim2.fromScale(1, 1);
@@ -19827,17 +22529,18 @@ velo.run(function(): ()
 			for _: number, tag: string in {'bed', 'block'} do
 				for _: number, part: Instance in collectionService:GetTagged(tag) do
 					if tracked(part, tag) then
-						attach(part);
+						attach(part, tag ~= 'bed');
 					end;
 				end;
 				BedPlates:Clean(collectionService:GetInstanceAddedSignal(tag):Connect(function(part: Instance): ()
 					if tracked(part, tag) then
-						attach(part);
+						attach(part, tag ~= 'bed');
 					end;
 				end));
 				BedPlates:Clean(collectionService:GetInstanceRemovedSignal(tag):Connect(function(part: Instance): ()
 					if plates[part] then
 						signatures[plates[part]] = nil;
+						itemPlates[plates[part]] = nil;
 						plates[part]:Destroy();
 						plates[part] = nil;
 					end;
@@ -19856,6 +22559,7 @@ velo.run(function(): ()
 			BedPlates:Clean(function(): ()
 				table.clear(plates);
 				table.clear(signatures);
+				table.clear(itemPlates);
 				folder:ClearAllChildren();
 			end);
 		end,
@@ -19946,22 +22650,33 @@ velo.run(function(): ()
 	local PatchRadius: table = {["Value"] = 15};
 	local NoAnimation: table = {["Enabled"] = false};
 	local LimitToItem: table = {["Enabled"] = false};
-	local scanInterval: number = 0.5;
+	local passInterval: number = 0.5;
 	local layout: {[Vector3]: string} = {};
-	local queue: {table} = {};
-	local stock: {table} = {};
+	local patchBed: BasePart? = nil;
+	local placing: boolean = false;
+	local session: table? = nil;
 
 	local pyramid: (size: number) -> {Vector3} = function(size: number): {Vector3}
 		local cells: {Vector3} = {};
 		for height: number = size, 0, -1 do
 			for width: number = height, 0, -1 do
-				for _: number, x: number in {width, -width} do
-					table.insert(cells, Vector3.new(x, size - height, height + 1 - width) * 3);
-					table.insert(cells, Vector3.new(x, size - height, width - height) * 3);
-				end;
+				table.insert(cells, Vector3.new(width, size - height, height + 1 - width) * 3);
+				table.insert(cells, Vector3.new(-width, size - height, height + 1 - width) * 3);
+				table.insert(cells, Vector3.new(width, size - height, width - height) * 3);
+				table.insert(cells, Vector3.new(-width, size - height, width - height) * 3);
 			end;
 		end;
 		return cells;
+	end;
+
+	local ownBed: (reach: number) -> BasePart? = function(reach: number): BasePart?
+		local origin: Vector3 = entitylib.isAlive and entitylib.character.RootPart.Position or Vector3.zero;
+		for _: number, bed: BasePart in collectionService:GetTagged('bed') do
+			if (origin - bed.Position).Magnitude < reach and bed:GetAttribute('Team'..(lplr:GetAttribute('Team') or -1)..'NoBreak') then
+				return bed;
+			end;
+		end;
+		return nil;
 	end;
 
 	local mapLayout: (bed: BasePart) -> () = function(bed: BasePart): ()
@@ -19991,50 +22706,156 @@ velo.run(function(): ()
 		end;
 	end;
 
-	local pickBlock: (entry: table) -> table? = function(entry: table): table?
-		if entry.Layer then
-			for offset: number = 0, #stock - 1 do
-				local candidate: table = stock[(math.min(entry.Layer, #stock) + offset - 1) % #stock + 1];
-				if candidate.Amount > 0 then
-					return candidate;
-				end;
-			end;
-			return nil;
-		end;
-		local allowed: (itemType: string) -> boolean = function(itemType: string): boolean
-			local wool: boolean = itemType:find('wool') ~= nil;
-			return (wool or not WoolOnly["Enabled"]) and table.find(PatchList["ListEnabled"], wool and 'wool' or itemType) ~= nil;
+	local patchBlock: (itemType: string) -> (string?, Instance?) = function(itemType: string): (string?, Instance?)
+		local allowed: (name: string) -> boolean = function(name: string): boolean
+			local wool: boolean = name:find('wool') ~= nil;
+			return (wool or not WoolOnly["Enabled"]) and table.find(PatchList["ListEnabled"], wool and 'wool' or name) ~= nil;
 		end;
 		if LimitToItem["Enabled"] then
 			local hand: Instance? = store.hand.toolType == 'block' and store.hand.tool or nil;
-			return hand and allowed(hand.Name) and {["Type"] = hand.Name, ["Tool"] = hand, ["Amount"] = math.huge} or nil;
+			if hand and allowed(hand.Name) then
+				return hand.Name, hand;
+			end;
+			return nil, nil;
 		end;
-		local best: table?, bestHealth: number = nil, -1;
+		local best: table?, bestHealth: number? = nil, nil;
 		for _: number, item: table in store.inventory.inventory.items do
 			local block: table? = bedwars.ItemMeta[item.itemType].block;
 			if block and allowed(item.itemType) then
-				if item.itemType == entry.Type then
-					return {["Type"] = item.itemType, ["Tool"] = item.tool, ["Amount"] = item.amount};
+				if item.itemType == itemType then
+					return item.itemType, item.tool;
 				end;
-				if (block.health or 0) > bestHealth then
-					best, bestHealth = {["Type"] = item.itemType, ["Tool"] = item.tool, ["Amount"] = item.amount}, block.health or 0;
+				if not bestHealth or (block.health or 0) > bestHealth then
+					best, bestHealth = item, block.health or 0;
 				end;
 			end;
 		end;
-		return best;
+		return best and best.itemType or nil, best and best.tool or nil;
+	end;
+
+	local placeLayer: (bed: BasePart, stock: {table}, layer: number) -> boolean = function(bed: BasePart, stock: {table}, layer: number): boolean
+		local placeDelay: number = 1 / math.min(bedwars.DefaultPlaceCPS or math.huge, bedwars.SharedConstants.BLOCK_PLACE_CPS);
+		for _: number, offset: Vector3 in pyramid(layer) do
+			if not BedProtector["Enabled"] or not entitylib.isAlive then
+				return false;
+			end;
+			local position: Vector3 = (bed.CFrame * CFrame.new(offset)).Position;
+			if getPlacedBlock(position) or (entitylib.character.RootPart.Position - position).Magnitude > PlaceRange["Value"] then
+				continue;
+			end;
+			local block: table? = nil;
+			for index: number = 0, #stock - 1 do
+				local candidate: table = stock[(math.min(layer, #stock) + index - 1) % #stock + 1];
+				if candidate.Amount > 0 then
+					block = candidate;
+					break;
+				end;
+			end;
+			if not block then
+				return false;
+			end;
+			repeat
+				task.wait();
+			until not BedProtector["Enabled"] or not entitylib.isAlive or workspace:GetServerTimeNow() - bedwars.BlockCpsController.lastPlaceTimestamp >= placeDelay;
+			if not BedProtector["Enabled"] or not entitylib.isAlive then
+				return false;
+			end;
+			if AutoSwitch["Enabled"] and hotbarSwitch(hotbarSlotOf(block.Tool)) then
+				task.wait();
+			end;
+			task.spawn(placeBlock, position, block.Type);
+			if getPlacedBlock(position) then
+				block.Amount -= 1;
+			end;
+		end;
+		return true;
+	end;
+
+	local protectPass: () -> boolean = function(): boolean
+		local extent: number = 0;
+		for _: number, offset: Vector3 in pyramid(Layers["Value"]) do
+			extent = math.max(extent, offset.Magnitude);
+		end;
+		local bed: BasePart? = ownBed(PlaceRange["Value"] + extent);
+		if not bed then
+			return false;
+		end;
+		local stock: {table} = {};
+		for _: number, item: table in store.inventory.inventory.items do
+			local block: table? = bedwars.ItemMeta[item.itemType].block;
+			local wool: boolean = item.itemType:find('wool') ~= nil;
+			if block and (WoolOnly["Enabled"] and wool or not WoolOnly["Enabled"] and not table.find(Blacklist["ListEnabled"], wool and 'wool' or item.itemType)) then
+				table.insert(stock, {["Type"] = item.itemType, ["Health"] = block.health or 0, ["Tool"] = item.tool, ["Amount"] = item.amount or math.huge});
+			end;
+		end;
+		if #stock > 1 then
+			table.sort(stock, function(a: table, b: table): boolean
+				return a.Health > b.Health;
+			end);
+		end;
+		local previousSlot: number? = AutoSwitch["Enabled"] and store.hand.tool and hotbarSlotOf(store.hand.tool) or nil;
+		for layer: number = 1, Layers["Value"] do
+			if #stock == 0 or not placeLayer(bed, stock, layer) then
+				break;
+			end;
+		end;
+		if previousSlot and hotbarSwitch(previousSlot) then
+			task.wait();
+		end;
+		return true;
+	end;
+
+	local patchPass: () -> boolean = function(): boolean
+		local found: BasePart? = ownBed(PlaceRange["Value"] + PatchRadius["Value"]);
+		if found ~= patchBed then
+			patchBed = found;
+			if found then
+				mapLayout(found);
+			else
+				table.clear(layout);
+			end;
+		end;
+		local bed: BasePart? = patchBed;
+		if not bed or not entitylib.isAlive then
+			return bed ~= nil;
+		end;
+		local origin: Vector3 = entitylib.character.RootPart.Position;
+		local holes: {table} = {};
+		for position: Vector3, name: string in layout do
+			if (origin - position).Magnitude <= PlaceRange["Value"] and not getPlacedBlock(position) then
+				table.insert(holes, {["Position"] = position, ["Type"] = name});
+			end;
+		end;
+		table.sort(holes, function(a: table, b: table): boolean
+			return (a.Position - bed.Position).Magnitude < (b.Position - bed.Position).Magnitude;
+		end);
+		for _: number, hole: table in holes do
+			if getPlacedBlock(hole.Position) then
+				continue;
+			end;
+			local itemType: string?, tool: Instance? = patchBlock(hole.Type);
+			if not itemType then
+				break;
+			end;
+			local slot: number? = AutoSwitch["Enabled"] and hotbarSlotOf(tool) or nil;
+			if slot and hotbarSwitch(slot) then
+				task.wait();
+			end;
+			placing = true;
+			placeBlock(hole.Position, itemType);
+			placing = false;
+			task.wait(1 / bedwars.SharedConstants.BLOCK_PLACE_CPS);
+		end;
+		return true;
 	end;
 
 	BedProtector = vape.Categories.World:CreateModule({
 		["Name"] = 'BedProtector',
 		["Function"] = function(callback: boolean): ()
 			if not callback then
+				session, placing = nil, false;
 				return;
 			end;
-			local bed: BasePart?;
-			local nextScan: number = 0;
-			local busy: boolean = false;
-			local placing: boolean = false;
-			local returnSlot: number?;
 			local placeAnimation: any = bedwars.BlockController:getAnimationController():getAssetId(0);
 			local oldPlayAnimation: (...any) -> any = bedwars.AnimationUtil.playAnimation;
 			bedwars.AnimationUtil.playAnimation = function(self: table, plr: Player, assetId: any, ...: any): any
@@ -20045,11 +22866,9 @@ velo.run(function(): ()
 			end;
 			BedProtector:Clean(function(): ()
 				bedwars.AnimationUtil.playAnimation = oldPlayAnimation;
-				table.clear(queue);
-				table.clear(layout);
 			end);
 			BedProtector:Clean(collectionService:GetInstanceAddedSignal('block'):Connect(function(block: Instance): ()
-				if Patch["Enabled"] and bed and not block:HasTag('bed') and (block.Position - bed.Position).Magnitude <= PatchRadius["Value"] then
+				if Patch["Enabled"] and patchBed and not block:HasTag('bed') and (block.Position - patchBed.Position).Magnitude <= PatchRadius["Value"] then
 					layout[block.Position] = block.Name;
 				end;
 			end));
@@ -20059,125 +22878,26 @@ velo.run(function(): ()
 					layout[data.blockRef.blockPosition * 3] = nil;
 				end;
 			end));
-
-			local rescan: () -> boolean = function(): boolean
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local extent: number = 0;
-				for _: number, offset: Vector3 in pyramid(Layers["Value"]) do
-					extent = math.max(extent, offset.Magnitude);
-				end;
-				local reach: number = PlaceRange["Value"] + math.max(extent, Patch["Enabled"] and PatchRadius["Value"] or 0);
-				local found: BasePart?;
-				for _: number, candidate: BasePart in collectionService:GetTagged('bed') do
-					if (origin - candidate.Position).Magnitude < reach and candidate:GetAttribute('Team'..(lplr:GetAttribute('Team') or -1)..'NoBreak') then
-						found = candidate;
-						break;
-					end;
-				end;
-				if found ~= bed then
-					bed = found;
-					table.clear(layout);
-					if bed and Patch["Enabled"] then
-						mapLayout(bed);
-					end;
-				end;
-				table.clear(queue);
-				if not bed then
-					return false;
-				end;
-				table.clear(stock);
-				for _: number, item: table in store.inventory.inventory.items do
-					local block: table? = bedwars.ItemMeta[item.itemType].block;
-					local wool: boolean = item.itemType:find('wool') ~= nil;
-					if block and (WoolOnly["Enabled"] and wool or not WoolOnly["Enabled"] and not table.find(Blacklist["ListEnabled"], wool and 'wool' or item.itemType)) then
-						table.insert(stock, {["Type"] = item.itemType, ["Health"] = block.health or 0, ["Tool"] = item.tool, ["Amount"] = item.amount or math.huge});
-					end;
-				end;
-				table.sort(stock, function(a: table, b: table): boolean
-					return a.Health > b.Health;
-				end);
-				for layer: number = 1, #stock > 0 and Layers["Value"] or 0 do
-					for _: number, offset: Vector3 in pyramid(layer) do
-						local position: Vector3 = (bed.CFrame * CFrame.new(offset)).Position;
-						if not getPlacedBlock(position) and (origin - position).Magnitude <= PlaceRange["Value"] then
-							table.insert(queue, {["Position"] = position, ["Layer"] = layer});
-						end;
-					end;
-				end;
-				local holes: {table} = {};
-				for position: Vector3, name: string in (Patch["Enabled"] and layout or {}) do
-					if (origin - position).Magnitude <= PlaceRange["Value"] and not getPlacedBlock(position) then
-						table.insert(holes, {["Position"] = position, ["Type"] = name});
-					end;
-				end;
-				table.sort(holes, function(a: table, b: table): boolean
-					return (a.Position - bed.Position).Magnitude < (b.Position - bed.Position).Magnitude;
-				end);
-				table.move(holes, 1, #holes, #queue + 1, queue);
-				return true;
-			end;
-
-			local finishPass: () -> () = function(): ()
-				if returnSlot then
-					hotbarSwitch(returnSlot);
-					returnSlot = nil;
-				end;
-				if Mode["Value"] == 'On Key' and BedProtector["Enabled"] then
+			local current: table = {};
+			session = current;
+			patchBed = nil;
+			table.clear(layout);
+			repeat
+				local protected: boolean = protectPass();
+				local patched: boolean = Patch["Enabled"] and patchPass();
+				if not protected and not patched and Mode["Value"] == 'On Key' then
+					notif('BedProtector', 'Unable to locate bed', 5);
 					BedProtector:Toggle();
+					break;
 				end;
-			end;
-
-			BedProtector:Clean(runService.Heartbeat:Connect(function(): ()
-				if busy or not entitylib.isAlive then
-					return;
+				task.wait(passInterval);
+				if Mode["Value"] == 'On Key' then
+					if BedProtector["Enabled"] and session == current then
+						BedProtector:Toggle();
+					end;
+					break;
 				end;
-				if #queue == 0 then
-					if tick() < nextScan then
-						return;
-					end;
-					nextScan = tick() + scanInterval;
-					if not rescan() then
-						if Mode["Value"] == 'On Key' then
-							notif('BedProtector', 'Unable to locate bed', 5);
-							BedProtector:Toggle();
-						end;
-						return;
-					end;
-					if #queue == 0 then
-						finishPass();
-					end;
-					return;
-				end;
-				local placeDelay: number = 1 / math.min(bedwars.DefaultPlaceCPS or math.huge, bedwars.SharedConstants.BLOCK_PLACE_CPS);
-				if not canPlace() or workspace:GetServerTimeNow() - bedwars.BlockCpsController.lastPlaceTimestamp < placeDelay then
-					return;
-				end;
-				local entry: table = table.remove(queue, 1);
-				local block: table? = not getPlacedBlock(entry.Position) and (entitylib.character.RootPart.Position - entry.Position).Magnitude <= PlaceRange["Value"] and pickBlock(entry) or nil;
-				if block then
-					busy = true;
-					if AutoSwitch["Enabled"] then
-						returnSlot = returnSlot or hotbarSlotOf(store.hand.tool);
-						hotbarSwitch(hotbarSlotOf(block.Tool));
-					end;
-					placing = true;
-					placeBlock(entry.Position, block.Type);
-					placing = false;
-					if getPlacedBlock(entry.Position) then
-						block.Amount -= 1;
-					end;
-					busy = false;
-				elseif entry.Layer and not getPlacedBlock(entry.Position) then
-					for index: number = #queue, 1, -1 do
-						if queue[index].Layer then
-							table.remove(queue, index);
-						end;
-					end;
-				end;
-				if #queue == 0 then
-					finishPass();
-				end;
-			end));
+			until not BedProtector["Enabled"] or session ~= current;
 		end,
 		["Tooltip"] = 'Builds layers of your strongest blocks around your bed and patches holes enemies break.'
 	});
@@ -20222,6 +22942,10 @@ velo.run(function(): ()
 					option.Object.Visible = callback;
 				end;
 			end;
+			if not callback then
+				patchBed = nil;
+				table.clear(layout);
+			end;
 		end,
 		["Tooltip"] = 'Remembers your bed defense and puts back blocks that enemies break.'
 	});
@@ -20247,7 +22971,7 @@ velo.run(function(): ()
 		["Name"] = 'No Animation',
 		["Darker"] = true,
 		["Visible"] = false,
-		["Tooltip"] = 'Hides the arm swing of placed blocks.'
+		["Tooltip"] = 'Hides the arm swing of patched blocks.'
 	});
 	LimitToItem = BedProtector:CreateToggle({
 		["Name"] = 'Limit to item',
@@ -20282,13 +23006,16 @@ velo.run(function(): ()
 	local cycleInterval: number = 0.5;
 	local warnInterval: number = 5;
 	local directions: {Vector3} = {Vector3.new(1, 0, 0), Vector3.new(-1, 0, 0), Vector3.new(0, 0, 1), Vector3.new(0, 0, -1)};
-	local pattern: table? = nil;
+	local centerOrigin: Vector3? = nil;
+	local anchor: Vector3? = nil;
 	local aim: table = {};
+	local lastPlace: number = 0;
+	local lastWarning: number = 0;
 	local retries: {[Vector3]: number} = {};
 
 	local groundOrigin: () -> Vector3 = function(): Vector3
 		local position: Vector3 = entitylib.character.RootPart.Position;
-		local hit: RaycastResult? = bedwars.QueryUtil:raycast(position, Vector3.new(0, -groundScan, 0), store.airRay);
+		local hit: RaycastResult? = workspace:Raycast(position, Vector3.new(0, -groundScan, 0), store.airRay);
 		return roundPos(hit and Vector3.new(position.X, hit.Position.Y + 1.5, position.Z) or position);
 	end;
 
@@ -20328,6 +23055,27 @@ velo.run(function(): ()
 		return false;
 	end;
 
+	local blockStock: () -> {table} = function(): {table}
+		local stock: {table} = {};
+		for _: number, item: table in store.inventory.inventory.items do
+			local block: table? = bedwars.ItemMeta[item.itemType].block;
+			local wool: boolean = item.itemType:find('wool') ~= nil;
+			if block and (WoolOnly["Enabled"] and wool or not WoolOnly["Enabled"] and not table.find(Blacklist["ListEnabled"], wool and 'wool' or item.itemType)) then
+				local slot: number? = hotbarSlotOf(item.tool);
+				if slot or not Switch["Enabled"] then
+					table.insert(stock, {["Type"] = item.itemType, ["Health"] = block.health or 0, ["Slot"] = slot, ["Amount"] = item.amount or math.huge});
+				end;
+			end;
+		end;
+		if #stock > 1 then
+			local hardest: boolean = Priority["Value"] == 'Hardest';
+			table.sort(stock, function(a: table, b: table): boolean
+				return hardest and a.Health > b.Health or not hardest and a.Health < b.Health;
+			end);
+		end;
+		return stock;
+	end;
+
 	local enclosure: (origin: Vector3, grounded: boolean) -> {Vector3} = function(origin: Vector3, grounded: boolean): {Vector3}
 		local enemy: table? = entitylib.EntityPosition({["Range"] = enemyRange, ["Part"] = 'RootPart', ["Players"] = true});
 		local facing: Vector3 = enemy and enemy.RootPart.Position - origin or Vector3.zero;
@@ -20336,7 +23084,7 @@ velo.run(function(): ()
 			return a:Dot(facing) > b:Dot(facing);
 		end);
 		local cells: {Vector3} = {};
-		if grounded and not bedwars.QueryUtil:raycast(origin, Vector3.new(0, -3, 0), store.airRay) then
+		if grounded and not workspace:Raycast(origin, Vector3.new(0, -3, 0), store.airRay) then
 			table.insert(cells, Vector3.new(0, -3, 0));
 		end;
 		for _: number, height: number in {0, 3} do
@@ -20351,29 +23099,12 @@ velo.run(function(): ()
 		return cells;
 	end;
 
-	local startPattern: (origin: Vector3, cells: {Vector3}, limit: number, patching: boolean) -> () = function(origin: Vector3, cells: {Vector3}, limit: number, patching: boolean): ()
-		local stock: {table} = {};
-		for _: number, item: table in store.inventory.inventory.items do
-			local block: table? = bedwars.ItemMeta[item.itemType].block;
-			local wool: boolean = item.itemType:find('wool') ~= nil;
-			local slot: number? = hotbarSlotOf(item.tool);
-			if block and (WoolOnly["Enabled"] and wool or not WoolOnly["Enabled"] and not table.find(Blacklist["ListEnabled"], wool and 'wool' or item.itemType)) and (slot or not Switch["Enabled"]) then
-				table.insert(stock, {["Type"] = item.itemType, ["Health"] = block.health or 0, ["Slot"] = slot, ["Amount"] = item.amount or math.huge});
-			end;
+	local aimError: () -> number = function(): number
+		local look: Vector3 = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1);
+		if not aim.Goal or look.Magnitude < 0.001 then
+			return 0;
 		end;
-		table.sort(stock, function(a: table, b: table): boolean
-			return Priority["Value"] == 'Hardest' and a.Health > b.Health or Priority["Value"] ~= 'Hardest' and a.Health < b.Health;
-		end);
-		pattern = {
-			["Origin"] = origin,
-			["Cells"] = cells,
-			["Limit"] = limit,
-			["Placed"] = 0,
-			["Patching"] = patching,
-			["Stock"] = stock,
-			["Return"] = store.hand.tool and hotbarSlotOf(store.hand.tool) or nil,
-			["Center"] = PlacementMode["Value"] == 'Blatant' and Center["Enabled"]
-		};
+		return math.acos(math.clamp(look.Unit:Dot(aim.Goal.Unit), -1, 1));
 	end;
 
 	local stopAim: () -> () = function(): ()
@@ -20386,91 +23117,140 @@ velo.run(function(): ()
 		table.clear(aim);
 	end;
 
-	local aimError: () -> number = function(): number
-		local look: Vector3 = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1);
-		if not aim.Goal or look.Magnitude < 0.001 then
-			return 0;
+	local placeDelay: () -> number = function(): number
+		local speed: number = math.min(bedwars.DefaultPlaceCPS or math.huge, bedwars.SharedConstants.BLOCK_PLACE_CPS);
+		if PlacementMode["Value"] == 'Legit' then
+			speed = math.min(speed, PlacementSpeed["Value"]);
 		end;
-		return math.acos(math.clamp(look.Unit:Dot(aim.Goal.Unit), -1, 1));
+		return 1 / math.max(speed, 1);
 	end;
 
-	local finishPattern: () -> () = function(): ()
-		local finished: table? = pattern;
-		pattern = nil;
-		if not finished then
-			return;
+	local placePattern: (origin: Vector3, cells: {Vector3}, stock: {table}, limit: number, patching: boolean) -> () = function(origin: Vector3, cells: {Vector3}, stock: {table}, limit: number, patching: boolean): ()
+		local hotbar: number? = store.hand.tool and hotbarSlotOf(store.hand.tool) or nil;
+		local placed: number = 0;
+		for _: number, offset: Vector3 in cells do
+			if placed >= limit or not BlockIn["Enabled"] or not entitylib.isAlive then
+				break;
+			end;
+			local position: Vector3 = origin + offset;
+			if getPlacedBlock(position) then
+				continue;
+			end;
+			while stock[1] and stock[1].Amount <= 0 do
+				table.remove(stock, 1);
+			end;
+			local block: table? = stock[1];
+			if not block then
+				break;
+			end;
+			local legit: boolean = PlacementMode["Value"] == 'Legit';
+			if not legit and Center["Enabled"] then
+				centerOrigin = origin;
+			end;
+			local turning: boolean = patching and legit and offset.Y >= 0 and offset.Y <= 3 and (offset.X ~= 0 or offset.Z ~= 0);
+			if turning then
+				if not aim.Home then
+					local look: Vector3 = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1);
+					aim.Home = look.Magnitude > 0.001 and look.Unit or nil;
+				end;
+				aim.Goal, aim.Returning = Vector3.new(offset.X, 0, offset.Z), false;
+			end;
+			local deadline: number = os.clock() + turnTimeout;
+			repeat
+				task.wait();
+			until not BlockIn["Enabled"] or not entitylib.isAlive or (workspace:GetServerTimeNow() - math.max(lastPlace, bedwars.BlockCpsController.lastPlaceTimestamp) >= placeDelay() and (not turning or aimError() < turnTolerance or os.clock() > deadline));
+			if not BlockIn["Enabled"] or not entitylib.isAlive or (PlacementMode["Value"] == 'Legit' and not isInside(origin)) then
+				break;
+			end;
+			if Switch["Enabled"] then
+				hotbarSwitch(block.Slot);
+			end;
+			lastPlace = workspace:GetServerTimeNow();
+			task.spawn(placeBlock, position, block.Type);
+			local registered: boolean = getPlacedBlock(position) ~= nil;
+			if registered then
+				block.Amount -= 1;
+				placed += 1;
+			end;
+			if patching then
+				retries[position] = os.clock() + (registered and retryGap or failGap);
+			end;
 		end;
-		if finished.Patching then
+		if patching then
 			if aim.Home then
 				aim.Goal, aim.Returning = aim.Home, true;
 			else
 				stopAim();
 			end;
 		end;
-		if ReturnSlot["Enabled"] and Switch["Enabled"] and finished.Return then
-			hotbarSwitch(finished.Return);
+		if ReturnSlot["Enabled"] and Switch["Enabled"] and hotbar then
+			hotbarSwitch(hotbar);
 		end;
 	end;
 
-	local placeNext: () -> () = function(): ()
-		local current: table = pattern;
-		local offset: Vector3? = current.Cells[1];
-		if not offset or current.Placed >= current.Limit then
-			finishPattern();
+	local build: () -> boolean = function(): boolean
+		if not entitylib.isAlive or (Mode["Value"] ~= 'On bind' and not enemyBedNear(false)) then
+			return false;
+		end;
+		local stock: {table} = blockStock();
+		local early: boolean = false;
+		repeat
+			task.wait();
+			if entitylib.isAlive and not early then
+				local origin: Vector3 = groundOrigin();
+				local drop: number = entitylib.character.RootPart.Position.Y - origin.Y;
+				early = drop >= 6 and drop <= 24;
+				if early then
+					placePattern(origin, enclosure(origin, false), stock, PlacementMode["Value"] == 'Blatant' and Center["Enabled"] and math.huge or 3, false);
+				end;
+			end;
+		until not BlockIn["Enabled"] or not entitylib.isAlive or entitylib.character.Humanoid.FloorMaterial ~= Enum.Material.Air;
+		if entitylib.isAlive then
+			local origin: Vector3 = groundOrigin();
+			placePattern(origin, enclosure(origin, true), stock, math.huge, false);
+			anchor = origin;
+		end;
+		centerOrigin = nil;
+		return true;
+	end;
+
+	local patch: () -> () = function(): ()
+		if not entitylib.isAlive then
+			anchor = nil;
 			return;
 		end;
-		local position: Vector3 = current.Origin + offset;
-		if getPlacedBlock(position) then
-			table.remove(current.Cells, 1);
+		local base: Vector3? = anchor;
+		if not base or entitylib.character.Humanoid.FloorMaterial == Enum.Material.Air or not canPlace() or not isInside(base) then
 			return;
 		end;
-		local block: table? = nil;
-		for _: number, candidate: table in current.Stock do
-			if candidate.Amount > 0 then
-				block = candidate;
-				break;
+		local origin: Vector3 = groundOrigin();
+		if origin.Y > base.Y then
+			return;
+		end;
+		if origin.Y < base.Y then
+			base, anchor = origin, origin;
+			table.clear(retries);
+		end;
+		local cells: {Vector3} = {};
+		for _: number, offset: Vector3 in enclosure(base, true) do
+			local position: Vector3 = base + offset;
+			if not getPlacedBlock(position) and (retries[position] or 0) <= os.clock() then
+				table.insert(cells, offset);
 			end;
 		end;
-		if not block then
-			finishPattern();
+		if #cells == 0 then
 			return;
 		end;
-		local legit: boolean = PlacementMode["Value"] == 'Legit';
-		local turning: boolean = current.Patching and legit and offset.Y >= 0 and offset.Y <= 3 and (offset.X ~= 0 or offset.Z ~= 0);
-		if turning and current.Turned ~= offset then
-			local look: Vector3 = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1);
-			aim.Home = aim.Home or (look.Magnitude > 0.001 and look.Unit or nil);
-			aim.Goal, aim.Returning = Vector3.new(offset.X, 0, offset.Z), false;
-			current.Turned, current.TurnDeadline = offset, os.clock() + turnTimeout;
-		end;
-		local speed: number = math.min(bedwars.DefaultPlaceCPS or math.huge, bedwars.SharedConstants.BLOCK_PLACE_CPS);
-		speed = math.max(legit and math.min(speed, PlacementSpeed["Value"]) or speed, 1);
-		if workspace:GetServerTimeNow() - math.max(current.LastPlace or 0, bedwars.BlockCpsController.lastPlaceTimestamp) < 1 / speed then
+		local stock: {table} = blockStock();
+		if #stock == 0 then
+			if os.clock() - lastWarning > warnInterval then
+				lastWarning = os.clock();
+				notif('Block-In', 'No blocks left to patch with', 3, 'warning');
+			end;
 			return;
 		end;
-		if turning and aimError() >= turnTolerance and os.clock() < current.TurnDeadline then
-			return;
-		end;
-		if legit and not isInside(current.Origin) then
-			finishPattern();
-			return;
-		end;
-		table.remove(current.Cells, 1);
-		current.Busy = true;
-		if Switch["Enabled"] then
-			hotbarSwitch(block.Slot);
-		end;
-		current.LastPlace = workspace:GetServerTimeNow();
-		placeBlock(position, block.Type);
-		local registered: boolean = getPlacedBlock(position) ~= nil;
-		if registered then
-			block.Amount -= 1;
-			current.Placed += 1;
-		end;
-		if current.Patching then
-			retries[position] = os.clock() + (registered and retryGap or failGap);
-		end;
-		current.Busy = false;
+		placePattern(base, cells, stock, math.huge, true);
+		centerOrigin = nil;
 	end;
 
 	local turnOff: () -> () = function(): ()
@@ -20479,47 +23259,40 @@ velo.run(function(): ()
 		end;
 	end;
 
+	local isAway: () -> boolean = function(): boolean
+		return BedChecker["Enabled"] and not (entitylib.isAlive and enemyBedNear(true));
+	end;
+
+	local dismiss: () -> () = function(): ()
+		if vape.Loaded then
+			notif('Block-In', 'You are not near an enemy bed defense', 3, 'warning');
+		end;
+		turnOff();
+	end;
+
 	BlockIn = vape.Categories.World:CreateModule({
 		["Name"] = 'Block-In',
 		["Function"] = function(callback: boolean): ()
 			if not callback then
 				return;
 			end;
-			local bind: boolean = Mode["Value"] == 'On bind';
-			if not vape.Loaded and bind and AutoPatch["Enabled"] then
+			if not vape.Loaded and Mode["Value"] == 'On bind' and AutoPatch["Enabled"] then
 				task.defer(turnOff);
 				return;
 			end;
-			local dismiss: () -> boolean = function(): boolean
-				if BedChecker["Enabled"] and not (entitylib.isAlive and enemyBedNear(true)) then
-					if vape.Loaded then
-						notif('Block-In', 'You are not near an enemy bed defense', 3, 'warning');
-					end;
-					task.defer(turnOff);
-					return true;
-				end;
-				return false;
-			end;
-			if dismiss() then
+			if isAway() then
+				task.defer(dismiss);
 				return;
 			end;
-			local phase: string = 'build';
-			local early: boolean = false;
-			local anchor: Vector3?;
-			local nextCheck: number = 0;
-			local lastWarning: number = 0;
+			lastPlace, anchor = 0, nil;
 			table.clear(retries);
-			BlockIn:Clean(function(): ()
-				pattern = nil;
-				stopAim();
-			end);
 			BlockIn:Clean(runService.PreSimulation:Connect(function(): ()
-				if not pattern or not pattern.Center or not entitylib.isAlive then
+				if not centerOrigin or PlacementMode["Value"] ~= 'Blatant' or not Center["Enabled"] or vape.MovementOwner or not entitylib.isAlive then
 					return;
 				end;
 				local root: BasePart = entitylib.character.RootPart;
 				if isnetworkowner(root) then
-					root.CFrame = CFrame.new(pattern.Origin.X, root.Position.Y, pattern.Origin.Z) * root.CFrame.Rotation;
+					root.CFrame = CFrame.new(centerOrigin.X, root.Position.Y, centerOrigin.Z) * root.CFrame.Rotation;
 					root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0);
 				end;
 			end));
@@ -20539,79 +23312,35 @@ velo.run(function(): ()
 				local root: BasePart = entitylib.character.RootPart;
 				root.CFrame = root.CFrame:Lerp(CFrame.lookAlong(root.Position, aim.Goal), math.clamp((turnSpeed + 2) * deltaTime, 0, 1));
 			end));
-			BlockIn:Clean(runService.Heartbeat:Connect(function(): ()
-				if not entitylib.isAlive then
-					anchor = nil;
-					return;
+			BlockIn:Clean(function(): ()
+				centerOrigin, anchor = nil, nil;
+				stopAim();
+			end);
+			local guarding: boolean = false;
+			repeat
+				local bind: boolean = Mode["Value"] == 'On bind';
+				if isAway() then
+					dismiss();
+					break;
 				end;
-				if pattern then
-					if not pattern.Busy then
-						placeNext();
-					end;
-					return;
-				end;
-				local now: number = os.clock();
-				if now < nextCheck then
-					return;
-				end;
-				if dismiss() then
-					return;
-				end;
-				local humanoid: Humanoid = entitylib.character.Humanoid;
-				if phase == 'build' then
-					if not bind and not enemyBedNear(false) then
-						nextCheck = now + cycleInterval;
-						return;
-					end;
-					local origin: Vector3 = groundOrigin();
-					if humanoid.FloorMaterial == Enum.Material.Air then
-						local drop: number = entitylib.character.RootPart.Position.Y - origin.Y;
-						if not early and drop >= 6 and drop <= 24 then
-							early = true;
-							startPattern(origin, enclosure(origin, false), PlacementMode["Value"] == 'Blatant' and Center["Enabled"] and math.huge or 3, false);
-						end;
-						return;
-					end;
-					early = false;
-					anchor = origin;
-					startPattern(origin, enclosure(origin, true), math.huge, false);
-					phase = bind and (AutoPatch["Enabled"] and 'patch' or 'done') or 'build';
-					nextCheck = now + (bind and 0 or cycleInterval);
-				elseif phase == 'done' then
+				if guarding and bind and AutoPatch["Enabled"] then
+					patch();
+					task.wait(patchInterval);
+				elseif guarding and bind then
 					turnOff();
+					break;
 				else
-					nextCheck = now + patchInterval;
-					if not anchor or humanoid.FloorMaterial == Enum.Material.Air or not canPlace() or not isInside(anchor) then
-						return;
+					local built: boolean = build();
+					guarding = bind and built and AutoPatch["Enabled"];
+					if bind and not guarding then
+						turnOff();
+						break;
 					end;
-					local origin: Vector3 = groundOrigin();
-					if origin.Y > anchor.Y then
-						return;
-					end;
-					if origin.Y < anchor.Y then
-						anchor = origin;
-						table.clear(retries);
-					end;
-					local cells: {Vector3} = {};
-					for _: number, offset: Vector3 in enclosure(anchor, true) do
-						local position: Vector3 = anchor + offset;
-						if not getPlacedBlock(position) and (retries[position] or 0) <= now then
-							table.insert(cells, offset);
-						end;
-					end;
-					if #cells == 0 then
-						return;
-					end;
-					startPattern(anchor, cells, math.huge, true);
-					if #pattern.Stock == 0 then
-						pattern = nil;
-						if now - lastWarning > warnInterval then
-							lastWarning = now;
-							notif('Block-In', 'No blocks left to patch with', 3, 'warning');
-						end;
+					if not bind then
+						task.wait(cycleInterval);
 					end;
 				end;
-			end));
+			until not BlockIn["Enabled"];
 		end,
 		["Tooltip"] = 'Builds walls and a roof around you.'
 	});
@@ -20704,9 +23433,43 @@ velo.run(function(): ()
 	local stashLifetime: number = 5;
 	local cooldowns: {[Instance]: number} = {};
 	local stash: {table} = {};
+	local session: table? = nil;
 
-	local loot: (folder: Instance, bank: boolean) -> () = function(folder: Instance, bank: boolean): ()
-		if (cooldowns[folder] or 0) > tick() then
+	local inventoryRemote: (name: string) -> any = function(name: string): any
+		return bedwars.Client:GetNamespace('Inventory'):Get(name);
+	end;
+
+	local observedChest: () -> Instance? = function(): Instance?
+		local observed: ObjectValue? = lplr.Character and lplr.Character:FindFirstChild('ObservedChestFolder');
+		return observed and observed.Value or nil;
+	end;
+
+	local lootChest: (folderValue: Instance?) -> () = function(folderValue: Instance?): ()
+		local folder: Instance? = folderValue and folderValue.Value or nil;
+		local children: {Instance} = folder and folder:GetChildren() or {};
+		if #children <= 1 or (cooldowns[folder] or 0) >= tick() then
+			return;
+		end;
+		cooldowns[folder] = tick() + chestCooldown;
+		local previous: Instance? = observedChest();
+		inventoryRemote('SetObservedChest'):SendToServer(folder);
+		for _: number, child: Instance in children do
+			if child:IsA('Accessory') then
+				task.spawn(function(): ()
+					inventoryRemote('ChestGetItem'):CallServer(folder, child);
+				end);
+				if LegitMode["Enabled"] then
+					task.wait(legitGap);
+				end;
+			end;
+		end;
+		inventoryRemote('SetObservedChest'):SendToServer(previous);
+	end;
+
+	local stealCrate: (crate: Instance) -> () = function(crate: Instance): ()
+		local folderValue: Instance? = crate:FindFirstChild('ChestFolderValue');
+		local folder: Instance? = folderValue and folderValue.Value or nil;
+		if not folder then
 			return;
 		end;
 		local items: {Instance} = {};
@@ -20718,36 +23481,59 @@ velo.run(function(): ()
 		if #items == 0 then
 			return;
 		end;
-		cooldowns[folder] = tick() + chestCooldown;
-		local inventoryNet: table = bedwars.Client:GetNamespace('Inventory');
-		local observed: ObjectValue? = lplr.Character and lplr.Character:FindFirstChild('ObservedChestFolder');
-		local previous: Instance? = observed and observed.Value or nil;
-		local gap: number = LegitMode["Enabled"] and legitGap or 0;
-		inventoryNet:Get('SetObservedChest'):SendToServer(folder);
-		for index: number, item: Instance in items do
-			task.delay((index - 1) * gap, function(): ()
-				if inventoryNet:Get('ChestGetItem'):CallServer(folder, item) and bank then
-					table.insert(stash, {["Type"] = item.Name, ["Expires"] = tick() + stashLifetime});
+		local previous: Instance? = observedChest();
+		inventoryRemote('SetObservedChest'):SendToServer(folder);
+		for _: number, item: Instance in items do
+			local itemType: string = item.Name;
+			task.spawn(function(): ()
+				if inventoryRemote('ChestGetItem'):CallServer(folder, item) and BankLoot["Enabled"] then
+					table.insert(stash, {["Type"] = itemType, ["Expires"] = tick() + stashLifetime});
 				end;
 			end);
 		end;
-		task.delay(#items * gap, function(): ()
-			inventoryNet:Get('SetObservedChest'):SendToServer(previous);
-		end);
+		inventoryRemote('SetObservedChest'):SendToServer(previous);
+	end;
+
+	local depositStash: () -> () = function(): ()
+		local inventories: Instance? = replicatedStorage:FindFirstChild('Inventories');
+		local personal: Instance? = inventories and inventories:FindFirstChild(lplr.Name..'_personal');
+		if not personal then
+			return;
+		end;
+		local pending: {table} = table.clone(stash);
+		table.clear(stash);
+		for _: number, entry: table in pending do
+			local item: table? = getItem(entry.Type);
+			if item then
+				task.spawn(function(): ()
+					-- CallServer rethrows server errors; catsix keeps the entry for another try instead of dropping it.
+					local sent: boolean, result: any = pcall(function(): any
+						return inventoryRemote('ChestGiveItem'):CallServer(personal, item.tool);
+					end);
+					if not (sent and result) and tick() < entry.Expires then
+						table.insert(stash, entry);
+					end;
+				end);
+			elseif tick() < entry.Expires then
+				table.insert(stash, entry);
+			end;
+		end;
 	end;
 
 	ChestSteal = vape.Categories.World:CreateModule({
 		["Name"] = 'ChestSteal',
 		["Function"] = function(callback: boolean): ()
 			if not callback then
+				session = nil;
 				table.clear(stash);
 				table.clear(cooldowns);
 				return;
 			end;
+			local current: table = {};
+			session = current;
 			local chests: table = collection('chest', ChestSteal);
 			local crates: table = collection('team-crate', ChestSteal);
 			local personalChests: table = collection('personal-chest', ChestSteal);
-			local nextTick: number, nextCrate: number = 0, 0;
 			local box: Part?, boxTarget: BasePart?, boxTween: Tween?;
 			if Visualize["Enabled"] then
 				box = Instance.new('Part');
@@ -20765,89 +23551,94 @@ velo.run(function(): ()
 				bedwars.QueryUtil:setQueryIgnored(box, true);
 				ChestSteal:Clean(box);
 			end;
-			ChestSteal:Clean(runService.Heartbeat:Connect(function(): ()
-				local now: number = tick();
-				if now < nextTick or store.queueType == 'bedwars_test' then
-					return;
-				end;
-				nextTick = now + tickRate;
-				local target: BasePart? = nil;
-				if entitylib.isAlive and store.matchState ~= 2 then
-					local origin: Vector3 = entitylib.character.RootPart.Position;
-					local guiOpen: boolean = bedwars.AppController:isAppOpen('ChestApp');
-					if not OnlySkywars["Enabled"] or store.queueType:find('skywars') then
-						local observed: ObjectValue? = GuiCheck["Enabled"] and guiOpen and lplr.Character:FindFirstChild('ObservedChestFolder') or nil;
-						if observed and observed.Value then
-							loot(observed.Value, false);
+
+			ChestSteal:Clean(task.spawn(function(): ()
+				repeat
+					task.wait();
+				until store.matchState ~= 0;
+				local nextSteal: number = 0;
+				repeat
+					if TeamCrates["Enabled"] and entitylib.isAlive and tick() > nextSteal and (not GuiCheck["Enabled"] or bedwars.AppController:isAppOpen('ChestApp')) then
+						nextSteal = tick() + CrateDelay["Value"];
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						local team: any = lplr:GetAttribute('Team');
+						for _: number, crate: BasePart in crates do
+							if crate:GetAttribute('Team') ~= team and (origin - crate.Position).Magnitude <= Range["Value"] then
+								stealCrate(crate);
+							end;
 						end;
+						if #stash > 0 then
+							for _: number, chest: BasePart in personalChests do
+								if (origin - chest.Position).Magnitude <= Range["Value"] then
+									depositStash();
+									break;
+								end;
+							end;
+						end;
+					end;
+					task.wait(tickRate);
+				until not ChestSteal["Enabled"];
+			end));
+
+			repeat
+				task.wait();
+			until store.queueType ~= 'bedwars_test' or session ~= current;
+			repeat
+				local target: BasePart? = nil;
+				if entitylib.isAlive and store.matchState ~= 2 and (not OnlySkywars["Enabled"] or store.queueType:find('skywars')) then
+					if GuiCheck["Enabled"] then
+						if bedwars.AppController:isAppOpen('ChestApp') then
+							local observed: Instance? = lplr.Character:FindFirstChild('ObservedChestFolder');
+							lootChest(observed);
+							local folder: Instance? = observed and observed.Value;
+							for _: number, chest: BasePart in (folder and chests or {}) do
+								local folderValue: ObjectValue? = chest:FindFirstChild('ChestFolderValue');
+								if folderValue and folderValue.Value == folder then
+									target = chest;
+									break;
+								end;
+							end;
+						end;
+					else
+						local origin: Vector3 = entitylib.character.RootPart.Position;
 						local closest: number = math.huge;
 						for _: number, chest: BasePart in chests do
-							local folderValue: ObjectValue? = chest:FindFirstChild('ChestFolderValue');
-							local folder: Instance? = folderValue and folderValue.Value;
 							local distance: number = (origin - chest.Position).Magnitude;
-							if folder and (observed and observed.Value == folder or not GuiCheck["Enabled"] and distance <= Range["Value"]) then
-								loot(folder, false);
+							if distance <= Range["Value"] then
+								lootChest(chest:FindFirstChild('ChestFolderValue'));
 								if distance < closest then
 									closest, target = distance, chest;
 								end;
 							end;
 						end;
 					end;
-					if TeamCrates["Enabled"] and store.matchState ~= 0 and now >= nextCrate and (not GuiCheck["Enabled"] or guiOpen) then
-						nextCrate = now + CrateDelay["Value"];
-						for _: number, crate: BasePart in crates do
-							local folderValue: ObjectValue? = crate:FindFirstChild('ChestFolderValue');
-							if folderValue and folderValue.Value and crate:GetAttribute('Team') ~= lplr:GetAttribute('Team') and (origin - crate.Position).Magnitude <= Range["Value"] then
-								loot(folderValue.Value, BankLoot["Enabled"]);
-							end;
+				end;
+				if box then
+					if target ~= boxTarget then
+						if boxTween then
+							boxTween:Cancel();
+							boxTween = nil;
 						end;
-						local inventories: Instance? = replicatedStorage:FindFirstChild('Inventories');
-						local personal: Instance? = inventories and inventories:FindFirstChild(lplr.Name..'_personal');
-						for _: number, chest: BasePart in (BankLoot["Enabled"] and personal and #stash > 0 and personalChests or {}) do
-							if (origin - chest.Position).Magnitude <= Range["Value"] then
-								local pending: {table} = stash;
-								stash = {};
-								for _: number, entry: table in pending do
-									local item: table? = getItem(entry.Type);
-									if item then
-										if not bedwars.Client:GetNamespace('Inventory'):Get('ChestGiveItem'):CallServer(personal, item.tool) and tick() < entry.Expires then
-											table.insert(stash, entry);
-										end;
-									elseif tick() < entry.Expires then
-										table.insert(stash, entry);
-									end;
-								end;
-								break;
-							end;
+						if not target then
+							box.Parent = nil;
+						elseif Animate["Enabled"] and box.Parent == gameCamera then
+							boxTween = tweenService:Create(box, TweenInfo.new(AnimationTime["Value"], Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {["CFrame"] = target.CFrame});
+							boxTween:Play();
+						else
+							box.CFrame = target.CFrame;
+							box.Parent = gameCamera;
 						end;
+						boxTarget = target;
+					end;
+					if target then
+						box.SelectionBox.Color3 = Color3.fromHSV(OutlineColor["Hue"], OutlineColor["Sat"], OutlineColor["Value"]);
+						box.SelectionBox.Transparency = 1 - OutlineColor["Opacity"];
+						box.SelectionBox.SurfaceColor3 = Color3.fromHSV(FillColor["Hue"], FillColor["Sat"], FillColor["Value"]);
+						box.SelectionBox.SurfaceTransparency = 1 - FillColor["Opacity"];
 					end;
 				end;
-				if not box then
-					return;
-				end;
-				if target ~= boxTarget then
-					if boxTween then
-						boxTween:Cancel();
-						boxTween = nil;
-					end;
-					if not target then
-						box.Parent = nil;
-					elseif Animate["Enabled"] and box.Parent == gameCamera then
-						boxTween = tweenService:Create(box, TweenInfo.new(AnimationTime["Value"], Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {["CFrame"] = target.CFrame});
-						boxTween:Play();
-					else
-						box.CFrame = target.CFrame;
-						box.Parent = gameCamera;
-					end;
-					boxTarget = target;
-				end;
-				if target then
-					box.SelectionBox.Color3 = Color3.fromHSV(OutlineColor["Hue"], OutlineColor["Sat"], OutlineColor["Value"]);
-					box.SelectionBox.Transparency = 1 - OutlineColor["Opacity"];
-					box.SelectionBox.SurfaceColor3 = Color3.fromHSV(FillColor["Hue"], FillColor["Sat"], FillColor["Value"]);
-					box.SelectionBox.SurfaceTransparency = 1 - FillColor["Opacity"];
-				end;
-			end));
+				task.wait(tickRate);
+			until not ChestSteal["Enabled"] or session ~= current;
 		end,
 		["Tooltip"] = 'Grabs items from nearby chests and enemy team crates.'
 	});
@@ -21094,6 +23885,9 @@ velo.run(function(): ()
 					end;
 				end;
 				Schematica:Clean(runService.Heartbeat:Connect(function(): ()
+					if vape.ThreadFix then
+						setthreadidentity(8);
+					end;
 					if not entitylib.isAlive then
 						return;
 					end;
@@ -21169,8 +23963,6 @@ velo.run(function(): ()
 	local Targets: table;
 	local Range: table;
 	local scanRate: number = 0.1;
-	local nextScan: number = 0;
-	local swapping: boolean = false;
 
 	local setArmor: (slot: number, wear: boolean) -> () = function(slot: number, wear: boolean): ()
 		if not wear then
@@ -21194,19 +23986,14 @@ velo.run(function(): ()
 			if not callback then
 				return;
 			end;
-			if Mode["Value"] == 'On Key' then
+			if Mode["Value"] ~= 'Toggle' then
 				ArmorSwitch:Toggle();
 				for slot: number = 0, 2 do
 					setArmor(slot, store.inventory.inventory.armor[slot + 1] == 'empty');
 				end;
 				return;
 			end;
-			ArmorSwitch:Clean(runService.Heartbeat:Connect(function(): ()
-				local now: number = tick();
-				if swapping or now < nextScan then
-					return;
-				end;
-				nextScan = now + scanRate;
+			repeat
 				local threatened: boolean = entitylib.EntityPosition({
 					["Part"] = 'RootPart',
 					["Range"] = Range["Value"],
@@ -21214,14 +24001,13 @@ velo.run(function(): ()
 					["NPCs"] = Targets.NPCs["Enabled"],
 					["Wallcheck"] = Targets.Walls["Enabled"]
 				}) ~= nil;
-				swapping = true;
 				for slot: number = 0, 2 do
-					if ArmorSwitch["Enabled"] and (store.inventory.inventory.armor[slot + 1] ~= 'empty') ~= threatened then
+					if (store.inventory.inventory.armor[slot + 1] ~= 'empty') ~= threatened and ArmorSwitch["Enabled"] then
 						setArmor(slot, threatened);
 					end;
 				end;
-				swapping = false;
-			end));
+				task.wait(scanRate);
+			until not ArmorSwitch["Enabled"];
 		end,
 		["Tooltip"] = 'Puts on / takes off armor when toggled for baiting.'
 	});
@@ -21271,24 +24057,19 @@ velo.run(function(): ()
 	};
 	local kitSwords: {[string]: string} = {["ice_queen"] = 'ice_sword', ["ember"] = 'infernal_saber', ["lumen"] = 'light_sword'};
 	local bedwarsQueues: {string} = {'combined_kit_to4', 'overpowered', 'hyper_gen_to4', 'all_random_kit_to4', 'all_same_kit_to4'};
-	local shopApps: {string} = {'BedwarsItemShopApp', 'TeamUpgradeApp', 'BedwarsTeamUpgradeApp'};
 	local upgradeToggles: {[string]: table} = {};
 	local upgradeLabels: {[string]: string} = {};
 	local upgradeOrder: {string} = {};
-	local customOrders: {table} = {};
+	local customOrders: {[string]: {table}} = {["Pre"] = {}, ["Post"] = {}};
 	local savedTiers: {[table]: table} = {};
-	local shopIndex: {[string]: table}? = nil;
 	local nextAttempt: number = tick();
-	local nextScan: number = 0;
-	local nextClick: number = 0;
-	local lastUpgradeShop: boolean = false;
-	local shopPatched: boolean = false;
 	local tiersBypassed: boolean = false;
-	local clickTarget: table? = nil;
+	local holding: boolean = false;
+	local clickThread: thread? = nil;
 
 	local ownsAnyKit: (kits: {string}?) -> boolean = function(kits: {string}?): boolean
-		for _: number, kit: string in kits or {} do
-			if hasKit(kit) then
+		for _: number, kit: string in (kits and store.equippedKits or {}) do
+			if table.find(kits, kit) then
 				return true;
 			end;
 		end;
@@ -21308,30 +24089,29 @@ velo.run(function(): ()
 		return ownsAnyKit(item.ignoredByKit);
 	end;
 
+	local upgradeLocked: (item: table) -> boolean = function(item: table): boolean
+		local requirement: table? = item.require and item.require.teamUpgrade;
+		return requirement ~= nil and (bedwars.Store:getState().Bedwars.teamUpgrades[requirement.upgradeId] or -1) < requirement.lowestTierIndex;
+	end;
+
 	local canBuy: (item: table, wallet: {[string]: number}, amount: number?) -> boolean = function(item: table, wallet: {[string]: number}, amount: number?): boolean
 		if wallet[item.currency] == nil then
 			local currency: table? = getItem(item.currency);
 			wallet[item.currency] = currency and currency.amount or 0;
 		end;
-		if isHidden(item) or item.lockedByForge or item.disabled then
-			return false;
-		end;
-		local requirement: table? = item.require and item.require.teamUpgrade;
-		if requirement and (bedwars.Store:getState().Bedwars.teamUpgrades[requirement.upgradeId] or -1) < requirement.lowestTierIndex then
+		if isHidden(item) or item.lockedByForge or item.disabled or upgradeLocked(item) then
 			return false;
 		end;
 		return wallet[item.currency] >= item.price * (amount or 1);
 	end;
 
-	local buyItem: (item: table, wallet: {[string]: number}, shopId: string, silent: boolean?) -> () = function(item: table, wallet: {[string]: number}, shopId: string, silent: boolean?): ()
+	local buyItem: (item: table, wallet: {[string]: number}, shopId: string) -> () = function(item: table, wallet: {[string]: number}, shopId: string): ()
 		fire('BedwarsPurchaseItem', 'CallServerAsync', {["shopItem"] = item, ["shopId"] = shopId}):andThen(function(success: any): ()
 			if not success then
 				return;
 			end;
-			if not silent then
-				local meta: table? = bedwars.ItemMeta[item.itemType];
-				notif('AutoBuy', 'Bought '..(meta and meta.displayName or item.itemType), 3);
-			end;
+			local meta: table? = bedwars.ItemMeta[item.itemType];
+			notif('AutoBuy', 'Bought '..(meta and meta.displayName or item.itemType), 3);
 			bedwars.AudioManager:playAudio(bedwars.SoundList.BEDWARS_PURCHASE_ITEM);
 			bedwars.Store:dispatch({["type"] = 'BedwarsAddItemPurchased', ["itemType"] = item.itemType});
 			if item.tiered and not item.nextTier then
@@ -21348,17 +24128,17 @@ velo.run(function(): ()
 		for _: number, kit: string in store.equippedKits do
 			if kitSwords[kit] then
 				local list: {string} = table.clone(tiers.Sword);
-				list[#list] = kitSwords[kit];
+				list[5] = kitSwords[kit];
 				return list;
 			end;
 		end;
 		return tiers.Sword;
 	end;
 
-	local buyTier: (current: string, ladder: {string}, wallet: {[string]: number}, shopId: string) -> boolean = function(current: string, ladder: {string}, wallet: {[string]: number}, shopId: string): boolean
-		local index: number? = table.find(ladder, current);
+	local buyTier: (current: string?, ladder: {string}, wallet: {[string]: number}, shopId: string) -> boolean = function(current: string?, ladder: {string}, wallet: {[string]: number}, shopId: string): boolean
+		local index: number? = current and table.find(ladder, current);
 		local choice: table? = nil;
-		for tier: number = (index or #ladder) + 1, (index and #ladder or 0) do
+		for tier: number = index and index + 1 or math.huge, #ladder do
 			local item: table? = bedwars.Shop.getShopItem(ladder[tier], lplr);
 			if not item or isHidden(item) then
 				continue;
@@ -21385,158 +24165,108 @@ velo.run(function(): ()
 		return choice ~= nil;
 	end;
 
-	local buyCustom: (wallet: {[string]: number}, shopId: string, after: boolean) -> boolean = function(wallet: {[string]: number}, shopId: string, after: boolean): boolean
+	local buyCustom: (order: table, wallet: {[string]: number}, shopId: string?) -> boolean = function(order: table, wallet: {[string]: number}, shopId: string?): boolean
+		if not shopId then
+			return false;
+		end;
+		local item: table? = bedwars.Shop.getShopItem(order.Item, lplr);
+		if not item or not order.Amount then
+			return false;
+		end;
+		local held: table? = getItem(order.Item == 'wool_white' and bedwars.Shop.getTeamWoolById(lplr:GetAttribute('Team')) or order.Item);
+		local count: number = (held and order.Amount - held.amount or order.Amount) // math.max(item.amount, 1);
+		if count <= 0 or not canBuy(item, wallet, count) then
+			return false;
+		end;
+		for _: number = 1, count do
+			buyItem(item, wallet, shopId);
+		end;
+		return true;
+	end;
+
+	local buyGear: (wallet: {[string]: number}, shopId: string?, gear: string) -> boolean = function(wallet: {[string]: number}, shopId: string?, gear: string): boolean
+		if not shopId then
+			return false;
+		end;
+		if gear == 'Armor' then
+			local chest: any = store.inventory.inventory.armor[2];
+			local worn: table? = chest ~= 'empty' and chest or getBestArmor(1);
+			return buyTier(worn and worn.itemType or 'none', tiers.Armor, wallet, shopId);
+		elseif gear == 'Sword' then
+			return buyTier(store.tools.sword and store.tools.sword.itemType, swordTiers(), wallet, shopId);
+		elseif gear == 'Axe' then
+			return buyTier(store.tools.wood and store.tools.wood.itemType or 'none', tiers.Axe, wallet, shopId);
+		end;
+		return buyTier(store.tools.stone and store.tools.stone.itemType, tiers.Pickaxe, wallet, shopId);
+	end;
+
+	local buyUpgrade: (id: string, wallet: {[string]: number}) -> boolean = function(id: string, wallet: {[string]: number}): boolean
+		local meta: table = bedwars.TeamUpgradeMeta[id];
+		if meta.disabledInQueue and table.find(meta.disabledInQueue, store.queueType) then
+			return false;
+		end;
+		local owned: table = bedwars.Store:getState().Bedwars.teamUpgrades[lplr:GetAttribute('Team')] or {};
 		local bought: boolean = false;
-		for _: number, order: table in customOrders do
-			local item: table? = order.After == after and bedwars.Shop.getShopItem(order.Item, lplr) or nil;
-			if not item then
+		for tierIndex: number = (owned[id] or 0) + 1, #meta.tiers do
+			local tier: table = meta.tiers[tierIndex];
+			if tier.availableOnlyInQueue and not table.find(tier.availableOnlyInQueue, store.queueType) then
 				continue;
 			end;
-			local held: table? = getItem(order.Item == 'wool_white' and bedwars.Shop.getTeamWoolById(lplr:GetAttribute('Team')) or order.Item);
-			local count: number = (held and order.Amount - held.amount or order.Amount) // math.max(item.amount, 1);
-			if count > 0 and canBuy(item, wallet, count) then
-				for _: number = 1, count do
-					buyItem(item, wallet, shopId);
-				end;
-				bought = true;
+			if not canBuy({["currency"] = 'diamond', ["price"] = tier.cost}, wallet) then
+				break;
 			end;
+			fire('RequestPurchaseTeamUpgrade', 'CallServerAsync', id):andThen(function(success: any): ()
+				if success then
+					notif('AutoBuy', 'Bought '..upgradeLabels[id]..' '..tierIndex, 3);
+				end;
+			end);
+			wallet.diamond -= tier.cost;
+			bought = true;
 		end;
 		return bought;
+	end;
+
+	local attempt: (step: (...any) -> boolean, ...any) -> boolean = function(step: (...any) -> boolean, ...: any): boolean
+		local ran: boolean, bought: any = pcall(step, ...);
+		return ran and bought == true;
 	end;
 
 	local purchaseRound: (shopId: string?, upgradeShop: boolean) -> boolean = function(shopId: string?, upgradeShop: boolean): boolean
 		local wallet: {[string]: number} = {};
 		local bought: boolean = false;
-		if shopId then
-			bought = buyCustom(wallet, shopId, false) or bought;
-			if Armor["Enabled"] then
-				local chest: any = store.inventory.inventory.armor[2];
-				local worn: table? = chest ~= 'empty' and chest or getBestArmor(1);
-				bought = buyTier(worn and worn.itemType or 'none', tiers.Armor, wallet, shopId) or bought;
-			end;
-			if Sword["Enabled"] and store.tools.sword then
-				bought = buyTier(store.tools.sword.itemType, swordTiers(), wallet, shopId) or bought;
-			end;
-			if Axe["Enabled"] then
-				bought = buyTier(store.tools.wood and store.tools.wood.itemType or 'none', tiers.Axe, wallet, shopId) or bought;
-			end;
-			if Pickaxe["Enabled"] then
-				bought = buyTier(store.tools.stone and store.tools.stone.itemType or 'none', tiers.Pickaxe, wallet, shopId) or bought;
+		for _: number, order: table in customOrders.Pre do
+			bought = attempt(buyCustom, order, wallet, shopId) or bought;
+		end;
+		for _: number, gear: {any} in {{'Armor', Armor}, {'Sword', Sword}, {'Axe', Axe}, {'Pickaxe', Pickaxe}} do
+			if gear[2]["Enabled"] then
+				bought = attempt(buyGear, wallet, shopId, gear[1]) or bought;
 			end;
 		end;
-		if upgradeShop and Upgrades["Enabled"] then
-			local owned: table = bedwars.Store:getState().Bedwars.teamUpgrades[lplr:GetAttribute('Team')] or {};
-			for _: number, id: string in upgradeOrder do
-				local meta: table = bedwars.TeamUpgradeMeta[id];
-				if not upgradeToggles[id]["Enabled"] or (meta.disabledInQueue and table.find(meta.disabledInQueue, store.queueType)) then
-					continue;
-				end;
-				for tierIndex: number = (owned[id] or 0) + 1, #meta.tiers do
-					local tier: table = meta.tiers[tierIndex];
-					if tier.availableOnlyInQueue and not table.find(tier.availableOnlyInQueue, store.queueType) then
-						continue;
-					end;
-					if not canBuy({["currency"] = 'diamond', ["price"] = tier.cost}, wallet) then
-						break;
-					end;
-					fire('RequestPurchaseTeamUpgrade', 'CallServerAsync', id):andThen(function(success: any): ()
-						if success then
-							notif('AutoBuy', 'Bought '..upgradeLabels[id]..' '..tierIndex, 3);
-						end;
-					end);
-					wallet.diamond -= tier.cost;
-					bought = true;
-				end;
+		for _: number, id: string in upgradeOrder do
+			if upgradeShop and Upgrades["Enabled"] and upgradeToggles[id]["Enabled"] then
+				bought = attempt(buyUpgrade, id, wallet) or bought;
 			end;
 		end;
-		if shopId then
-			bought = buyCustom(wallet, shopId, true) or bought;
+		for _: number, order: table in customOrders.Post do
+			bought = attempt(buyCustom, order, wallet, shopId) or bought;
 		end;
 		return bought;
 	end;
 
-	local patchShop: () -> () = function(): ()
-		shopPatched = true;
-		local folder: Instance? = replicatedStorage.TS:FindFirstChild('shop');
-		local utilModule: Instance? = folder and folder:FindFirstChild('shop-util');
-		if not utilModule then
-			return;
+	local nearbyShops: () -> (string?, boolean, boolean) = function(): (string?, boolean, boolean)
+		if not entitylib.isAlive then
+			return nil, false, false;
 		end;
-		local util: table = require(utilModule).ShopUtil;
-		local oldAll: (...any) -> {string} = util.getAllSuperiorItems;
-		local oldOwns: (...any) -> boolean = util.ownsSuperiorItem;
-		local allSuperior: (self: table, plr: Player, shopItem: table?) -> {string} = function(self: table, plr: Player, shopItem: table?): {string}
-			if plr ~= lplr then
-				return oldAll(self, plr, shopItem);
+		local origin: Vector3 = entitylib.character.RootPart.Position;
+		local shopId: string?, upgradeShop: boolean, near: boolean = nil, false, false;
+		for _: number, entry: table in store.shop do
+			if (entry.RootPart.Position - origin).Magnitude <= shopRange then
+				near = true;
+				upgradeShop = upgradeShop or entry.Upgrades;
+				shopId = entry.Shop and entry.Id or shopId;
 			end;
-			if not shopItem or not shopItem.superiorItems then
-				return {};
-			end;
-			if not shopIndex then
-				shopIndex = {};
-				for _: number, entry: table in bedwars.Shop.getShop(plr) do
-					shopIndex[entry.itemType] = entry;
-				end;
-			end;
-			local result: {string}, seen: {[string]: boolean} = {}, {};
-			local collect: (itemTypes: {string}) -> ();
-			collect = function(itemTypes: {string}): ()
-				for _: number, itemType: string in itemTypes do
-					if not seen[itemType] then
-						seen[itemType] = true;
-						table.insert(result, itemType);
-						local entry: table? = shopIndex[itemType];
-						if entry and entry.superiorItems then
-							collect(entry.superiorItems);
-						end;
-					end;
-				end;
-			end;
-			collect(shopItem.superiorItems);
-			return result;
 		end;
-		local ownsSuperior: (self: table, plr: Player, shopItem: table) -> boolean = function(self: table, plr: Player, shopItem: table): boolean
-			if plr ~= lplr then
-				return oldOwns(self, plr, shopItem);
-			end;
-			local superior: {string} = self:getAllSuperiorItems(plr, shopItem);
-			for _: number, ladder: {string} in {bedwars.Shop.Pickaxes, bedwars.Shop.Axes} do
-				local tier: number? = table.find(ladder, shopItem.itemType);
-				if tier then
-					for higher: number = tier + 1, #ladder do
-						table.insert(superior, ladder[higher]);
-					end;
-					break;
-				end;
-			end;
-			local owned: {[string]: number}, counted: {[Instance]: boolean} = {}, {};
-			for _: number, item: table in (#superior > 0 and bedwars.getInventory(plr).items or {}) do
-				if not counted[item.tool] then
-					counted[item.tool] = true;
-					owned[item.itemType] = (owned[item.itemType] or 0) + item.amount;
-				end;
-			end;
-			for _: number, itemType: string in superior do
-				if (owned[itemType] or 0) >= 1 then
-					return true;
-				end;
-			end;
-			return false;
-		end;
-		util.getAllSuperiorItems = allSuperior;
-		util.ownsSuperiorItem = ownsSuperior;
-		AutoBuy:Clean(runService.PreSimulation:Connect(function(): ()
-			shopIndex = nil;
-		end));
-		AutoBuy:Clean(function(): ()
-			if util.getAllSuperiorItems == allSuperior then
-				util.getAllSuperiorItems = oldAll;
-			end;
-			if util.ownsSuperiorItem == ownsSuperior then
-				util.ownsSuperiorItem = oldOwns;
-			end;
-			shopIndex = nil;
-		end);
+		return shopId, upgradeShop, near;
 	end;
 
 	local restoreTiers: () -> () = function(): ()
@@ -21550,7 +24280,7 @@ velo.run(function(): ()
 
 	local bypassTiers: () -> () = function(): ()
 		tiersBypassed = true;
-		local items: any = bedwars.Shop.ShopItems;
+		local items: any = bedwars.ShopItems;
 		if type(items) ~= 'table' then
 			notif('AutoBuy', 'Tier bypass unavailable: the shop item list was not found', 5, 'warning');
 			return;
@@ -21566,10 +24296,7 @@ velo.run(function(): ()
 		local mouse: Vector2 = inputService:GetMouseLocation() - guiService:GetGuiInset();
 		for _: number, object: GuiObject in lplr.PlayerGui:GetGuiObjectsAtPosition(mouse.X, mouse.Y) do
 			local current: Instance? = object;
-			for _: number = 1, 12 do
-				if not current or current == lplr.PlayerGui then
-					break;
-				end;
+			while current and current ~= lplr.PlayerGui do
 				local itemType: string? = current.Name:match('^(.+)_ShopItemCard$');
 				if itemType then
 					return itemType;
@@ -21580,6 +24307,35 @@ velo.run(function(): ()
 		return nil;
 	end;
 
+	local startClicking: (itemType: string) -> () = function(itemType: string): ()
+		if clickThread then
+			task.cancel(clickThread);
+		end;
+		clickThread = task.spawn(function(): ()
+			repeat
+				local shopId: string? = bedwars.AppController:isAppOpen('BedwarsItemShopApp') and store.shopLoaded and (nearbyShops()) or nil;
+				if shopId and bedwars.BedwarsShopController.alreadyPurchasedMap[itemType] == nil then
+					local item: table? = bedwars.Shop.getShopItem(itemType, lplr, {["shopId"] = shopId});
+					local currency: table? = item and getItem(item.currency);
+					if item and not (item.ignoredByKit and table.find(item.ignoredByKit, store.equippedKit or '')) and not item.lockedByForge and not item.disabled and (currency and currency.amount or 0) >= item.price and not upgradeLocked(item) then
+						fire('BedwarsPurchaseItem', 'CallServerAsync', {["shopItem"] = item, ["shopId"] = shopId}):andThen(function(success: any): ()
+							if not success then
+								return;
+							end;
+							bedwars.AudioManager:playAudio(bedwars.SoundList.BEDWARS_PURCHASE_ITEM);
+							bedwars.Store:dispatch({["type"] = 'BedwarsAddItemPurchased', ["itemType"] = itemType});
+							if item.tiered then
+								bedwars.BedwarsShopController.alreadyPurchasedMap[itemType] = true;
+							end;
+						end);
+					end;
+				end;
+				task.wait(1 / ClickSpeed["Value"]);
+			until not holding;
+			clickThread = nil;
+		end);
+	end;
+
 	local retryNow: () -> () = function(): ()
 		nextAttempt = tick();
 	end;
@@ -21587,90 +24343,71 @@ velo.run(function(): ()
 	AutoBuy = vape.Categories.Inventory:CreateModule({
 		["Name"] = 'AutoBuy',
 		["Function"] = function(callback: boolean): ()
-			nextAttempt = tick();
-			clickTarget = nil;
 			if not callback then
+				nextAttempt = tick();
 				return;
 			end;
-			shopPatched = false;
-			lastUpgradeShop = false;
 			AutoBuy:Clean(restoreTiers);
-			AutoBuy:Clean(vapeEvents.InventoryAmountChanged.Event:Connect(function(): ()
-				if nextAttempt - tick() > 1 then
-					nextAttempt = tick();
+			AutoBuy:Clean(function(): ()
+				holding = false;
+				if clickThread then
+					task.cancel(clickThread);
+					clickThread = nil;
 				end;
-			end));
+			end);
 			AutoBuy:Clean(inputService.InputBegan:Connect(function(input: InputObject): ()
-				if input.UserInputType == Enum.UserInputType.MouseButton1 and Clicker["Enabled"] and bedwars.AppController:isAppOpen('BedwarsItemShopApp') then
-					local itemType: string? = hoveredShopItem();
-					clickTarget = itemType and {["Item"] = itemType, ["Start"] = tick() + HoldDelay["Value"], ["Confirmed"] = false} or nil;
+				if input.UserInputType ~= Enum.UserInputType.MouseButton1 or not Clicker["Enabled"] or not bedwars.AppController:isAppOpen('BedwarsItemShopApp') then
+					return;
 				end;
+				local itemType: string? = hoveredShopItem();
+				if not itemType then
+					return;
+				end;
+				holding = true;
+				task.delay(HoldDelay["Value"], function(): ()
+					if holding and hoveredShopItem() == itemType then
+						startClicking(itemType);
+					end;
+				end);
 			end));
 			AutoBuy:Clean(inputService.InputEnded:Connect(function(input: InputObject): ()
 				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					clickTarget = nil;
+					holding = false;
 				end;
 			end));
-			AutoBuy:Clean(runService.Heartbeat:Connect(function(): ()
-				local now: number = tick();
-				if not store.shopLoaded or not entitylib.isAlive then
-					return;
-				end;
-				if not shopPatched then
-					patchShop();
-				end;
-				if TierBypass["Enabled"] and not tiersBypassed then
-					bypassTiers();
-				end;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local shopId: string?, upgradeShop: boolean = nil, false;
-				for _: number, shop: table in store.shop do
-					if (shop.RootPart.Position - origin).Magnitude <= shopRange then
-						shopId = shop.Shop and shop.Id or shopId;
-						upgradeShop = upgradeShop or shop.Upgrades;
-					end;
-				end;
-
-				if clickTarget and now >= clickTarget.Start and now >= nextClick then
-					nextClick = now + 1 / ClickSpeed["Value"];
-					if not clickTarget.Confirmed and hoveredShopItem() ~= clickTarget.Item then
-						clickTarget = nil;
-					elseif shopId and bedwars.AppController:isAppOpen('BedwarsItemShopApp') and bedwars.BedwarsShopController.alreadyPurchasedMap[clickTarget.Item] == nil then
-						clickTarget.Confirmed = true;
-						local item: table? = bedwars.Shop.getShopItem(clickTarget.Item, lplr, {["shopId"] = shopId});
-						local wallet: {[string]: number} = {};
-						if item and canBuy(item, wallet) then
-							buyItem(item, wallet, shopId, true);
-						end;
-					end;
-				end;
-
-				if now < nextScan then
-					return;
-				end;
-				nextScan = now + scanRate;
-				if store.queueType == 'bedwars_test' or store.matchState == 2 or not (shopId or upgradeShop) then
-					return;
-				end;
+			AutoBuy:Clean(task.spawn(function(): ()
+				repeat
+					task.wait();
+				until store.queueType ~= 'bedwars_test';
 				if BedwarsCheck["Enabled"] and not (store.queueType:find('bedwars') or table.find(bedwarsQueues, store.queueType)) then
 					return;
 				end;
-				local menuOpen: boolean = false;
-				for _: number, app: string in shopApps do
-					menuOpen = menuOpen or bedwars.AppController:isAppOpen(app);
-				end;
-				if GuiCheck["Enabled"] ~= menuOpen then
-					return;
-				end;
-				if upgradeShop ~= lastUpgradeShop then
-					lastUpgradeShop = upgradeShop;
-					if nextAttempt - now > 1 then
-						nextAttempt = now;
+				AutoBuy:Clean(vapeEvents.InventoryAmountChanged.Event:Connect(function(): ()
+					if nextAttempt - tick() > 1 then
+						nextAttempt = tick();
 					end;
-				end;
-				if now >= nextAttempt then
-					nextAttempt = now + (purchaseRound(shopId, upgradeShop) and retryDelay or math.huge);
-				end;
+				end));
+				local lastUpgradeShop: boolean? = nil;
+				repeat
+					if TierBypass["Enabled"] and not tiersBypassed and store.shopLoaded then
+						bypassTiers();
+					end;
+					local shopId: string?, upgradeShop: boolean, near: boolean = nearbyShops();
+					local menuOpen: boolean = bedwars.AppController:isAppOpen('BedwarsItemShopApp') or bedwars.AppController:isAppOpen('TeamUpgradeApp');
+					if GuiCheck["Enabled"] ~= menuOpen then
+						near = false;
+					end;
+					if near and lastUpgradeShop ~= upgradeShop then
+						if nextAttempt - tick() > 1 then
+							nextAttempt = tick();
+						end;
+						lastUpgradeShop = upgradeShop;
+					end;
+					if near and nextAttempt <= tick() and store.matchState ~= 2 and store.shopLoaded then
+						nextAttempt = tick() + (purchaseRound(shopId, upgradeShop) and retryDelay or math.huge);
+					end;
+					task.wait(scanRate);
+				until not AutoBuy["Enabled"];
 			end));
 		end,
 		["Tooltip"] = 'Automatically buys items when you go near the shop'
@@ -21698,7 +24435,6 @@ velo.run(function(): ()
 			for _: string, toggle: table in upgradeToggles do
 				toggle.Object.Visible = enabled;
 			end;
-			retryNow();
 		end,
 		["Default"] = true
 	});
@@ -21722,6 +24458,12 @@ velo.run(function(): ()
 	});
 	BedwarsCheck = AutoBuy:CreateToggle({
 		["Name"] = 'Only Bedwars',
+		["Function"] = function(): ()
+			if AutoBuy["Enabled"] then
+				AutoBuy:Toggle();
+				AutoBuy:Toggle();
+			end;
+		end,
 		["Default"] = true,
 		["Tooltip"] = 'Only buys in BedWars modes, including Kit Fusion and Hyper Kits'
 	});
@@ -21768,18 +24510,23 @@ velo.run(function(): ()
 		["Name"] = 'Item',
 		["Placeholder"] = 'priority/item/amount/after',
 		["Function"] = function(list: {string}): ()
-			table.clear(customOrders);
+			local byPriority: {[string]: {[number]: table}} = {["Pre"] = {}, ["Post"] = {}};
 			for _: number, entry: string in list do
 				local fields: {string} = entry:split('/');
-				local priority: number?, amount: number? = tonumber(fields[1]), tonumber(fields[3]);
-				if priority and amount and fields[2] then
-					table.insert(customOrders, {["Priority"] = priority, ["Item"] = fields[2], ["Amount"] = amount, ["After"] = fields[4] ~= nil});
+				local priority: number? = tonumber(fields[1]);
+				if priority then
+					byPriority[fields[4] and 'Post' or 'Pre'][priority] = {["Priority"] = priority, ["Item"] = fields[2], ["Amount"] = tonumber(fields[3])};
 				end;
 			end;
-			table.sort(customOrders, function(a: table, b: table): boolean
-				return a.Priority < b.Priority;
-			end);
-			retryNow();
+			for group: string, orders: {[number]: table} in byPriority do
+				table.clear(customOrders[group]);
+				for _: number, order: table in orders do
+					table.insert(customOrders[group], order);
+				end;
+				table.sort(customOrders[group], function(a: table, b: table): boolean
+					return a.Priority < b.Priority;
+				end);
+			end;
 		end
 	});
 end);
@@ -21790,12 +24537,12 @@ velo.run(function(): ()
 	local SpeedPotion: table;
 	local Apple: table;
 	local ShieldPotion: table;
+	local UseBuffs: table;
 	local BuffItems: table;
 	local CombatOnly: table;
 	local BuffDelay: table;
 	local combatWindow: number = 6;
 	local speedAttempts: number = 4;
-	local nextBuff: number = 0;
 
 	local heal: (attribute: string?) -> () = function(attribute: string?): ()
 		if not entitylib.isAlive then
@@ -21815,15 +24562,19 @@ velo.run(function(): ()
 		if Apple["Enabled"] and (not attribute or attribute:find('Health')) and character:GetAttribute('Health') / character:GetAttribute('MaxHealth') <= Health["Value"] / 100 then
 			local food: table? = getItem('orange') or (not character:GetAttribute('StatusEffect_golden_apple') and getItem('golden_apple')) or getItem('apple');
 			if food then
-				fire('ConsumeItem', 'CallServer', {["item"] = food.tool});
+				fire('ConsumeItem', 'CallServerAsync', {["item"] = food.tool});
 			end;
 		end;
 		if ShieldPotion["Enabled"] and (not attribute or attribute:find('Shield')) and (character:GetAttribute('Shield_POTION') or 0) == 0 then
 			local shield: table? = getItem('big_shield') or getItem('mini_shield');
 			if shield then
-				fire('ConsumeItem', 'CallServer', {["item"] = shield.tool});
+				fire('ConsumeItem', 'CallServerAsync', {["item"] = shield.tool});
 			end;
 		end;
+	end;
+
+	local inCombat: (character: Model) -> boolean = function(character: Model): boolean
+		return workspace:GetServerTimeNow() - (character:GetAttribute('LastDamageTakenTime') or 0) < combatWindow;
 	end;
 
 	AutoConsume = vape.Categories.Inventory:CreateModule({
@@ -21840,35 +24591,30 @@ velo.run(function(): ()
 					heal(attribute);
 				end;
 			end));
-			AutoConsume:Clean(runService.Heartbeat:Connect(function(): ()
-				local now: number = tick();
-				if now < nextBuff or #BuffItems.ListEnabled == 0 then
-					return;
-				end;
-				nextBuff = now + BuffDelay["Value"];
-				if not entitylib.isAlive or store.matchState ~= 1 or isCasting() then
-					return;
-				end;
-				local character: Model = lplr.Character;
-				if CombatOnly["Enabled"] and workspace:GetServerTimeNow() - (character:GetAttribute('LastDamageTakenTime') or 0) >= combatWindow then
-					return;
-				end;
-				for _: number, itemType: string in BuffItems.ListEnabled do
-					local item: table? = getItem(itemType);
-					local consumable: table? = item and bedwars.ItemMeta[itemType].consumable;
-					if consumable then
-						local effect: string = consumable.statusEffect and consumable.statusEffect.statusEffectType or (itemType:gsub('_potion', ''));
-						if not character:GetAttribute('StatusEffect_'..effect) then
-							nextBuff = now + (consumable.consumeTime or 1) + BuffDelay["Value"];
-							fire('ConsumeItem', 'CallServer', {["item"] = item.tool});
-							break;
+			AutoConsume:Clean(task.spawn(function(): ()
+				repeat
+					local character: Model? = lplr.Character;
+					if UseBuffs["Enabled"] and entitylib.isAlive and character and store.matchState == 1 and not isCasting() and (not CombatOnly["Enabled"] or inCombat(character)) then
+						for _: number, itemType: string in BuffItems.ListEnabled do
+							local item: table? = getItem(itemType);
+							local meta: table? = item and bedwars.ItemMeta[itemType];
+							local consumable: table? = meta and meta.consumable;
+							if consumable then
+								local effect: string = consumable.statusEffect and consumable.statusEffect.statusEffectType or (itemType:gsub('_potion', ''));
+								if not character:GetAttribute('StatusEffect_'..effect) then
+									fire('ConsumeItem', 'CallServerAsync', {["item"] = item.tool});
+									task.wait(consumable.consumeTime or 1);
+									break;
+								end;
+							end;
 						end;
 					end;
-				end;
+					task.wait(BuffDelay["Value"]);
+				until not AutoConsume["Enabled"];
 			end));
 			heal(nil);
 		end,
-		["Tooltip"] = 'Heals when health or shield is under threshold, and keeps your listed buff items active.'
+		["Tooltip"] = 'Heals when health or shield is under threshold, and can keep your listed buff items active.'
 	});
 	Health = AutoConsume:CreateSlider({
 		["Name"] = 'Health Percent',
@@ -21889,13 +24635,26 @@ velo.run(function(): ()
 		["Name"] = 'Shield Potions',
 		["Default"] = true
 	});
+	UseBuffs = AutoConsume:CreateToggle({
+		["Name"] = 'Auto Use',
+		["Function"] = function(enabled: boolean): ()
+			for _: number, option: table? in {BuffItems, CombatOnly, BuffDelay} do
+				if option then
+					option.Object.Visible = enabled;
+				end;
+			end;
+		end,
+		["Tooltip"] = 'Drinks and eats the buff items you list as soon as their effect runs out'
+	});
 	BuffItems = AutoConsume:CreateTextList({
 		["Name"] = 'Buff Items',
 		["Default"] = {'fury_potion', 'crit_star', 'vitality_star', 'pie'},
+		["Darker"] = true,
 		["Tooltip"] = 'Item ids, anything the game lets you consume\nfury_potion, jump_potion, serpents_touch_potion, crit_star, vitality_star, snow_cone, pie, watermelon, can_of_beans, sparkling_apple_juice'
 	});
 	CombatOnly = AutoConsume:CreateToggle({
 		["Name"] = 'Buffs in combat only',
+		["Darker"] = true,
 		["Tooltip"] = 'Saves buff items until something has hit you in the last 6 seconds'
 	});
 	BuffDelay = AutoConsume:CreateSlider({
@@ -21904,8 +24663,12 @@ velo.run(function(): ()
 		["Max"] = 5,
 		["Default"] = 0.5,
 		["Decimal"] = 10,
+		["Darker"] = true,
 		["Suffix"] = 'seconds'
 	});
+	for _: number, option: table in {BuffItems, CombatOnly, BuffDelay} do
+		option.Object.Visible = false;
+	end;
 end);
 
 velo.run(function(): ()
@@ -21928,7 +24691,8 @@ velo.run(function(): ()
 				local duration: number = math.max(self.durationSeconds * (Multiplier["Value"] / normalSpeed), self.durationSeconds - serverTolerance);
 				local handle: any = self:showProgress(duration);
 				local started: number = self.startedClickTime;
-				task.delay(duration, function(): ()
+				bedwars.RuntimeLib.Promise.defer(function(): ()
+					task.wait(duration);
 					if handle ~= self.handle or started ~= self.startedClickTime or not self.closeOnComplete then
 						return;
 					end;
@@ -21943,7 +24707,7 @@ velo.run(function(): ()
 				end);
 			end;
 			clickHold.showProgress = function(self: table, duration: number): any
-				local roact: table = bedwars.Roact;
+				local roact: table = debug.getupvalue(oldShowProgress, 1);
 				local handle: any = roact.mount(roact.createElement('ScreenGui', {}, {
 					roact.createElement('Frame', {
 						[roact.Ref] = self.wrapperRef,
@@ -21987,7 +24751,7 @@ end);
 
 velo.run(function(): ()
 	local FastDrop: table = {["Enabled"] = false};
-	local dropKeys: {Enum.KeyCode} = {Enum.KeyCode.H, Enum.KeyCode.Backspace};
+	local idlePoll: number = 0.1;
 
 	FastDrop = vape.Categories.Inventory:CreateModule({
 		["Name"] = 'FastDrop',
@@ -21995,17 +24759,14 @@ velo.run(function(): ()
 			if not callback then
 				return;
 			end;
-			FastDrop:Clean(runService.Heartbeat:Connect(function(): ()
-				if not entitylib.isAlive or store.inventory.opened or inputService:GetFocusedTextBox() then
-					return;
+			repeat
+				if entitylib.isAlive and not store.inventory.opened and (inputService:IsKeyDown(Enum.KeyCode.H) or inputService:IsKeyDown(Enum.KeyCode.Backspace)) and inputService:GetFocusedTextBox() == nil then
+					task.spawn(bedwars.ItemDropController.dropItemInHand);
+					task.wait();
+				else
+					task.wait(idlePoll);
 				end;
-				for _: number, key: Enum.KeyCode in dropKeys do
-					if inputService:IsKeyDown(key) then
-						bedwars.ItemDropController.dropItemInHand();
-						return;
-					end;
-				end;
-			end));
+			until not FastDrop["Enabled"];
 		end,
 		["Tooltip"] = 'Drops items fast while you hold H or Backspace.'
 	});
@@ -22017,6 +24778,7 @@ velo.run(function(): ()
 	local Clear: table;
 	local List: table;
 	local sorting: boolean = false;
+	local settleTime: number = 0.5;
 	local quickItems: {string} = {'diamond_sword', 'diamond_pickaxe', 'diamond_axe', 'shears', 'wood_bow', 'wool_white', 'fireball', 'apple', 'iron', 'gold', 'diamond', 'emerald'};
 	local bestOf: {[string]: {string}} = {
 		["diamond_sword"] = {'sword', 'wood_sword'},
@@ -22423,39 +25185,44 @@ velo.run(function(): ()
 
 	local sortHotbar: () -> () = function(): ()
 		local layout: table? = List.Hotbars[List.Selected];
-		if sorting or not layout then
-			return;
-		end;
-		sorting = true;
-		local wanted: {[number]: string} = {};
-		for slot: string, itemType: string in layout.Hotbar do
-			wanted[tonumber(slot) - 1] = resolveItem(itemType);
+		local wanted: {[string]: string} = {};
+		for slot: string, itemType: string in (layout and layout.Hotbar or {}) do
+			wanted[slot] = resolveItem(itemType);
 		end;
 		local placed: {[number]: boolean} = {};
-		for _: number, entry: table in inventorySlots() do
-			if entry.container == 'hotbar' and wanted[entry.index] == entry.itemType then
-				placed[entry.index] = true;
+		for slot: number = 1, 9 do
+			local held: table? = store.inventory.hotbar[slot];
+			if wanted[tostring(slot)] and held and held.item and held.item.itemType == wanted[tostring(slot)] then
+				placed[slot - 1] = true;
 			end;
 		end;
-		for index: number = 0, 8 do
-			local itemType: string? = wanted[index];
-			if not itemType or placed[index] then
+		for slot: number = 1, 9 do
+			local itemType: string? = wanted[tostring(slot)];
+			if not itemType or placed[slot - 1] then
 				continue;
 			end;
+			local source: table? = nil;
 			for _: number, entry: table in inventorySlots() do
 				if entry.itemType == itemType and entry.container ~= 'armor' and not (entry.container == 'hotbar' and placed[entry.index]) then
-					placed[index] = moveSlot({
-						["operation"] = 'swap_hotbar',
-						["slot"] = {["container"] = entry.container, ["index"] = entry.index},
-						["target"] = {["container"] = 'hotbar', ["index"] = index}
-					});
+					source = entry;
 					break;
 				end;
+			end;
+			if source and moveSlot({
+				["operation"] = 'swap_hotbar',
+				["slot"] = {["container"] = source.container, ["index"] = source.index},
+				["target"] = {["container"] = 'hotbar', ["index"] = slot - 1}
+			}) then
+				local deadline: number = os.clock() + settleTime;
+				repeat
+					task.wait();
+					local held: table? = store.inventory.hotbar[slot];
+				until held and held.item and held.item.itemType == itemType or os.clock() > deadline;
 			end;
 		end;
 		if Clear["Enabled"] then
 			local keep: {[string]: boolean} = {};
-			for _: number, itemType: string in wanted do
+			for _: string, itemType: string in wanted do
 				keep[itemType] = true;
 			end;
 			for _: number, entry: table in table.clone(inventorySlots()) do
@@ -22464,6 +25231,14 @@ velo.run(function(): ()
 				end;
 			end;
 		end;
+	end;
+
+	local runSort: () -> () = function(): ()
+		if sorting then
+			return;
+		end;
+		sorting = true;
+		pcall(sortHotbar);
 		sorting = false;
 	end;
 
@@ -22473,12 +25248,12 @@ velo.run(function(): ()
 			if not callback then
 				return;
 			end;
-			task.defer(sortHotbar);
+			task.spawn(runSort);
 			if Mode["Value"] == 'On Key' then
 				AutoHotbar:Toggle();
 				return;
 			end;
-			AutoHotbar:Clean(vapeEvents.InventoryAmountChanged.Event:Connect(sortHotbar));
+			AutoHotbar:Clean(vapeEvents.InventoryAmountChanged.Event:Connect(runSort));
 		end,
 		["Tooltip"] = 'Automatically arranges hotbar to your liking.'
 	});
@@ -22547,7 +25322,7 @@ velo.run(function(): ()
 				end;
 				local threatened: boolean = false;
 				for _: number, ent: table in (OnEnemy["Enabled"] and entitylib.List or {}) do
-					if ent.Player and ent.Targetable and ent.Health > 0 and (ent.RootPart.Position - origin).Magnitude <= EnemyRange["Value"] then
+					if ent.Player and ent.Targetable and ent.Health > 0 and ent.RootPart and (ent.RootPart.Position - origin).Magnitude <= EnemyRange["Value"] then
 						threatened = true;
 						break;
 					end;
@@ -22578,7 +25353,7 @@ velo.run(function(): ()
 				for _: number, itemType: string in Items.ListEnabled do
 					local item: table? = getItem(itemType);
 					if item and (item.amount or 1) >= minimum then
-						giveItem:CallServer(personal, item.tool);
+						task.spawn(giveItem.CallServer, giveItem, personal, item.tool);
 					end;
 				end;
 			end));
@@ -22729,10 +25504,11 @@ velo.run(function(): ()
 	local knockbackWindow: number = 0.2;
 	local settleTime: number = 0.5;
 	local ticksPerSecond: number = 60;
+	local warnGap: number = 5;
 
 	local counter: TextLabel?;
 	local placed: number, nextPlace: number, lastDanger: number = 0, 0, 0;
-	local engaged: boolean, reactAt: number, lastSlot: number? = false, 0, nil;
+	local engaged: boolean = false;
 	local catchCell: Vector3?, catchUntil: number, catchSeen: boolean, catchTries: number = nil, 0, false, 0;
 	local impulse: Vector3, impulseUntil: number = Vector3.zero, 0;
 	local groundY: number? = nil;
@@ -22756,7 +25532,7 @@ velo.run(function(): ()
 	end;
 
 	local dangerAt: (position: Vector3) -> boolean = function(position: Vector3): boolean
-		if not store.airRay or not (OnVoid["Enabled"] or FallCheck["Enabled"]) then
+		if not (OnVoid["Enabled"] or FallCheck["Enabled"]) then
 			return false;
 		end;
 		local floor: RaycastResult? = bedwars.QueryUtil:raycast(position, Vector3.new(0, -maxDrop, 0), store.airRay);
@@ -22824,6 +25600,110 @@ velo.run(function(): ()
 		return nil, false;
 	end;
 
+	local step: (lastSlot: {number?}) -> () = function(lastSlot: {number?}): ()
+		if not entitylib.isAlive then
+			catchCell, catchSeen, catchTries, engaged = nil, false, 0, false;
+			return;
+		end;
+		local root: BasePart = entitylib.character.RootPart;
+		local grounded: boolean = entitylib.character.Humanoid.FloorMaterial ~= Enum.Material.Air;
+		if grounded then
+			groundY = roundPos(root.Position - Vector3.new(0, entitylib.character.HipHeight + 1.5, 0)).Y;
+			placed, catchTries = 0, 0;
+		end;
+
+		if catchCell then
+			local feet: Vector3 = root.Position - Vector3.new(0, entitylib.character.HipHeight + 1.5, 0);
+			local velocity: Vector3 = tick() < impulseUntil and root.AssemblyLinearVelocity + impulse or root.AssemblyLinearVelocity;
+			local gravity: number = workspace.Gravity;
+			local fallTime: number = (velocity.Y + math.sqrt(velocity.Y * velocity.Y + 2 * gravity * math.max(feet.Y - (catchCell.Y + 1.5), 0))) / gravity;
+			local landing: Vector3 = Vector3.new(math.round((feet.X + velocity.X * fallTime) / 3) * 3, catchCell.Y, math.round((feet.Z + velocity.Z * fallTime) / 3) * 3);
+			if grounded or feet.Y < catchCell.Y or (landing - catchCell).Magnitude > 3 then
+				catchCell, catchSeen = nil, false;
+			elseif getPlacedBlock(catchCell) then
+				catchSeen = true;
+			elseif catchSeen or tick() > catchUntil then
+				catchCell, catchSeen = nil, false;
+			end;
+		end;
+
+		local position: Vector3?, catching: boolean = nil, false;
+		if not catchCell then
+			position, catching = choosePlacement();
+		end;
+
+		if position or counter then
+			local itemType: string?, amount: number, item: table? = pickBlock();
+			if counter then
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
+				counter.Text = amount..' <font color="rgb(170, 170, 170)">(Clutch)</font>';
+				counter.TextColor3 = Color3.fromHSV(amount / 128 / 2.8, 0.86, 1);
+			end;
+			if position and itemType and (not LimitBlocks["Enabled"] or placed < MaxBlocks["Value"]) then
+				if not engaged then
+					engaged = true;
+					lastSlot[1] = store.inventory.hotbarSlot;
+					task.wait(MoveDelay:GetRandomValue() / ticksPerSecond);
+					if vape.ThreadFix then
+						setthreadidentity(8);
+					end;
+					position = nil;
+					if entitylib.isAlive then
+						position, catching = choosePlacement();
+					end;
+				end;
+				local serverNow: number = workspace:GetServerTimeNow();
+				local interval: number = 1 / bedwars.SharedConstants.BLOCK_PLACE_CPS;
+				if position and serverNow >= nextPlace then
+					local slot: number? = item and hotbarSlotOf(item.tool);
+					if slot then
+						task.spawn(hotbarSwitch, slot);
+					end;
+					nextPlace = serverNow + math.max(1 / PlaceSpeed["Value"], interval);
+					local restore: CFrame? = nil;
+					if not SilentAim["Enabled"] then
+						restore = gameCamera.CFrame;
+						if vape.ThreadFix then
+							setthreadidentity(8);
+						end;
+						gameCamera.CFrame = CFrame.lookAt(restore.Position, position);
+					end;
+					local success: any = placeBlock(position, itemType);
+					if restore then
+						task.delay(ResetAngle:GetRandomValue() / ticksPerSecond, function(): ()
+							if vape.ThreadFix then
+								setthreadidentity(8);
+							end;
+							gameCamera.CFrame = CFrame.lookAt(gameCamera.CFrame.Position, gameCamera.CFrame.Position + restore.LookVector);
+						end);
+					end;
+					if success then
+						placed += 1;
+						if catching then
+							catchCell, catchSeen = position, false;
+							catchTries += 1;
+							catchUntil = tick() + catchWindow + math.clamp(store.ping.total, 0, 0.3);
+						end;
+					else
+						nextPlace = serverNow + math.max(FailDelay["Value"] / 1000, interval);
+					end;
+				end;
+			end;
+		end;
+
+		if position then
+			lastDanger = tick();
+		elseif engaged and tick() - lastDanger > settleTime then
+			engaged, placed = false, 0;
+			if ReturnSlot["Enabled"] and lastSlot[1] then
+				hotbarSwitch(lastSlot[1]);
+			end;
+			lastSlot[1] = nil;
+		end;
+	end;
+
 	Clutch = vape.Categories.Utility:CreateModule({
 		["Name"] = 'Clutch',
 		["Function"] = function(callback: boolean): ()
@@ -22834,8 +25714,7 @@ velo.run(function(): ()
 				counter.Visible = callback;
 			end;
 			if not callback then
-				engaged, placed, reactAt, lastSlot = false, 0, 0, nil;
-				catchCell, catchSeen, catchTries, impulseUntil, groundY = nil, false, 0, 0, nil;
+				engaged, placed, catchCell, catchSeen, catchTries, impulseUntil, groundY = false, 0, nil, false, 0, 0, nil;
 				return;
 			end;
 
@@ -22851,92 +25730,19 @@ velo.run(function(): ()
 				end;
 			end));
 
-			Clutch:Clean(runService.Heartbeat:Connect(function(): ()
+			local lastSlot: {number?} = {};
+			local warnedAt: number = 0;
+			repeat
 				if vape.ThreadFix then
 					setthreadidentity(8);
 				end;
-				if not entitylib.isAlive then
-					catchCell, catchSeen, catchTries, engaged = nil, false, 0, false;
-					return;
+				local ran: boolean, failure: any = pcall(step, lastSlot);
+				if not ran and tick() > warnedAt then
+					warnedAt = tick() + warnGap;
+					warn('[Velocity] clutch step failed: '..tostring(failure));
 				end;
-				local root: BasePart = entitylib.character.RootPart;
-				local grounded: boolean = entitylib.character.Humanoid.FloorMaterial ~= Enum.Material.Air;
-				local feet: Vector3 = root.Position - Vector3.new(0, entitylib.character.HipHeight + 1.5, 0);
-				if grounded then
-					groundY = roundPos(feet).Y;
-					placed, catchTries = 0, 0;
-				end;
-
-				if catchCell then
-					local velocity: Vector3 = tick() < impulseUntil and root.AssemblyLinearVelocity + impulse or root.AssemblyLinearVelocity;
-					local gravity: number = workspace.Gravity;
-					local fallTime: number = (velocity.Y + math.sqrt(velocity.Y * velocity.Y + 2 * gravity * math.max(feet.Y - (catchCell.Y + 1.5), 0))) / gravity;
-					local landing: Vector3 = Vector3.new(math.round((feet.X + velocity.X * fallTime) / 3) * 3, catchCell.Y, math.round((feet.Z + velocity.Z * fallTime) / 3) * 3);
-					if grounded or feet.Y < catchCell.Y or (landing - catchCell).Magnitude > 3 then
-						catchCell, catchSeen = nil, false;
-					elseif getPlacedBlock(catchCell) then
-						catchSeen = true;
-					elseif catchSeen or tick() > catchUntil then
-						catchCell, catchSeen = nil, false;
-					end;
-				end;
-
-				local position: Vector3?, catching: boolean = nil, false;
-				if not catchCell then
-					position, catching = choosePlacement();
-				end;
-				local itemType: string?, amount: number, item: table? = pickBlock();
-				if counter then
-					counter.Text = amount..' <font color="rgb(170, 170, 170)">(Clutch)</font>';
-					counter.TextColor3 = Color3.fromHSV(amount / 128 / 2.8, 0.86, 1);
-				end;
-
-				if position and itemType and (not LimitBlocks["Enabled"] or placed < MaxBlocks["Value"]) then
-					if not engaged then
-						engaged, lastSlot = true, store.inventory.hotbarSlot;
-						reactAt = tick() + MoveDelay:GetRandomValue() / ticksPerSecond;
-					end;
-					local serverNow: number = workspace:GetServerTimeNow();
-					local interval: number = 1 / bedwars.SharedConstants.BLOCK_PLACE_CPS;
-					if tick() >= reactAt and serverNow >= nextPlace then
-						local slot: number? = item and hotbarSlotOf(item.tool);
-						if slot and store.inventory.hotbarSlot ~= slot then
-							bedwars.Store:dispatch({["type"] = 'InventorySelectHotbarSlot', ["slot"] = slot});
-						end;
-						nextPlace = serverNow + math.max(1 / PlaceSpeed["Value"], interval);
-						if not SilentAim["Enabled"] then
-							local restore: CFrame = gameCamera.CFrame;
-							gameCamera.CFrame = CFrame.lookAt(restore.Position, position);
-							task.delay(ResetAngle:GetRandomValue() / ticksPerSecond, function(): ()
-								if vape.ThreadFix then
-									setthreadidentity(8);
-								end;
-								gameCamera.CFrame = CFrame.lookAt(gameCamera.CFrame.Position, gameCamera.CFrame.Position + restore.LookVector);
-							end);
-						end;
-						if placeBlock(position, itemType) then
-							placed += 1;
-							if catching then
-								catchCell, catchSeen = position, false;
-								catchTries += 1;
-								catchUntil = tick() + catchWindow + math.clamp(store.ping.total, 0, 0.3);
-							end;
-						else
-							nextPlace = serverNow + math.max(FailDelay["Value"] / 1000, interval);
-						end;
-					end;
-				end;
-
-				if position then
-					lastDanger = tick();
-				elseif engaged and tick() - lastDanger > settleTime then
-					engaged, placed = false, 0;
-					if ReturnSlot["Enabled"] and lastSlot and store.inventory.hotbarSlot ~= lastSlot then
-						bedwars.Store:dispatch({["type"] = 'InventorySelectHotbarSlot', ["slot"] = lastSlot});
-					end;
-					lastSlot = nil;
-				end;
-			end));
+				task.wait();
+			until not Clutch["Enabled"];
 		end,
 		["Tooltip"] = 'Places blocks under you to save you from falling into the void or taking fall damage.'
 	});
@@ -23102,7 +25908,7 @@ velo.run(function(): ()
 	local flat: Vector3 = Vector3.new(1, 0, 1);
 	local up: Vector3 = Vector3.new(0, 1, 0);
 	local profile: table = {
-		["Timing"] = {["Observe"] = 0.2, ["Think"] = 0.3, ["Command"] = 0.12, ["GoalTimeout"] = 45, ["RouteTimeout"] = 8, ["SwitchDelay"] = 0.14},
+		["Timing"] = {["Observe"] = 0.2, ["Think"] = 0.3, ["Command"] = 0.12, ["GoalTimeout"] = 45, ["SwitchDelay"] = 0.14},
 		["Memory"] = {["Sight"] = 120, ["Remember"] = 8, ["Visible"] = 0.6, ["Hit"] = 3, ["FailureLife"] = 40, ["FailureWeight"] = 25, ["Shortfall"] = 30, ["Learn"] = 30, ["LearnGap"] = 1.5},
 		["Decide"] = {["Commit"] = 18, ["SwitchMargin"] = 8, ["TravelWeight"] = 1.1, ["RiskWeight"] = 45, ["Detour"] = 1.25},
 		["Walk"] = {
@@ -23174,6 +25980,11 @@ velo.run(function(): ()
 
 	local between: (range: {number}) -> number = function(range: {number}): number
 		return range[1] + math.random() * (range[2] - range[1]);
+	end;
+
+	local alive: () -> boolean = function(): boolean
+		local character: Model? = lplr.Character;
+		return entitylib.isAlive and character ~= nil and (character:GetAttribute('Health') or 0) > 0;
 	end;
 
 	local known: (record: table, now: number) -> boolean = function(record: table, now: number): boolean
@@ -23473,7 +26284,7 @@ velo.run(function(): ()
 			if wall and wall.Name ~= 'bed' and (wall.Position - root.Position).Magnitude <= profile.Walk.TunnelReach then
 				if now >= mind.nextBreak then
 					mind.nextBreak = now + jitter(0.3, 0.3);
-					task.defer(breakBlock, wall, {["Effects"] = true, ["Animation"] = 'Normal', ["AutoTool"] = true});
+					task.spawn(breakBlock, wall, {["Effects"] = true, ["Animation"] = 'Normal', ["AutoTool"] = true});
 				end;
 				walker.note('tunneling', wall.Name);
 				return target;
@@ -23537,8 +26348,9 @@ velo.run(function(): ()
 	end;
 
 	walker.sprint = function(): ()
-		if not bedwars.SprintController.sprinting then
-			bedwars.SprintController:startSprinting();
+		local controller: table? = bedwars.SprintController;
+		if controller and not controller.sprinting then
+			pcall(controller.startSprinting, controller);
 		end;
 	end;
 
@@ -23561,12 +26373,12 @@ velo.run(function(): ()
 	end;
 
 	walker.ask = function(key: string, position: Vector3, threats: {Vector3}?, now: number): ()
-		local request: table = {["Cancelled"] = false, ["Issued"] = now};
+		local request: table = {["Cancelled"] = false};
 		local from: Vector3 = entitylib.character.RootPart.Position;
 		local me: table = world.self;
 		walker.request, walker.requestKey = request, key;
-		walker.thread = task.spawn(function(): ()
-			local plan: table?, result: table? = agent:Draft(from, position, {
+		task.spawn(function(): ()
+			local success: boolean, plan: any, result: any = pcall(agent.Draft, agent, from, position, {
 				["Channel"] = 'legitautoplay',
 				["Mode"] = 'Legit',
 				["BlocksAvailable"] = math.max(me.blocks - profile.Build.Reserve, 0),
@@ -23582,11 +26394,11 @@ velo.run(function(): ()
 			end;
 			walker.request, walker.requestKey = nil, nil;
 			local at: number = os.clock();
-			if not plan then
-				walker.fault(key, result and result.Reason or 'no plan', at);
+			if not success or not plan then
+				walker.fault(key, success and result and result.Reason or tostring(plan), at);
 				return;
 			end;
-			if not entitylib.isAlive then
+			if not alive() then
 				return;
 			end;
 			local root: BasePart = entitylib.character.RootPart;
@@ -23630,7 +26442,7 @@ velo.run(function(): ()
 		end;
 		mind.nextPlace = serverNow + jitter(1 / (bedwars.SharedConstants.BLOCK_PLACE_CPS or 12), 0.18);
 		mind.placed[key] = now + 0.8;
-		placeBlock(position, block);
+		task.spawn(placeBlock, position, block);
 		return true;
 	end;
 
@@ -23736,13 +26548,15 @@ velo.run(function(): ()
 				return 'moving';
 			end;
 			local grid: Vector3 = point.Grid or navigation.WorldToGrid(point.Position);
-			local here: Vector3 = navigation.WorldToGrid(position - Vector3.new(0, humanoid.HipHeight - 1.5, 0));
 			agent.Memory:Route(grid, 'collision', now);
-			for x: number = -1, 1 do
-				for y: number = -1, 1 do
-					for z: number = -1, 1 do
-						navigation.World:Invalidate(grid.X + x, grid.Y + y, grid.Z + z);
-						navigation.World:Invalidate(here.X + x, here.Y + y, here.Z + z);
+			if navigation.World then
+				local here: Vector3 = navigation.WorldToGrid(position - Vector3.new(0, humanoid.HipHeight - 1.5, 0));
+				for x: number = -1, 1 do
+					for y: number = -1, 1 do
+						for z: number = -1, 1 do
+							navigation.World:Invalidate(grid.X + x, grid.Y + y, grid.Z + z);
+							navigation.World:Invalidate(here.X + x, here.Y + y, here.Z + z);
+						end;
 					end;
 				end;
 			end;
@@ -23757,11 +26571,6 @@ velo.run(function(): ()
 		local offset: Vector3 = position - entitylib.character.RootPart.Position;
 		if (offset * flat).Magnitude <= radius and math.abs(offset.Y) <= (vertical or 6) then
 			return 'arrived';
-		end;
-		if walker.request and now - walker.request.Issued > profile.Timing.RouteTimeout then
-			walker.request.Cancelled = true;
-			walker.request, walker.requestKey = nil, nil;
-			walker.fault(key, 'planner did not answer', now);
 		end;
 		local plan: table? = agent:Current();
 		local owned: boolean = plan ~= nil and not plan.Expired and walker.key == key;
@@ -24029,8 +26838,9 @@ velo.run(function(): ()
 		end,
 		["Run"] = function(goal: table, now: number, delta: number): ()
 			local held: table? = getItem(goal.Currency);
-			if (held and held.amount or 0) >= goal.Need then
-				finishGoal(goal, now, true, 'collected '..held.amount..' '..goal.Currency);
+			local amount: number = held and held.amount or 0;
+			if amount >= goal.Need then
+				finishGoal(goal, now, true, 'collected '..amount..' '..goal.Currency);
 				return;
 			end;
 			if goal.Phase == 'APPROACH' then
@@ -24253,7 +27063,7 @@ velo.run(function(): ()
 			turnToward(bed.Position, delta);
 			if now >= mind.nextBreak and (bed:GetAttribute('BedShieldEndTime') or 0) <= workspace:GetServerTimeNow() then
 				mind.nextBreak = now + jitter(profile.Build.BreakInterval, 0.3);
-				task.defer(breakBlock, bed, {["Effects"] = true, ["Animation"] = 'Normal', ["AutoTool"] = true});
+				task.spawn(breakBlock, bed, {["Effects"] = true, ["Animation"] = 'Normal', ["AutoTool"] = true});
 			end;
 			if now - goal.BreakAt > profile.Build.BreakStall + 20 then
 				finishGoal(goal, now, false, 'bed will not break');
@@ -24478,6 +27288,8 @@ velo.run(function(): ()
 		fight.reset();
 	end;
 
+	local errorLimit: number = 3;
+
 	local standDown: () -> () = function(): ()
 		walker.cancel();
 		fight.reset();
@@ -24485,21 +27297,54 @@ velo.run(function(): ()
 		mind.goal = nil;
 	end;
 
+	local step: (now: number, delta: number) -> () = function(now: number, delta: number): ()
+		local playing: boolean = alive() and store.matchState == 1 and isnetworkowner(entitylib.character.RootPart);
+		if not playing then
+			if mind.active then
+				mind.active = false;
+				standDown();
+			end;
+			return;
+		end;
+		if not mind.active then
+			mind.active = true;
+			mark('Resumed control');
+		end;
+		senses.Filter();
+		if now >= mind.nextObserve then
+			mind.nextObserve = now + profile.Timing.Observe;
+			observe(now);
+		end;
+		if now >= mind.readyAt and (mind.dirty or now >= mind.nextThink) then
+			think(now);
+		end;
+		local goal: table? = mind.goal;
+		if not goal then
+			walker.halt();
+			return;
+		end;
+		if now - goal.StartedAt > profile.Timing.GoalTimeout and goal.Kind ~= 'WAIT' and goal.Kind ~= 'FIGHT' then
+			finishGoal(goal, now, false, 'timed out');
+			return;
+		end;
+		goalKinds[goal.Kind].Run(goal, now, delta);
+	end;
+
 	LegitAutoPlay = vape.Categories.Utility:CreateModule({
 		["Name"] = 'LegitAutoPlay',
 		["Function"] = function(callback: boolean): ()
 			if not callback then
+				holdAim(false);
+				if entitylib.isAlive then
+					walker.halt();
+				end;
 				if agent then
-					standDown();
-					if entitylib.isAlive then
-						walker.halt();
-					end;
 					agent:Destroy();
 				end;
-				if walker.thread and coroutine.status(walker.thread) == 'suspended' then
-					task.cancel(walker.thread);
+				if mind then
+					mind.goal = nil;
 				end;
-				agent, senses, walker.thread = nil, nil, nil;
+				agent, senses = nil, nil;
 				return;
 			end;
 			local pathModel: Model = Instance.new('Model');
@@ -24523,7 +27368,7 @@ velo.run(function(): ()
 							end
 						},
 						["breakBlock"] = function(block: Instance): ()
-							task.defer(breakBlock, block, {["Effects"] = true, ["Animation"] = 'Normal', ["AutoTool"] = true});
+							breakBlock(block, {["Effects"] = true, ["Animation"] = 'Normal', ["AutoTool"] = true});
 						end,
 						["placeBlock"] = placeBlock
 					}, {__index = bedwars}),
@@ -24559,7 +27404,9 @@ velo.run(function(): ()
 			end));
 			LegitAutoPlay:Clean(vapeEvents.EntityDeathEvent.Event:Connect(function(death: table): ()
 				if death.entityInstance == lplr.Character then
-					standDown();
+					walker.cancel();
+					fight.reset();
+					mind.goal = nil;
 					return;
 				end;
 				local killed: Player? = death.entityInstance and playersService:GetPlayerFromCharacter(death.entityInstance);
@@ -24594,38 +27441,16 @@ velo.run(function(): ()
 			end));
 
 			LegitAutoPlay:Clean(runService.Heartbeat:Connect(function(delta: number): ()
-				local now: number = os.clock();
-				local character: Model? = lplr.Character;
-				local playing: boolean = entitylib.isAlive and character ~= nil and (character:GetAttribute('Health') or 0) > 0 and store.matchState == 1 and isnetworkowner(entitylib.character.RootPart);
-				if not playing then
-					if mind.active then
-						mind.active = false;
-						standDown();
-					end;
+				local ran: boolean, problem: any = xpcall(step, debug.traceback, os.clock(), delta);
+				if ran then
 					return;
 				end;
-				if not mind.active then
-					mind.active = true;
-					mark('Resumed control');
+				warn('[Velocity] legitautoplay step failed: '..tostring(problem));
+				mind.errors = (mind.errors or 0) + 1;
+				if mind.errors >= errorLimit then
+					mind.errors = 0;
+					standDown();
 				end;
-				senses.Filter();
-				if now >= mind.nextObserve then
-					mind.nextObserve = now + profile.Timing.Observe;
-					observe(now);
-				end;
-				if now >= mind.readyAt and (mind.dirty or now >= mind.nextThink) then
-					think(now);
-				end;
-				local goal: table? = mind.goal;
-				if not goal then
-					walker.halt();
-					return;
-				end;
-				if now - goal.StartedAt > profile.Timing.GoalTimeout and goal.Kind ~= 'WAIT' and goal.Kind ~= 'FIGHT' then
-					finishGoal(goal, now, false, 'timed out');
-					return;
-				end;
-				goalKinds[goal.Kind].Run(goal, now, delta);
 			end));
 		end,
 		["Tooltip"] = 'Plays the match like a person: walks with the humanoid, turns and clicks at human rates, and weighs shopping, farming, covering your bed, raiding beds and fighting as the match changes.'
@@ -24708,7 +27533,6 @@ velo.run(function(): ()
 			end;
 			local tnts: {BasePart} = {};
 			local countered: {[Vector3]: number} = {};
-			local nextAction: number = 0;
 			AutoCounterTNT:Clean(workspace.ChildAdded:Connect(function(child: Instance): ()
 				if child.Name ~= 'tnt' or not child:IsA('BasePart') then
 					return;
@@ -24721,42 +27545,39 @@ velo.run(function(): ()
 					end;
 				end);
 			end));
-			AutoCounterTNT:Clean(runService.Heartbeat:Connect(function(): ()
-				local now: number = tick();
-				if now < nextAction or not entitylib.isAlive then
-					return;
-				end;
-				nextAction = now + scanGap;
+			repeat
 				for spot: Vector3, expiry: number in countered do
-					if expiry <= now then
+					if expiry <= tick() then
 						countered[spot] = nil;
 					end;
 				end;
-				local tool: Instance?;
-				if LimitToItem["Enabled"] then
-					tool = store.hand.tool and store.hand.tool.Name == 'tnt' and store.hand.tool or nil;
-				else
-					local held: table? = getItem('tnt');
-					tool = held and held.tool or nil;
-				end;
-				if not tool then
-					return;
-				end;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				for _: number, tnt: BasePart in tnts do
-					local spot: Vector3 = Vector3.new(math.round(tnt.Position.X), math.round(tnt.Position.Y), math.round(tnt.Position.Z));
-					if tnt.AssemblyLinearVelocity.Y >= 0 and not countered[spot] and (origin - tnt.Position).Magnitude <= Range["Value"] then
-						countered[spot] = now + rememberFor;
-						nextAction = now + placeGap;
-						if AutoSwitch["Enabled"] and not LimitToItem["Enabled"] then
-							switchItem(tool, 0);
-							hotbarSwitch(hotbarSlotOf(tool));
+				if entitylib.isAlive then
+					local tool: Instance?;
+					if LimitToItem["Enabled"] then
+						tool = store.hand.tool and store.hand.tool.Name == 'tnt' and store.hand.tool or nil;
+					else
+						local held: table? = getItem('tnt');
+						tool = held and held.tool or nil;
+					end;
+					if tool then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						for _: number, tnt: BasePart in tnts do
+							local spot: Vector3 = Vector3.new(math.round(tnt.Position.X), math.round(tnt.Position.Y), math.round(tnt.Position.Z));
+							if tnt.AssemblyLinearVelocity.Y >= 0 and not countered[spot] and (origin - tnt.Position).Magnitude <= Range["Value"] then
+								if not LimitToItem["Enabled"] and AutoSwitch["Enabled"] then
+									local slot: number? = hotbarSlotOf(tool);
+									switchItem(tool);
+									hotbarSwitch(slot);
+								end;
+								countered[spot] = tick() + rememberFor;
+								task.spawn(placeBlock, tnt.Position, tool.Name);
+								task.wait(placeGap);
+							end;
 						end;
-						placeBlock(tnt.Position, tool.Name);
-						return;
 					end;
 				end;
-			end));
+				task.wait(scanGap);
+			until not AutoCounterTNT["Enabled"];
 		end,
 		["Tooltip"] = "Automatically places tnt on opponent's tnt"
 	});
@@ -24797,6 +27618,7 @@ velo.run(function(): ()
 	local pathfindingService: PathfindingService = cloneref(game:GetService('PathfindingService'));
 	local flatMask: Vector3 = Vector3.new(1, 0, 1);
 	local logFile: string = 'halloween-log.txt';
+	local walkBinding: string = 'AutoHalloweenMove';
 	local eventQueues: {[string]: string} = {["halloween_event"] = 'Marrow', ["halloween_2025_event_pve"] = 'Arachne'};
 	local eventChoices: {[string]: string} = {["Marrow's Madness"] = 'Marrow', ["Arachne's Lair"] = 'Arachne'};
 	local classKits: {[string]: string} = {["Nazar"] = 'nazar', ["Silas"] = 'rebellion_leader', ["Kaida"] = 'summoner', ["Death Adder"] = 'sorcerer', ["Melody"] = 'melody'};
@@ -24811,11 +27633,10 @@ velo.run(function(): ()
 		["Finish"] = '320, 21, 28, 330, 21, 30, 340, 21, 32, 347, 21, 34, 353, 26, 41, 356, 21, 45, 359, 26, 49, 363, 21, 50, 374, 26, 51, 384, 30, 52, 389, 23, 52, 394, 28, 53, 404, 27, 53, 409, 32, 54, 418, 30, 54, 425, 31, 49, 428, 35, 46, 432, 38, 42, 441, 37, 38, 451, 37, 37, 456, 42, 36, 463, 45, 32, 467, 50, 29, 474, 52, 22, 478, 47, 21, 483, 52, 21, 488, 48, 19, 497, 49, 14, 506, 49, 10, 515, 47, 12, 524, 47, 12, 534, 46, 15, 540, 46, 14, 547, 46, 14, 552, 48, 11, 560, 46, 16, 561, 50, 21, 562, 40, 26, 561, 45, 30, 559, 41, 35, 555, 39, 44, 552, 39, 54, 552, 42, 59, 558, 41, 66, 567, 46, 71, 576, 45, 75, 582, 48, 81, 593, 51, 81, 598, 47, 81, 603, 52, 81, 608, 47, 81, 613, 52, 82, 619, 48, 82, 624, 56, 85, 630, 60, 93, 636, 64, 100, 638, 60, 104, 636, 64, 109, 634, 67, 118, 634, 62, 123, 635, 67, 128, 638, 69, 138, 640, 73, 142, 649, 75, 146, 654, 71, 147, 661, 69, 152, 664, 69, 160, 667, 69, 168, 673, 74, 176, 676, 69, 181, 678, 74, 185, 680, 69, 190, 682, 74, 195, 684, 69, 199, 685, 74, 204, 686, 69, 209'
 	};
 
-	local walk: table = {["Dir"] = Vector3.zero, ["Jump"] = false, ["Active"] = false, ["Bunny"] = false, ["Costs"] = nil};
+	local brain: table = {["Token"] = 0, ["Session"] = 0, ["Hold"] = 0, ["Bridge"] = false, ["Health"] = 100, ["Warned"] = 0};
+	local walk: table = {["Dir"] = Vector3.zero, ["Jump"] = false, ["Active"] = false, ["Bound"] = false, ["Bunny"] = false};
 	local combat: table = {["Owned"] = false, ["Bow"] = false, ["NPCs"] = false, ["Heal"] = false, ["Original"] = {}, ["Saved"] = {}};
-	local state: table = {["Scene"] = nil, ["Assets"] = nil, ["Step"] = nil, ["Wake"] = 0, ["Stepping"] = false, ["Serial"] = 0, ["Cleanup"] = {}, ["Hold"] = 0, ["Health"] = 100, ["Bridge"] = false};
-	local nav: table = {["Result"] = ''};
-	local scenes: {[string]: (assets: Instance) -> ((now: number) -> boolean)?} = {};
+	local scenes: {[string]: (token: number, assets: Instance) -> ()} = {};
 
 	local log: (message: string) -> () = function(message: string): ()
 		if not Debug["Enabled"] then
@@ -24830,7 +27651,15 @@ velo.run(function(): ()
 		end;
 	end;
 
-	local dumpScene: (root: Instance?, file: string, summary: boolean?) -> () = function(root: Instance?, file: string, summary: boolean?): ()
+	local tenths: (value: number) -> number = function(value: number): number
+		return math.floor(value * 10) / 10;
+	end;
+
+	local hundredths: (value: number) -> number = function(value: number): number
+		return math.floor(value * 100) / 100;
+	end;
+
+	local dumpTree: (root: Instance?, file: string, summary: boolean?) -> () = function(root: Instance?, file: string, summary: boolean?): ()
 		if not root or not Debug["Enabled"] then
 			return;
 		end;
@@ -24840,7 +27669,9 @@ velo.run(function(): ()
 			if not summary or item:IsA('Folder') or item:IsA('Model') or item:IsA('ProximityPrompt') or #tags > 0 or next(item:GetAttributes()) ~= nil then
 				local parts: {string} = {item:GetFullName():sub(#root:GetFullName() + 2)..' ['..item.ClassName..']'};
 				if item:IsA('BasePart') then
-					table.insert(parts, string.format('at %.1f,%.1f,%.1f sz %.1f,%.1f,%.1f cc %s tr %.2f', item.Position.X, item.Position.Y, item.Position.Z, item.Size.X, item.Size.Y, item.Size.Z, tostring(item.CanCollide), item.Transparency));
+					table.insert(parts, 'at '..tenths(item.Position.X)..','..tenths(item.Position.Y)..','..tenths(item.Position.Z));
+					table.insert(parts, 'sz '..tenths(item.Size.X)..','..tenths(item.Size.Y)..','..tenths(item.Size.Z));
+					table.insert(parts, 'cc '..tostring(item.CanCollide)..' tr '..hundredths(item.Transparency));
 				end;
 				for key: string, value: any in item:GetAttributes() do
 					table.insert(parts, '@'..key..'='..tostring(value));
@@ -24865,35 +27696,21 @@ velo.run(function(): ()
 		return eventChoices[Event["Value"]] or eventQueues[store.queueType];
 	end;
 
-	local positionOf: (object: Instance?) -> Vector3? = function(object: Instance?): Vector3?
-		if not object then
-			return nil;
-		elseif object:IsA('BasePart') then
-			return object.Position;
-		elseif object:IsA('Model') then
-			return object:GetPivot().Position;
-		elseif object:IsA('Attachment') then
-			return object.WorldPosition;
-		end;
-		local holder: Instance? = object:IsA('ProximityPrompt') and object.Parent or nil;
-		if holder and holder:IsA('Attachment') then
-			return holder.WorldPosition;
-		end;
-		local part: Instance? = holder and (holder:IsA('BasePart') and holder or holder:FindFirstAncestorWhichIsA('BasePart'));
-		return part and part.Position or nil;
+	local current: (token: number) -> boolean = function(token: number): boolean
+		return AutoHalloween["Enabled"] and token == brain.Token;
 	end;
 
-	local groundAt: (position: Vector3, rise: number, depth: number) -> Vector3 = function(position: Vector3, rise: number, depth: number): Vector3
-		local params: RaycastParams = RaycastParams.new();
-		params.FilterType = Enum.RaycastFilterType.Exclude;
-		params.FilterDescendantsInstances = {gameCamera, lplr.Character};
-		local hit: RaycastResult? = workspace:Raycast(position + Vector3.new(0, rise, 0), Vector3.new(0, -depth, 0), params);
-		return hit and hit.Position + Vector3.new(0, 3, 0) or position;
+	local rootPart: () -> BasePart? = function(): BasePart?
+		return entitylib.isAlive and entitylib.character and entitylib.character.RootPart or nil;
+	end;
+
+	local liveHumanoid: () -> Humanoid? = function(): Humanoid?
+		return entitylib.isAlive and entitylib.character and entitylib.character.Humanoid or nil;
 	end;
 
 	local routeFrom: (text: string) -> {Vector3} = function(text: string): {Vector3}
 		local numbers: {number} = {};
-		for number: string in string.gmatch(text, '%-?%.0f+') do
+		for number: string in string.gmatch(text, '%-?%d+') do
 			table.insert(numbers, tonumber(number));
 		end;
 		local route: {Vector3} = {};
@@ -24901,6 +27718,40 @@ velo.run(function(): ()
 			table.insert(route, Vector3.new(numbers[index], numbers[index + 1], numbers[index + 2]));
 		end;
 		return route;
+	end;
+
+	local partPosition: (object: Instance?) -> Vector3? = function(object: Instance?): Vector3?
+		if not object then
+			return nil;
+		elseif object:IsA('BasePart') then
+			return object.Position;
+		elseif object:IsA('Model') then
+			return object:GetPivot().Position;
+		end;
+		return nil;
+	end;
+
+	local promptPosition: (prompt: ProximityPrompt) -> Vector3? = function(prompt: ProximityPrompt): Vector3?
+		local holder: Instance? = prompt.Parent;
+		if holder and holder:IsA('Attachment') then
+			return holder.WorldPosition;
+		end;
+		while holder and not holder:IsA('BasePart') do
+			holder = holder.Parent;
+		end;
+		return holder and holder.Position or nil;
+	end;
+
+	local groundBelow: (from: Vector3, depth: number, fallback: Vector3) -> Vector3 = function(from: Vector3, depth: number, fallback: Vector3): Vector3
+		local params: RaycastParams = RaycastParams.new();
+		params.FilterType = Enum.RaycastFilterType.Exclude;
+		params.FilterDescendantsInstances = {gameCamera, lplr.Character};
+		local hit: RaycastResult? = workspace:Raycast(from, Vector3.new(0, -depth, 0), params);
+		return hit and hit.Position + Vector3.new(0, 3, 0) or fallback;
+	end;
+
+	local groundAt: (position: Vector3) -> Vector3 = function(position: Vector3): Vector3
+		return groundBelow(position + Vector3.new(0, 6, 0), 60, position);
 	end;
 
 	local nearestIndex: (route: {Vector3}, position: Vector3) -> number = function(route: {Vector3}, position: Vector3): number
@@ -24914,18 +27765,30 @@ velo.run(function(): ()
 		return best;
 	end;
 
-	local halt: () -> () = function(): ()
-		walk.Dir, walk.Jump, walk.Active = Vector3.zero, false, false;
-		if entitylib.isAlive then
-			entitylib.character.Humanoid:Move(Vector3.zero, false);
+	local bindWalk: () -> () = function(): ()
+		if walk.Bound then
+			return;
 		end;
+		walk.Bound = true;
+		runService:BindToRenderStep(walkBinding, Enum.RenderPriority.Last.Value + 5, function(): ()
+			local body: Humanoid? = liveHumanoid();
+			if not body or not walk.Active then
+				return;
+			end;
+			body:Move(walk.Dir, false);
+			if walk.Jump then
+				walk.Jump = false;
+				body:ChangeState(Enum.HumanoidStateType.Jumping);
+			end;
+		end);
 	end;
 
-	local nudge: (root: BasePart, target: Vector3) -> () = function(root: BasePart, target: Vector3): ()
-		local gap: Vector3 = (target - root.Position) * flatMask;
-		local spot: Vector3 = gap.Magnitude > 24 and Vector3.new(root.Position.X + gap.Unit.X * 24, target.Y, root.Position.Z + gap.Unit.Z * 24) or target;
-		root.CFrame = CFrame.new(spot + Vector3.new(0, 2, 0));
-		root.AssemblyLinearVelocity = Vector3.zero;
+	local stopWalk: () -> () = function(): ()
+		walk.Dir, walk.Jump, walk.Active = Vector3.zero, false, false;
+		local body: Humanoid? = liveHumanoid();
+		if body then
+			body:Move(Vector3.zero, false);
+		end;
 	end;
 
 	local plan: (from: Vector3, to: Vector3, radius: number?) -> ({PathWaypoint}?, string) = function(from: Vector3, to: Vector3, radius: number?): ({PathWaypoint}?, string)
@@ -24941,231 +27804,214 @@ velo.run(function(): ()
 		return path:GetWaypoints(), 'ok';
 	end;
 
-	local finishNav: (job: table, result: string) -> () = function(job: table, result: string): ()
-		if nav == job then
-			nav = {["Result"] = result};
-			halt();
-		end;
-	end;
-
-	local startLeg: (job: table, target: Vector3, radius: number, timeout: number, vertical: number?, abort: (() -> boolean)?) -> () = function(job: table, target: Vector3, radius: number, timeout: number, vertical: number?, abort: (() -> boolean)?): ()
-		job.Target, job.Radius, job.Timeout, job.Vertical, job.Abort = target, radius, timeout, vertical or 9, abort;
-		job.Leg += 1;
-		job.Started, job.Waypoints, job.Index, job.ReplanAt, job.Jumped, job.Faults = os.clock(), {}, 2, 0, {}, 0;
-		job.Anchor, job.MovedAt, job.HoppedAt = entitylib.isAlive and entitylib.character.RootPart.Position or Vector3.zero, os.clock(), 0;
+	local walkTo: (target: Vector3, radius: number, timeout: number, token: number, abort: (() -> boolean)?, vertical: number?) -> (boolean, string) = function(target: Vector3, radius: number, timeout: number, token: number, abort: (() -> boolean)?, vertical: number?): (boolean, string)
+		bindWalk();
+		local started: number = os.clock();
+		local waypoints: {PathWaypoint} = {};
+		local index: number, replanAt: number, faults: number, skippedAt: number = 2, 0, 0, 0;
+		local jumped: {[number]: boolean} = {};
+		local root: BasePart? = rootPart();
+		local anchor: Vector3, movedAt: number = root and root.Position or Vector3.zero, os.clock();
+		local result: string = 'timeout';
 		walk.Active = true;
-	end;
-
-	local goTo: (target: Vector3, moveOptions: table) -> () = function(target: Vector3, moveOptions: table): ()
-		local job: table = {["Mode"] = 'walk', ["Result"] = '', ["Goal"] = target, ["Settings"] = moveOptions, ["Leg"] = 0, ["Failed"] = 0, ["Began"] = os.clock(), ["PauseUntil"] = 0};
-		nav = job;
-		startLeg(job, target, moveOptions.Radius, moveOptions.Scene and 25 or moveOptions.Timeout, moveOptions.Vertical, moveOptions.Abort);
-	end;
-
-	local endLeg: (job: table, result: string) -> () = function(job: table, result: string): ()
-		halt();
-		local moveOptions: table = job.Settings;
-		if (result == 'arrived' and not job.Hopping) or not moveOptions.Scene or result == 'dead' or result == 'abort' then
-			finishNav(job, result);
-			return;
-		end;
-		if job.Hopping then
-			job.Hopping = false;
-			if result ~= 'arrived' then
-				job.Failed += 1;
-				log('hop '..result);
-			end;
-		else
-			log('travel '..result);
-			job.Searching = true;
-			local origin: Vector3? = entitylib.isAlive and entitylib.character.RootPart.Position or nil;
-			local heading: Vector3 = origin and (job.Goal - origin) * flatMask or Vector3.zero;
-			local candidates: {table} = {};
-			for _: number, item: Instance in (origin and heading.Magnitude >= 1 and moveOptions.Scene:GetDescendants() or {}) do
-				if item:IsA('BasePart') and item.CanCollide and item.Size.Y < 40 and item.Size.X > 3 and item.Size.Z > 3 then
-					local top: Vector3 = item.Position + Vector3.new(0, item.Size.Y / 2 + 3, 0);
-					local ahead: number = ((top - origin) * flatMask):Dot(heading.Unit);
-					if ahead > 12 and ahead < 150 and math.abs(top.Y - origin.Y) < 30 then
-						table.insert(candidates, {["Top"] = top, ["Left"] = ((job.Goal - top) * flatMask).Magnitude});
-					end;
-				end;
-			end;
-			table.sort(candidates, function(a: table, b: table): boolean
-				return a.Left < b.Left;
-			end);
-			local landing: Vector3?;
-			for index: number = 1, math.min(#candidates, 10) do
-				local planned: {PathWaypoint}? = plan(origin, candidates[index].Top);
-				if nav ~= job then
-					return;
-				end;
-				if planned and #planned > 1 then
-					landing = candidates[index].Top;
-					break;
-				end;
-			end;
-			job.Searching = false;
-			if landing then
-				job.Hopping = true;
-				startLeg(job, landing, 5, 30, 10, nil);
-				return;
-			end;
-			job.Failed += 1;
-			log('hop '..(not origin and 'dead' or heading.Magnitude < 1 and 'here' or 'no hop in '..#candidates));
-		end;
-		if job.Failed >= 2 then
-			finishNav(job, result);
-		elseif os.clock() - job.Began >= moveOptions.Limit then
-			finishNav(job, 'timeout');
-		else
-			job.PauseUntil = result == 'arrived' and 0 or os.clock() + 0.5;
-			startLeg(job, job.Goal, moveOptions.Radius, 25, moveOptions.Vertical, moveOptions.Abort);
-		end;
-	end;
-
-	local stepWalk: (job: table, now: number) -> () = function(job: table, now: number): ()
-		if now - job.Started >= job.Timeout then
-			endLeg(job, 'timeout');
-			return;
-		elseif not entitylib.isAlive then
-			endLeg(job, 'dead');
-			return;
-		elseif job.Abort and job.Abort() then
-			endLeg(job, 'abort');
-			return;
-		end;
-		local position: Vector3 = entitylib.character.RootPart.Position;
-		if ((job.Target - position) * flatMask).Magnitude <= job.Radius and math.abs(job.Target.Y - position.Y) <= job.Vertical then
-			endLeg(job, 'arrived');
-			return;
-		end;
-		if (#job.Waypoints == 0 or now >= job.ReplanAt) and not job.Planning then
-			local leg: number = job.Leg;
-			job.Planning = true;
-			local planned: {PathWaypoint}?, reason: string = plan(position, job.Target, job.Faults >= 2 and 1.2 or 2);
-			job.Planning = false;
-			if nav ~= job or job.Leg ~= leg then
-				return;
-			end;
-			if planned and #planned > 1 then
-				job.Waypoints, job.Index, job.Jumped = planned, 2, {};
-			else
-				job.Waypoints = {};
-				job.Faults += 1;
-				if job.Faults >= 5 then
-					endLeg(job, 'nopath '..reason);
-					return;
-				end;
-			end;
-			job.ReplanAt = os.clock() + (#job.Waypoints > 0 and 4 or 1);
-			return;
-		end;
-		local waypoint: PathWaypoint? = job.Waypoints[job.Index];
-		local heading: Vector3 = ((waypoint and waypoint.Position or job.Target) - position) * flatMask;
-		if waypoint and heading.Magnitude < 3 and math.abs(waypoint.Position.Y - position.Y) < 7 then
-			job.Index += 1;
-		else
-			walk.Dir = heading.Magnitude > 0.01 and heading.Unit or Vector3.zero;
-			if not waypoint then
-				job.Waypoints = {};
-			elseif waypoint.Action == Enum.PathWaypointAction.Jump and heading.Magnitude < 6 and not job.Jumped[job.Index] then
-				job.Jumped[job.Index] = true;
-				walk.Jump = true;
-			elseif walk.Bunny and heading.Magnitude > 7 and entitylib.character.Humanoid.FloorMaterial ~= Enum.Material.Air and now - job.HoppedAt > 0.45 then
-				job.HoppedAt, walk.Jump = now, true;
-			end;
-		end;
-		if (position - job.Anchor).Magnitude > 1.2 then
-			job.Anchor, job.MovedAt = position, now;
-		elseif now - job.MovedAt > 1.1 then
-			walk.Jump, job.MovedAt = true, now;
-			job.Faults += 1;
-			if job.Faults % 2 == 0 then
-				job.ReplanAt = 0;
-			end;
-		end;
-	end;
-
-	local beginAttempt: (job: table) -> () = function(job: table): ()
-		job.Started, job.Anchor, job.MovedAt, job.ReportedAt, job.HoppedAt, job.Recoveries = os.clock(), Vector3.zero, os.clock(), 0, 0, 0;
-		walk.Active = true;
-	end;
-
-	local followRoute: (route: {Vector3}, first: number, moveOptions: table) -> () = function(route: {Vector3}, first: number, moveOptions: table): ()
-		local job: table = {["Mode"] = 'route', ["Result"] = '', ["Route"] = route, ["Index"] = first, ["Settings"] = moveOptions, ["Attempt"] = 1, ["Began"] = os.clock(), ["PauseUntil"] = 0};
-		nav = job;
-		beginAttempt(job);
-	end;
-
-	local endAttempt: (job: table, result: string) -> () = function(job: table, result: string): ()
-		halt();
-		local moveOptions: table = job.Settings;
-		if moveOptions.Label then
-			log(moveOptions.Label..' '..result..' at '..job.Index..'/'..#job.Route);
-		end;
-		if result == 'done' or result == 'dead' or job.Attempt >= (moveOptions.Attempts or 1) or (moveOptions.Cap and os.clock() - job.Began > moveOptions.Cap) then
-			finishNav(job, result);
-			return;
-		end;
-		job.Attempt += 1;
-		job.PauseUntil = os.clock() + (moveOptions.Pause or 0);
-		beginAttempt(job);
-	end;
-
-	local stepRoute: (job: table, now: number) -> () = function(job: table, now: number): ()
-		local moveOptions: table, route: {Vector3} = job.Settings, job.Route;
-		if now - job.Started >= moveOptions.Limit then
-			endAttempt(job, 'timeout');
-			return;
-		elseif not entitylib.isAlive then
-			endAttempt(job, 'dead');
-			return;
-		end;
-		local root: BasePart, humanoid: Humanoid = entitylib.character.RootPart, entitylib.character.Humanoid;
-		local position: Vector3 = root.Position;
-		for _: number = job.Index, #route do
-			if ((route[job.Index] - position) * flatMask).Magnitude >= (moveOptions.Reach or 4.5) then
+		while os.clock() - started < timeout do
+			if not current(token) then
+				result = 'cancel';
 				break;
 			end;
-			job.Index += 1;
+			root = rootPart();
+			if not root then
+				result = 'dead';
+				break;
+			end;
+			if abort and abort() then
+				result = 'abort';
+				break;
+			end;
+			local position: Vector3 = root.Position;
+			if ((target - position) * flatMask).Magnitude <= radius and math.abs(target.Y - position.Y) <= (vertical or 9) then
+				result = 'arrived';
+				break;
+			end;
+			if #waypoints == 0 or os.clock() >= replanAt then
+				local planned: {PathWaypoint}?, reason: string = plan(position, target, faults >= 2 and 1.2 or 2);
+				if planned and #planned > 1 then
+					waypoints, index, jumped = planned, 2, {};
+				else
+					waypoints = {};
+					faults += 1;
+					if faults >= 5 then
+						result = 'nopath '..reason;
+						break;
+					end;
+				end;
+				replanAt = os.clock() + (#waypoints > 0 and 4 or 1);
+			end;
+			local waypoint: PathWaypoint? = waypoints[index];
+			if waypoint then
+				local flat: Vector3 = (waypoint.Position - position) * flatMask;
+				if flat.Magnitude < 3 and math.abs(waypoint.Position.Y - position.Y) < 7 then
+					index += 1;
+				else
+					walk.Dir = flat.Magnitude > 0.01 and flat.Unit or Vector3.zero;
+					if walk.Bunny and flat.Magnitude > 7 then
+						local body: Humanoid? = liveHumanoid();
+						if body and body.FloorMaterial ~= Enum.Material.Air and os.clock() - skippedAt > 0.45 then
+							skippedAt, walk.Jump = os.clock(), true;
+						end;
+					end;
+					if waypoint.Action == Enum.PathWaypointAction.Jump and flat.Magnitude < 6 and not jumped[index] then
+						jumped[index], walk.Jump = true, true;
+					end;
+				end;
+			else
+				local flat: Vector3 = (target - position) * flatMask;
+				walk.Dir = flat.Magnitude > 0.01 and flat.Unit or Vector3.zero;
+				waypoints = {};
+			end;
+			if (position - anchor).Magnitude > 1.2 then
+				anchor, movedAt = position, os.clock();
+			elseif os.clock() - movedAt > 1.1 then
+				walk.Jump, movedAt = true, os.clock();
+				faults += 1;
+				if faults % 2 == 0 then
+					replanAt = 0;
+				end;
+			end;
+			task.wait();
 		end;
-		if job.Index > #route then
-			endAttempt(job, 'done');
-			return;
+		stopWalk();
+		return result == 'arrived', result;
+	end;
+
+	local hop: (goal: Vector3, scene: Instance, token: number) -> (boolean, string) = function(goal: Vector3, scene: Instance, token: number): (boolean, string)
+		local root: BasePart? = rootPart();
+		if not root then
+			return false, 'dead';
 		end;
-		local point: Vector3 = route[job.Index];
-		local heading: Vector3 = ((point - position) * flatMask).Unit;
-		if moveOptions.Evade and moveOptions.Evade(root, position, heading) then
-			walk.Dir = Vector3.zero;
-			job.Anchor, job.MovedAt = root.Position, now;
-			return;
+		local origin: Vector3 = root.Position;
+		local heading: Vector3 = (goal - origin) * flatMask;
+		if heading.Magnitude < 1 then
+			return false, 'here';
 		end;
-		walk.Dir = heading;
-		if humanoid.FloorMaterial ~= Enum.Material.Air and now - job.HoppedAt > 0.45 then
-			job.HoppedAt, walk.Jump = now, true;
+		heading = heading.Unit;
+		local candidates: {table} = {};
+		for _: number, item: Instance in scene:GetDescendants() do
+			if item:IsA('BasePart') and item.CanCollide and item.Size.Y < 40 and item.Size.X > 3 and item.Size.Z > 3 then
+				local top: Vector3 = item.Position + Vector3.new(0, item.Size.Y / 2 + 3, 0);
+				local ahead: number = ((top - origin) * flatMask):Dot(heading);
+				if ahead > 12 and ahead < 150 and math.abs(top.Y - origin.Y) < 30 then
+					table.insert(candidates, {["Top"] = top, ["Left"] = ((goal - top) * flatMask).Magnitude});
+				end;
+			end;
 		end;
-		local canRecover: boolean = moveOptions.Recover == true and job.Recoveries < 14 and humanoid.Health > 0;
-		if canRecover and (position.Y < point.Y - 18 or (root.AssemblyLinearVelocity.Y < -58 and position.Y < point.Y - 10)) then
-			job.Recoveries += 1;
-			nudge(root, point);
-			job.Anchor, job.MovedAt = root.Position, now;
-			log('recover fall '..job.Index..'/'..#route);
+		table.sort(candidates, function(a: table, b: table): boolean
+			return a.Left < b.Left;
+		end);
+		for index: number = 1, math.min(#candidates, 10) do
+			if not current(token) then
+				return false, 'cancel';
+			end;
+			local planned: {PathWaypoint}? = plan(origin, candidates[index].Top);
+			if planned and #planned > 1 then
+				local reached: boolean, reason: string = walkTo(candidates[index].Top, 5, 30, token, nil, 10);
+				return reached, 'hop '..reason;
+			end;
 		end;
-		if now - job.ReportedAt > 3 then
-			job.ReportedAt = now;
-			log(string.format('follow %.0f/%.0f at %.0f,%.0f,%.0f hp %.0f', job.Index, #route, position.X, position.Y, position.Z, humanoid.Health));
+		return false, 'no hop in '..#candidates;
+	end;
+
+	local nudge: (root: BasePart, target: Vector3) -> () = function(root: BasePart, target: Vector3): ()
+		local gap: Vector3 = (target - root.Position) * flatMask;
+		local spot: Vector3 = gap.Magnitude > 24 and Vector3.new(root.Position.X + gap.Unit.X * 24, target.Y, root.Position.Z + gap.Unit.Z * 24) or target;
+		root.CFrame = CFrame.new(spot + Vector3.new(0, 2, 0));
+		root.AssemblyLinearVelocity = Vector3.zero;
+	end;
+
+	local follow: (route: {Vector3}, first: number, token: number, limit: number, recover: boolean?, radius: number?, evade: ((root: BasePart, position: Vector3, direction: Vector3) -> boolean)?) -> (boolean, number, string) = function(route: {Vector3}, first: number, token: number, limit: number, recover: boolean?, radius: number?, evade: ((root: BasePart, position: Vector3, direction: Vector3) -> boolean)?): (boolean, number, string)
+		bindWalk();
+		walk.Active = true;
+		local index: number = first;
+		local started: number, movedAt: number, reportedAt: number, hoppedAt: number, recoveries: number = os.clock(), os.clock(), 0, 0, 0;
+		local anchor: Vector3 = Vector3.zero;
+		local reach: number = radius or 4.5;
+		local result: string = 'timeout';
+		while current(token) and os.clock() - started < limit do
+			local root: BasePart? = rootPart();
+			local body: Humanoid? = liveHumanoid();
+			if not root or not body then
+				result = 'dead';
+				break;
+			end;
+			local position: Vector3 = root.Position;
+			while index <= #route and ((route[index] - position) * flatMask).Magnitude < reach do
+				index += 1;
+			end;
+			if index > #route then
+				result = 'done';
+				break;
+			end;
+			local flat: Vector3 = (route[index] - position) * flatMask;
+			if evade and evade(root, position, flat.Unit) then
+				walk.Dir = Vector3.zero;
+				anchor, movedAt = root.Position, os.clock();
+				task.wait();
+				continue;
+			end;
+			walk.Dir = flat.Unit;
+			if body.FloorMaterial ~= Enum.Material.Air and os.clock() - hoppedAt > 0.45 then
+				hoppedAt, walk.Jump = os.clock(), true;
+			end;
+			if recover and recoveries < 14 and body.Health > 0 and (position.Y < route[index].Y - 18 or root.AssemblyLinearVelocity.Y < -58 and position.Y < route[index].Y - 10) then
+				recoveries += 1;
+				nudge(root, route[index]);
+				anchor, movedAt = root.Position, os.clock();
+				log('recover fall '..index..'/'..#route);
+			end;
+			if os.clock() - reportedAt > 3 then
+				reportedAt = os.clock();
+				log('follow '..index..'/'..#route..' at '..math.floor(position.X)..','..math.floor(position.Y)..','..math.floor(position.Z)..' hp '..math.floor(body.Health));
+			end;
+			if ((position - anchor) * flatMask).Magnitude > 2.5 then
+				anchor, movedAt = position, os.clock();
+			elseif recover and recoveries < 14 and body.Health > 0 and os.clock() - movedAt > 1.6 then
+				recoveries += 1;
+				nudge(root, route[index]);
+				anchor, movedAt = root.Position, os.clock();
+				log('recover stuck '..index..'/'..#route);
+			elseif os.clock() - movedAt > 3 then
+				result = 'stuck';
+				log('stuck ws '..body.WalkSpeed..' md '..body.MoveDirection.Magnitude..' state '..tostring(body:GetState())..' plat '..tostring(body.PlatformStand)..' sit '..tostring(body.Sit)..' vel '..math.floor(root.AssemblyLinearVelocity.Magnitude)..' anch '..tostring(root.Anchored)..' dir '..walk.Dir.Magnitude);
+				break;
+			end;
+			task.wait();
 		end;
-		if ((position - job.Anchor) * flatMask).Magnitude > 2.5 then
-			job.Anchor, job.MovedAt = position, now;
-		elseif canRecover and now - job.MovedAt > 1.6 then
-			job.Recoveries += 1;
-			nudge(root, point);
-			job.Anchor, job.MovedAt = root.Position, now;
-			log('recover stuck '..job.Index..'/'..#route);
-		elseif now - job.MovedAt > 3 then
-			log('stuck ws '..humanoid.WalkSpeed..' state '..tostring(humanoid:GetState())..' anchored '..tostring(root.Anchored));
-			endAttempt(job, 'stuck');
+		stopWalk();
+		return result == 'done', index, result;
+	end;
+
+	local travel: (target: Vector3, radius: number, limit: number, token: number, scene: Instance, vertical: number?, abort: (() -> boolean)?) -> boolean = function(target: Vector3, radius: number, limit: number, token: number, scene: Instance, vertical: number?, abort: (() -> boolean)?): boolean
+		local started: number, failed: number = os.clock(), 0;
+		while current(token) and os.clock() - started < limit do
+			local reached: boolean, reason: string = walkTo(target, radius, 25, token, abort, vertical);
+			if reached then
+				return true;
+			end;
+			if reason == 'dead' or reason == 'cancel' or reason == 'abort' then
+				return false;
+			end;
+			log('travel '..reason);
+			local hopped: boolean, hopReason: string = hop(target, scene, token);
+			if not hopped then
+				log('hop '..hopReason);
+				failed += 1;
+				if failed >= 2 then
+					return false;
+				end;
+				task.wait(0.5);
+			end;
 		end;
+		return false;
 	end;
 
 	local releaseBow: () -> () = function(): ()
@@ -25176,14 +28022,14 @@ velo.run(function(): ()
 		if combat.Bow and aura["Enabled"] then
 			aura:Toggle();
 		end;
-		local npcs: table? = aura.Options.Targets and aura.Options.Targets.NPCs;
-		if combat.NPCs and npcs and npcs["Enabled"] then
-			npcs:Toggle();
+		local targets: table? = aura.Options and aura.Options.Targets;
+		if combat.NPCs and targets and targets.NPCs and targets.NPCs["Enabled"] then
+			targets.NPCs:Toggle();
 		end;
 		combat.Bow, combat.NPCs = false, false;
 	end;
 
-	local combatEnsure: () -> () = function(): ()
+	local ensureCombat: () -> () = function(): ()
 		if not Fight["Enabled"] or not activeEvent() then
 			return;
 		end;
@@ -25200,43 +28046,45 @@ velo.run(function(): ()
 				end;
 			end;
 		end;
-		local style: string = sceneStyle[state.Scene or ''] or 'melee';
+		local style: string = sceneStyle[brain.Scene or ''] or 'melee';
 		local melee: boolean = style == 'melee' or style == 'both';
 		local killaura: table? = vape.Modules.Killaura;
 		if killaura and killaura["Enabled"] ~= melee then
 			killaura:Toggle();
-			log('killaura '..(melee and 'on' or 'off')..' for '..tostring(state.Scene));
+			log('built-in killaura '..(melee and 'on' or 'off')..' for '..tostring(brain.Scene));
 		end;
 		local aura: table? = vape.Modules.ProjectileAura;
-		if aura and (style == 'bow' or style == 'both') and Archery["Enabled"] then
-			local npcs: table? = aura.Options.Targets and aura.Options.Targets.NPCs;
-			if npcs and not npcs["Enabled"] then
-				npcs:Toggle();
+		if (style == 'bow' or style == 'both') and Archery["Enabled"] then
+			local targets: table? = aura and aura.Options and aura.Options.Targets;
+			if targets and targets.NPCs and not targets.NPCs["Enabled"] then
+				targets.NPCs:Toggle();
 				combat.NPCs = true;
 			end;
-			if not aura["Enabled"] then
+			if aura and not aura["Enabled"] then
 				aura:Toggle();
 				combat.Bow = true;
 			end;
 		elseif combat.Bow or combat.NPCs then
 			releaseBow();
-			log('projectileaura off for '..tostring(state.Scene));
+			log('built-in projectileaura off for '..tostring(brain.Scene));
 		end;
 		for moduleName: string, wanted: {[string]: any} in tuning do
 			local module: table? = vape.Modules[moduleName];
-			for optionName: string, value: any in (module and wanted or {}) do
-				local option: table? = module.Options[optionName];
-				local current: any = option and option[type(value) == 'boolean' and 'Enabled' or 'Value'];
-				if option and current ~= nil and current ~= value then
+			local options: table? = module and module.Options;
+			for optionName: string, value: any in (options and wanted or {}) do
+				local option: table? = options[optionName];
+				if option and type(value) == 'boolean' and option["Enabled"] ~= nil and option["Enabled"] ~= value then
 					if combat.Saved[option] == nil then
-						combat.Saved[option] = current;
+						combat.Saved[option] = option["Enabled"];
 					end;
-					if type(value) == 'boolean' then
-						option:Toggle();
-					else
-						option:SetValue(value);
-					end;
+					option:Toggle();
 					log('tuned '..moduleName..' '..optionName..' '..tostring(value));
+				elseif option and type(value) == 'number' and option["Value"] ~= nil and option["Value"] ~= value then
+					if combat.Saved[option] == nil then
+						combat.Saved[option] = option["Value"];
+					end;
+					option:SetValue(value);
+					log('tuned '..moduleName..' '..optionName..' '..value);
 				end;
 			end;
 		end;
@@ -25248,7 +28096,7 @@ velo.run(function(): ()
 		end;
 	end;
 
-	local combatRelease: () -> () = function(): ()
+	local releaseCombat: () -> () = function(): ()
 		releaseBow();
 		for option: table, original: any in combat.Saved do
 			if type(original) == 'boolean' then
@@ -25267,202 +28115,140 @@ velo.run(function(): ()
 			end;
 		end;
 		table.clear(combat.Original);
+		combat.Owned = false;
 		local consume: table? = vape.Modules.AutoConsume;
 		if combat.Heal and consume and consume["Enabled"] then
 			consume:Toggle();
 		end;
-		combat.Owned, combat.Heal = false, false;
+		combat.Heal = false;
 	end;
 
-	local endScene: () -> () = function(): ()
-		state.Step, state.Wake, state.Stepping = nil, 0, false;
-		state.Serial += 1;
-		for _: number, item: any in state.Cleanup do
-			if type(item) == 'function' then
-				item();
-			elseif type(item) == 'thread' then
-				if coroutine.status(item) ~= 'dead' then
-					task.cancel(item);
-				end;
-			else
-				item:Disconnect();
-			end;
-		end;
-		table.clear(state.Cleanup);
-		nav = {["Result"] = 'cancel'};
-		walk.Bunny, walk.Costs = false, nil;
-		halt();
-	end;
-
-	local gateOpener: (namespace: string, button: Instance?) -> (now: number) -> boolean = function(namespace: string, button: Instance?): (now: number) -> boolean
+	local openGate: (namespace: string, button: BasePart?, token: number) -> () = function(namespace: string, button: BasePart?, token: number): ()
 		local remotes: table = bedwars.Client:GetNamespace(namespace);
-		local opened: boolean, requests: number, walking: boolean, waitUntil: number = false, 0, false, 0;
-		table.insert(state.Cleanup, remotes:Get('GateOpenSuccess'):Connect(function(): ()
+		local opened: boolean, requests: number = false, 0;
+		AutoHalloween:Clean(remotes:Get('GateOpenSuccess'):Connect(function(): ()
 			opened = true;
 		end));
-		return function(now: number): boolean
-			if opened or not button then
-				return true;
-			elseif now < waitUntil then
-				state.Wake = now + 0.2;
-				return false;
-			elseif requests >= 3 then
-				return true;
-			elseif not walking then
-				walking = true;
-				goTo(groundAt(button.Position, 6, 60), {["Radius"] = 5, ["Timeout"] = 60, ["Abort"] = function(): boolean
-					return opened;
-				end});
-				return false;
-			end;
-			walking = false;
-			if nav.Result == 'arrived' then
+		while current(token) and button and not opened and requests < 3 do
+			local reached: boolean = walkTo(groundAt(button.Position), 5, 60, token, function(): boolean
+				return opened;
+			end);
+			if reached and current(token) then
 				remotes:Get('GateOpenRequest'):SendToServer();
 				requests += 1;
 				log('gate requested');
-				waitUntil = now + 5;
-				state.Wake = now + 0.2;
+				local waited: number = os.clock();
+				while current(token) and not opened and os.clock() - waited < 5 do
+					task.wait(0.2);
+				end;
 			else
-				state.Wake = now + 1;
+				task.wait(1);
 			end;
-			return false;
 		end;
 	end;
 
-	scenes.halloween_graveyard_2023 = function(assets: Instance): ((now: number) -> boolean)?
+	scenes.halloween_graveyard_2023 = function(token: number, assets: Instance): ()
 		local scene: Instance? = assets:FindFirstChild('Assets');
 		if not scene then
-			return nil;
-		end;
-		if not fireproximityprompt then
-			notif('AutoHalloween', 'Your executor cannot fire proximity prompts, the candle altar needs them', 8, 'warning');
-			return nil;
+			return;
 		end;
 		local remotes: table = bedwars.Client:GetNamespace('HalloweenGraveyard2023');
-		local solved: boolean = false;
-		table.insert(state.Cleanup, remotes:Get('PuzzleSolved'):Connect(function(): ()
+		local gate: Instance? = scene:FindFirstChild('GateButton');
+		local solved: boolean, found: number = false, 0;
+		AutoHalloween:Clean(remotes:Get('PuzzleSolved'):Connect(function(): ()
 			solved = true;
 			log('altar solved');
 		end));
-		table.insert(state.Cleanup, remotes:Get('CandleDiscovered'):Connect(function(data: any): ()
-			log('candle discovered '..tostring(type(data) == 'table' and data.candleCount or '?'));
+		AutoHalloween:Clean(remotes:Get('CandleDiscovered'):Connect(function(data: any): ()
+			found = type(data) == 'table' and data.candleCount or found + 1;
+			log('candle discovered '..tostring(found));
 		end));
-		local gate: Instance? = scene:FindFirstChild('GateButton');
-		local openGate: (now: number) -> boolean = gateOpener('HalloweenGraveyard2023', gate and gate:FindFirstChild('Button'));
-		local candles: Instance?, points: {Instance} = nil, {};
-		local visited: {[Instance]: number} = {};
-		local phase: string, fires: number, reached: boolean, waitUntil: number = 'gate', 0, false, 0;
-		local candle: Instance?, prompt: ProximityPrompt?, spot: Vector3?, target: Instance? = nil, nil, nil, nil;
+		openGate('HalloweenGraveyard2023', gate and gate:FindFirstChild('Button'), token);
+		task.wait(3);
+
+		local altar: Instance? = scene:FindFirstChild('Altar');
+		if not altar or not altar:FindFirstChild('Candles') or not altar:FindFirstChild('Points') then
+			return;
+		end;
+		if not fireproximityprompt then
+			notif('AutoHalloween', 'Your executor cannot fire proximity prompts, the candle altar needs them', 8, 'warning');
+			return;
+		end;
+		local candles: Instance = altar.Candles;
+		local points: {Instance} = altar.Points:GetChildren();
 		local misplaced: (point: Instance) -> boolean = function(point: Instance): boolean
 			return point:GetAttribute('CandleColor') ~= point:GetAttribute('Color');
 		end;
 		local collectedCount: () -> number = function(): number
 			local count: number = 0;
-			for _: number, item: Instance in candles:GetChildren() do
-				count += item:GetAttribute('Collected') == true and 1 or 0;
+			for _: number, candle: Instance in candles:GetChildren() do
+				if candle:GetAttribute('Collected') == true then
+					count += 1;
+				end;
 			end;
 			return count;
 		end;
-		return function(now: number): boolean
-			if phase == 'gate' then
-				if openGate(now) then
-					phase, state.Wake = 'altar', now + 3;
-				end;
-			elseif phase == 'altar' then
-				local altar: Instance? = scene:FindFirstChild('Altar');
-				if not altar or not altar:FindFirstChild('Candles') or not altar:FindFirstChild('Points') then
-					return true;
-				end;
-				candles, points, phase, walk.Bunny = altar.Candles, altar.Points:GetChildren(), 'decide', true;
-			elseif phase == 'candleTravel' then
-				reached, fires, phase = nav.Result == 'arrived', 0, 'candleFire';
-			elseif phase == 'candleFire' then
-				local collected: boolean = candle:GetAttribute('Collected') == true;
-				if fires < 4 and prompt and not collected and entitylib.isAlive and (spot - entitylib.character.RootPart.Position).Magnitude <= 11.5 then
-					fireproximityprompt(prompt);
-					fires += 1;
-					state.Wake = now + 0.4;
-					return false;
-				end;
-				if collected then
-					log('candle collected by us');
-				elseif not reached then
-					visited[candle] = now + 70;
-				end;
-				phase, state.Wake = 'decide', now + 0.4;
-			elseif phase == 'fixTravel' then
-				if nav.Result == 'arrived' then
-					log('point '..target.Name..' wants '..tostring(target:GetAttribute('Color'))..' has '..tostring(target:GetAttribute('CandleColor')));
-					phase, fires = 'fixFire', 0;
-				else
-					phase, state.Wake = 'decide', now + 1;
-				end;
-			elseif phase == 'fixFire' then
-				if fires < 9 and misplaced(target) then
-					fireproximityprompt(prompt);
-					fires += 1;
-					state.Wake = now + 0.4;
-				else
-					phase = 'decide';
-				end;
-			elseif phase == 'prayTravel' then
-				if nav.Result == 'arrived' then
-					log('praying');
-					fireproximityprompt(prompt);
-					phase, waitUntil = 'prayWait', now + 5;
-				else
-					phase, state.Wake = 'decide', now + 1;
-				end;
-			elseif phase == 'prayWait' then
-				if solved or now >= waitUntil then
-					phase = 'decide';
-				else
-					state.Wake = now + 0.3;
-				end;
-			elseif solved then
-				walk.Bunny = false;
-				return true;
-			elseif not entitylib.isAlive then
-				state.Wake = now + 0.5;
-			else
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local pending: {Instance} = {};
-				for _: number, item: Instance in (collectedCount() < #points and candles:GetChildren() or {}) do
-					if item:GetAttribute('Collected') ~= true and now - (visited[item] or -math.huge) > 25 then
-						table.insert(pending, item);
+
+		local visited: {[Instance]: number} = {};
+		walk.Bunny = true;
+		while current(token) and not solved do
+			local root: BasePart? = rootPart();
+			if not root then
+				task.wait(0.5);
+				continue;
+			end;
+			local pending: {Instance} = {};
+			if collectedCount() < #points then
+				for _: number, candle: Instance in candles:GetChildren() do
+					if candle:GetAttribute('Collected') ~= true and os.clock() - (visited[candle] or -math.huge) > 25 then
+						table.insert(pending, candle);
 					end;
 				end;
-				if #pending > 0 then
-					table.sort(pending, function(a: Instance, b: Instance): boolean
-						local first: Vector3?, second: Vector3? = positionOf(a), positionOf(b);
-						return first ~= nil and second ~= nil and (first - origin).Magnitude < (second - origin).Magnitude;
-					end);
-					local chosen: Instance = pending[1];
-					local chosenSpot: Vector3? = positionOf(chosen);
-					visited[chosen] = now;
-					if not chosenSpot then
-						return false;
-					end;
-					log(string.format('candle at %.0f,%.0f,%.0f collected %.0f/%.0f', chosenSpot.X, chosenSpot.Y, chosenSpot.Z, collectedCount(), #points));
-					local chosenPrompt: ProximityPrompt? = chosen:FindFirstChildWhichIsA('ProximityPrompt', true);
+			end;
+			if #pending > 0 then
+				table.sort(pending, function(a: Instance, b: Instance): boolean
+					local first: Vector3?, second: Vector3? = partPosition(a), partPosition(b);
+					return first ~= nil and second ~= nil and (first - root.Position).Magnitude < (second - root.Position).Magnitude;
+				end);
+				local candle: Instance = pending[1];
+				visited[candle] = os.clock();
+				local spot: Vector3? = partPosition(candle);
+				if spot then
+					log('candle at '..math.floor(spot.X)..','..math.floor(spot.Y)..','..math.floor(spot.Z)..', collected '..collectedCount()..'/'..#points);
+					local prompt: ProximityPrompt? = candle:FindFirstChildWhichIsA('ProximityPrompt', true);
 					local firedAt: number = 0;
-					candle, prompt, spot, phase = chosen, chosenPrompt, chosenSpot, 'candleTravel';
-					goTo(groundAt(chosenSpot, 6, 60), {["Radius"] = 4, ["Limit"] = 18, ["Scene"] = assets, ["Vertical"] = 14, ["Abort"] = function(): boolean
-						if collectedCount() >= #points or chosen:GetAttribute('Collected') == true then
+					local reached: boolean = travel(groundAt(spot), 4, 18, token, assets, 14, function(): boolean
+						if collectedCount() >= #points or candle:GetAttribute('Collected') == true then
 							return true;
 						end;
-						if chosenPrompt and entitylib.isAlive and (chosenSpot - entitylib.character.RootPart.Position).Magnitude <= 10.5 and os.clock() - firedAt > 0.4 then
+						local body: BasePart? = rootPart();
+						if prompt and body and (spot - body.Position).Magnitude <= 10.5 and os.clock() - firedAt > 0.4 then
 							firedAt = os.clock();
-							fireproximityprompt(chosenPrompt);
+							pcall(fireproximityprompt, prompt);
 						end;
 						return false;
-					end});
-					return false;
+					end);
+					local body: BasePart? = rootPart();
+					for _: number = 1, 4 do
+						if not prompt or not body or candle:GetAttribute('Collected') == true or (spot - body.Position).Magnitude > 11.5 then
+							break;
+						end;
+						pcall(fireproximityprompt, prompt);
+						task.wait(0.4);
+					end;
+					if candle:GetAttribute('Collected') == true then
+						log('candle collected by us');
+					elseif not reached then
+						visited[candle] = os.clock() + 70;
+					end;
+					task.wait(0.4);
 				end;
-				local holder: Instance?;
-				target = nil;
-				for _: number, point: Instance in points do
-					for _: number, item: Instance in (misplaced(point) and candles:GetChildren() or {}) do
+				continue;
+			end;
+			local target: Instance?, holder: Instance? = nil, nil;
+			for _: number, point: Instance in points do
+				if misplaced(point) then
+					for _: number, item: Instance in candles:GetChildren() do
 						if tostring(item:GetAttribute('AltarPoint')) == point.Name then
 							target, holder = point, item;
 							break;
@@ -25472,54 +28258,76 @@ velo.run(function(): ()
 						break;
 					end;
 				end;
-				if target and holder then
-					prompt, spot = holder:FindFirstChildWhichIsA('ProximityPrompt', true), positionOf(holder);
-					if prompt and spot then
-						phase = 'fixTravel';
-						goTo(groundAt(spot, 6, 60), {["Radius"] = 7, ["Limit"] = 60, ["Scene"] = assets, ["Vertical"] = 14});
-					else
-						state.Wake = now + 1;
-					end;
-					return false;
-				end;
-				local aligned: boolean = collectedCount() >= #points;
-				for _: number, point: Instance in points do
-					aligned = aligned and not misplaced(point);
-				end;
-				local altar: Instance = candles.Parent;
-				local model: Instance? = altar:FindFirstChild('Model');
-				local skull: Instance? = model and model:FindFirstChild('Skull');
-				prompt, spot = skull and skull:FindFirstChildWhichIsA('ProximityPrompt'), positionOf(skull);
-				if aligned and prompt and spot then
-					phase = 'prayTravel';
-					goTo(groundAt(spot, 6, 60), {["Radius"] = 6, ["Limit"] = 90, ["Scene"] = assets, ["Vertical"] = 14});
-				else
-					state.Wake = now + 1;
-				end;
 			end;
-			return false;
+			if target and holder then
+				local prompt: ProximityPrompt? = holder:FindFirstChildWhichIsA('ProximityPrompt', true);
+				local spot: Vector3? = partPosition(holder);
+				if prompt and spot and travel(groundAt(spot), 7, 60, token, assets, 14) then
+					log('point '..target.Name..' wants '..tostring(target:GetAttribute('Color'))..' has '..tostring(target:GetAttribute('CandleColor')));
+					for _: number = 1, 9 do
+						if not current(token) or not misplaced(target) then
+							break;
+						end;
+						pcall(fireproximityprompt, prompt);
+						task.wait(0.4);
+					end;
+				else
+					task.wait(1);
+				end;
+				continue;
+			end;
+			local aligned: boolean = collectedCount() >= #points;
+			for _: number, point: Instance in points do
+				aligned = aligned and not misplaced(point);
+			end;
+			local model: Instance? = altar:FindFirstChild('Model');
+			local skull: Instance? = model and model:FindFirstChild('Skull');
+			local prayer: ProximityPrompt? = skull and skull:FindFirstChildWhichIsA('ProximityPrompt');
+			local spot: Vector3? = partPosition(skull);
+			if aligned and prayer and spot and travel(groundAt(spot), 6, 90, token, assets, 14) then
+				log('praying');
+				pcall(fireproximityprompt, prayer);
+				local waited: number = os.clock();
+				while current(token) and not solved and os.clock() - waited < 5 do
+					task.wait(0.3);
+				end;
+			else
+				task.wait(1);
+			end;
 		end;
+		walk.Bunny = false;
 	end;
 
-	scenes.halloween_graveyard = function(assets: Instance): ((now: number) -> boolean)?
+	scenes.halloween_graveyard = function(token: number, assets: Instance): ()
 		local graveyard: Instance? = assets:FindFirstChild('Assets');
 		if not graveyard then
-			return nil;
+			return;
 		end;
 		local remotes: table = bedwars.Client:GetNamespace('HalloweenGraveyard');
 		local gate: Instance? = graveyard:FindFirstChild('GateButton');
-		local openGate: (now: number) -> boolean = gateOpener('HalloweenGraveyard', gate and gate:FindFirstChild('Button'));
-		local symbols: {[string]: boolean} = {};
-		local clues: {string} = {};
+		local clues: {Instance} = {};
 		for _: number, clue: Instance in graveyard.Clues:GetChildren() do
 			local symbol: any = clue:GetAttribute('Symbol');
-			if type(symbol) == 'string' and symbol ~= '' and not symbols[symbol] then
-				symbols[symbol] = true;
-				table.insert(clues, symbol);
+			if type(symbol) == 'string' and symbol ~= '' then
+				table.insert(clues, clue);
 			end;
 		end;
 		log('graveyard: '..#clues..' clues');
-		local sortedSymbols: (text: any) -> string = function(text: any): string
+
+		openGate('HalloweenGraveyard', gate and gate:FindFirstChild('Button'), token);
+
+		local symbols: {[string]: boolean} = {};
+		for _: number, clue: Instance in clues do
+			local symbol: string = clue:GetAttribute('Symbol');
+			if not symbols[symbol] and current(token) then
+				remotes:Get('FoundClue'):SendToServer(symbol);
+				symbols[symbol] = true;
+				log('clue '..symbol);
+				task.wait(0.3);
+			end;
+		end;
+
+		local symbolSet: (text: any) -> string = function(text: any): string
 			local list: {string} = {};
 			for symbol: string in string.gmatch(tostring(text or ''), '[^,%s]+') do
 				table.insert(list, symbol);
@@ -25527,71 +28335,59 @@ velo.run(function(): ()
 			table.sort(list);
 			return table.concat(list, ',');
 		end;
-		local phase: string, sent: number, requests: number, waitUntil: number, dug: boolean = 'gate', 0, 0, 0, false;
-		local grave: Instance?, spot: Vector3?;
-		table.insert(state.Cleanup, remotes:Get('GraveDigResult'):Connect(function(data: any): ()
-			dug = dug or type(data) == 'table' and data.success == true;
+		local found: {string} = {};
+		for symbol: string in symbols do
+			table.insert(found, symbol);
+		end;
+		local wanted: string = symbolSet(table.concat(found, ','));
+		local grave: Instance?;
+		for _: number, candidate: Instance in graveyard.Graveyard:GetChildren() do
+			if symbolSet(candidate:GetAttribute('Symbols')) == wanted then
+				grave = candidate;
+				break;
+			end;
+		end;
+		if not grave then
+			log('no grave matches '..wanted);
+			return;
+		end;
+		log('grave '..wanted);
+		local dug: boolean = false;
+		AutoHalloween:Clean(remotes:Get('GraveDigResult'):Connect(function(data: any): ()
+			if type(data) == 'table' and data.success then
+				dug = true;
+			end;
 		end));
-		return function(now: number): boolean
-			if phase == 'gate' then
-				phase = openGate(now) and 'clues' or phase;
-			elseif phase == 'clues' then
-				if sent < #clues then
-					sent += 1;
-					remotes:Get('FoundClue'):SendToServer(clues[sent]);
-					log('clue '..clues[sent]);
-					state.Wake = now + 0.3;
-					return false;
-				end;
-				local wanted: string = sortedSymbols(table.concat(clues, ','));
-				for _: number, candidate: Instance in graveyard.Graveyard:GetChildren() do
-					if sortedSymbols(candidate:GetAttribute('Symbols')) == wanted then
-						grave = candidate;
-						break;
-					end;
-				end;
-				if not grave then
-					log('no grave matches '..wanted);
-					return true;
-				end;
-				log('grave '..wanted);
-				phase, spot = 'dig', positionOf(grave);
-			elseif phase == 'digWait' then
-				if dug or not grave.Parent or now >= waitUntil then
-					phase = 'dig';
-				else
-					state.Wake = now + 0.2;
-				end;
-			elseif phase == 'digWalk' then
-				if nav.Result == 'arrived' then
-					remotes:Get('GraveDigRequest'):SendToServer({["grave"] = grave});
-					log('dig requested');
-					state.Wake = now + 6;
-				else
-					state.Wake = now + 1;
-				end;
-				phase = 'dig';
-			elseif not spot or not grave.Parent or dug then
-				return true;
-			elseif requests < 2 then
-				requests += 1;
+		local spot: Vector3? = partPosition(grave);
+		local remoteTries: number = 0;
+		while current(token) and spot and grave.Parent and not dug do
+			if remoteTries < 2 then
+				remoteTries += 1;
 				remotes:Get('GraveDigRequest'):SendToServer({["grave"] = grave});
 				log('dig requested remotely');
-				phase, waitUntil = 'digWait', now + 3;
-			else
-				phase = 'digWalk';
-				goTo(groundAt(spot, 6, 60), {["Radius"] = 6, ["Timeout"] = 60});
+				local waited: number = os.clock();
+				while current(token) and not dug and grave.Parent and os.clock() - waited < 3 do
+					task.wait(0.2);
+				end;
+				continue;
 			end;
-			return false;
+			local reached: boolean = walkTo(groundAt(spot), 6, 60, token);
+			if reached and current(token) then
+				remotes:Get('GraveDigRequest'):SendToServer({["grave"] = grave});
+				log('dig requested');
+				task.wait(6);
+			else
+				task.wait(1);
+			end;
 		end;
 	end;
 
-	scenes.halloween_maze = function(assets: Instance): ((now: number) -> boolean)?
+	scenes.halloween_maze = function(token: number, assets: Instance): ()
 		local maze: Instance? = assets:FindFirstChild('Maze');
-		local exit: BasePart? = maze and maze:FindFirstChild('ExitBlocker');
-		if not maze or not exit then
-			return nil;
+		if not maze then
+			return;
 		end;
+		local exit: BasePart? = maze:FindFirstChild('ExitBlocker');
 		local guards: {BasePart} = {};
 		local clearGuards: () -> () = function(): ()
 			for _: number, guard: BasePart in guards do
@@ -25600,7 +28396,7 @@ velo.run(function(): ()
 			table.clear(guards);
 			walk.Costs = nil;
 		end;
-		table.insert(state.Cleanup, clearGuards);
+		AutoHalloween:Clean(clearGuards);
 		local guardBosses: (radius: number) -> () = function(radius: number): ()
 			clearGuards();
 			if radius <= 0 then
@@ -25623,272 +28419,298 @@ velo.run(function(): ()
 			walk.Costs = {["Trap"] = math.huge};
 		end;
 		local exitPoint: (offset: number) -> Vector3 = function(offset: number): Vector3
-			return groundAt(Vector3.new(exit.Position.X + offset, exit.Position.Y - 9, exit.Position.Z), 6, 60);
+			return groundAt(Vector3.new(exit.Position.X + offset, exit.Position.Y - 9, exit.Position.Z));
 		end;
-		local serial: number = state.Serial;
-		local attempts: {{number}} = {};
-		for _: number, offset: number in {27, 63} do
-			for _: number, radius: number in {48, 44, 40, 36, 0} do
-				table.insert(attempts, {offset, radius});
-			end;
-		end;
-		local phase: string, attempt: number = 'role', 0;
-		return function(now: number): boolean
-			if phase == 'runnerWalk' then
-				log('maze trap '..attempts[attempt][2]..' walk: '..nav.Result);
-				if nav.Result ~= 'arrived' then
-					phase = 'runnerPlan';
-				elseif attempts[attempt][1] == 27 then
-					walk.Active, walk.Dir = true, Vector3.new(-1, 0, 0);
-					phase, state.Wake = 'push', now + 3;
-				else
-					clearGuards();
-					return true;
-				end;
-				return false;
-			elseif phase == 'push' then
-				halt();
-				log('maze finish pushed');
-				clearGuards();
-				return true;
-			elseif phase == 'runnerPlan' then
-				attempt += 1;
-				if attempt > #attempts then
-					clearGuards();
-					phase, state.Wake = 'role', now + 1;
-					return false;
-				end;
-				local offset: number, radius: number = attempts[attempt][1], attempts[attempt][2];
+		local illuminate: () -> () = function(): ()
+			local origin: Vector3 = maze.PrimaryPart and maze.PrimaryPart.Position or maze:GetPivot().Position;
+			local sendLight: table = bedwars.Client:Get('SendFlashlightPositionToServer');
+			bedwars.Client:Get('ToggleFlashlight'):SendToServer(true);
+			local target: Vector3 = exitPoint(63);
+			for _: number, radius: number in {48, 44, 40, 36} do
 				guardBosses(radius);
-				local target: Vector3 = exitPoint(offset);
-				local planned: {PathWaypoint}? = entitylib.isAlive and plan(entitylib.character.RootPart.Position, target) or nil;
-				if state.Serial ~= serial then
-					return false;
+				if plan(Vector3.new(-143, -108, -23), target) then
+					log('light guide radius '..radius);
+					break;
 				end;
-				log('maze trap '..radius..' exit '..offset..': '..(planned and 'path' or 'no path'));
-				if planned then
-					phase = 'runnerWalk';
-					goTo(target, {["Radius"] = offset == 27 and 2.5 or 8, ["Timeout"] = 200});
-				end;
-				return false;
 			end;
+			log('illuminator origin '..math.floor(origin.X)..','..math.floor(origin.Z));
+			local path: {PathWaypoint}, plannedAt: number, sentAt: number = {}, 0, 0;
+			while current(token) do
+				local lead: Vector3?, gap: number = nil, math.huge;
+				for _: number, plr: Player in playersService:GetPlayers() do
+					local role: any = plr:GetAttribute('MazeRole');
+					local body: Model? = plr.Character;
+					local root: BasePart? = body and body:FindFirstChild('HumanoidRootPart');
+					local humanoid: Humanoid? = body and body:FindFirstChildOfClass('Humanoid');
+					if plr ~= lplr and type(role) == 'string' and role:find('runner') and root and humanoid and humanoid.Health > 0 then
+						local left: number = ((target - root.Position) * flatMask).Magnitude;
+						if left < gap then
+							lead, gap = root.Position, left;
+						end;
+					end;
+				end;
+				if lead then
+					if os.clock() - plannedAt > 1.5 then
+						plannedAt = os.clock();
+						local waypoints: {PathWaypoint}? = plan(lead, target);
+						if not waypoints then
+							local costs: {[string]: number}? = walk.Costs;
+							walk.Costs = nil;
+							waypoints = plan(lead, target);
+							walk.Costs = costs;
+						end;
+						if waypoints then
+							path = waypoints;
+						end;
+					end;
+					local spot: Vector3 = lead;
+					local closest: number, best: number = 1, math.huge;
+					for index: number, waypoint: PathWaypoint in path do
+						local away: number = ((waypoint.Position - lead) * flatMask).Magnitude;
+						if away < best then
+							closest, best = index, away;
+						end;
+					end;
+					local travelled: number = 0;
+					for index: number = closest, #path - 1 do
+						travelled += (path[index + 1].Position - path[index].Position).Magnitude;
+						spot = path[index + 1].Position;
+						if travelled >= 32 then
+							break;
+						end;
+					end;
+					if gap < 45 then
+						spot = Vector3.new(exit.Position.X + 17, exit.Position.Y - 9, exit.Position.Z);
+					end;
+					sendLight:SendToServer(Vector2.new(math.clamp((spot.X - origin.X) * 0.01, -2.5, 2.5), math.clamp((spot.Z - origin.Z) * 0.01, -2.5, 2.5)));
+					if os.clock() - sentAt > 5 then
+						sentAt = os.clock();
+						log('light at '..math.floor(spot.X)..','..math.floor(spot.Z)..' lead '..math.floor(lead.X)..','..math.floor(lead.Z));
+					end;
+				end;
+				task.wait(0.12);
+			end;
+		end;
+		while current(token) do
 			local role: any = lplr:GetAttribute('MazeRole');
-			if role == 'illuminator' and entitylib.isAlive then
-				local origin: Vector3 = maze.PrimaryPart and maze.PrimaryPart.Position or maze:GetPivot().Position;
-				local sendLight: any = bedwars.Client:Get('SendFlashlightPositionToServer');
-				bedwars.Client:Get('ToggleFlashlight'):SendToServer(true);
-				local target: Vector3 = exitPoint(63);
-				for _: number, radius: number in {48, 44, 40, 36} do
-					guardBosses(radius);
-					if plan(Vector3.new(-143, -108, -23), target) then
-						log('light guide radius '..radius);
+			if role == 'illuminator' and exit and rootPart() then
+				illuminate();
+				clearGuards();
+				return;
+			end;
+			if type(role) == 'string' and role:find('runner') and exit and rootPart() then
+				local reachedOffset: number = 0;
+				for _: number, offset: number in {27, 63} do
+					for _: number, radius: number in {48, 44, 40, 36, 0} do
+						guardBosses(radius);
+						local root: BasePart? = rootPart();
+						local target: Vector3 = exitPoint(offset);
+						local planned: {PathWaypoint}? = root and plan(root.Position, target) or nil;
+						log('maze trap '..radius..' exit '..offset..': '..(planned and 'path' or 'no path'));
+						if planned then
+							local done: boolean, reason: string = walkTo(target, offset == 27 and 2.5 or 8, 200, token);
+							log('maze trap '..radius..' walk: '..reason);
+							if done then
+								reachedOffset = offset;
+								break;
+							end;
+							if not current(token) then
+								clearGuards();
+								return;
+							end;
+						end;
+					end;
+					if reachedOffset > 0 then
 						break;
 					end;
 				end;
-				if state.Serial ~= serial then
-					return false;
+				if reachedOffset == 27 and current(token) then
+					bindWalk();
+					walk.Active, walk.Dir = true, Vector3.new(-1, 0, 0);
+					task.wait(3);
+					stopWalk();
+					log('maze finish pushed');
 				end;
-				local path: {PathWaypoint}, plannedAt: number, reportedAt: number, sentAt: number = {}, 0, 0, 0;
-				table.insert(state.Cleanup, runService.Heartbeat:Connect(function(): ()
-					if os.clock() - sentAt < 0.12 then
-						return;
+				clearGuards();
+				if reachedOffset > 0 then
+					while current(token) do
+						task.wait(1);
 					end;
-					sentAt = os.clock();
-					local lead: Vector3?, gap: number = nil, math.huge;
-					for _: number, plr: Player in playersService:GetPlayers() do
-						local runnerRole: any = plr:GetAttribute('MazeRole');
-						local root: BasePart? = plr.Character and plr.Character:FindFirstChild('HumanoidRootPart');
-						local humanoid: Humanoid? = plr.Character and plr.Character:FindFirstChildOfClass('Humanoid');
-						if plr ~= lplr and type(runnerRole) == 'string' and runnerRole:find('runner') and root and humanoid and humanoid.Health > 0 then
-							local left: number = ((target - root.Position) * flatMask).Magnitude;
-							if left < gap then
-								lead, gap = root.Position, left;
-							end;
-						end;
-					end;
-					if lead then
-						if os.clock() - plannedAt > 1.5 then
-							plannedAt = os.clock();
-							local waypoints: {PathWaypoint}? = plan(lead, target);
-							if not waypoints then
-								local costs: {[string]: number}? = walk.Costs;
-								walk.Costs = nil;
-								waypoints = plan(lead, target);
-								walk.Costs = costs;
-							end;
-							path = waypoints or path;
-						end;
-						local closest: number, best: number = 1, math.huge;
-						for index: number, waypoint: PathWaypoint in path do
-							local away: number = ((waypoint.Position - lead) * flatMask).Magnitude;
-							if away < best then
-								closest, best = index, away;
-							end;
-						end;
-						local spot: Vector3, travelled: number = lead, 0;
-						for index: number = closest, #path - 1 do
-							travelled += (path[index + 1].Position - path[index].Position).Magnitude;
-							spot = path[index + 1].Position;
-							if travelled >= 32 then
-								break;
-							end;
-						end;
-						if gap < 45 then
-							spot = Vector3.new(exit.Position.X + 17, exit.Position.Y - 9, exit.Position.Z);
-						end;
-						sendLight:SendToServer(Vector2.new(math.clamp((spot.X - origin.X) * 0.01, -2.5, 2.5), math.clamp((spot.Z - origin.Z) * 0.01, -2.5, 2.5)));
-						if os.clock() - reportedAt > 5 then
-							reportedAt = os.clock();
-							log(string.format('light at %.0f,%.0f lead %.0f,%.0f', spot.X, spot.Z, lead.X, lead.Z));
-						end;
-					end;
-				end));
-				return true;
+					return;
+				end;
 			end;
-			if type(role) == 'string' and role:find('runner') and entitylib.isAlive then
-				phase, attempt = 'runnerPlan', 0;
-				return false;
-			end;
-			state.Wake = now + 1;
-			return false;
+			task.wait(1);
 		end;
+		clearGuards();
 	end;
 
-	scenes.halloween_obby = function(assets: Instance): ((now: number) -> boolean)?
+	scenes.halloween_obby = function(token: number, assets: Instance): ()
 		local remotes: table = bedwars.Client:GetNamespace('HalloweenObby');
 		local gate: Instance? = assets:FindFirstChild('EntryGate');
 		local prompt: Instance? = gate and gate:FindFirstChild('OpenGatePrompt', true);
-		local entry: BasePart? = gate and gate:FindFirstChild('EntryTeleportPoint');
-		local activated: boolean = false;
-		state.Bridge = false;
-		table.insert(state.Cleanup, remotes:Get('ObbyActivatedScene'):Connect(function(): ()
-			activated = true;
+		local started: boolean = false;
+		brain.Bridge = false;
+		AutoHalloween:Clean(remotes:Get('ObbyActivatedScene'):Connect(function(): ()
+			started = true;
 		end));
-		table.insert(state.Cleanup, remotes:Get('BridgeTestSuccess'):Connect(function(): ()
-			state.Bridge = true;
+		AutoHalloween:Clean(remotes:Get('BridgeTestSuccess'):Connect(function(): ()
+			brain.Bridge = true;
 			log('bridge gates opened');
 		end));
+		local entry: BasePart? = gate and gate:FindFirstChild('EntryTeleportPoint');
 		local atEntry: () -> boolean = function(): boolean
-			return entry ~= nil and entitylib.isAlive and (entitylib.character.RootPart.Position - entry.Position).Magnitude < 8;
+			local root: BasePart? = rootPart();
+			return root ~= nil and entry ~= nil and (root.Position - entry.Position).Magnitude < 8;
 		end;
 		local pen: {Vector3} = {Vector3.new(-132, 56, 58), Vector3.new(-111, 45, 58), Vector3.new(-86, 34, 56), Vector3.new(-70, 27, 54), Vector3.new(-49, 16, 56), Vector3.new(-38, 13, 55)};
+		while current(token) and prompt and not started and not atEntry() do
+			local body: BasePart? = rootPart();
+			if body and body.Position.X < -55 then
+				follow(pen, nearestIndex(pen, body.Position), token, 25);
+			end;
+			local spot: Vector3? = entry and entry.Position + Vector3.new(-17, 2, 0) or partPosition(prompt.Parent);
+			local reached: boolean = spot ~= nil and walkTo(spot, 5, 60, token, function(): boolean
+				return started or atEntry();
+			end);
+			if reached and current(token) and not atEntry() then
+				remotes:Get('ActivateObbyScene'):SendToServer();
+				log('obby start requested');
+				task.wait(3);
+			else
+				task.wait(1);
+			end;
+		end;
+
+		local waited: number = os.clock();
+		while current(token) and entry and os.clock() - waited < 45 do
+			local root: BasePart? = rootPart();
+			if root and (root.Position - entry.Position).Magnitude < 25 then
+				break;
+			end;
+			task.wait(0.3);
+		end;
+		task.wait(5);
+		log('obby run');
+		for _: number, section: {string} in {{'BridgeTestSection', 'halloween-bridge.txt'}, {'FakeOutParkourSection', 'halloween-fakeout.txt'}, {'FadingParkourSection', 'halloween-fading.txt'}, {'WinningRoom', 'halloween-winning.txt'}} do
+			dumpTree(assets:FindFirstChild(section[1]), section[2]);
+		end;
 
 		local bridge: Instance? = assets:FindFirstChild('BridgeTestSection');
 		local winning: Instance? = assets:FindFirstChild('WinningRoom');
 		local rope: Instance? = winning and winning:FindFirstChild('Rope');
 		local start: {Vector3}, approach: {Vector3}, finish: {Vector3} = routeFrom(course.Start), routeFrom(course.Bridge), routeFrom(course.Finish);
 
-		local prepareDetour: () -> () = function(): ()
-			local fakeout: Instance? = assets:FindFirstChild('FakeOutParkourSection');
-			local real: {BasePart}, fake: {BasePart} = {}, {};
-			for _: number, item: Instance in (fakeout and fakeout:GetChildren() or {}) do
-				if item:IsA('Folder') then
-					for _: number, rock: Instance in item:GetChildren() do
-						if rock:IsA('BasePart') then
-							table.insert(rock:FindFirstChildWhichIsA('ParticleEmitter') and fake or real, rock);
-						end;
+		local fakeout: Instance? = assets:FindFirstChild('FakeOutParkourSection');
+		local real: {BasePart}, fake: {BasePart} = {}, {};
+		for _: number, item: Instance in (fakeout and fakeout:GetChildren() or {}) do
+			if item:IsA('Folder') then
+				for _: number, rock: Instance in item:GetChildren() do
+					if rock:IsA('BasePart') then
+						table.insert(rock:FindFirstChildWhichIsA('ParticleEmitter') and fake or real, rock);
 					end;
-				elseif item:IsA('BasePart') and item.Position.X > 440 and item.Size.X > 10 then
-					table.insert(real, item);
 				end;
+			elseif item:IsA('BasePart') and item.Position.X > 440 and item.Size.X > 10 then
+				table.insert(real, item);
 			end;
-			table.sort(real, function(a: BasePart, b: BasePart): boolean
-				return a.Position.X < b.Position.X;
-			end);
-			local fakeGap: (point: Vector3) -> number = function(point: Vector3): number
-				local nearest: number = math.huge;
-				for _: number, rock: BasePart in fake do
-					local dx: number = math.max(math.abs(point.X - rock.Position.X) - rock.Size.X / 2, 0);
-					local dz: number = math.max(math.abs(point.Z - rock.Position.Z) - rock.Size.Z / 2, 0);
-					nearest = math.min(nearest, math.sqrt(dx * dx + dz * dz));
-				end;
-				return nearest;
+		end;
+		table.sort(real, function(a: BasePart, b: BasePart): boolean
+			return a.Position.X < b.Position.X;
+		end);
+		local fakeGap: (point: Vector3) -> number = function(point: Vector3): number
+			local nearest: number = math.huge;
+			for _: number, rock: BasePart in fake do
+				local dx: number = math.max(math.abs(point.X - rock.Position.X) - rock.Size.X / 2, 0);
+				local dz: number = math.max(math.abs(point.Z - rock.Position.Z) - rock.Size.Z / 2, 0);
+				nearest = math.min(nearest, math.sqrt(dx * dx + dz * dz));
 			end;
-			local stepCost: (from: Vector3, to: Vector3) -> number = function(from: Vector3, to: Vector3): number
-				local exposure: number, length: number = 0, ((to - from) * flatMask).Magnitude;
-				for _: number, rock: BasePart in fake do
-					local near: number, far: number = 0, 1;
-					for _: number, axis: string in {'X', 'Z'} do
-						local low: number, high: number = rock.Position[axis] - rock.Size[axis] / 2 + 1, rock.Position[axis] + rock.Size[axis] / 2 - 1;
-						local delta: number = to[axis] - from[axis];
-						if math.abs(delta) < 1e-6 then
-							near = (from[axis] < low or from[axis] > high) and 2 or near;
-						else
-							local enter: number, leave: number = (low - from[axis]) / delta, (high - from[axis]) / delta;
-							near, far = math.max(near, math.min(enter, leave)), math.min(far, math.max(enter, leave));
+			return nearest;
+		end;
+		local stepCost: (from: Vector3, to: Vector3) -> number = function(from: Vector3, to: Vector3): number
+			local exposure: number, length: number = 0, ((to - from) * flatMask).Magnitude;
+			for _: number, rock: BasePart in fake do
+				local near: number, far: number = 0, 1;
+				for _: number, axis: string in {'X', 'Z'} do
+					local low: number, high: number = rock.Position[axis] - rock.Size[axis] / 2 + 1, rock.Position[axis] + rock.Size[axis] / 2 - 1;
+					local delta: number = to[axis] - from[axis];
+					if math.abs(delta) < 1e-6 then
+						if from[axis] < low or from[axis] > high then
+							near = 2;
 						end;
-					end;
-					exposure += near <= far and (far - near) * length or 0;
-				end;
-				return length + math.abs(to.Y - from.Y) * 0.5 + exposure * 6 + math.max(0, 6 - fakeGap(to)) * 8;
-			end;
-			local layers: {{Vector3}} = {};
-			for _: number, rock: BasePart in real do
-				local top: Vector3 = rock.Position + Vector3.new(0, rock.Size.Y / 2 + 3, 0);
-				local spreadX: number, spreadZ: number = math.max(rock.Size.X / 2 - 2, 0), math.max(rock.Size.Z / 2 - 2, 0);
-				local layer: {Vector3} = {};
-				for _: number, step: {number} in {{0, 0}, {1, 1}, {-1, 1}, {1, -1}, {-1, -1}, {1, 0}, {-1, 0}, {0, 1}, {0, -1}} do
-					table.insert(layer, top + Vector3.new(step[1] * spreadX, 0, step[2] * spreadZ));
-				end;
-				table.insert(layers, layer);
-			end;
-			local costs: {{number}}, trails: {{{Vector3}}} = {}, {};
-			for depth: number, layer: {Vector3} in layers do
-				local entered: {number}, routes: {{Vector3}} = {}, {};
-				for slot: number, node: Vector3 in layer do
-					entered[slot], routes[slot] = math.huge, {};
-					if depth == 1 then
-						entered[slot], routes[slot] = math.max(0, 6 - fakeGap(node)) * 8, {node};
 					else
-						for previousSlot: number, previous: Vector3 in layers[depth - 1] do
-							local total: number = ((node - previous) * flatMask).Magnitude <= 22 and costs[depth - 1][previousSlot] + stepCost(previous, node) or math.huge;
-							if total < entered[slot] then
-								entered[slot], routes[slot] = total, table.clone(trails[depth - 1][previousSlot]);
-								table.insert(routes[slot], node);
-							end;
+						local enter: number, leave: number = (low - from[axis]) / delta, (high - from[axis]) / delta;
+						near, far = math.max(near, math.min(enter, leave)), math.min(far, math.max(enter, leave));
+					end;
+				end;
+				if near <= far then
+					exposure += (far - near) * length;
+				end;
+			end;
+			return length + math.abs(to.Y - from.Y) * 0.5 + exposure * 6 + math.max(0, 6 - fakeGap(to)) * 8;
+		end;
+		local layers: {{Vector3}} = {};
+		for _: number, rock: BasePart in real do
+			local top: Vector3 = rock.Position + Vector3.new(0, rock.Size.Y / 2 + 3, 0);
+			local spreadX: number, spreadZ: number = math.max(rock.Size.X / 2 - 2, 0), math.max(rock.Size.Z / 2 - 2, 0);
+			local layer: {Vector3} = {};
+			for _: number, step: {number} in {{0, 0}, {1, 1}, {-1, 1}, {1, -1}, {-1, -1}, {1, 0}, {-1, 0}, {0, 1}, {0, -1}} do
+				table.insert(layer, top + Vector3.new(step[1] * spreadX, 0, step[2] * spreadZ));
+			end;
+			table.insert(layers, layer);
+		end;
+		local costs: {{number}}, trails: {{{Vector3}}} = {}, {};
+		for depth: number, layer: {Vector3} in layers do
+			local entered: {number}, routes: {{Vector3}} = {}, {};
+			for slot: number, node: Vector3 in layer do
+				entered[slot], routes[slot] = math.huge, {};
+				if depth == 1 then
+					entered[slot], routes[slot] = math.max(0, 6 - fakeGap(node)) * 8, {node};
+				else
+					for previousSlot: number, previous: Vector3 in layers[depth - 1] do
+						if ((node - previous) * flatMask).Magnitude <= 22 and costs[depth - 1][previousSlot] + stepCost(previous, node) < entered[slot] then
+							entered[slot], routes[slot] = costs[depth - 1][previousSlot] + stepCost(previous, node), table.clone(trails[depth - 1][previousSlot]);
+							table.insert(routes[slot], node);
 						end;
 					end;
 				end;
-				local settled: {number}, settledRoutes: {{Vector3}} = table.clone(entered), table.clone(routes);
-				for slot: number, node: Vector3 in layer do
-					for otherSlot: number, other: Vector3 in layer do
-						local total: number = otherSlot ~= slot and entered[otherSlot] < math.huge and entered[otherSlot] + stepCost(other, node) or math.huge;
-						if total < settled[slot] then
-							settled[slot], settledRoutes[slot] = total, table.clone(routes[otherSlot]);
-							table.insert(settledRoutes[slot], node);
-						end;
+			end;
+			local settled: {number}, settledRoutes: {{Vector3}} = table.clone(entered), table.clone(routes);
+			for slot: number, node: Vector3 in layer do
+				for otherSlot: number, other: Vector3 in layer do
+					if otherSlot ~= slot and entered[otherSlot] < math.huge and entered[otherSlot] + stepCost(other, node) < settled[slot] then
+						settled[slot], settledRoutes[slot] = entered[otherSlot] + stepCost(other, node), table.clone(routes[otherSlot]);
+						table.insert(settledRoutes[slot], node);
 					end;
 				end;
-				costs[depth], trails[depth] = settled, settledRoutes;
 			end;
-			local detour: {Vector3}, bestCost: number = {}, math.huge;
-			for slot: number, total: number in costs[#layers] or {} do
-				if total < bestCost then
-					bestCost, detour = total, trails[#layers][slot];
+			costs[depth], trails[depth] = settled, settledRoutes;
+		end;
+		local detour: {Vector3}, bestCost: number = {}, math.huge;
+		for slot: number, total: number in costs[#layers] or {} do
+			if total < bestCost then
+				bestCost, detour = total, trails[#layers][slot];
+			end;
+		end;
+		if #detour == 0 then
+			for _: number, layer: {Vector3} in layers do
+				table.insert(detour, layer[1]);
+			end;
+			log('fakeout detour search failed');
+		end;
+		log('fakeout real rocks '..#layers..' points '..#detour);
+		if #layers >= 5 then
+			local merged: {Vector3} = {};
+			for _: number, point: Vector3 in finish do
+				if point.X < 372 then
+					table.insert(merged, point);
 				end;
 			end;
-			if #detour == 0 then
-				for _: number, layer: {Vector3} in layers do
-					table.insert(detour, layer[1]);
+			table.move(detour, 1, #detour, #merged + 1, merged);
+			for _: number, point: Vector3 in finish do
+				if point.X >= 452 then
+					table.insert(merged, point);
 				end;
-				log('fakeout detour search failed');
 			end;
-			log('fakeout real rocks '..#layers..' points '..#detour);
-			if #layers >= 5 then
-				local merged: {Vector3} = {};
-				for _: number, point: Vector3 in finish do
-					if point.X < 372 then
-						table.insert(merged, point);
-					end;
-				end;
-				table.move(detour, 1, #detour, #merged + 1, merged);
-				for _: number, point: Vector3 in finish do
-					if point.X >= 452 then
-						table.insert(merged, point);
-					end;
-				end;
-				finish = merged;
-			end;
+			finish = merged;
 		end;
 
 		local lift: table = {["Active"] = false, ["Origin"] = Vector3.zero, ["Since"] = 0};
@@ -25897,15 +28719,14 @@ velo.run(function(): ()
 			for _: number, rock: table in rocks do
 				local offset: Vector3, closing: Vector3 = rock.Position - position, rock.Velocity - velocity;
 				local square: number = closing:Dot(closing);
-				local t: number = square > 1 and math.clamp(-offset:Dot(closing) / square, 0, horizon) or 0;
-				worst = math.min(worst, (offset + closing * t).Magnitude);
+				local moment: number = square > 1 and math.clamp(-offset:Dot(closing) / square, 0, horizon) or 0;
+				worst = math.min(worst, (offset + closing * moment).Magnitude);
 			end;
 			return worst;
 		end;
 		local evadeBoulders: (root: BasePart, position: Vector3, direction: Vector3) -> boolean = function(root: BasePart, position: Vector3, direction: Vector3): boolean
-			local inLane: boolean = position.X > 470 and position.X < 720;
 			local rocks: {table} = {};
-			if lift.Active or inLane then
+			if lift.Active or (position.X > 470 and position.X < 720) then
 				for _: number, item: Instance in collectionService:GetTagged('ActiveRollingObject') do
 					local part: Instance? = item:IsA('Model') and (item.PrimaryPart or item:FindFirstChild('Boulder')) or item;
 					if part and part:IsA('BasePart') then
@@ -25916,29 +28737,114 @@ velo.run(function(): ()
 			if lift.Active then
 				local held: number = os.clock() - lift.Since;
 				local threatened: boolean = #rocks > 0 and clearance(lift.Origin, Vector3.zero, 0.5, rocks) < 26;
-				local landing: boolean = held > 2.2 or (held > 0.4 and not threatened);
-				root.CFrame = CFrame.new(lift.Origin + Vector3.new(0, landing and 0 or 30, 0)) * root.CFrame.Rotation;
-				root.AssemblyLinearVelocity = Vector3.zero;
-				lift.Active = not landing;
-				if landing then
-					log(string.format('boulder lift done after %.2f', held));
+				if held > 2.2 or held > 0.4 and not threatened then
+					root.CFrame = CFrame.new(lift.Origin) * root.CFrame.Rotation;
+					root.AssemblyLinearVelocity = Vector3.zero;
+					lift.Active = false;
+					log('boulder lift done after '..hundredths(held));
+					return false;
 				end;
-				return not landing;
+				root.CFrame = CFrame.new(lift.Origin + Vector3.new(0, 30, 0)) * root.CFrame.Rotation;
+				root.AssemblyLinearVelocity = Vector3.zero;
+				return true;
 			end;
-			if #rocks > 0 and inLane and clearance(position, direction * 17, 0.6, rocks) < 22 then
+			if #rocks > 0 and position.X > 470 and position.X < 720 and clearance(position, direction * 17, 0.6, rocks) < 22 then
 				lift.Active, lift.Origin, lift.Since = true, position, os.clock();
 				root.CFrame = CFrame.new(position + Vector3.new(0, 30, 0)) * root.CFrame.Rotation;
 				root.AssemblyLinearVelocity = Vector3.zero;
-				log(string.format('boulder lift at %.0f,%.0f,%.0f rocks %.0f', position.X, position.Y, position.Z, #rocks));
+				log('boulder lift at '..math.floor(position.X)..','..math.floor(position.Y)..','..math.floor(position.Z)..' rocks '..#rocks);
 				return true;
 			end;
 			return false;
 		end;
+
+		local run: (route: {Vector3}, first: number, label: string, limit: number, recover: boolean?, guard: boolean?) -> () = function(route: {Vector3}, first: number, label: string, limit: number, recover: boolean?, guard: boolean?): ()
+			local index: number = first;
+			for _: number = 1, 6 do
+				local done: boolean, reachedIndex: number, result: string = follow(route, index, token, limit, recover, nil, guard and evadeBoulders or nil);
+				index = reachedIndex;
+				log(label..' '..result..' at '..index..'/'..#route);
+				if done or result == 'dead' or not current(token) then
+					return;
+				end;
+				task.wait(0.5);
+			end;
+		end;
+
+		run(start, 1, 'start route', 30, true);
+
+		local fading: Instance? = assets:FindFirstChild('FadingParkourSection');
+		local paths: Instance? = fading and fading:FindFirstChild('Paths');
+		local platforms: {BasePart} = {};
+		if paths then
+			for pair: number = 1, 9 do
+				local folder: Instance? = paths:FindFirstChild(tostring(pair));
+				local solid: BasePart?;
+				for _: number, child: Instance in (folder and folder:GetChildren() or {}) do
+					if child:IsA('BasePart') and child.CanCollide then
+						solid = child;
+					end;
+				end;
+				if solid then
+					table.insert(platforms, solid);
+				end;
+			end;
+		end;
+		log('fading real platforms '..#platforms);
+		if #platforms >= 8 then
+			local crossing: {Vector3} = {};
+			for index: number, platform: BasePart in platforms do
+				local top: number = platform.Position.Y + platform.Size.Y / 2 + 3;
+				local left: number, low: number, high: number = platform.Position.X - platform.Size.X / 2, platform.Position.Z - platform.Size.Z / 2, platform.Position.Z + platform.Size.Z / 2;
+				if index == 1 then
+					local lane: number = math.clamp(53, low + 2, high - 2);
+					table.insert(crossing, Vector3.new(left - 2.5, top, lane));
+					table.insert(crossing, Vector3.new(left + 2.5, top, lane));
+				else
+					local previous: BasePart = platforms[index - 1];
+					local sharedLow: number = math.max(low, previous.Position.Z - previous.Size.Z / 2);
+					local sharedHigh: number = math.min(high, previous.Position.Z + previous.Size.Z / 2);
+					local lane: number = (sharedLow + sharedHigh) / 2;
+					if sharedHigh - sharedLow < 0.5 then
+						lane = math.clamp(lane, low + 1, high - 1);
+					end;
+					table.insert(crossing, Vector3.new((previous.Position.X + previous.Size.X / 2 + left) / 2, math.max(top, previous.Position.Y + previous.Size.Y / 2 + 3), lane));
+				end;
+				table.insert(crossing, platform.Position + Vector3.new(0, platform.Size.Y / 2 + 3, 0));
+			end;
+			local crossingStarted: number, index: number = os.clock(), 1;
+			for _: number = 1, 3 do
+				local done: boolean, reachedIndex: number, result: string = follow(crossing, index, token, 14, true, 2.5);
+				index = reachedIndex;
+				log('fading '..result..' at '..index..'/'..#crossing);
+				if done or result == 'dead' or not current(token) or os.clock() - crossingStarted > 40 then
+					break;
+				end;
+				task.wait(0.3);
+			end;
+		end;
+
+		local root: BasePart? = rootPart();
+		if root and root.Position.X < 195 then
+			log('fading fallback from '..math.floor(root.Position.X));
+			for _: number = 1, 8 do
+				root = rootPart();
+				if not root or root.Position.X >= 195 then
+					break;
+				end;
+				nudge(root, approach[1]);
+				task.wait(0.7);
+			end;
+			root = rootPart();
+		end;
+		local first: number = root and nearestIndex(approach, root.Position) or 1;
 		local symbolsShown: (model: Instance?) -> number = function(model: Instance?): number
 			local total: number = 0;
 			local holder: Instance? = model and model:FindFirstChild('PlayerSymbols');
 			for _: number, symbol: Instance in (holder and holder:GetChildren() or {}) do
-				total += symbol:IsA('BasePart') and 1 - symbol.Transparency or 0;
+				if symbol:IsA('BasePart') then
+					total += 1 - symbol.Transparency;
+				end;
 			end;
 			return total;
 		end;
@@ -25946,271 +28852,154 @@ velo.run(function(): ()
 		local leftBridge: Instance? = bridges and bridges:FindFirstChild('StoneBridgeLeft');
 		local rightBridge: Instance? = bridges and bridges:FindFirstChild('StoneBridgeRight');
 		local peak: {number} = {0, 0};
-		local sampledAt: number, loggedAt: number = 0, 0;
-		local sampler: RBXScriptConnection?;
-		local phase: string, waitUntil: number, nudges: number, resume: number = 'entry', 0, 0, 1;
-		local began: number, evaluatedAt: number, reportedAt: number = 0, 0, 0;
-		return function(now: number): boolean
-			if phase == 'entry' then
-				if not prompt or activated or atEntry() then
-					phase, waitUntil = 'arrive', now + 45;
-				else
-					phase = 'entryWalk';
-					if entitylib.isAlive and entitylib.character.RootPart.Position.X < -55 then
-						followRoute(pen, nearestIndex(pen, entitylib.character.RootPart.Position), {["Limit"] = 25});
-					end;
+		local sampling: boolean = true;
+		task.spawn(function(): ()
+			local stamp: number = 0;
+			while sampling and current(token) do
+				local left: number, right: number = symbolsShown(leftBridge), symbolsShown(rightBridge);
+				peak[1], peak[2] = math.max(peak[1], left), math.max(peak[2], right);
+				if os.clock() - stamp > 1 then
+					stamp = os.clock();
+					log('symbols left '..hundredths(left)..' right '..hundredths(right));
 				end;
-			elseif phase == 'entryWalk' then
-				local spot: Vector3? = entry and entry.Position + Vector3.new(-17, 2, 0) or positionOf(prompt.Parent);
-				if spot then
-					phase = 'entryRequest';
-					goTo(spot, {["Radius"] = 5, ["Timeout"] = 60, ["Abort"] = function(): boolean
-						return activated or atEntry();
-					end});
-				else
-					phase, state.Wake = 'entry', now + 1;
-				end;
-			elseif phase == 'entryRequest' then
-				if nav.Result == 'arrived' and not atEntry() then
-					remotes:Get('ActivateObbyScene'):SendToServer();
-					log('obby start requested');
-					state.Wake = now + 3;
-				else
-					state.Wake = now + 1;
-				end;
-				phase = 'entry';
-			elseif phase == 'arrive' then
-				if entry and now < waitUntil and not (entitylib.isAlive and (entitylib.character.RootPart.Position - entry.Position).Magnitude < 25) then
-					state.Wake = now + 0.3;
-				else
-					phase, state.Wake = 'start', now + 5;
-				end;
-			elseif phase == 'start' then
-				log('obby run');
-				for _: number, section: string in {'BridgeTestSection', 'FakeOutParkourSection', 'FadingParkourSection', 'WinningRoom'} do
-					dumpScene(assets:FindFirstChild(section), 'halloween-'..section..'.txt');
-				end;
-				prepareDetour();
-				phase = 'fading';
-				followRoute(start, 1, {["Limit"] = 30, ["Recover"] = true, ["Attempts"] = 6, ["Pause"] = 0.5, ["Label"] = 'start route'});
-			elseif phase == 'fading' then
-				local fading: Instance? = assets:FindFirstChild('FadingParkourSection');
-				local paths: Instance? = fading and fading:FindFirstChild('Paths');
-				local platforms: {BasePart} = {};
-				for pair: number = 1, 9 do
-					local folder: Instance? = paths and paths:FindFirstChild(tostring(pair));
-					local solid: BasePart?;
-					for _: number, child: Instance in (folder and folder:GetChildren() or {}) do
-						if child:IsA('BasePart') and child.CanCollide then
-							solid = child;
-						end;
-					end;
-					if solid then
-						table.insert(platforms, solid);
-					end;
-				end;
-				log('fading real platforms '..#platforms);
-				phase = 'fallback';
-				if #platforms < 8 then
-					return false;
-				end;
-				local crossing: {Vector3} = {};
-				for index: number, platform: BasePart in platforms do
-					local top: number = platform.Position.Y + platform.Size.Y / 2 + 3;
-					local left: number, low: number, high: number = platform.Position.X - platform.Size.X / 2, platform.Position.Z - platform.Size.Z / 2, platform.Position.Z + platform.Size.Z / 2;
-					if index == 1 then
-						local lane: number = math.clamp(53, low + 2, high - 2);
-						table.insert(crossing, Vector3.new(left - 2.5, top, lane));
-						table.insert(crossing, Vector3.new(left + 2.5, top, lane));
-					else
-						local previous: BasePart = platforms[index - 1];
-						local sharedLow: number = math.max(low, previous.Position.Z - previous.Size.Z / 2);
-						local sharedHigh: number = math.min(high, previous.Position.Z + previous.Size.Z / 2);
-						local lane: number = (sharedLow + sharedHigh) / 2;
-						if sharedHigh - sharedLow < 0.5 then
-							lane = math.clamp(lane, low + 1, high - 1);
-						end;
-						table.insert(crossing, Vector3.new((previous.Position.X + previous.Size.X / 2 + left) / 2, math.max(top, previous.Position.Y + previous.Size.Y / 2 + 3), lane));
-					end;
-					table.insert(crossing, platform.Position + Vector3.new(0, platform.Size.Y / 2 + 3, 0));
-				end;
-				followRoute(crossing, 1, {["Limit"] = 14, ["Recover"] = true, ["Reach"] = 2.5, ["Attempts"] = 3, ["Pause"] = 0.3, ["Cap"] = 40, ["Label"] = 'fading'});
-			elseif phase == 'fallback' then
-				if entitylib.isAlive and entitylib.character.RootPart.Position.X < 195 and nudges < 8 then
-					if nudges == 0 then
-						log('fading fallback from '..math.floor(entitylib.character.RootPart.Position.X));
-					end;
-					nudges += 1;
-					nudge(entitylib.character.RootPart, approach[1]);
-					state.Wake = now + 0.7;
-					return false;
-				end;
-				sampler = runService.Heartbeat:Connect(function(): ()
-					if os.clock() - sampledAt < 0.1 then
-						return;
-					end;
-					sampledAt = os.clock();
-					local left: number, right: number = symbolsShown(leftBridge), symbolsShown(rightBridge);
-					peak[1], peak[2] = math.max(peak[1], left), math.max(peak[2], right);
-					if os.clock() - loggedAt > 1 then
-						loggedAt = os.clock();
-						log(string.format('symbols left %.2f right %.2f', left, right));
-					end;
-				end);
-				table.insert(state.Cleanup, sampler);
-				phase, waitUntil = 'settle', 0;
-				followRoute(approach, entitylib.isAlive and nearestIndex(approach, entitylib.character.RootPart.Position) or 1, {["Limit"] = 40, ["Recover"] = true, ["Attempts"] = 6, ["Pause"] = 0.5, ["Label"] = 'approach'});
-			elseif phase == 'settle' then
-				waitUntil = waitUntil == 0 and now + 4 or waitUntil;
-				local left: number, right: number = math.max(symbolsShown(leftBridge), peak[1]), math.max(symbolsShown(rightBridge), peak[2]);
-				if math.abs(left - right) < 0.3 and now < waitUntil then
-					state.Wake = now + 0.2;
-					return false;
-				end;
-				sampler:Disconnect();
-				log(string.format('bridge symbols left %.2f right %.2f', left, right));
-				local gatePrompts: {ProximityPrompt} = {};
-				for _: number, item: Instance in (bridge or assets):GetDescendants() do
-					if item:IsA('ProximityPrompt') and item.ActionText == 'Open Gate' then
-						table.insert(gatePrompts, item);
-					end;
-				end;
-				table.sort(gatePrompts, function(a: ProximityPrompt, b: ProximityPrompt): boolean
-					local first: Vector3?, second: Vector3? = positionOf(a), positionOf(b);
-					return (first and first.Z or 0) < (second and second.Z or 0);
-				end);
-				local gateSpot: Vector3? = positionOf(gatePrompts[1]);
-				began = now;
-				if not gateSpot then
-					log('no gate prompt');
-					phase = 'bridgeDone';
-				else
-					local stand: Vector3 = groundAt(Vector3.new(gateSpot.X - 7, 32, gateSpot.Z), 0, 60);
-					log(string.format('bridge stand %.0f,%.0f,%.0f', stand.X, stand.Y, stand.Z));
-					phase = 'bridgeTest';
-					goTo(stand, {["Radius"] = 4, ["Limit"] = 60, ["Scene"] = assets, ["Vertical"] = 12});
-				end;
-			elseif phase == 'bridgeTest' then
-				if state.Bridge or now - began >= 75 then
-					phase = 'bridgeDone';
-					return false;
-				end;
+				task.wait(0.1);
+			end;
+		end);
+		run(approach, first, 'approach', 40, true);
+		local left: number, right: number = symbolsShown(leftBridge), symbolsShown(rightBridge);
+		local settle: number = os.clock();
+		while current(token) and math.abs(math.max(left, peak[1]) - math.max(right, peak[2])) < 0.3 and os.clock() - settle < 4 do
+			task.wait(0.2);
+			left, right = symbolsShown(leftBridge), symbolsShown(rightBridge);
+		end;
+		sampling = false;
+		left, right = math.max(left, peak[1]), math.max(right, peak[2]);
+		log('bridge symbols left '..hundredths(left)..' right '..hundredths(right));
+
+		local began: number = os.clock();
+		local gatePrompts: {ProximityPrompt} = {};
+		for _: number, item: Instance in (bridge or assets):GetDescendants() do
+			if item:IsA('ProximityPrompt') and item.ActionText == 'Open Gate' then
+				table.insert(gatePrompts, item);
+			end;
+		end;
+		table.sort(gatePrompts, function(a: ProximityPrompt, b: ProximityPrompt): boolean
+			local firstSpot: Vector3?, secondSpot: Vector3? = promptPosition(a), promptPosition(b);
+			return (firstSpot and firstSpot.Z or 0) < (secondSpot and secondSpot.Z or 0);
+		end);
+		local gateSpot: Vector3? = gatePrompts[1] and promptPosition(gatePrompts[1]);
+		if not gateSpot then
+			log('no gate prompt');
+		else
+			local above: Vector3 = Vector3.new(gateSpot.X - 7, 32, gateSpot.Z);
+			local stand: Vector3 = groundBelow(above, 60, above);
+			log('bridge stand '..math.floor(stand.X)..','..math.floor(stand.Y)..','..math.floor(stand.Z)..' side 1');
+			travel(stand, 4, 60, token, assets, 12);
+			local evaluatedAt: number, reportedAt: number = 0, 0;
+			while current(token) and not brain.Bridge and os.clock() - began < 75 do
 				local shown: number = symbolsShown(leftBridge);
-				if now - reportedAt > 1 then
-					reportedAt = now;
-					log(string.format('gate symbols %.2f other %.2f', shown, symbolsShown(rightBridge)));
+				if os.clock() - reportedAt > 1 then
+					reportedAt = os.clock();
+					log('gate symbols '..hundredths(shown)..' other '..hundredths(symbolsShown(rightBridge)));
 				end;
-				if (shown >= 1.4 and now - evaluatedAt > 1.2) or now - evaluatedAt > 6 then
-					evaluatedAt = now;
+				if (shown >= 1.4 and os.clock() - evaluatedAt > 1.2) or os.clock() - evaluatedAt > 6 then
+					evaluatedAt = os.clock();
 					remotes:Get('EvaluateBridgeTest'):CallServerAsync():andThen(function(passed: any): ()
-						log(string.format('bridge evaluate %s at symbols %.2f', tostring(passed), shown));
+						log('bridge evaluate '..tostring(passed)..' at symbols '..hundredths(shown));
 						if passed then
-							state.Bridge = true;
+							brain.Bridge = true;
 						end;
 					end);
 				end;
-				state.Wake = now + 0.1;
-			elseif phase == 'bridgeDone' then
-				if not state.Bridge then
-					log('bridge gate stayed locked');
-				end;
-				phase = 'finishPrep';
-				if entitylib.isAlive and entitylib.character.RootPart.Position.X < 335 then
-					state.Wake = now + 2;
-				end;
-			elseif phase == 'finishPrep' then
-				phase = 'finishRun';
-				if entitylib.isAlive and entitylib.character.RootPart.Position.Z > 45 then
-					for index: number, point: Vector3 in finish do
-						if point.X >= 345 then
-							resume = index;
-							break;
-						end;
-					end;
-					goTo(finish[resume], {["Radius"] = 6, ["Limit"] = 40, ["Scene"] = assets, ["Vertical"] = 20});
-				end;
-			elseif phase == 'finishRun' then
-				phase = 'escape';
-				followRoute(finish, resume, {["Limit"] = 120, ["Recover"] = true, ["Evade"] = evadeBoulders, ["Attempts"] = 6, ["Pause"] = 0.5, ["Label"] = 'finish route'});
-			elseif not rope then
-				return true;
-			else
-				remotes:Get('AttemptEscapeObby'):CallServerAsync():andThen(function(escaped: any): ()
-					log('escape '..tostring(escaped));
-				end);
-				state.Wake = now + 2;
+				task.wait(0.1);
 			end;
-			return false;
+		end;
+		if not brain.Bridge then
+			log('bridge gate stayed locked');
+		end;
+
+		root = rootPart();
+		local resume: number = 1;
+		if root and root.Position.X < 335 then
+			task.wait(2);
+			root = rootPart();
+		end;
+		if root and root.Position.Z > 45 then
+			for index: number, point: Vector3 in finish do
+				if point.X >= 345 then
+					resume = index;
+					break;
+				end;
+			end;
+			travel(finish[resume], 6, 40, token, assets, 20);
+		end;
+		run(finish, resume, 'finish route', 120, true, true);
+
+		if not rope then
+			return;
+		end;
+		while current(token) do
+			remotes:Get('AttemptEscapeObby'):CallServerAsync():andThen(function(escaped: any): ()
+				log('escape '..tostring(escaped));
+			end);
+			task.wait(2);
 		end;
 	end;
 
-	scenes.halloween_2024_stage_1 = function(assets: Instance): ((now: number) -> boolean)?
+	scenes.halloween_2024_stage_1 = function(token: number, assets: Instance): ()
+		ensureCombat();
 		log('stage 1');
+		local progress: () -> number = function(): number
+			return assets:GetAttribute('CrystalsBroken') or 0;
+		end;
 		local danger: (position: Vector3) -> number = function(position: Vector3): number
 			local penalty: number = 0;
 			for _: number, guard: Instance in collectionService:GetTagged('SpearGuard') do
-				local spot: Vector3? = positionOf(guard);
-				penalty += spot and (spot - position).Magnitude < 55 and 400 or 0;
+				local spot: Vector3? = partPosition(guard);
+				if spot and (spot - position).Magnitude < 55 then
+					penalty += 400;
+				end;
 			end;
 			return penalty;
 		end;
-		local serial: number = state.Serial;
-		local crystal: BasePart?, reached: boolean, deadline: number = nil, false, 0;
-		return function(now: number): boolean
-			if crystal then
-				if deadline == 0 then
-					reached, deadline = nav.Result == 'arrived', now + 25;
-				end;
-				if crystal.Parent and now < deadline then
-					breakBlock(crystal, {["AutoTool"] = true});
-					if state.Serial == serial then
-						state.Wake = now + 0.15;
-					end;
-					return false;
-				end;
-				crystal = nil;
-				state.Wake = reached and now or now + 0.5;
-				return false;
-			end;
-			if (assets:GetAttribute('CrystalsBroken') or 0) >= 6 then
-				halt();
-				return true;
-			end;
+		while current(token) and progress() < 6 do
+			local root: BasePart? = rootPart();
 			local crystals: {BasePart} = {};
 			for _: number, block: Instance in collectionService:GetTagged('block') do
 				if block.Name == 'halloween_crystal_block' and block.Parent then
 					table.insert(crystals, block);
 				end;
 			end;
-			if not entitylib.isAlive or #crystals == 0 then
-				state.Wake = now + 1;
-				return false;
+			if not root or #crystals == 0 then
+				task.wait(1);
+				continue;
 			end;
-			local origin: Vector3 = entitylib.character.RootPart.Position;
 			table.sort(crystals, function(a: BasePart, b: BasePart): boolean
-				return (a.Position - origin).Magnitude + danger(a.Position) < (b.Position - origin).Magnitude + danger(b.Position);
+				return (a.Position - root.Position).Magnitude + danger(a.Position) < (b.Position - root.Position).Magnitude + danger(b.Position);
 			end);
-			local chosen: BasePart = crystals[1];
-			crystal, deadline = chosen, 0;
-			log(string.format('crystal %.0f,%.0f progress %.0f', chosen.Position.X, chosen.Position.Z, assets:GetAttribute('CrystalsBroken') or 0));
-			goTo(chosen.Position + Vector3.new(0, -2, 0), {["Radius"] = 12, ["Timeout"] = 90, ["Vertical"] = 12, ["Abort"] = function(): boolean
-				return chosen.Parent == nil;
-			end});
-			return false;
+			local crystal: BasePart = crystals[1];
+			log('crystal '..math.floor(crystal.Position.X)..','..math.floor(crystal.Position.Z)..' progress '..progress());
+			local reached: boolean = walkTo(crystal.Position + Vector3.new(0, -2, 0), 12, 90, token, function(): boolean
+				return not crystal.Parent;
+			end, 12);
+			local deadline: number = os.clock() + 25;
+			while current(token) and crystal.Parent and os.clock() < deadline do
+				pcall(breakBlock, crystal, {["AutoTool"] = true});
+				task.wait(0.15);
+			end;
+			if not reached then
+				task.wait(0.5);
+			end;
 		end;
+		stopWalk();
 	end;
 
-	scenes.skeleton_boss = function(assets: Instance): ((now: number) -> boolean)?
+	scenes.skeleton_boss = function(token: number, assets: Instance): ()
+		ensureCombat();
 		local remotes: table = bedwars.Client:GetNamespace('Halloween2025Remotes');
-		local hazards: {table} = {};
-		local skulls: {table} = {};
-		local bones: {[BasePart]: table} = {};
+		local hazards: {table}, skulls: {table}, bones: {[BasePart]: table} = {}, {}, {};
 		local lifted: table? = nil;
-		local low: Vector3, high: Vector3 = Vector3.new(-75, 0, 70), Vector3.new(190, 0, 350);
-		local addHazard: (center: Vector3, radius: number, length: number) -> () = function(center: Vector3, radius: number, length: number): ()
-			table.insert(hazards, {["Center"] = center, ["Radius"] = radius, ["Until"] = os.clock() + length});
-		end;
-		table.insert(state.Cleanup, workspace.DescendantAdded:Connect(function(item: Instance): ()
+		AutoHalloween:Clean(workspace.DescendantAdded:Connect(function(item: Instance): ()
 			if item.Name == 'Bone' and item:IsA('BasePart') and not item:FindFirstAncestor('WallModel') then
 				local boss: Instance? = collectionService:GetTagged('SkeletonBoss')[1];
 				if not (boss and item:IsDescendantOf(boss)) then
@@ -26218,38 +29007,38 @@ velo.run(function(): ()
 				end;
 			end;
 		end));
-		table.insert(state.Cleanup, workspace.ChildAdded:Connect(function(child: Instance): ()
-			if child.Name == 'WallModel' then
-				local wall: Instance? = child:WaitForChild('WallPart', 2);
-				if wall and wall:IsA('BasePart') then
-					wall.CanTouch = false;
-				end;
-			end;
-		end));
-		table.insert(state.Cleanup, remotes:Get('SkeletonBossAction'):Connect(function(data: any): ()
-			local info: any = type(data) == 'table' and data.actionData;
-			if type(info) ~= 'table' then
+		local low: Vector3, high: Vector3 = Vector3.new(-75, 0, 70), Vector3.new(190, 0, 350);
+		local addHazard: (center: Vector3, radius: number, length: number) -> () = function(center: Vector3, radius: number, length: number): ()
+			table.insert(hazards, {["Center"] = center, ["Radius"] = radius, ["Until"] = os.clock() + length});
+		end;
+		AutoHalloween:Clean(remotes:Get('SkeletonBossAction'):Connect(function(data: any): ()
+			if type(data) ~= 'table' or type(data.actionData) ~= 'table' then
 				return;
 			end;
+			local info: table = data.actionData;
 			if data.action == 0 and info.state == 'reassemble' and lifted then
 				lifted.Reassembled = true;
-			elseif data.action == 0 and info.state == 'dissassemble' and entitylib.isAlive then
-				addHazard(entitylib.character.RootPart.Position, 70, 4);
-				log('head bounce coming, running');
+			end;
+			if data.action == 0 and info.state == 'dissassemble' then
+				local body: BasePart? = rootPart();
+				if body then
+					addHazard(body.Position, 70, 4);
+					log('head bounce coming, running');
+				end;
 			elseif data.action == 0 and info.state == 'launch' and type(info.launch) == 'table' and info.launch.landingPosition then
 				local landing: Vector3 = info.launch.landingPosition;
-				local radius: number, duration: number = info.launch.radius or 60, info.launch.duration or 3.25;
-				addHazard(landing, radius + 6, duration + 1.2);
-				log(string.format('head bounce landing %.0f,%.0f radius %.0f', landing.X, landing.Z, radius));
-				table.insert(state.Cleanup, task.delay(math.max(duration - 0.4, 0.2), function(): ()
-					if entitylib.isAlive and not lifted and ((entitylib.character.RootPart.Position - landing) * flatMask).Magnitude < radius + 8 then
-						local root: BasePart = entitylib.character.RootPart;
-						lifted = {["Origin"] = root.Position, ["Until"] = os.clock() + 3.4, ["Reassembled"] = false, ["Clear"] = 0, ["Logged"] = 0};
-						root.CFrame = CFrame.new(root.Position + Vector3.new(0, 75, 0)) * root.CFrame.Rotation;
-						root.AssemblyLinearVelocity = Vector3.zero;
+				addHazard(landing, (info.launch.radius or 60) + 6, (info.launch.duration or 3.25) + 1.2);
+				local body: BasePart? = rootPart();
+				log('head bounce landing '..math.floor(landing.X)..','..math.floor(landing.Z)..' radius '..tostring(info.launch.radius)..' me '..(body and tostring(math.floor(((body.Position - landing) * flatMask).Magnitude)) or '?')..' away');
+				task.delay(math.max((info.launch.duration or 3.25) - 0.4, 0.2), function(): ()
+					local now: BasePart? = rootPart();
+					if now and current(token) and not lifted and ((now.Position - landing) * flatMask).Magnitude < (info.launch.radius or 60) + 8 then
+						lifted = {["Origin"] = now.Position, ["Until"] = os.clock() + 3.4, ["Reassembled"] = false, ["Clear"] = 0, ["Logged"] = 0};
+						now.CFrame = CFrame.new(now.Position + Vector3.new(0, 75, 0)) * now.CFrame.Rotation;
+						now.AssemblyLinearVelocity = Vector3.zero;
 						log('head bounce lift');
 					end;
-				end));
+				end);
 			elseif data.action == 5 and type(info.positions) == 'table' then
 				for _: number, position: Vector3 in info.positions do
 					addHazard(position, 12, 3);
@@ -26260,34 +29049,19 @@ velo.run(function(): ()
 				log('skull toss');
 			end;
 		end));
+		AutoHalloween:Clean(workspace.ChildAdded:Connect(function(child: Instance): ()
+			if child.Name == 'WallModel' then
+				task.spawn(function(): ()
+					local wall: Instance? = child:WaitForChild('WallPart', 2);
+					if wall and wall:IsA('BasePart') then
+						wall.CanTouch = false;
+					end;
+				end);
+			end;
+		end));
 
-		local hoppedAt: number, loggedAt: number = 0, 0;
-		walk.Active = true;
-		table.insert(state.Cleanup, runService.Heartbeat:Connect(function(): ()
-			if not entitylib.isAlive then
-				return;
-			end;
-			local root: BasePart = entitylib.character.RootPart;
-			if lifted then
-				local wave: Instance? = workspace:FindFirstChild('BlockStompShockwave');
-				if lifted.Reassembled and not wave and lifted.Clear == 0 then
-					lifted.Clear = os.clock();
-				end;
-				if wave and wave:IsA('BasePart') and os.clock() - lifted.Logged > 0.5 then
-					lifted.Logged = os.clock();
-					log(string.format('shockwave size %.0f,%.0f,%.0f at %.0f,%.0f', wave.Size.X, wave.Size.Y, wave.Size.Z, wave.Position.X, wave.Position.Z));
-				end;
-				local hovering: boolean = os.clock() < lifted.Until and (lifted.Clear == 0 or os.clock() - lifted.Clear < 0.35);
-				root.CFrame = CFrame.new(lifted.Origin + Vector3.new(0, hovering and 75 or 0, 0)) * root.CFrame.Rotation;
-				root.AssemblyLinearVelocity = Vector3.zero;
-				if hovering then
-					walk.Dir = Vector3.zero;
-					return;
-				end;
-				lifted = nil;
-				log('head bounce lift done');
-			end;
-			local now: number, position: Vector3 = os.clock(), root.Position;
+		local activeHazards: () -> {table} = function(): {table}
+			local now: number = os.clock();
 			local active: {table} = {};
 			for index: number = #hazards, 1, -1 do
 				if now > hazards[index].Until then
@@ -26322,30 +29096,68 @@ velo.run(function(): ()
 					bones[bone] = nil;
 					continue;
 				end;
-				local velocity: Vector3 = bone.AssemblyLinearVelocity;
+				local position: Vector3, velocity: Vector3 = bone.Position, bone.AssemblyLinearVelocity;
 				if now - info.Time > 0.03 then
-					velocity = (bone.Position - info.Position) / (now - info.Time);
-					info.Position, info.Time = bone.Position, now;
+					velocity = (position - info.Position) / (now - info.Time);
+					info.Position, info.Time = position, now;
 				end;
 				if velocity.Magnitude > 6 and velocity.Magnitude < 150 then
 					if not info.Logged then
 						info.Logged = true;
-						log(string.format('bone speed %.0f at %.0f,%.0f,%.0f', velocity.Magnitude, bone.Position.X, bone.Position.Y, bone.Position.Z));
+						log('bone speed '..math.floor(velocity.Magnitude)..' at '..math.floor(position.X)..','..math.floor(position.Y)..','..math.floor(position.Z));
 					end;
 					for _: number, lead: number in {0, 0.4, 0.8} do
-						table.insert(active, {["Center"] = bone.Position + velocity * lead, ["Radius"] = 12});
+						table.insert(active, {["Center"] = position + velocity * lead, ["Radius"] = 12});
 					end;
 				end;
 			end;
 			for _: number, cloud: Instance in collectionService:GetTagged('SkeletonBossGasCloud') do
-				local spot: Vector3? = positionOf(cloud);
+				local spot: Vector3? = partPosition(cloud);
 				if spot then
 					table.insert(active, {["Center"] = spot, ["Radius"] = (cloud:IsA('BasePart') and math.max(cloud.Size.X, cloud.Size.Z) / 2 or 14) + 4});
 				end;
 			end;
+			return active;
+		end;
+
+		bindWalk();
+		walk.Active = true;
+		local loggedAt: number, hoppedAt: number = 0, 0;
+		while current(token) do
+			local root: BasePart? = rootPart();
+			if not root then
+				task.wait(0.5);
+				continue;
+			end;
+			if lifted then
+				local wave: Instance? = workspace:FindFirstChild('BlockStompShockwave');
+				if lifted.Reassembled and not wave and lifted.Clear == 0 then
+					lifted.Clear = os.clock();
+				end;
+				if wave and wave:IsA('BasePart') and os.clock() - lifted.Logged > 0.5 then
+					lifted.Logged = os.clock();
+					log('shockwave size '..math.floor(wave.Size.X)..','..math.floor(wave.Size.Y)..','..math.floor(wave.Size.Z)..' at '..math.floor(wave.Position.X)..','..math.floor(wave.Position.Z));
+				end;
+				if os.clock() < lifted.Until and (lifted.Clear == 0 or os.clock() - lifted.Clear < 0.35) then
+					walk.Dir = Vector3.zero;
+					root.CFrame = CFrame.new(lifted.Origin + Vector3.new(0, 75, 0)) * root.CFrame.Rotation;
+					root.AssemblyLinearVelocity = Vector3.zero;
+					task.wait();
+					continue;
+				end;
+				root.CFrame = CFrame.new(lifted.Origin) * root.CFrame.Rotation;
+				root.AssemblyLinearVelocity = Vector3.zero;
+				lifted = nil;
+				log('head bounce lift done');
+			end;
+			local position: Vector3 = root.Position;
+			local active: {table} = activeHazards();
 			local inside: boolean = false;
 			for _: number, hazard: table in active do
-				inside = inside or ((position - hazard.Center) * flatMask).Magnitude < hazard.Radius;
+				if ((position - hazard.Center) * flatMask).Magnitude < hazard.Radius then
+					inside = true;
+					break;
+				end;
 			end;
 			local direction: Vector3 = Vector3.zero;
 			if inside then
@@ -26363,64 +29175,98 @@ velo.run(function(): ()
 						best, direction = score, candidate;
 					end;
 				end;
-				if now - loggedAt > 1 then
-					loggedAt = now;
-					log(string.format('dodge %.0f hazards at %.0f,%.0f', #active, position.X, position.Z));
+				if os.clock() - loggedAt > 1 then
+					loggedAt = os.clock();
+					log('dodge '..#active..' hazards at '..math.floor(position.X)..','..math.floor(position.Z));
 				end;
 			else
-				local bossSpot: Vector3? = positionOf(collectionService:GetTagged('SkeletonBoss')[1]);
-				local offset: Vector3 = bossSpot and (bossSpot - position) * flatMask or Vector3.zero;
-				if offset.Magnitude > 42 then
-					direction = offset.Unit;
-				elseif offset.Magnitude < 30 and offset.Magnitude > 0.1 then
-					direction = -offset.Unit;
+				local bossSpot: Vector3? = partPosition(collectionService:GetTagged('SkeletonBoss')[1]);
+				if bossSpot then
+					local offset: Vector3 = (bossSpot - position) * flatMask;
+					if offset.Magnitude > 42 then
+						direction = offset.Unit;
+					elseif offset.Magnitude < 30 and offset.Magnitude > 0.1 then
+						direction = -offset.Unit;
+					end;
 				end;
 			end;
 			walk.Dir, walk.Jump = direction, false;
-			if inside and entitylib.character.Humanoid.FloorMaterial ~= Enum.Material.Air and now - hoppedAt > 0.45 then
-				hoppedAt, walk.Jump = now, true;
+			if inside then
+				local body: Humanoid? = liveHumanoid();
+				if body and body.FloorMaterial ~= Enum.Material.Air and os.clock() - hoppedAt > 0.45 then
+					hoppedAt, walk.Jump = os.clock(), true;
+				end;
 			end;
-		end));
-		return nil;
+			task.wait();
+		end;
+		stopWalk();
 	end;
 
 	AutoHalloween = vape.Categories.Utility:CreateModule({
 		["Name"] = 'AutoHalloween',
 		["Function"] = function(callback: boolean): ()
 			if not callback then
+				brain.Token += 1;
+				brain.Hold = 0;
+				if walk.Bound then
+					walk.Bound = false;
+					runService:UnbindFromRenderStep(walkBinding);
+				end;
+				walk.Active, walk.Dir, walk.Jump, walk.Bunny = false, Vector3.zero, false, false;
+				releaseCombat();
 				return;
 			end;
-			for _: number, name: string in {'Speed', 'Fly', 'Nuker'} do
+			brain.Token += 1;
+			brain.Session += 1;
+			brain.Scene, brain.Assets = nil, nil;
+			for _: number, name: string in {'Speed', 'Fly', 'InfiniteFly', 'AutoMiner', 'Nuker'} do
 				local other: table? = vape.Modules[name];
 				if other and other["Enabled"] then
 					other:Toggle();
 					log('disabled '..name);
 				end;
 			end;
-			state.Scene, state.Assets, state.Hold = nil, nil, 0;
-
-			runService:BindToRenderStep('VelocityHalloweenWalk', Enum.RenderPriority.Last.Value + 5, function(): ()
-				if not walk.Active or not entitylib.isAlive then
+			ensureCombat();
+			local eventRemotes: table = bedwars.Client:GetNamespace('Halloween2025Remotes');
+			AutoHalloween:Clean(eventRemotes:Get('PlayerLevelUp'):Connect(function(data: any): ()
+				if type(data) ~= 'table' then
 					return;
 				end;
-				entitylib.character.Humanoid:Move(walk.Dir, false);
-				if walk.Jump then
-					walk.Jump = false;
-					entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping);
+				local offered: {string} = {};
+				for _: number, key: string in {'ability1', 'ability2'} do
+					if type(data[key]) == 'string' then
+						table.insert(offered, data[key]);
+					end;
 				end;
-			end);
-			AutoHalloween:Clean(function(): ()
-				runService:UnbindFromRenderStep('VelocityHalloweenWalk');
-				endScene();
-				combatRelease();
+				local chosen: string? = offered[1];
+				local wanted: string = Upgrades["Value"] == 'Health' and 'health' or 'damage';
+				for _: number, ability: string in offered do
+					if ability:find(wanted) then
+						chosen = ability;
+						break;
+					end;
+				end;
+				if chosen then
+					eventRemotes:Get('RequestSkillUpgrade'):SendToServer({["halloweenUpgradeType"] = chosen, ["level"] = data.level});
+					log('upgrade '..chosen..' at level '..tostring(data.level));
+				end;
+			end));
+			-- Get throws for a remote the place does not define; the keeper hold is optional.
+			pcall(function(): ()
+				AutoHalloween:Clean(bedwars.Client:Get('GravekeeperDeath'):Connect(function(data: any): ()
+					if type(data) == 'table' and data.target == lplr then
+						brain.Hold = os.clock() + 20;
+						log('keeper targets us, self death blocked');
+					end;
+				end));
 			end);
 
 			local damageController: table = bedwars.DamageController;
 			local rawSelfDeath: any = rawget(damageController, 'requestSelfDeath');
 			local requestSelfDeath: (self: table, damageType: any) -> any = damageController.requestSelfDeath;
 			local holdSelfDeath: (self: table, damageType: any) -> any = function(self: table, damageType: any): any
-				log('self death '..tostring(damageType)..' '..debug.traceback():gsub('\n', ' | '));
-				if os.clock() < state.Hold then
+				log('self death '..tostring(damageType)..' '..(debug.traceback():gsub('\n', ' | ')));
+				if os.clock() < brain.Hold then
 					return nil;
 				end;
 				return requestSelfDeath(self, damageType);
@@ -26432,113 +29278,76 @@ velo.run(function(): ()
 				end;
 			end);
 
-			local netManaged: Instance = replicatedStorage.rbxts_include.node_modules['@rbxts'].net.out._NetManaged;
-			if netManaged:FindFirstChild('GravekeeperDeath') then
-				AutoHalloween:Clean(bedwars.Client:Get('GravekeeperDeath'):Connect(function(data: any): ()
-					if type(data) == 'table' and data.target == lplr then
-						state.Hold = os.clock() + 20;
-						log('keeper targets us, self death blocked');
-					end;
-				end));
-			end;
-
-			local nextCheck: number, warned: boolean, levelHooked: boolean = 0, false, false;
-			AutoHalloween:Clean(runService.Heartbeat:Connect(function(): ()
-				local now: number = os.clock();
-				local job: table = nav;
-				if job.Mode and not job.Searching and now >= job.PauseUntil then
-					if job.Mode == 'walk' then
-						stepWalk(job, now);
-					else
-						stepRoute(job, now);
-					end;
-				end;
-				local step: ((now: number) -> boolean)? = state.Step;
-				if step and not nav.Mode and not state.Stepping and now >= state.Wake then
-					local serial: number = state.Serial;
-					state.Stepping = true;
-					local finished: boolean = step(now);
-					if state.Serial == serial then
-						state.Stepping = false;
-						state.Step = not finished and step or nil;
-					end;
-				end;
-				if now < nextCheck then
-					return;
-				end;
-				nextCheck = now + 0.25;
-				local mode: string? = activeEvent();
-				if not mode then
-					if not warned then
-						warned = true;
-						notif('AutoHalloween', "Only works in Marrow's Madness and Arachne's Lair", 6, 'warning');
-					end;
-					return;
-				end;
-				local eventRemotes: table = bedwars.Client:GetNamespace('Halloween2025Remotes');
-				if not levelHooked then
-					levelHooked = true;
-					AutoHalloween:Clean(eventRemotes:Get('PlayerLevelUp'):Connect(function(data: any): ()
-						if type(data) ~= 'table' then
-							return;
+			local session: number = brain.Session;
+			task.spawn(function(): ()
+				local warned: boolean = false;
+				while AutoHalloween["Enabled"] and brain.Session == session do
+					local mode: string? = activeEvent();
+					if not mode then
+						if not warned then
+							warned = true;
+							notif('AutoHalloween', "Only works in Marrow's Madness and Arachne's Lair", 6, 'warning');
 						end;
-						local wanted: string = Upgrades["Value"] == 'Health' and 'health' or 'damage';
-						local chosen: string? = type(data.ability1) == 'string' and data.ability1 or nil;
-						for _: number, ability: any in {data.ability1, data.ability2} do
-							if type(ability) == 'string' and ability:find(wanted) then
-								chosen = ability;
-								break;
+						task.wait(2);
+						continue;
+					end;
+					-- Ensuring combat toggles other modules' options, whose callbacks can throw.
+					local combined: boolean, trouble: any = pcall(ensureCombat);
+					if not combined and os.clock() - brain.Warned > 5 then
+						brain.Warned = os.clock();
+						log('combat failed: '..tostring(trouble));
+					end;
+					local pickedKit: any = lplr:GetAttribute('HalloweenKit');
+					if mode == 'Arachne' and (not pickedKit or pickedKit == 'none') then
+						eventRemotes:Get('PlayerSelectKit'):SendToServer({["kitSelected"] = classKits[Class["Value"]] or 'nazar'});
+						log('class '..Class["Value"]);
+					end;
+					local vital: Humanoid? = liveHumanoid();
+					if vital then
+						if brain.Health - vital.Health >= 25 then
+							local root: BasePart? = rootPart();
+							local near: {string} = {};
+							for _: number, other: Instance in collectionService:GetTagged('entity') do
+								local spot: Vector3? = partPosition(other);
+								if root and spot and other ~= lplr.Character and (spot - root.Position).Magnitude < 40 then
+									table.insert(near, other.Name..':'..math.floor((spot - root.Position).Magnitude));
+								end;
 							end;
+							local where: string = root and math.floor(root.Position.X)..','..math.floor(root.Position.Y)..','..math.floor(root.Position.Z) or '?';
+							log('hp drop '..math.floor(brain.Health)..' -> '..math.floor(vital.Health)..' at '..where..' near '..table.concat(near, ',', 1, math.min(#near, 8)));
 						end;
-						chosen = chosen or (type(data.ability2) == 'string' and data.ability2 or nil);
-						if chosen then
-							eventRemotes:Get('RequestSkillUpgrade'):SendToServer({["halloweenUpgradeType"] = chosen, ["level"] = data.level});
-							log('upgrade '..chosen..' at level '..tostring(data.level));
-						end;
-					end));
-				end;
-				combatEnsure();
-				local pickedKit: any = lplr:GetAttribute('HalloweenKit');
-				if mode == 'Arachne' and (not pickedKit or pickedKit == 'none') then
-					eventRemotes:Get('PlayerSelectKit'):SendToServer({["kitSelected"] = classKits[Class["Value"]] or 'nazar'});
-					log('class '..Class["Value"]);
-				end;
-				if entitylib.isAlive then
-					local health: number = entitylib.character.Humanoid.Health;
-					if Debug["Enabled"] and state.Health - health >= 25 then
-						local origin: Vector3 = entitylib.character.RootPart.Position;
-						local near: {string} = {};
-						for _: number, other: Instance in collectionService:GetTagged('entity') do
-							local spot: Vector3? = positionOf(other);
-							if spot and other ~= lplr.Character and (spot - origin).Magnitude < 40 and #near < 8 then
-								table.insert(near, other.Name..':'..math.floor((spot - origin).Magnitude));
-							end;
-						end;
-						log(string.format('hp drop %.0f -> %.0f at %.0f,%.0f,%.0f near %s', state.Health, health, origin.X, origin.Y, origin.Z, table.concat(near, ',')));
+						brain.Health = vital.Health;
 					end;
-					state.Health = health;
-				end;
-				local sceneKey: string?, sceneAssets: Instance? = nil, nil;
-				for _: string, controller: any in bedwars.Knit.Controllers do
-					if type(controller) == 'table' and rawget(controller, 'sceneKey') ~= nil and rawget(controller, 'active') == true and rawget(controller, 'sceneAssets') then
-						sceneKey, sceneAssets = controller.sceneKey, controller.sceneAssets;
-						break;
+					local sceneKey: string?, sceneAssets: Instance? = nil, nil;
+					for _: any, controller: any in bedwars.Knit.Controllers do
+						if type(controller) == 'table' and rawget(controller, 'sceneKey') ~= nil and rawget(controller, 'active') == true and rawget(controller, 'sceneAssets') then
+							sceneKey, sceneAssets = controller.sceneKey, controller.sceneAssets;
+							break;
+						end;
 					end;
+					if sceneKey ~= brain.Scene or sceneAssets ~= brain.Assets then
+						brain.Token += 1;
+						brain.Scene, brain.Assets = sceneKey, sceneAssets;
+						stopWalk();
+						log('scene '..tostring(sceneKey));
+						local handler: ((token: number, assets: Instance) -> ())? = sceneKey and scenes[sceneKey] or nil;
+						if not handler and sceneKey and sceneAssets then
+							task.spawn(dumpTree, sceneAssets, 'halloween-scene-'..sceneKey..'.txt', true);
+						end;
+						if handler and sceneAssets then
+							local token: number = brain.Token;
+							task.spawn(function(): ()
+								-- A scene script that breaks must not take the director down with it.
+								local ran: boolean, failure: any = pcall(handler, token, sceneAssets);
+								if not ran then
+									log('handler '..sceneKey..' failed: '..tostring(failure));
+								end;
+							end);
+						end;
+					end;
+					task.wait(0.25);
 				end;
-				if sceneKey == state.Scene and sceneAssets == state.Assets then
-					return;
-				end;
-				endScene();
-				state.Scene, state.Assets = sceneKey, sceneAssets;
-				log('scene '..tostring(sceneKey));
-				local handler: ((assets: Instance) -> ((now: number) -> boolean)?)? = sceneKey and scenes[sceneKey];
-				if sceneKey and sceneAssets and not handler then
-					dumpScene(sceneAssets, 'halloween-scene-'..sceneKey..'.txt', true);
-				elseif handler and sceneAssets then
-					combatEnsure();
-					state.Step = handler(sceneAssets);
-				end;
-			end));
+			end);
 		end,
 		["Tooltip"] = "Plays Marrow's Madness and Arachne's Lair for you"
 	});
@@ -26592,34 +29401,36 @@ velo.run(function(): ()
 			return {Hives, Range, Delay};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextCheck: number, nextPlace: number = 0, 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < math.max(nextCheck, nextPlace) or not entitylib.isAlive then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				if not bedwars.AbilityController:canUseAbility('place_scarab_hive', quiet) then
-					return;
-				end;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local standing: number = 0;
-				for _: number, hive: Instance in collectionService:GetTagged('scarab_spawner') do
-					local part: BasePart? = hive:IsA('Model') and hive.PrimaryPart or hive;
-					if part and part:GetAttribute('PlacedByUserId') == lplr.UserId and (part.Position - origin).Magnitude <= Range["Value"] then
-						standing += 1;
+			local running: boolean, nextPlace: number = true, 0;
+			autoKit:Clean(function(): ()
+				running = false;
+			end);
+			task.spawn(function(): ()
+				repeat
+					if entitylib.isAlive and tick() >= nextPlace and bedwars.AbilityController:canUseAbility('place_scarab_hive', quiet) then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						local standing: number = 0;
+						for _: number, hive: Instance in collectionService:GetTagged('scarab_spawner') do
+							local part: BasePart? = hive:IsA('Model') and hive.PrimaryPart or hive;
+							if part and part:GetAttribute('PlacedByUserId') == lplr.UserId and (part.Position - origin).Magnitude <= Range["Value"] then
+								standing += 1;
+							end;
+						end;
+						if standing < Hives["Value"] then
+							nextPlace = tick() + Delay["Value"];
+							bedwars.AbilityController:useAbility('place_scarab_hive');
+						end;
 					end;
-				end;
-				if standing < Hives["Value"] then
-					nextPlace = tick() + Delay["Value"];
-					bedwars.AbilityController:useAbility('place_scarab_hive');
-				end;
-			end));
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
 
 velo.run(function(): ()
 	local checkRate: number = 0.5;
+	local buyGap: number = 0.1;
 	local upgrades: {string} = {};
 	local buyToggles: {[string]: table} = {};
 	local Last: table;
@@ -26643,37 +29454,43 @@ velo.run(function(): ()
 			return created;
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextCheck: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				local crystal: table? = getItem('frost_crystal');
-				if not crystal or (MenuCheck["Enabled"] and not bedwars.AppController:isAppOpen('FrostyHammerApp')) then
-					return;
-				end;
-				local tiers: {[string]: number} = bedwars.AdetundeUtil.getUpgradesFromHammer(lplr) or {};
-				local saved: string? = Last["Value"] ~= 'None' and Last["Value"] or nil;
-				local nextTier: (upgrade: string) -> table? = function(upgrade: string): table?
-					return tiers[upgrade] ~= nil and buyToggles[upgrade]["Enabled"] and bedwars.AdetundeUpgradeMeta[upgrade].tiers[tiers[upgrade] + 1] or nil;
-				end;
-				local othersLeft: boolean = false;
-				for _: number, upgrade: string in upgrades do
-					if upgrade ~= saved and nextTier(upgrade) then
-						othersLeft = true;
-						local tier: table = nextTier(upgrade);
-						if crystal.amount >= tier.price then
-							fire('UpgradeFrostyHammer', 'CallServer', upgrade);
-							return;
+			local running: boolean = true;
+			autoKit:Clean(function(): ()
+				running = false;
+			end);
+			task.spawn(function(): ()
+				repeat
+					if not MenuCheck["Enabled"] or bedwars.AppController:isAppOpen('FrostyHammerApp') then
+						local tiers: {[string]: number} = bedwars.AdetundeUtil.getUpgradesFromHammer(lplr) or {};
+						local saved: string? = Last["Value"] ~= 'None' and Last["Value"] or nil;
+						local nextTier: (upgrade: string) -> table? = function(upgrade: string): table?
+							return buyToggles[upgrade]["Enabled"] and bedwars.AdetundeUpgradeMeta[upgrade].tiers[tiers[upgrade] + 1] or nil;
+						end;
+						local order: {string}, waiting: boolean = {}, false;
+						for _: number, upgrade: string in upgrades do
+							if tiers[upgrade] ~= nil and upgrade ~= saved then
+								table.insert(order, upgrade);
+								waiting = waiting or nextTier(upgrade) ~= nil;
+							end;
+						end;
+						if saved and tiers[saved] ~= nil and not waiting then
+							table.insert(order, saved);
+						end;
+						for _: number, upgrade: string in order do
+							local crystal: table? = getItem('frost_crystal');
+							if not crystal then
+								break;
+							end;
+							local tier: table? = nextTier(upgrade);
+							if tier and crystal.amount >= tier.price then
+								fire('UpgradeFrostyHammer', 'CallServer', upgrade);
+								task.wait(buyGap);
+							end;
 						end;
 					end;
-				end;
-				local savedTier: table? = saved and not othersLeft and nextTier(saved);
-				if savedTier and crystal.amount >= savedTier.price then
-					fire('UpgradeFrostyHammer', 'CallServer', saved);
-				end;
-			end));
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
@@ -26696,28 +29513,33 @@ velo.run(function(): ()
 			return {VoidSave, Escape, Health, Range};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextCheck: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or not entitylib.isAlive then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				if not bedwars.AbilityController:canUseAbility('rocket_detonate', quiet) then
-					return;
-				end;
-				local root: BasePart = entitylib.character.RootPart;
-				local falling: boolean = VoidSave["Enabled"] and root.AssemblyLinearVelocity.Y <= fallSpeed and not workspace:Raycast(root.Position, Vector3.new(0, -2000, 0), store.airRay);
-				local cornered: boolean = Escape["Enabled"] and entitylib.character.Health <= entitylib.character.MaxHealth * Health["Value"] / 100 and #entitylib.AllPosition({
-					["Range"] = Range["Value"],
-					["Part"] = 'RootPart',
-					["Players"] = autoKit.Options.Targets.Players["Enabled"],
-					["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"]
-				}) > 0;
-				if falling or cornered then
-					nextCheck = tick() + 1;
-					bedwars.AbilityController:useAbility('rocket_detonate');
-				end;
-			end));
+			local running: boolean, nextBoost: number = true, 0;
+			autoKit:Clean(function(): ()
+				running = false;
+			end);
+			task.spawn(function(): ()
+				repeat
+					if entitylib.isAlive and tick() >= nextBoost and bedwars.AbilityController:canUseAbility('rocket_detonate', quiet) then
+						local root: BasePart = entitylib.character.RootPart;
+						local humanoid: Humanoid = entitylib.character.Humanoid;
+						local boost: boolean = VoidSave["Enabled"] and root.AssemblyLinearVelocity.Y <= fallSpeed and not workspace:Raycast(root.Position, Vector3.new(0, -2000, 0), store.airRay);
+						if not boost and Escape["Enabled"] and humanoid.Health <= humanoid.MaxHealth * (Health["Value"] / 100) then
+							boost = #entitylib.AllPosition({
+								["Range"] = Range["Value"],
+								["Part"] = 'RootPart',
+								["Players"] = autoKit.Options.Targets.Players["Enabled"],
+								["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"],
+								["Priority"] = false
+							}) > 0;
+						end;
+						if boost then
+							nextBoost = tick() + 1;
+							bedwars.AbilityController:useAbility('rocket_detonate');
+						end;
+					end;
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
@@ -26735,27 +29557,31 @@ velo.run(function(): ()
 			return {Range, Amount};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextCheck: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or not entitylib.isAlive then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				if bedwars.AbilityController:canUseAbility('spider_queen_summon_spiders', quiet) and #entitylib.AllPosition({
-					["Range"] = Range["Value"],
-					["Part"] = 'RootPart',
-					["Players"] = autoKit.Options.Targets.Players["Enabled"],
-					["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"],
-					["Wallcheck"] = autoKit.Options.Targets.Walls["Enabled"] or nil
-				}) >= Amount["Value"] then
-					bedwars.AbilityController:useAbility('spider_queen_summon_spiders');
-				end;
-			end));
+			local running: boolean = true;
+			autoKit:Clean(function(): ()
+				running = false;
+			end);
+			task.spawn(function(): ()
+				repeat
+					if entitylib.isAlive and bedwars.AbilityController:canUseAbility('spider_queen_summon_spiders', quiet) and #entitylib.AllPosition({
+						["Range"] = Range["Value"],
+						["Part"] = 'RootPart',
+						["Players"] = autoKit.Options.Targets.Players["Enabled"],
+						["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"],
+						["Wallcheck"] = autoKit.Options.Targets.Walls["Enabled"],
+						["Priority"] = false
+					}) >= Amount["Value"] then
+						bedwars.AbilityController:useAbility('spider_queen_summon_spiders');
+					end;
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
 
 velo.run(function(): ()
+	local checkRate: number = 0.1;
 	local maxHiveLevel: number = 10;
 	local Collect: table;
 	local CollectRange: table;
@@ -26779,38 +29605,48 @@ velo.run(function(): ()
 			return {Collect, CollectRange, CollectDelay, Switch, NetOnly, Deposit, DepositRange, DepositDelay};
 		end,
 		["Start"] = function(autoKit: table): ()
+			local running: boolean = true;
 			local hives: {BasePart} = collection('beehive', autoKit);
-			local nextCatch: number, nextDeposit: number = 0, 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if not entitylib.isAlive then
-					return;
-				end;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				if Collect["Enabled"] and tick() >= nextCatch and (not NetOnly["Enabled"] or store.hand.tool and store.hand.tool.Name == 'bee_net') then
-					for _: number, bee: Instance in collectionService:GetTagged('bee') do
-						local root: BasePart? = bee.PrimaryPart or bee:FindFirstChild('Root');
-						if root and (origin - root.Position).Magnitude <= CollectRange["Value"] then
-							local net: table? = Switch["Enabled"] and getItem('bee_net');
-							if net then
-								switchItem(net.tool, 0);
+			autoKit:Clean(function(): ()
+				running = false;
+			end);
+			task.spawn(function(): ()
+				repeat
+					if entitylib.isAlive then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						if Collect["Enabled"] and (not NetOnly["Enabled"] or store.hand.tool and store.hand.tool.Name == 'bee_net') then
+							for _: number, bee: Model in collectionService:GetTagged('bee') do
+								local root: BasePart? = bee.PrimaryPart or bee:FindFirstChild('Root');
+								if root and (origin - root.Position).Magnitude <= CollectRange["Value"] then
+									local net: table? = Switch["Enabled"] and getItem('bee_net') or nil;
+									if net then
+										switchItem(net.tool);
+									end;
+									fire('PickUpBee', 'SendToServer', {["beeId"] = bee:GetAttribute('BeeId')});
+									if CollectDelay["Value"] > 0 then
+										task.wait(CollectDelay["Value"]);
+									end;
+								end;
 							end;
-							fire('PickUpBee', 'SendToServer', {["beeId"] = bee:GetAttribute('BeeId')});
-							nextCatch = tick() + CollectDelay["Value"];
-							break;
+						end;
+						if Deposit["Enabled"] and getItem('bee') then
+							for _: number, hive: BasePart in hives do
+								if not getItem('bee') then
+									break;
+								end;
+								local prompt: ProximityPrompt? = hive:FindFirstChildWhichIsA('ProximityPrompt');
+								if prompt and (hive:GetAttribute('Level') or 0) < maxHiveLevel and hive:GetAttribute('PlacedByUserId') == lplr.UserId and (origin - hive.Position).Magnitude <= DepositRange["Value"] then
+									task.spawn(fireproximityprompt, prompt);
+									if DepositDelay["Value"] > 0 then
+										task.wait(DepositDelay["Value"]);
+									end;
+								end;
+							end;
 						end;
 					end;
-				end;
-				if Deposit["Enabled"] and tick() >= nextDeposit and getItem('bee') then
-					for _: number, hive: BasePart in hives do
-						local prompt: ProximityPrompt? = hive:FindFirstChildWhichIsA('ProximityPrompt');
-						if prompt and (hive:GetAttribute('Level') or 0) < maxHiveLevel and hive:GetAttribute('PlacedByUserId') == lplr.UserId and (origin - hive.Position).Magnitude <= DepositRange["Value"] then
-							nextDeposit = tick() + DepositDelay["Value"];
-							fireproximityprompt(prompt);
-							break;
-						end;
-					end;
-				end;
-			end));
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
@@ -26833,37 +29669,50 @@ velo.run(function(): ()
 			return {Track, TrackDelay, Reroll, RerollRange};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextCheck: number, nextTrack: number, nextReroll: number = 0, 0, 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or not entitylib.isAlive then
-					return;
+			local running: boolean, nextTrack: number, nextReroll: number = true, 0, 0;
+			local tryAbility: (ability: string) -> boolean = function(ability: string): boolean
+				if not bedwars.AbilityController:canUseAbility(ability, quiet) then
+					return false;
 				end;
-				nextCheck = tick() + checkRate;
-				local kitState: table? = bedwars.Store:getState().Kit;
-				local bounty: Player? = kitState and kitState.bountyHunterTarget;
-				if Track["Enabled"] and bounty and tick() >= nextTrack then
-					local enabled: table = bedwars.AbilityController.enabledAbilities or {};
-					local ability: string = 'bounty_hunter_'..math.clamp((bedwars.BountyHunterUtil.getBountyHunterLevel(lplr) or 0) + 1, 1, 4);
-					for _: number, level: string in trackLevels do
-						if enabled[level] then
-							ability = level;
-							break;
+				bedwars.AbilityController:useAbility(ability);
+				return true;
+			end;
+			autoKit:Clean(function(): ()
+				running = false;
+			end);
+			task.spawn(function(): ()
+				repeat
+					if entitylib.isAlive then
+						local kitState: table? = bedwars.Store:getState().Kit;
+						local bounty: Player? = kitState and kitState.bountyHunterTarget;
+						local ent: table? = bounty and entitylib.getEntity(bounty);
+						if Track["Enabled"] and bounty and tick() >= nextTrack then
+							local enabled: table? = bedwars.AbilityController.enabledAbilities;
+							local ability: string? = nil;
+							for _: number, level: string in trackLevels do
+								if enabled and enabled[level] then
+									ability = level;
+									break;
+								end;
+							end;
+							if not ability then
+								local level: number = bedwars.BountyHunterUtil and bedwars.BountyHunterUtil.getBountyHunterLevel(lplr) or 0;
+								ability = 'bounty_hunter_'..math.clamp(level + 1, 1, 4);
+							end;
+							if tryAbility(ability) then
+								nextTrack = tick() + TrackDelay["Value"];
+							end;
+						end;
+						if Reroll["Enabled"] and tick() >= nextReroll then
+							local distance: number = ent and ent.RootPart and (ent.RootPart.Position - entitylib.character.RootPart.Position).Magnitude or math.huge;
+							if distance > RerollRange["Value"] and tryAbility('bounty_hunter_reroll') then
+								nextReroll = tick() + 1;
+							end;
 						end;
 					end;
-					if bedwars.AbilityController:canUseAbility(ability, quiet) then
-						bedwars.AbilityController:useAbility(ability);
-						nextTrack = tick() + TrackDelay["Value"];
-					end;
-				end;
-				if Reroll["Enabled"] and tick() >= nextReroll then
-					local ent: table? = bounty and entitylib.getEntity(bounty);
-					local distance: number = ent and (ent.RootPart.Position - entitylib.character.RootPart.Position).Magnitude or math.huge;
-					if distance > RerollRange["Value"] and bedwars.AbilityController:canUseAbility('bounty_hunter_reroll', quiet) then
-						bedwars.AbilityController:useAbility('bounty_hunter_reroll');
-						nextReroll = tick() + 1;
-					end;
-				end;
-			end));
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
@@ -26885,63 +29734,73 @@ velo.run(function(): ()
 			return {BedCheck, Animation, HammerOnly, Blacklist};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local blockKind: {[BasePart]: string} = {};
-			local placed: {BasePart} = collection('block', autoKit, function(list: {BasePart}, block: BasePart, tag: string): ()
-				task.defer(function(): ()
-					if block.Parent and not block:GetAttribute('NoBreak') and block:GetAttribute('PlacedByUserId') then
-						blockKind[block] = block.Name:find('wool_') and 'wool' or block.Name;
-						table.insert(list, block);
-					end;
-				end);
-			end, function(list: {BasePart}, block: BasePart, tag: string): ()
-				local index: number? = table.find(list, block);
-				if index then
-					table.remove(list, index);
-				end;
-				blockKind[block] = nil;
+			local running: boolean = true;
+			autoKit:Clean(function(): ()
+				running = false;
 			end);
-			local nextCheck: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or store.matchState == 0 or not entitylib.isAlive then
+			task.spawn(function(): ()
+				repeat
+					task.wait();
+				until store.matchState ~= 0 or not running;
+				if not running then
 					return;
 				end;
-				nextCheck = tick() + checkRate;
-				local holding: boolean = store.hand.tool ~= nil and store.hand.tool.Name == 'hammer';
-				if HammerOnly["Enabled"] and not holding or not HammerOnly["Enabled"] and not getItem('hammer') then
-					return;
-				end;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local bed: BasePart?, bedDistance: number = nil, math.huge;
-				local teamFlag: string = 'Team'..(lplr:GetAttribute('Team') or -1)..'NoBreak';
-				for _: number, candidate: BasePart in (BedCheck["Enabled"] and collectionService:GetTagged('bed') or {}) do
-					if candidate:GetAttribute(teamFlag) and (candidate.Position - origin).Magnitude < bedDistance then
-						bed, bedDistance = candidate, (candidate.Position - origin).Magnitude;
+				local blockKind: {[BasePart]: string} = {};
+				local placed: {BasePart} = collection('block', autoKit, function(list: {BasePart}, block: BasePart, tag: string): ()
+					task.delay(0, function(): ()
+						if block.Parent and not block:GetAttribute('NoBreak') and block:GetAttribute('PlacedByUserId') then
+							blockKind[block] = block.Name:find('wool_') and 'wool' or block.Name;
+							table.insert(list, block);
+						end;
+					end);
+				end, function(list: {BasePart}, block: BasePart, tag: string): ()
+					local index: number? = table.find(list, block);
+					if index then
+						table.remove(list, index);
 					end;
-				end;
-				for _: number, block: BasePart in placed do
-					if table.find(Blacklist["ListEnabled"], blockKind[block]) or block:FindFirstChild('BuilderFortify') then
-						continue;
+					blockKind[block] = nil;
+				end);
+				repeat
+					if entitylib.isAlive and (not HammerOnly["Enabled"] and getItem('hammer') or HammerOnly["Enabled"] and store.hand.tool and store.hand.tool.Name == 'hammer') then
+						local bed: BasePart?, bedDistance: number = nil, math.huge;
+						if BedCheck["Enabled"] then
+							local origin: Vector3 = entitylib.character.RootPart.Position;
+							local teamFlag: string = 'Team'..(lplr:GetAttribute('Team') or -1)..'NoBreak';
+							for _: number, candidate: BasePart in collectionService:GetTagged('bed') do
+								if (origin - candidate.Position).Magnitude < bedDistance and candidate:GetAttribute(teamFlag) then
+									bed, bedDistance = candidate, (origin - candidate.Position).Magnitude;
+								end;
+							end;
+						end;
+						for _: number, block: BasePart in placed do
+							if table.find(Blacklist["ListEnabled"], blockKind[block]) then
+								continue;
+							end;
+							if (not BedCheck["Enabled"] or bed and (bed.Position - block.Position).Magnitude <= bedRadius) and not block:FindFirstChild('BuilderFortify') then
+								fire('FortifyBlock', 'SendToServer', bedwars.BlockController:getBlockPosition(block.Position));
+								if Animation["Enabled"] then
+									bedwars.GameAnimationUtil:playAnimation(lplr, bedwars.GameAnimationUtil:getAssetId(bedwars.AnimationType.BUILDER_HAMMER_HIT), {["fadeInTime"] = 0.02});
+									bedwars.AudioManager:playAudio(bedwars.SoundList.FORTIFY_BLOCK, {["position"] = entitylib.character.RootPart.Position});
+								end;
+							end;
+						end;
 					end;
-					if BedCheck["Enabled"] and (not bed or (bed.Position - block.Position).Magnitude > bedRadius) then
-						continue;
-					end;
-					fire('FortifyBlock', 'SendToServer', bedwars.BlockController:getBlockPosition(block.Position));
-					if Animation["Enabled"] then
-						bedwars.GameAnimationUtil:playAnimation(lplr, bedwars.GameAnimationUtil:getAssetId(bedwars.AnimationType.BUILDER_HAMMER_HIT), {["fadeInTime"] = 0.02});
-						bedwars.AudioManager:playAudio(bedwars.SoundList.FORTIFY_BLOCK, {["position"] = origin});
-					end;
-				end;
-			end));
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
 
 velo.run(function(): ()
-	local checkRate: number = 0.2;
+	local checkRate: number = 0.05;
+	local updateRate: number = 0.2;
 	local stickiness: number = 15;
-	local utilModule: Instance? = replicatedStorage.TS.games.bedwars.kit.kits:FindFirstChild('blood-assassin');
-	utilModule = utilModule and utilModule:FindFirstChild('blood-assassin-util');
-	local abandonTime: number = utilModule and require(utilModule).BloodAssassinUtil.ABANDON_TIME_SEC or 60;
+	local loaded: boolean, util: any = pcall(function(): any
+		return require(replicatedStorage.TS.games.bedwars.kit.kits['blood-assassin']['blood-assassin-util']).BloodAssassinUtil;
+	end);
+	local abandonTime: number = loaded and util and util.ABANDON_TIME_SEC or 60;
+	local session: table? = nil;
 	local ContractMode: table;
 	local MinHealth: table;
 	local TargetMode: table;
@@ -26955,20 +29814,32 @@ velo.run(function(): ()
 			MinHealth = autoKit:CreateSlider({["Name"] = 'Caitlyn Minimum health', ["Min"] = 1, ["Max"] = 100, ["Default"] = 30, ["Tooltip"] = 'How low they must be for On Low'});
 			TargetMode = autoKit:CreateDropdown({["Name"] = 'Caitlyn Target mode', ["List"] = sortNames, ["Default"] = 'Distance', ["Tooltip"] = 'Who gets the contract when several hit players have one up'});
 			Range = autoKit:CreateSlider({["Name"] = 'Caitlyn Range', ["Min"] = 1, ["Max"] = 50, ["Default"] = 50, ["Suffix"] = 'studs'});
-			Priorities = autoKit:CreateToggle({["Name"] = 'Caitlyn Target priorities', ["Tooltip"] = 'Takes the contract with the best reward and easiest kill in range right away'});
+			Priorities = autoKit:CreateToggle({["Name"] = 'Caitlyn Target priorities', ["Function"] = function(): ()
+				if session then
+					session.Priority = nil;
+				end;
+			end, ["Tooltip"] = 'Takes the contract with the best reward and easiest kill in range right away'});
 			DropContract = autoKit:CreateToggle({["Name"] = 'Caitlyn Drop contract', ["Tooltip"] = 'Drops a contract once the game allows it if the target died or left your range'});
 			return {ContractMode, MinHealth, TargetMode, Range, Priorities, DropContract};
 		end,
 		["Start"] = function(autoKit: table): ()
+			local running: boolean = true;
 			local hits: {[Instance]: number} = {};
 			local threats: {[Player]: number} = {};
 			local beds: {[any]: table} = {};
 			local pending: table = {["Until"] = 0, ["DropUntil"] = 0};
+			session = pending;
 			local reset: (keepPriority: boolean) -> () = function(keepPriority: boolean): ()
 				table.clear(hits);
 				pending.Id = nil;
 				pending.Priority = keepPriority and pending.Priority or nil;
 			end;
+			autoKit:Clean(function(): ()
+				running = false;
+				if session == pending then
+					session = nil;
+				end;
+			end);
 			autoKit:Clean(vapeEvents.EntityDamageEvent.Event:Connect(function(damage: table): ()
 				local source: table? = typeof(damage.fromEntity) == 'Instance' and entitylib.getEntity(damage.fromEntity) or nil;
 				if damage.entityInstance == lplr.Character and source and source.Player then
@@ -26994,7 +29865,7 @@ velo.run(function(): ()
 			end;
 			local bedStanding: (team: any) -> boolean = function(team: any): boolean
 				local cached: table? = beds[team];
-				if not cached or cached.Expires < tick() then
+				if not cached or cached.Expires <= tick() then
 					local standing: boolean = false;
 					for _: number, bed: Instance in collectionService:GetTagged('bed') do
 						standing = standing or bed:GetAttribute('Team'..tostring(team)..'NoBreak') ~= nil;
@@ -27009,11 +29880,12 @@ velo.run(function(): ()
 				if not ent then
 					return nil;
 				end;
+				local health: number = ent.Humanoid.Health;
 				local distance: number = (entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude;
 				local value: number = 30 + (tonumber(contract.rewardValue) or 0) * 35;
-				value += (1 - math.clamp(ent.Health / math.max(ent.MaxHealth, 1), 0, 1)) * 35;
+				value += (1 - math.clamp(health / math.max(ent.Humanoid.MaxHealth, 1), 0, 1)) * 35;
 				value += math.max(1 - distance / Range["Value"], 0) * 20;
-				value += ent.Health <= MinHealth["Value"] and 20 or 0;
+				value += health <= MinHealth["Value"] and 20 or 0;
 				value += (threats[ent.Player] or 0) > tick() and 30 or 0;
 				value += ent.Character:GetAttribute('BleedSource') == lplr.UserId and 25 or 0;
 				local team: any = ent.Player:GetAttribute('Team');
@@ -27027,13 +29899,16 @@ velo.run(function(): ()
 			local pickByPriority: (contracts: {table}) -> (table?, boolean) = function(contracts: {table}): (table?, boolean)
 				local rewarding: boolean = false;
 				for _: number, contract: table in contracts do
-					rewarding = rewarding or contract.rewardValue ~= nil or contract.rewardUpgrade ~= nil;
+					if contract.rewardValue or contract.rewardUpgrade then
+						rewarding = true;
+						break;
+					end;
 				end;
 				if not rewarding then
 					return nil, false;
 				end;
 				local inRange: {[any]: table} = {};
-				for _: number, ent: table in entitylib.AllPosition({["Part"] = 'RootPart', ["Players"] = true, ["Range"] = Range["Value"], ["Wallcheck"] = true}) do
+				for _: number, ent: table in entitylib.AllPosition({["Part"] = 'RootPart', ["Players"] = true, ["Range"] = Range["Value"], ["Wallcheck"] = true, ["Priority"] = false}) do
 					if not spectating(ent) then
 						inRange[ent.Player] = ent;
 						inRange[ent.Character] = ent;
@@ -27062,9 +29937,9 @@ velo.run(function(): ()
 						offered[contract.target.Name] = contract;
 					end;
 				end;
-				for _: number, ent: table in entitylib.AllPosition({["Part"] = 'RootPart', ["Players"] = true, ["Range"] = Range["Value"], ["Sort"] = sortMethods[TargetMode["Value"]]}) do
+				for _: number, ent: table in entitylib.AllPosition({["Part"] = 'RootPart', ["Players"] = true, ["Range"] = Range["Value"], ["Sort"] = sortMethods[TargetMode["Value"]], ["Priority"] = false}) do
 					local contract: table? = offered[ent.Player.Name];
-					if contract and (hits[ent.Character] or 0) > tick() and not spectating(ent) and (ContractMode["Value"] ~= 'On Low' or ent.Health < MinHealth["Value"]) then
+					if contract and (hits[ent.Character] or 0) > tick() and not spectating(ent) and (ContractMode["Value"] ~= 'On Low' or ent.Humanoid.Health < MinHealth["Value"]) then
 						return contract;
 					end;
 				end;
@@ -27078,12 +29953,7 @@ velo.run(function(): ()
 				local ent: table? = contract.target and entitylib.getEntity(contract.target);
 				return not ent or ent.Health <= 0 or (ent.RootPart.Position - entitylib.character.RootPart.Position).Magnitude > Range["Value"];
 			end;
-			local nextCheck: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
+			local update: () -> () = function(): ()
 				for _: number, stamps: {[any]: number} in {hits, threats} do
 					for key: any, expires: number in stamps do
 						if expires <= tick() then
@@ -27128,7 +29998,17 @@ velo.run(function(): ()
 					pending.Id = contract.id;
 					pending.Until = tick() + 1;
 				end;
-			end));
+			end;
+			task.spawn(function(): ()
+				local nextUpdate: number = 0;
+				repeat
+					if tick() >= nextUpdate then
+						nextUpdate = tick() + updateRate;
+						update();
+					end;
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
@@ -27146,23 +30026,26 @@ velo.run(function(): ()
 			return {Range, Delay};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextCheck: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or not entitylib.isAlive then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				if bedwars.AbilityController:canUseAbility('CARD_THROW', quiet) and entitylib.EntityPosition({
-					["Origin"] = entitylib.character.RootPart.Position,
-					["Range"] = Range["Value"],
-					["Part"] = 'RootPart',
-					["Players"] = true,
-					["Wallcheck"] = true
-				}) then
-					nextCheck = tick() + Delay["Value"];
-					bedwars.AbilityController:useAbility('CARD_THROW');
-				end;
-			end));
+			local running: boolean, nextThrow: number = true, 0;
+			autoKit:Clean(function(): ()
+				running = false;
+			end);
+			task.spawn(function(): ()
+				repeat
+					if entitylib.isAlive and tick() >= nextThrow and bedwars.AbilityController:canUseAbility('CARD_THROW', quiet) and entitylib.EntityPosition({
+						["Origin"] = entitylib.character.RootPart.Position,
+						["Range"] = Range["Value"],
+						["Part"] = 'RootPart',
+						["Players"] = true,
+						["Wallcheck"] = true,
+						["Priority"] = false
+					}) then
+						nextThrow = tick() + Delay["Value"];
+						bedwars.AbilityController:useAbility('CARD_THROW');
+					end;
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
@@ -27188,33 +30071,38 @@ velo.run(function(): ()
 			return {Collect, Steal, Range, Delay, Overclock, OverclockRange};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextCheck: number, nextCollect: number, nextOverclock: number = 0, 0, 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or not entitylib.isAlive then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local controller: table? = bedwars.GatherBotBasicController;
-				if Collect["Enabled"] and tick() >= nextCollect and controller then
-					for bot: Model in controller.gatherBotMap or {} do
-						if bot.Parent and (Steal["Enabled"] or bot:GetAttribute('PlacedByUserId') == lplr.UserId) and (bot:GetAttribute('HeldItemAmount') or 0) > 0 and (bot:GetPivot().Position - origin).Magnitude <= Range["Value"] then
-							fire('GatherBotCollectItems', 'SendToServer', {["gatherBot"] = bot});
-							nextCollect = tick() + Delay["Value"];
-							break;
+			local running: boolean, nextCollect: number, nextOverclock: number = true, 0, 0;
+			autoKit:Clean(function(): ()
+				running = false;
+			end);
+			task.spawn(function(): ()
+				repeat
+					if entitylib.isAlive then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						if Collect["Enabled"] and tick() >= nextCollect then
+							local controller: table? = bedwars.GatherBotBasicController;
+							for bot: Model in controller and controller.gatherBotMap or {} do
+								if bot.Parent and (Steal["Enabled"] or bot:GetAttribute('PlacedByUserId') == lplr.UserId) and (bot:GetAttribute('HeldItemAmount') or 0) > 0 and (bot:GetPivot().Position - origin).Magnitude <= Range["Value"] then
+									fire('GatherBotCollectItems', 'SendToServer', {["gatherBot"] = bot});
+									nextCollect = tick() + Delay["Value"];
+									break;
+								end;
+							end;
+						end;
+						if Overclock["Enabled"] and tick() >= nextOverclock and bedwars.AbilityController:canUseAbility('STEAM_ENGINEER_OVERCLOCK', quiet) and #entitylib.AllPosition({
+							["Range"] = OverclockRange["Value"],
+							["Part"] = 'RootPart',
+							["Players"] = autoKit.Options.Targets.Players["Enabled"],
+							["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"],
+							["Priority"] = false
+						}) > 0 then
+							nextOverclock = tick() + 1;
+							bedwars.AbilityController:useAbility('STEAM_ENGINEER_OVERCLOCK');
 						end;
 					end;
-				end;
-				if Overclock["Enabled"] and tick() >= nextOverclock and bedwars.AbilityController:canUseAbility('STEAM_ENGINEER_OVERCLOCK', quiet) and #entitylib.AllPosition({
-					["Range"] = OverclockRange["Value"],
-					["Part"] = 'RootPart',
-					["Players"] = autoKit.Options.Targets.Players["Enabled"],
-					["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"]
-				}) > 0 then
-					nextOverclock = tick() + 1;
-					bedwars.AbilityController:useAbility('STEAM_ENGINEER_OVERCLOCK');
-				end;
-			end));
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
@@ -27241,7 +30129,7 @@ velo.run(function(): ()
 			return {Banner, Trigger, Range, Cooldown, LegitSwitch, SwitchDelay};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextPlace: number, placing: boolean = 0, false;
+			local running: boolean, nextPlace: number, placing: boolean = true, 0, false;
 			local plant: () -> () = function(): ()
 				if placing or tick() < nextPlace or not entitylib.isAlive then
 					return;
@@ -27270,41 +30158,43 @@ velo.run(function(): ()
 				end;
 				placing, nextPlace = true, tick() + Cooldown["Value"];
 				local previous: number? = LegitSwitch["Enabled"] and store.hand.tool and hotbarSlotOf(store.hand.tool) or nil;
-				local holding: boolean = not LegitSwitch["Enabled"] or store.hand.tool == item.tool or hotbarSwitch(hotbarSlotOf(item.tool));
-				if holding then
+				if not LegitSwitch["Enabled"] or hotbarSwitch(hotbarSlotOf(item.tool)) then
 					if LegitSwitch["Enabled"] then
 						task.wait(SwitchDelay["Value"]);
 					end;
 					placeBlock(spot, itemType);
-					if previous and previous ~= hotbarSlotOf(item.tool) then
+					if previous then
 						task.wait(SwitchDelay["Value"]);
 						hotbarSwitch(previous);
 					end;
 				end;
 				placing = false;
 			end;
+			autoKit:Clean(function(): ()
+				running = false;
+			end);
 			autoKit:Clean(vapeEvents.EntityDamageEvent.Event:Connect(function(damage: table): ()
-				local involved: boolean = (damage.fromEntity ~= nil and damage.fromEntity.Name == lplr.Name) or (lplr.Character ~= nil and damage.entityInstance == lplr.Character);
-				if Trigger["Value"] == 'On attack' and damage.damageType == 0 and involved then
-					plant();
-				end;
-			end));
-			local nextCheck: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if Trigger["Value"] ~= 'On near' or tick() < nextCheck or not entitylib.isAlive then
+				if Trigger["Value"] ~= 'On attack' or damage.damageType ~= 0 then
 					return;
 				end;
-				nextCheck = tick() + checkRate;
-				if entitylib.EntityPosition({
-					["Range"] = Range["Value"],
-					["Part"] = 'RootPart',
-					["Players"] = autoKit.Options.Targets.Players["Enabled"],
-					["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"],
-					["Wallcheck"] = autoKit.Options.Targets.Walls["Enabled"] or nil
-				}) then
-					plant();
+				if (damage.fromEntity and damage.fromEntity.Name == lplr.Name) or (lplr.Character and damage.entityInstance == lplr.Character) then
+					task.spawn(plant);
 				end;
 			end));
+			task.spawn(function(): ()
+				repeat
+					if Trigger["Value"] == 'On near' and entitylib.isAlive and entitylib.EntityPosition({
+						["Range"] = Range["Value"],
+						["Part"] = 'RootPart',
+						["Players"] = autoKit.Options.Targets.Players["Enabled"],
+						["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"],
+						["Wallcheck"] = autoKit.Options.Targets.Walls["Enabled"] or nil
+					}) then
+						plant();
+					end;
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
@@ -27322,26 +30212,27 @@ velo.run(function(): ()
 			return {Range, Amount};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextCheck: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or not entitylib.isAlive then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				if not bedwars.AbilityController:canUseAbility('beast_form', quiet) then
-					return;
-				end;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local nearby: number = 0;
-				for _: number, ent: table in entitylib.List do
-					if ent.Targetable and (ent.RootPart.Position - origin).Magnitude <= Range["Value"] then
-						nearby += 1;
+			local running: boolean = true;
+			autoKit:Clean(function(): ()
+				running = false;
+			end);
+			task.spawn(function(): ()
+				repeat
+					if entitylib.isAlive and bedwars.AbilityController:canUseAbility('beast_form', quiet) then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						local nearby: number = 0;
+						for _: number, ent: table in entitylib.List do
+							if ent.Targetable and (ent.RootPart.Position - origin).Magnitude <= Range["Value"] then
+								nearby += 1;
+							end;
+						end;
+						if nearby >= Amount["Value"] then
+							bedwars.AbilityController:useAbility('beast_form');
+						end;
 					end;
-				end;
-				if nearby >= Amount["Value"] then
-					bedwars.AbilityController:useAbility('beast_form');
-				end;
-			end));
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
@@ -27351,11 +30242,13 @@ velo.run(function(): ()
 	local parkHeight: number = 500;
 	local droneSpeed: number = 30;
 	local arriveDistance: number = 2;
+	local collectDistance: number = 5;
 	local burrowTime: number = 1.25;
 	local riseTime: number = 0.3;
 	local thrownSpeed: number = 100;
 	local splitRadius: number = 20;
 	local guardRadius: number = 60;
+	local flat: Vector3 = Vector3.new(1, 0, 1);
 	local DropMode: table;
 	local Whitelist: table;
 	local Visualize: table;
@@ -27369,7 +30262,7 @@ velo.run(function(): ()
 			Whitelist = autoKit:CreateTextList({["Name"] = 'Cyber Whitelist', ["Default"] = {'emerald', 'diamond'}});
 			Visualize = autoKit:CreateToggle({["Name"] = 'Cyber Visualize', ["Default"] = true, ["Tooltip"] = 'Highlights the targeted item and reports the drone distance'});
 			StealSplit = autoKit:CreateToggle({["Name"] = 'Cyber Steal split', ["Default"] = true, ["Tooltip"] = 'Skips drops at your own generator so only enemy splits get taken'});
-			TargetCheck = autoKit:CreateToggle({["Name"] = 'Cyber Target check', ["Tooltip"] = 'Skips drops with an enemy nearby'});
+			TargetCheck = autoKit:CreateToggle({["Name"] = 'Cyber Target check', ["Tooltip"] = 'Skips drops with an enemy near the drone'});
 			DroneOnly = autoKit:CreateToggle({["Name"] = 'Cyber Limit to item', ["Tooltip"] = 'Only flies while the drone item is held'});
 			return {DropMode, Whitelist, Visualize, StealSplit, TargetCheck, DroneOnly};
 		end,
@@ -27378,22 +30271,62 @@ velo.run(function(): ()
 			if not itemDrops then
 				return;
 			end;
+			local running: boolean = true;
 			local ignored: {[Instance]: number} = {};
-			local job: table = {["Phase"] = 'Idle', ["Until"] = 0, ["Notice"] = math.huge, ["Scan"] = 0};
-			local drone: Model?, generator: Model?, generatorExpires: number, nextDeploy: number, nextRelease: number = nil, nil, 0, 0, 0;
-			local flat: Vector3 = Vector3.new(1, 0, 1);
+			local generator: Model?, generatorExpires: number = nil, 0;
+			local drone: Model?, watched: Model? = nil, nil;
 
 			local teamGenerator: () -> Model? = function(): Model?
-				if generatorExpires < tick() or not (generator and generator.Parent) then
+				if generatorExpires <= tick() or not (generator and generator.Parent) then
 					generator, generatorExpires = collectionService:GetTagged(tostring(lplr:GetAttribute('Team'))..'_TeamOreGenerator')[1], tick() + 5;
 				end;
 				return generator;
 			end;
-			local park: (height: number) -> () = function(height: number): ()
-				local root: BasePart? = drone and drone.Parent and drone.PrimaryPart;
-				if root then
+			local holdingDrone: () -> boolean = function(): boolean
+				return not DroneOnly["Enabled"] or store.hand.tool ~= nil and store.hand.tool.Name == 'drone';
+			end;
+			local getDrone: () -> Model?;
+			getDrone = function(): Model?
+				if not holdingDrone() then
+					return nil;
+				end;
+				if drone and drone.Parent then
+					return drone;
+				end;
+				for _: number, candidate: Model in collectionService:GetTagged('Drone') do
+					if candidate:GetAttribute('PlayerUserId') == lplr.UserId then
+						if watched ~= candidate then
+							watched = candidate;
+							local release: () -> () = function(): ()
+								if not candidate:GetAttribute('HeldItem') then
+									return;
+								end;
+								repeat
+									local root: BasePart? = candidate.PrimaryPart;
+									if root then
+										fire('DropDroneItem', 'SendToServer', {["direction"] = Vector3.new(1000, 10, 0), ["position"] = root.Position});
+									end;
+									task.wait(0.1);
+								until not candidate:GetAttribute('HeldItem') or not running or not candidate.PrimaryPart;
+							end;
+							autoKit:Clean(candidate:GetAttributeChangedSignal('HeldItem'):Connect(release));
+							autoKit:Clean(candidate:GetAttributeChangedSignal('HeldItemAmount'):Connect(release));
+						end;
+						drone = candidate;
+						return candidate;
+					end;
+				end;
+				if getItem('drone') and fire('FireGuidedProjectile', 'CallServer', 'drone') then
+					task.wait(0.1);
+					return getDrone();
+				end;
+				return nil;
+			end;
+			local ascend: (target: Model) -> () = function(target: Model): ()
+				local root: BasePart? = target.PrimaryPart;
+				if root and target.Parent then
 					root.AssemblyLinearVelocity = Vector3.zero;
-					root.CFrame = CFrame.new(root.Position.X, height, root.Position.Z);
+					root.CFrame = CFrame.new(root.Position.X, cruiseHeight, root.Position.Z);
 				end;
 			end;
 			local steer: (root: BasePart, goal: Vector3) -> number = function(root: BasePart, goal: Vector3): number
@@ -27402,26 +30335,21 @@ velo.run(function(): ()
 				root.AssemblyLinearVelocity = CFrame.lookAt(root.Position * flat, goal * flat).LookVector * droneSpeed;
 				return (root.Position * flat - goal * flat).Magnitude;
 			end;
-			local finish: () -> () = function(): ()
-				if job.Highlight then
-					job.Highlight:Destroy();
-				end;
-				job.Phase, job.Drop, job.Highlight, job.Burrow, job.Notice = 'Idle', nil, nil, nil, math.huge;
-			end;
-			local pickDrop: (from: Vector3) -> BasePart? = function(from: Vector3): BasePart?
+			local pickDrop: (target: Model) -> BasePart? = function(target: Model): BasePart?
 				local home: Model? = teamGenerator();
 				local homePosition: Vector3 = home and home.PrimaryPart and home.PrimaryPart.Position or Vector3.zero;
-				local best: BasePart?, bestDistance: number = nil, math.huge;
+				local from: Vector3 = target.PrimaryPart.Position;
 				for drop: Instance, expires: number in ignored do
 					if expires <= tick() or drop.Parent ~= itemDrops then
 						ignored[drop] = nil;
 					end;
 				end;
+				local best: BasePart?, bestDistance: number = nil, math.huge;
 				for _: number, drop: Instance in itemDrops:GetChildren() do
-					local distance: number = drop:IsA('BasePart') and (drop.Position - from).Magnitude or math.huge;
+					local distance: number = drop:IsA('BasePart') and (from - drop.Position).Magnitude or math.huge;
 					if distance < bestDistance and tick() > (ignored[drop] or 0) and table.find(Whitelist["ListEnabled"], drop.Name) and drop.Position.Y > 0 and math.abs(drop.AssemblyLinearVelocity.Y) <= 0
 						and (not StealSplit["Enabled"] or (drop.Position - homePosition).Magnitude > splitRadius)
-						and (not TargetCheck["Enabled"] or not entitylib.EntityPosition({["Origin"] = from, ["Range"] = guardRadius, ["Part"] = 'RootPart', ["Players"] = true})) then
+						and (not TargetCheck["Enabled"] or not entitylib.EntityPosition({["Origin"] = from, ["Range"] = guardRadius, ["Part"] = 'RootPart', ["Players"] = true, ["Priority"] = false})) then
 						best, bestDistance = drop, distance;
 					end;
 				end;
@@ -27436,144 +30364,140 @@ velo.run(function(): ()
 				end;
 				ignored[drop] = tick() + 5;
 				local amount: number = drop:GetAttribute('Amount') or 1;
-				local home: Model? = DropMode["Value"] == 'Generator' and teamGenerator() or nil;
-				local homePart: BasePart? = home and home.PrimaryPart;
-				if DropMode["Value"] == 'Generator' and not homePart then
-					notif('Cyber', 'Generator not found', 20, 'alert');
-					return;
-				end;
-				if not homePart then
-					notif('Cyber', 'Collecting '..amount..' '..drop.Name, 4, 'info');
-				end;
-				local started: number, nextPickup: number = tick(), 0;
-				local carrier: RBXScriptConnection;
-				carrier = runService.Heartbeat:Connect(function(): ()
-					if drop.Parent ~= itemDrops or (homePart and tick() - started >= 1) or not entitylib.isAlive then
-						carrier:Disconnect();
-						notif('Cyber', (homePart and 'Dropped ' or 'Collected ')..amount..' '..drop.Name, homePart and 8 or 4, 'info');
-						return;
-					end;
-					drop.AssemblyLinearVelocity = Vector3.zero;
-					if homePart then
-						drop.CFrame = homePart.CFrame;
-						return;
-					end;
-					drop.CFrame = entitylib.character.RootPart.CFrame - Vector3.new(0, 4, 0);
-					if tick() >= nextPickup then
-						nextPickup = tick() + 0.02;
+				local parent: Instance? = drop.Parent;
+				if DropMode["Value"] == 'Player' then
+					notif('AutoCyber', 'Collecting '..amount..' '..drop.Name, 4, 'info');
+					repeat
+						if not entitylib.isAlive then
+							return;
+						end;
+						drop.AssemblyLinearVelocity = Vector3.zero;
+						drop.CFrame = entitylib.character.RootPart.CFrame - Vector3.new(0, 4, 0);
 						fire('PickupItemDrop', 'CallServerAsync', {["itemDrop"] = drop}):andThen(function(success: boolean): ()
-							local overlay: string? = bedwars.ItemMeta[drop.Name] and bedwars.ItemMeta[drop.Name].pickUpOverlaySound;
-							if success then
+							if success and bedwars.SoundList then
 								bedwars.AudioManager:playAudio(bedwars.SoundList.PICKUP_ITEM_DROP);
-							end;
-							if success and overlay then
-								bedwars.AudioManager:playAudio(overlay, {["position"] = drop.Position, ["volumeMultiplier"] = 0.9});
+								local overlay: string? = bedwars.ItemMeta[drop.Name] and bedwars.ItemMeta[drop.Name].pickUpOverlaySound;
+								if overlay then
+									bedwars.AudioManager:playAudio(overlay, {["position"] = drop.Position, ["volumeMultiplier"] = 0.9});
+								end;
 							end;
 						end);
-					end;
-				end);
-				autoKit:Clean(carrier);
+						task.wait(0.02);
+					until drop.Parent ~= parent;
+					notif('AutoCyber', 'Collected '..amount..' '..drop.Name..(amount > 1 and 's' or ''), 4, 'info');
+					return;
+				end;
+				local started: number = tick();
+				local home: Model? = teamGenerator();
+				local homePart: BasePart? = home and home.PrimaryPart;
+				if not homePart then
+					notif('AutoCyber', 'Generator not found', 20, 'alert');
+					return;
+				end;
+				repeat
+					drop.AssemblyLinearVelocity = Vector3.zero;
+					drop.CFrame = homePart.CFrame;
+					task.wait();
+				until tick() - started >= 1 or drop.Parent ~= parent;
+				notif('AutoCyber', 'Dropped '..amount..' '..drop.Name, 8, 'info');
 			end));
 
 			autoKit:Clean(function(): ()
-				finish();
-				park(parkHeight);
+				running = false;
+				local root: BasePart? = drone and drone.Parent and holdingDrone() and drone.PrimaryPart or nil;
+				if root then
+					root.CFrame = CFrame.new(root.Position.X, parkHeight, root.Position.Z);
+				end;
 			end);
 
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				local flying: boolean = not DroneOnly["Enabled"] or store.hand.tool ~= nil and store.hand.tool.Name == 'drone';
-				if not (drone and drone.Parent) then
-					drone = nil;
-					for _: number, candidate: Model in collectionService:GetTagged('Drone') do
-						if candidate:GetAttribute('PlayerUserId') == lplr.UserId then
-							drone = candidate;
-							break;
-						end;
-					end;
-					if not drone and flying and tick() >= nextDeploy and getItem('drone') then
-						nextDeploy = tick() + 1;
-						fire('FireGuidedProjectile', 'CallServer', 'drone');
-					end;
-				end;
-				local root: BasePart? = drone and drone.PrimaryPart;
-				if not root then
-					return;
-				end;
-				if drone:GetAttribute('HeldItem') and tick() >= nextRelease then
-					nextRelease = tick() + 0.1;
-					fire('DropDroneItem', 'SendToServer', {["direction"] = Vector3.new(1000, 10, 0), ["position"] = root.Position});
-				end;
-				if not flying then
-					return;
-				end;
-
-				if job.Phase == 'Idle' then
-					local drop: BasePart? = tick() >= job.Scan and pickDrop(root.Position) or nil;
-					job.Scan = drop and job.Scan or tick() + 0.2;
-					park(cruiseHeight);
-					if drop then
-						job.Phase, job.Drop, job.Until = 'Rise', drop, tick() + riseTime;
+			task.spawn(function(): ()
+				repeat
+					local current: Model? = getDrone();
+					local drop: BasePart? = current and current.PrimaryPart and pickDrop(current) or nil;
+					if current and drop then
+						ascend(current);
+						task.wait(riseTime);
+						local highlight: Highlight?;
 						if Visualize["Enabled"] then
-							local highlight: Highlight = Instance.new('Highlight');
+							highlight = Instance.new('Highlight');
 							highlight.FillColor = Color3.new(1, 1, 1);
 							highlight.FillTransparency = 0;
 							highlight.OutlineTransparency = 0.5;
 							highlight.OutlineColor = Color3.new();
 							highlight.Parent = drop;
-							job.Highlight = highlight;
 						end;
-						return;
-					end;
-					local nearest: BasePart?, nearestDistance: number = nil, math.huge;
-					for _: number, itemType: string in Whitelist["ListEnabled"] do
-						for _: number, ore: Model in collectionService:GetTagged(itemType..'_OreGenerator') do
-							local distance: number = ore.PrimaryPart and (ore.PrimaryPart.Position - root.Position).Magnitude or math.huge;
-							if distance < nearestDistance then
-								nearest, nearestDistance = ore.PrimaryPart, distance;
+						local distance: number, noticed: number, goal: Vector3 = 0, 9e9, drop.Position;
+						repeat
+							local root: BasePart? = current.Parent and current.PrimaryPart or nil;
+							if not root then
+								break;
+							end;
+							goal = drop.Position;
+							distance = steer(root, goal);
+							if noticed - distance >= 25 then
+								noticed = distance;
+								notif('AutoCyber', 'Drone is '..math.floor(distance)..' studs away from '..drop.Name..'.', 1, 'info');
+							end;
+							task.wait();
+						until drop.Parent ~= itemDrops or not running or distance <= arriveDistance;
+						if not running then
+							if highlight and highlight.Parent then
+								highlight:Destroy();
+							end;
+							break;
+						end;
+						if distance <= collectDistance then
+							local started: number = tick();
+							if Visualize["Enabled"] then
+								notif('AutoCyber', 'Attempting to collect '..drop.Name, 4, 'info');
+							end;
+							local burrow: Vector3?;
+							repeat
+								local root: BasePart? = current.Parent and current.PrimaryPart or nil;
+								if root then
+									if not burrow then
+										local ground: RaycastResult? = store.airRay and workspace:Raycast(goal + Vector3.new(0, 1, 0), Vector3.new(0, -5, 0), store.airRay) or nil;
+										local hitbox: BasePart? = current:FindFirstChild('Hitbox');
+										burrow = Vector3.new(goal.X, (ground and ground.Position.Y or goal.Y) - (hitbox and hitbox.Size.Y or 0), goal.Z);
+									end;
+									root.AssemblyLinearVelocity = Vector3.zero;
+									root.AssemblyAngularVelocity = Vector3.new(0, -30, 0);
+									root.CFrame = CFrame.new(burrow);
+								end;
+								task.wait(0.02);
+							until tick() - started >= burrowTime;
+							ascend(current);
+						elseif Visualize["Enabled"] then
+							notif('AutoCyber', 'Too far away to collect '..drop.Name..' ('..distance..' studs).', 8, 'info');
+						end;
+						if highlight and highlight.Parent then
+							highlight:Destroy();
+						end;
+					elseif current and current.PrimaryPart then
+						ascend(current);
+						for _: number, itemType: string in Whitelist["ListEnabled"] do
+							local generators: {Model} = collectionService:GetTagged(itemType..'_OreGenerator');
+							local from: Vector3 = current.PrimaryPart and current.PrimaryPart.Position or Vector3.zero;
+							table.sort(generators, function(a: Model, b: Model): boolean
+								return (from - a.PrimaryPart.Position).Magnitude < (from - b.PrimaryPart.Position).Magnitude;
+							end);
+							local goal: BasePart? = generators[1] and generators[1].PrimaryPart or nil;
+							if goal then
+								local distance: number = 0;
+								repeat
+									local root: BasePart? = current.Parent and current.PrimaryPart or nil;
+									if not root or pickDrop(current) then
+										break;
+									end;
+									distance = steer(root, goal.Position);
+									task.wait();
+								until not running or distance <= collectDistance;
 							end;
 						end;
 					end;
-					if nearest and nearestDistance > 5 then
-						steer(root, nearest.Position);
-					end;
-				elseif job.Phase == 'Rise' then
-					if tick() >= job.Until then
-						job.Phase = 'Travel';
-					end;
-				elseif job.Phase == 'Travel' then
-					local drop: BasePart = job.Drop;
-					if drop.Parent ~= itemDrops then
-						if Visualize["Enabled"] then
-							notif('Cyber', 'Lost '..drop.Name..' before reaching it', 8, 'info');
-						end;
-						finish();
-						return;
-					end;
-					local distance: number = steer(root, drop.Position);
-					if Visualize["Enabled"] and job.Notice - distance >= 25 then
-						job.Notice = distance;
-						notif('Cyber', 'Drone is '..math.floor(distance)..' studs from '..drop.Name, 1, 'info');
-					end;
-					if distance <= arriveDistance then
-						local ground: RaycastResult? = workspace:Raycast(drop.Position + Vector3.new(0, 1, 0), Vector3.new(0, -5, 0), store.airRay);
-						local hitbox: BasePart? = drone:FindFirstChild('Hitbox');
-						job.Phase, job.Until = 'Burrow', tick() + burrowTime;
-						job.Burrow = Vector3.new(drop.Position.X, (ground and ground.Position.Y or drop.Position.Y) - (hitbox and hitbox.Size.Y or 0), drop.Position.Z);
-						if Visualize["Enabled"] then
-							notif('Cyber', 'Collecting '..drop.Name, 4, 'info');
-						end;
-					end;
-				elseif job.Phase == 'Burrow' then
-					if tick() >= job.Until then
-						park(cruiseHeight);
-						finish();
-						return;
-					end;
-					root.AssemblyLinearVelocity = Vector3.zero;
-					root.AssemblyAngularVelocity = Vector3.new(0, -30, 0);
-					root.CFrame = CFrame.new(job.Burrow);
-				end;
-			end));
+					task.wait();
+				until not running;
+			end);
 		end
 	};
 end);
@@ -27594,31 +30518,46 @@ velo.run(function(): ()
 			return {Jump, BreakCannon, LegitSwitch, ToolOnly};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local jobs: {[BasePart]: table} = {};
+			local running: boolean = true;
 			local holdingTool: () -> boolean = function(): boolean
-				local meta: table? = store.hand.tool and bedwars.ItemMeta[store.hand.tool.Name];
-				return not ToolOnly["Enabled"] or meta ~= nil and meta.breakBlock ~= nil;
-			end;
-			local queue: (cannon: BasePart, keepLast: boolean) -> () = function(cannon: BasePart, keepLast: boolean): ()
-				local hits: number? = entitylib.isAlive and mining.hits(cannon, cannon.Position);
-				if not BreakCannon["Enabled"] or not hits or not holdingTool() then
-					return;
+				if not ToolOnly["Enabled"] then
+					return true;
 				end;
-				jobs[cannon] = {["Left"] = keepLast and hits - 1 or math.huge, ["Deadline"] = tick() + 0.6 + store.ping.total, ["Next"] = 0};
+				local meta: table? = store.hand.tool and bedwars.ItemMeta[store.hand.tool.Name];
+				return meta ~= nil and meta.breakBlock ~= nil;
+			end;
+			local blockHits: (cannon: BasePart) -> number = function(cannon: BasePart): number
+				local breakType: string = bedwars.ItemMeta[cannon.Name].block.breakType;
+				local tool: table? = store.tools[breakType];
+				local power: number = tool and bedwars.ItemMeta[tool.itemType].breakBlock[breakType] or 2;
+				return mining.health(cannon, bedwars.BlockController:getBlockPosition(cannon.Position)) / power;
+			end;
+			local breakCannon: (cannon: BasePart, keepLast: boolean) -> () = function(cannon: BasePart, keepLast: boolean): ()
+				local deadline: number = tick() + 0.6 + (store.ping.total or 0);
+				local left: number = keepLast and math.max(math.ceil(blockHits(cannon)) - 1, 0) or math.huge;
+				repeat
+					if not running or not entitylib.isAlive or not holdingTool() or left <= 0 or (cannon.Position - entitylib.character.RootPart.Position).Magnitude > config.BreakRange then
+						return;
+					end;
+					breakBlock(cannon, {["Effects"] = true, ["Animation"] = 'Normal', ["AutoTool"] = LegitSwitch["Enabled"]});
+					left -= 1;
+					task.wait(breakRate);
+				until not cannon.Parent or tick() > deadline;
 			end;
 
 			local oldAim: (...any) -> ...any = bedwars.CannonController.startAiming;
 			local oldLaunch: (...any) -> ...any = bedwars.CannonHandController.launchSelf;
 			bedwars.CannonController.startAiming = function(self: table, cannon: BasePart?, ...: any): ...any
 				local results: table = table.pack(oldAim(self, cannon, ...));
-				if cannon and cannon.Parent then
-					queue(cannon, true);
+				if BreakCannon["Enabled"] and cannon and cannon.Parent and entitylib.isAlive and holdingTool() and blockHits(cannon) > 1 then
+					task.spawn(breakCannon, cannon, true);
 				end;
 				return table.unpack(results, 1, results.n);
 			end;
 			bedwars.CannonHandController.launchSelf = function(self: table, cannon: BasePart?, ...: any): ...any
-				if cannon and cannon.Parent then
-					queue(cannon, false);
+				if BreakCannon["Enabled"] and cannon and cannon.Parent and entitylib.isAlive and (cannon.Position - entitylib.character.RootPart.Position).Magnitude <= config.BreakRange and holdingTool() then
+					pcall(breakCannon, cannon, true);
+					task.spawn(breakCannon, cannon, false);
 				end;
 				local results: table = table.pack(oldLaunch(self, cannon, ...));
 				if Jump["Enabled"] and entitylib.isAlive then
@@ -27627,21 +30566,10 @@ velo.run(function(): ()
 				return table.unpack(results, 1, results.n);
 			end;
 			autoKit:Clean(function(): ()
+				running = false;
 				bedwars.CannonController.startAiming = oldAim;
 				bedwars.CannonHandController.launchSelf = oldLaunch;
-				table.clear(jobs);
 			end);
-
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				for cannon: BasePart, job: table in jobs do
-					if not cannon.Parent or job.Left <= 0 or tick() > job.Deadline or not entitylib.isAlive or not holdingTool() or (cannon.Position - entitylib.character.RootPart.Position).Magnitude > config.BreakRange then
-						jobs[cannon] = nil;
-					elseif tick() >= job.Next then
-						job.Next, job.Left = tick() + breakRate, job.Left - 1;
-						breakBlock(cannon, {["Effects"] = true, ["Animation"] = 'Normal', ["AutoTool"] = LegitSwitch["Enabled"]});
-					end;
-				end;
-			end));
 		end
 	};
 end);
@@ -27663,6 +30591,7 @@ velo.run(function(): ()
 			return {Range, Delay, Animation};
 		end,
 		["Start"] = function(autoKit: table): ()
+			local running: boolean, lastMine: number = true, 0;
 			local attempts: {[Instance]: number} = {};
 			local lastAttempt: {[Instance]: number} = {};
 			local petrified: {Instance} = collection('petrified-player', autoKit, nil, function(list: {Instance}, statue: Instance, tag: string): ()
@@ -27672,42 +30601,45 @@ velo.run(function(): ()
 				end;
 				attempts[statue], lastAttempt[statue] = nil, nil;
 			end);
-			local nextCheck: number, lastMine: number = 0, 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or not entitylib.isAlive or tick() - lastMine < math.max(Delay["Value"], minimumGap) then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				local legit: table? = autoKit.Options["Legit Range"];
-				local range: number = legit and legit["Enabled"] and math.min(Range["Value"], legitRange) or Range["Value"];
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local myTeam: table? = bedwars.Store:getState().Game.myTeam;
-				local best: Instance?, bestAttempts: number, bestDistance: number = nil, math.huge, math.huge;
-				for _: number, statue: Instance in petrified do
-					local root: BasePart? = statue.Parent and (statue:IsA('Model') and statue.PrimaryPart or statue:IsA('BasePart') and statue) or nil;
-					if not root or not statue:GetAttribute('PetrifyId') or (myTeam and statue:GetAttribute('Team') == myTeam.id) or tick() - (lastAttempt[statue] or 0) < Delay["Value"] + 1 then
-						continue;
+			autoKit:Clean(function(): ()
+				running = false;
+			end);
+			task.spawn(function(): ()
+				repeat
+					if entitylib.isAlive and tick() - lastMine >= math.max(Delay["Value"], minimumGap) then
+						local legit: table? = autoKit.Options["Legit Range"];
+						local range: number = legit and legit["Enabled"] and math.min(Range["Value"], legitRange) or Range["Value"];
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						local myTeam: table? = bedwars.Store:getState().Game.myTeam;
+						local best: Instance?, bestAttempts: number, bestDistance: number = nil, math.huge, math.huge;
+						for _: number, statue: Instance in petrified do
+							local root: BasePart? = statue.Parent and (statue:IsA('Model') and statue.PrimaryPart or statue:IsA('BasePart') and statue) or nil;
+							if not root or not statue:GetAttribute('PetrifyId') or (myTeam and statue:GetAttribute('Team') == myTeam.id) or lastAttempt[statue] and tick() - lastAttempt[statue] < Delay["Value"] + 1 then
+								continue;
+							end;
+							local distance: number, count: number = (origin - root.Position).Magnitude, attempts[statue] or 0;
+							if distance <= range and (count < bestAttempts or count == bestAttempts and distance < bestDistance) then
+								best, bestAttempts, bestDistance = statue, count, distance;
+							end;
+						end;
+						if best then
+							local statue: Instance = best;
+							local petrifyId: any = statue:GetAttribute('PetrifyId');
+							attempts[statue], lastAttempt[statue] = bestAttempts + 1, tick();
+							if Animation["Enabled"] then
+								bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.MINER_MINE_STONE);
+							end;
+							task.delay(Delay["Value"], function(): ()
+								if autoKit["Enabled"] and statue.Parent then
+									fire('DestroyPetrifiedPlayer', 'SendToServer', {["petrifyId"] = petrifyId});
+								end;
+							end);
+							lastMine = tick();
+						end;
 					end;
-					local distance: number, count: number = (origin - root.Position).Magnitude, attempts[statue] or 0;
-					if distance <= range and (count < bestAttempts or count == bestAttempts and distance < bestDistance) then
-						best, bestAttempts, bestDistance = statue, count, distance;
-					end;
-				end;
-				if not best then
-					return;
-				end;
-				local statue: Instance = best;
-				local petrifyId: any = statue:GetAttribute('PetrifyId');
-				attempts[statue], lastAttempt[statue], lastMine = bestAttempts + 1, tick(), tick();
-				if Animation["Enabled"] then
-					bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.MINER_MINE_STONE);
-				end;
-				task.delay(Delay["Value"], function(): ()
-					if autoKit["Enabled"] and statue.Parent then
-						fire('DestroyPetrifiedPlayer', 'SendToServer', {["petrifyId"] = petrifyId});
-					end;
-				end);
-			end));
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
@@ -27734,13 +30666,14 @@ velo.run(function(): ()
 				if not bedwars.AbilityController:canUseAbility('dragon_sword_ult', quiet) then
 					return;
 				end;
-				local nearby: {table} = entitylib.AllPosition({
-					["Range"] = Range["Value"],
-					["Part"] = 'RootPart',
-					["Players"] = autoKit.Options.Targets.Players["Enabled"],
-					["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"]
-				});
-				if #nearby >= Crowd["Value"] then
+				local origin: Vector3 = entitylib.character.RootPart.Position;
+				local found: number = 0;
+				for _: number, ent: table in entitylib.List do
+					if ent.Targetable and (ent.RootPart.Position - origin).Magnitude <= Range["Value"] then
+						found += 1;
+					end;
+				end;
+				if found >= Crowd["Value"] then
 					bedwars.AbilityController:useAbility('dragon_sword_ult');
 				end;
 			end));
@@ -27819,7 +30752,7 @@ velo.run(function(): ()
 						collectAt[drill] = tick() + CollectDelay["Value"];
 						fire('ExtractFromDrill', 'SendToServer', {["drill"] = drill});
 						if Notify["Enabled"] then
-							notif('AutoKit', 'Collected drill resources', 4, 'info');
+							notif('Auto Drill', 'Collected drill resources', 4, 'info');
 						end;
 					end;
 					if not Attack["Enabled"] or tick() < (attackAt[drill] or 0) then
@@ -27917,7 +30850,7 @@ velo.run(function(): ()
 			return {Delay, Range, Limit};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local lastRelease: number = 0;
+			local lastRelease: number = os.clock();
 			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
 				if os.clock() - lastRelease < Delay["Value"] or not entitylib.isAlive then
 					return;
@@ -28054,19 +30987,16 @@ velo.run(function(): ()
 			return {Summon};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextUse: number = 0;
+			local nextRepair: number, nextSummon: number = 0, 0;
 			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextUse then
-					return;
-				end;
 				local controller: table = bedwars.TinkerKitController;
 				if controller.mounted then
-					if workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack > combatPause and bedwars.AbilityController:canUseAbility('tinker_self_repair', quiet) then
-						nextUse = tick() + repairRate;
+					if tick() >= nextRepair and bedwars.AbilityController:canUseAbility('tinker_self_repair', quiet) and workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack > combatPause then
+						nextRepair = tick() + repairRate;
 						bedwars.AbilityController:useAbility('tinker_self_repair');
 					end;
-				elseif Summon["Enabled"] and bedwars.AbilityController:canUseAbility('tinker_summon', quiet) then
-					nextUse = tick() + summonRate;
+				elseif Summon["Enabled"] and tick() >= nextSummon and bedwars.AbilityController:canUseAbility('tinker_summon', quiet) then
+					nextSummon = tick() + summonRate;
 					bedwars.AbilityController:useAbility('tinker_summon');
 				end;
 			end));
@@ -28076,10 +31006,9 @@ end);
 
 velo.run(function(): ()
 	local checkRate: number = 0.1;
-	local retryCooldown: number = 1;
+	local orbCooldown: number = 1;
 	local quiet: table = {["disableBlockedAbilityAlert"] = true};
 	local proximityPromptService: ProximityPromptService = cloneref(game:GetService('ProximityPromptService'));
-
 
 	local legitCap: (autoKit: table, range: number, cap: number?) -> number = function(autoKit: table, range: number, cap: number?): number
 		return cap and autoKit.Options['Legit Range']["Enabled"] and math.min(range, cap) or range;
@@ -28105,52 +31034,46 @@ velo.run(function(): ()
 			return {Streamer, Animation, ElderRange, ElderDelay};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local readyAt: {[Instance]: number} = {};
-			local blockedUntil: {[Instance]: number} = {};
-			local orbs: {Instance} = collection('treeOrb', autoKit, nil, function(list: {Instance}, orb: Instance, tag: string): ()
-				local index: number? = table.find(list, orb);
-				if index then
-					table.remove(list, index);
-				end;
-				readyAt[orb], blockedUntil[orb] = nil, nil;
+			local cooldowns: {[Instance]: number} = {};
+			autoKit:Clean(collectionService:GetInstanceRemovedSignal('treeOrb'):Connect(function(orb: Instance): ()
+				cooldowns[orb] = nil;
+			end));
+			autoKit:Clean(function(): ()
+				table.clear(cooldowns);
 			end);
 			autoKit:Clean(proximityPromptService.PromptShown:Connect(function(prompt: ProximityPrompt): ()
 				if Streamer["Enabled"] and prompt.Name == 'treeOrb' then
 					task.delay(0.1, prompt.InputHoldBegin, prompt);
 				end;
 			end));
-			local nextCheck: number, busy: boolean = 0, false;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if Streamer["Enabled"] or busy or tick() < nextCheck or not entitylib.isAlive then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local reach: number = legitCap(autoKit, ElderRange["Value"], elderReach);
-				for _: number, orb: Instance in orbs do
-					local inRange: boolean = orb.Parent ~= nil and (origin - orb:GetPivot().Position).Magnitude <= reach;
-					if not inRange or tick() < (blockedUntil[orb] or 0) then
-						readyAt[orb] = nil;
-						continue;
+			autoKit:Clean(task.spawn(function(): ()
+				repeat
+					if not Streamer["Enabled"] and entitylib.isAlive then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						for _: number, orb: Instance in collectionService:GetTagged('treeOrb') do
+							local reach: number = legitCap(autoKit, ElderRange["Value"], elderReach);
+							local position: Vector3? = orb.Parent and orb:GetPivot().Position or nil;
+							if not position or tick() <= (cooldowns[orb] or 0) or (origin - position).Magnitude > reach then
+								continue;
+							end;
+							if ElderDelay["Value"] > 0 then
+								task.wait(ElderDelay["Value"]);
+							end;
+							if orb.Parent and (entitylib.character.RootPart.Position - orb:GetPivot().Position).Magnitude <= reach then
+								if Animation["Enabled"] then
+									bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.PUNCH);
+									bedwars.ViewmodelController:playAnimation(bedwars.AnimationType.FP_USE_ITEM);
+									bedwars.AudioManager:playAudio(bedwars.SoundList.CROP_HARVEST);
+								end;
+								if fire('ConsumeTreeOrb', 'CallServer', {["treeOrbSecret"] = orb:GetAttribute('TreeOrbSecret')}) then
+									orb:Destroy();
+								end;
+								cooldowns[orb] = tick() + orbCooldown;
+							end;
+						end;
 					end;
-					readyAt[orb] = readyAt[orb] or tick() + ElderDelay["Value"];
-					if tick() < readyAt[orb] then
-						continue;
-					end;
-					readyAt[orb], blockedUntil[orb] = nil, tick() + retryCooldown;
-					if Animation["Enabled"] then
-						bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.PUNCH);
-						bedwars.ViewmodelController:playAnimation(bedwars.AnimationType.FP_USE_ITEM);
-						bedwars.AudioManager:playAudio(bedwars.SoundList.CROP_HARVEST);
-					end;
-					busy = true;
-					local collected: any = fire('ConsumeTreeOrb', 'CallServer', {["treeOrbSecret"] = orb:GetAttribute('TreeOrbSecret')});
-					busy = false;
-					if collected and orb.Parent then
-						orb:Destroy();
-					end;
-					return;
-				end;
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
 			end));
 		end
 	};
@@ -28171,26 +31094,23 @@ velo.run(function(): ()
 		end,
 		["Start"] = function(autoKit: table): ()
 			local spirits: {Instance} = collection('EvelynnSoul', autoKit);
-			local nextCheck: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or not entitylib.isAlive or hindered() then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local reach: number = legitCap(autoKit, SpiritRange["Value"], spiritReach);
-				for _: number, spirit: Instance in spirits do
-					local position: Vector3 = spirit:GetPivot().Position;
-					if (origin - position).Magnitude > reach then
-						continue;
+			autoKit:Clean(task.spawn(function(): ()
+				local used: number = 0;
+				repeat
+					if entitylib.isAlive and (SpiritDelay["Value"] <= 0 or tick() - used >= SpiritDelay["Value"]) and not hindered() then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						local reach: number = legitCap(autoKit, SpiritRange["Value"], spiritReach);
+						for _: number, spirit: Instance in spirits do
+							local position: Vector3 = spirit:GetPivot().Position;
+							if (origin - position).Magnitude <= reach and (not EnemyCheck["Enabled"] or entitylib.EntityPosition({["Origin"] = position, ["Range"] = spiritGuard, ["Part"] = 'RootPart', ["Players"] = true, ["NPCs"] = true, ["Priority"] = false})) then
+								fire('UseSpirit', 'CallServer', {["secret"] = spirit:GetAttribute('SpiritSecret')});
+								used = tick();
+								break;
+							end;
+						end;
 					end;
-					if EnemyCheck["Enabled"] and not entitylib.EntityPosition({["Origin"] = position, ["Range"] = spiritGuard, ["Part"] = 'RootPart', ["Players"] = true, ["NPCs"] = true}) then
-						continue;
-					end;
-					nextCheck = tick() + math.max(SpiritDelay["Value"], checkRate);
-					fire('UseSpirit', 'CallServer', {["secret"] = spirit:GetAttribute('SpiritSecret')});
-					return;
-				end;
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
 			end));
 		end
 	};
@@ -28210,25 +31130,23 @@ velo.run(function(): ()
 		end,
 		["Start"] = function(autoKit: table): ()
 			local souls: {Instance} = collection('GrimSoul', autoKit);
-			local nextCheck: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or not entitylib.isAlive then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				local character: Model = lplr.Character;
-				if character:GetAttribute('GrimReaperChannel') or (character:GetAttribute('Health') or 0) > (character:GetAttribute('MaxHealth') or 100) * SoulHealth["Value"] / 100 then
-					return;
-				end;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local reach: number = legitCap(autoKit, SoulRange["Value"], soulReach);
-				for _: number, soul: Instance in souls do
-					if (origin - soul:GetPivot().Position).Magnitude <= reach then
-						nextCheck = tick() + math.max(SoulDelay["Value"], checkRate);
-						fire('ConsumeGrimReaperSoul', 'CallServer', {["secret"] = soul:GetAttribute('GrimReaperSoulSecret')});
-						return;
+			autoKit:Clean(task.spawn(function(): ()
+				local used: number = 0;
+				repeat
+					local character: Model? = lplr.Character;
+					if entitylib.isAlive and character and (character:GetAttribute('Health') or 0) <= (character:GetAttribute('MaxHealth') or 100) * (SoulHealth["Value"] / 100) and not character:GetAttribute('GrimReaperChannel') and (SoulDelay["Value"] <= 0 or tick() - used >= SoulDelay["Value"]) then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						local reach: number = legitCap(autoKit, SoulRange["Value"], soulReach);
+						for _: number, soul: Instance in souls do
+							if (origin - soul:GetPivot().Position).Magnitude <= reach then
+								fire('ConsumeGrimReaperSoul', 'CallServer', {["secret"] = soul:GetAttribute('GrimReaperSoulSecret')});
+								used = tick();
+								break;
+							end;
+						end;
 					end;
-				end;
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
 			end));
 		end
 	};
@@ -28306,57 +31224,46 @@ velo.run(function(): ()
 			return {Range, Priority, Heal, AllyHealth};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local linked: Model? = nil;
-			local busy: boolean, nextCheck: number = false, 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if busy or tick() < nextCheck or not entitylib.isAlive then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				if not store.hand.tool or store.hand.tool.Name ~= 'warlock_staff' then
-					return;
-				end;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local selector: number = bedwars.WarlockBalance and bedwars.WarlockBalance.SELECTOR_RANGE or 24;
-				local reach: number = autoKit.Options['Legit Range']["Enabled"] and math.min(Range["Value"], selector) or Range["Value"];
-				local hurtAlly: table?, lowest: number = nil, AllyHealth["Value"] / 100;
-				if Heal["Enabled"] then
-					for _: number, ent: table in entitylib.List do
-						local ratio: number = ent.Health / ent.MaxHealth;
-						if not ent.Targetable and ent.Player and ratio <= lowest and (ent.RootPart.Position - origin).Magnitude <= reach then
-							hurtAlly, lowest = ent, ratio;
+			autoKit:Clean(task.spawn(function(): ()
+				local linked: Model? = nil;
+				repeat
+					if entitylib.isAlive and store.hand.tool and store.hand.tool.Name == 'warlock_staff' then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						local selector: number = bedwars.WarlockBalance and bedwars.WarlockBalance.SELECTOR_RANGE or 24;
+						local reach: number = autoKit.Options['Legit Range']["Enabled"] and math.min(Range["Value"], selector) or Range["Value"];
+						local hurtAlly: table?, lowest: number? = nil, nil;
+						if Heal["Enabled"] then
+							for _: number, ent: table in entitylib.List do
+								local ratio: number = ent.Health / ent.MaxHealth;
+								if not ent.Targetable and ent.Player and (ent.RootPart.Position - origin).Magnitude <= reach and ratio <= AllyHealth["Value"] / 100 and (not lowest or ratio < lowest) then
+									hurtAlly, lowest = ent, ratio;
+								end;
+							end;
+						end;
+						local target: table? = Priority["Value"] == 'Teammates' and hurtAlly or nil;
+						target = target or entitylib.EntityPosition({
+							["Origin"] = origin,
+							["Range"] = reach,
+							["Part"] = 'RootPart',
+							["Players"] = autoKit.Options.Targets.Players["Enabled"],
+							["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"],
+							["Wallcheck"] = autoKit.Options.Targets.Walls["Enabled"] or nil
+						}) or hurtAlly;
+						if target and target.Character ~= linked then
+							if bedwars.AbilityController:canUseAbility('WARLOCK_LINK', quiet) then
+								bedwars.AbilityController:useAbility('WARLOCK_LINK');
+								task.wait(store.ping.total or checkRate);
+							end;
+							if autoKit["Enabled"] and target.Character and target.Character.Parent then
+								linked = target.Character;
+								fire('WarlockLinkTarget', 'CallServer', {["target"] = target.Character});
+							end;
+						elseif not target then
+							linked = nil;
 						end;
 					end;
-				end;
-				local enemy: table? = entitylib.EntityPosition({
-					["Origin"] = origin,
-					["Range"] = reach,
-					["Part"] = 'RootPart',
-					["Players"] = autoKit.Options.Targets.Players["Enabled"],
-					["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"],
-					["Wallcheck"] = autoKit.Options.Targets.Walls["Enabled"] or nil
-				});
-				local target: table? = Priority["Value"] == 'Teammates' and (hurtAlly or enemy) or (enemy or hurtAlly);
-				if not target then
-					linked = nil;
-					return;
-				end;
-				if target.Character == linked then
-					return;
-				end;
-				busy = true;
-				local pause: number = 0;
-				if bedwars.AbilityController:canUseAbility('WARLOCK_LINK', quiet) then
-					bedwars.AbilityController:useAbility('WARLOCK_LINK');
-					pause = store.ping.total;
-				end;
-				task.delay(pause, function(): ()
-					busy = false;
-					if autoKit["Enabled"] and target.Character and target.Character.Parent then
-						linked = target.Character;
-						fire('WarlockLinkTarget', 'CallServer', {["target"] = target.Character});
-					end;
-				end);
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
 			end));
 		end
 	};
@@ -28385,38 +31292,44 @@ velo.run(function(): ()
 		["Options"] = function(autoKit: table): {table}
 			Harvest = autoKit:CreateToggle({["Name"] = 'Farmer Harvest crops', ["Default"] = true, ["Tooltip"] = 'Reaps anything ripe, the same call the harvest prompt makes'});
 			Collect = autoKit:CreateToggle({["Name"] = 'Farmer Collect drops', ["Default"] = true, ["Tooltip"] = 'Picks up crops and seeds lying on the ground'});
-			Animation = autoKit:CreateToggle({["Name"] = 'Farmer Animation', ["Default"] = true, ["Tooltip"] = 'Plays the punch animation and harvest sound'});
+			Animation = autoKit:CreateToggle({["Name"] = 'Farmer Animation', ["Tooltip"] = 'Plays the punch animation and harvest sound'});
 			Range = autoKit:CreateSlider({["Name"] = 'Farmer Range', ["Min"] = 1, ["Max"] = 60, ["Default"] = 25, ["Suffix"] = 'studs', ["Tooltip"] = 'The harvest prompt stops at 6 studs, so the server may refuse anything much further'});
 			Delay = autoKit:CreateSlider({["Name"] = 'Farmer Delay', ["Min"] = 0.05, ["Max"] = 3, ["Default"] = 0.15, ["Decimal"] = 100, ["Suffix"] = 's'});
 			return {Harvest, Collect, Animation, Range, Delay};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextAction: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextAction or not entitylib.isAlive then
-					return;
-				end;
-				nextAction = tick() + checkRate;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local reach: number = autoKit.Options['Legit Range']["Enabled"] and math.min(Range["Value"], harvestReach) or Range["Value"];
-				for _: number, crop: Instance in (Harvest["Enabled"] and collectionService:GetTagged('HarvestableCrop') or {}) do
-					local owner: Player? = playersService:GetPlayerByUserId(crop:GetAttribute('PlacedByUserId') or 0);
-					if crop:IsA('BasePart') and (crop.Position - origin).Magnitude <= reach and (not owner or owner:GetAttribute('Team') == lplr:GetAttribute('Team')) then
-						nextAction = tick() + Delay["Value"];
-						if fire('CropHarvest', 'CallServer', {["position"] = bedwars.BlockController:getBlockPosition(crop.Position)}) and Animation["Enabled"] and entitylib.isAlive then
-							bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.PUNCH);
-							bedwars.AudioManager:playAudio(bedwars.SoundList.CROP_HARVEST);
+			autoKit:Clean(task.spawn(function(): ()
+				local nextAction: number = 0;
+				repeat
+					if entitylib.isAlive and tick() >= nextAction then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						local reach: number = autoKit.Options['Legit Range']["Enabled"] and math.min(Range["Value"], harvestReach) or Range["Value"];
+						local acted: boolean = false;
+						for _: number, crop: Instance in (Harvest["Enabled"] and collectionService:GetTagged('HarvestableCrop') or {}) do
+							local ownerId: number = crop:GetAttribute('PlacedByUserId') or 0;
+							local owner: Player? = ownerId ~= 0 and playersService:GetPlayerByUserId(ownerId) or nil;
+							if crop:IsA('BasePart') and (crop.Position - origin).Magnitude <= reach and (not owner or owner:GetAttribute('Team') == lplr:GetAttribute('Team')) then
+								if fire('CropHarvest', 'CallServer', {["position"] = bedwars.BlockController:getBlockPosition(crop.Position)}) and Animation["Enabled"] and entitylib.isAlive then
+									bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.PUNCH);
+									bedwars.AudioManager:playAudio(bedwars.SoundList.CROP_HARVEST);
+								end;
+								acted = true;
+								break;
+							end;
 						end;
-						return;
+						for _: number, drop: Instance in (not acted and Collect["Enabled"] and collectionService:GetTagged('ItemDrop') or {}) do
+							if drop:IsA('BasePart') and farmDrops[drop.Name] and (drop:GetAttribute('PickupReadyTime') or math.huge) < workspace:GetServerTimeNow() and (drop.Position - origin).Magnitude <= reach then
+								fire('PickupItemDrop', 'CallServerAsync', {["itemDrop"] = drop});
+								acted = true;
+								break;
+							end;
+						end;
+						if acted then
+							nextAction = tick() + Delay["Value"];
+						end;
 					end;
-				end;
-				for _: number, drop: Instance in (Collect["Enabled"] and collectionService:GetTagged('ItemDrop') or {}) do
-					if drop:IsA('BasePart') and farmDrops[drop.Name] and (drop:GetAttribute('PickupReadyTime') or math.huge) < workspace:GetServerTimeNow() and (drop.Position - origin).Magnitude <= reach then
-						nextAction = tick() + Delay["Value"];
-						fire('PickupItemDrop', 'CallServerAsync', {["itemDrop"] = drop});
-						return;
-					end;
-				end;
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
 			end));
 		end
 	};
@@ -28458,9 +31371,21 @@ velo.run(function(): ()
 					local own: boolean = pad ~= nil and pad:IsA('BasePart') and (not OwnPads["Enabled"] or pad:GetAttribute('PlacedByUserId') == lplr.UserId);
 					if BreakPads["Enabled"] and own and (pad.Position - entitylib.character.RootPart.Position).Magnitude <= Range["Value"] then
 						task.delay(BreakDelay["Value"], function(): ()
-							if autoKit["Enabled"] and pad.Parent then
-								breakBlock(pad, {["AutoTool"] = LegitSwitch["Enabled"]});
+							if not autoKit["Enabled"] or not pad.Parent then
+								return;
 							end;
+							if LegitSwitch["Enabled"] then
+								local meta: table? = bedwars.ItemMeta[pad.Name];
+								local breakType: string? = meta and meta.block and meta.block.breakType;
+								local tool: table? = breakType and store.tools[breakType] or store.tools.sword;
+								local slot: number? = tool and hotbarSlotOf(tool.tool);
+								if slot then
+									hotbarSwitch(slot);
+								elseif tool then
+									switchItem(tool.tool);
+								end;
+							end;
+							breakBlock(pad, {["AutoTool"] = LegitSwitch["Enabled"]});
 						end);
 					end;
 					if Jump["Enabled"] then
@@ -28515,38 +31440,34 @@ velo.run(function(): ()
 			autoKit:Clean(function(): ()
 				table.clear(attempted);
 			end);
-			local nextCheck: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or not entitylib.isAlive then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				if bedwars.StatusEffectUtil:isActive(lplr.Character, 'grounded') or bedwars.StatusEffectUtil:isActive(lplr.Character, 'frosted') then
-					return;
-				end;
-				local balance: table = bedwars.BalanceFile;
-				local threshold: number = balance.HANNAH_BASE_EXECUTE_THRESHOLD + balance.HANNAH_MAX_COMBO * balance.HANNAH_COMBO_EXECUTE_BOOST;
-				for _: number, ent: table in entitylib.AllPosition({
-					["Range"] = Range["Value"],
-					["Part"] = 'RootPart',
-					["Players"] = autoKit.Options.Targets.Players["Enabled"],
-					["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"],
-					["Sort"] = sortMethods[Sort["Value"]]
-				}) do
-					local victim: Model = ent.Character;
-					if not victim:HasTag('HannahExecuteInteraction') or ent.Health > ent.MaxHealth * threshold or tick() - (attempted[victim] or 0) < retryGap then
-						continue;
+			autoKit:Clean(task.spawn(function(): ()
+				repeat
+					if entitylib.isAlive and not bedwars.StatusEffectUtil:isActive(lplr.Character, 'grounded') and not bedwars.StatusEffectUtil:isActive(lplr.Character, 'frosted') then
+						local balance: table = bedwars.BalanceFile;
+						local threshold: number = balance.HANNAH_BASE_EXECUTE_THRESHOLD + balance.HANNAH_MAX_COMBO * balance.HANNAH_COMBO_EXECUTE_BOOST;
+						for _: number, ent: table in entitylib.AllPosition({
+							["Origin"] = entitylib.character.RootPart.Position,
+							["Range"] = Range["Value"],
+							["Part"] = 'RootPart',
+							["Players"] = autoKit.Options.Targets.Players["Enabled"],
+							["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"],
+							["Sort"] = sortMethods[Sort["Value"]]
+						}) do
+							local victim: Model = ent.Character;
+							if victim:HasTag('HannahExecuteInteraction') and ent.Health <= ent.MaxHealth * threshold and (not AuraOnly["Enabled"] or (targetinfo.Targets[ent] or 0) > tick()) and (not attempted[victim] or tick() - attempted[victim] >= retryGap) then
+								attempted[victim] = tick();
+								if fire('HannahPromptTrigger', 'CallServer', {["user"] = lplr, ["victimEntity"] = victim}) then
+									local icon: Instance? = victim:FindFirstChild('Hannah Execution Icon');
+									if icon then
+										icon:Destroy();
+									end;
+								end;
+								break;
+							end;
+						end;
 					end;
-					if AuraOnly["Enabled"] and (targetinfo.Targets[ent] or 0) <= tick() then
-						continue;
-					end;
-					attempted[victim] = tick();
-					local icon: Instance? = fire('HannahPromptTrigger', 'CallServer', {["user"] = lplr, ["victimEntity"] = victim}) and victim:FindFirstChild('Hannah Execution Icon');
-					if icon then
-						icon:Destroy();
-					end;
-					return;
-				end;
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
 			end));
 		end
 	};
@@ -28573,7 +31494,7 @@ velo.run(function(): ()
 			local nextSlam: number = 0;
 			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
 				local jade: table = bedwars.JadeBalance;
-				if tick() < nextSlam or not entitylib.isAlive or not store.airRay or not bedwars.JadeHammerController then
+				if tick() < nextSlam or not entitylib.isAlive or not bedwars.JadeHammerController then
 					return;
 				end;
 				local root: BasePart = entitylib.character.RootPart;
@@ -28594,9 +31515,8 @@ velo.run(function(): ()
 					return;
 				end;
 				nextSlam = tick() + jade.HAMMER_COOLDOWN;
-				local held: boolean = store.hand.tool == hammer.tool;
-				task.defer(function(): ()
-					if not held then
+				task.spawn(function(): ()
+					if store.hand.tool ~= hammer.tool then
 						if LegitSwitch["Enabled"] then
 							hotbarSwitch(hotbarSlotOf(hammer.tool));
 						else
@@ -28614,10 +31534,20 @@ velo.run(function(): ()
 end);
 
 velo.run(function(): ()
+	local pollRate: number = 0.5;
 	local kitIds: {[string]: string} = {};
 	local lastSent: string? = nil;
 	local Kit: table;
 	local Timing: table;
+	local equipNow: () -> () = function(): ()
+		local choice: string = Kit["Value"];
+		if choice == 'None' or not kitIds[choice] then
+			return;
+		end;
+		lastSent = choice;
+		local equipped: any = fire('BedwarsActivateKit', 'CallServer', {["kit"] = kitIds[choice]});
+		notif('EquipKit', (equipped and 'Successfully equipped ' or 'Failed to equip ')..choice..'.', 10, 'info');
+	end;
 	kitSpecs.EquipKit = {
 		["Options"] = function(autoKit: table): {table}
 			local names: {string} = {};
@@ -28629,29 +31559,33 @@ velo.run(function(): ()
 			end;
 			table.sort(names);
 			table.insert(names, 1, 'None');
-			Kit = autoKit:CreateDropdown({["Name"] = 'EquipKit Kit', ["List"] = names, ["Function"] = function(value: string): ()
+			Kit = autoKit:CreateDropdown({["Name"] = 'EquipKit Kit', ["List"] = names, ["Function"] = function(_: string): ()
 				lastSent = nil;
+				if Timing and Timing["Value"] == 'Instantly' and autoKit["Enabled"] then
+					task.spawn(equipNow);
+				end;
 			end});
-			Timing = autoKit:CreateDropdown({["Name"] = 'EquipKit Timing', ["List"] = {'Round end', 'Instantly'}, ["Tooltip"] = 'Round end - equips it for the next round when the match ends\nInstantly - equips it once right away'});
+			Timing = autoKit:CreateDropdown({["Name"] = 'EquipKit Timing', ["List"] = {'Round end', 'Instantly'}, ["Tooltip"] = 'Round end - equips it for the next round when the round ends\nInstantly - equips it right away, again whenever you pick another kit'});
 			return {Kit, Timing};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local equip: () -> () = function(): ()
-				local choice: string = Kit["Value"];
-				if choice == 'None' or not kitIds[choice] then
-					return;
-				end;
-				lastSent = choice;
-				local equipped: any = fire('BedwarsActivateKit', 'CallServer', {["kit"] = kitIds[choice]});
-				notif('AutoKit', (equipped and 'Equipped ' or 'Failed to equip ')..choice..'.', 10, 'info');
-			end;
 			if Timing["Value"] == 'Instantly' and lastSent ~= Kit["Value"] then
-				equip();
+				task.spawn(equipNow);
 			end;
-			autoKit:Clean(vapeEvents.MatchEndEvent.Event:Connect(function(): ()
-				if Timing["Value"] == 'Round end' then
-					equip();
-				end;
+			autoKit:Clean(task.spawn(function(): ()
+				local lastState: number? = nil;
+				repeat
+					local choice: string = Kit["Value"];
+					if Timing["Value"] == 'Round end' and store.matchState == 2 and lastState == 1 and choice ~= 'None' and kitIds[choice] then
+						-- Not owned by autoKit: the kit swap fires KitChanged, which restarts AutoKit while the call is still pending.
+						task.spawn(function(): ()
+							fire('BedwarsActivateKit', 'CallServer', {["kit"] = kitIds[choice]});
+							notif('AutoEquipKit', 'Equipped '..choice..' for the next round.', 10, 'info');
+						end);
+					end;
+					lastState = store.matchState;
+					task.wait(pollRate);
+				until not autoKit["Enabled"];
 			end));
 		end
 	};
@@ -28661,7 +31595,6 @@ velo.run(function(): ()
 	local checkRate: number = 0.1;
 	local clawReach: number = 16.399;
 	local castTimeout: number = 6;
-	local castGrace: number = 0.2;
 	local quiet: table = {["disableBlockedAbilityAlert"] = true};
 	local Sort: table;
 	local SwingRange: table;
@@ -28693,80 +31626,85 @@ velo.run(function(): ()
 		["Start"] = function(autoKit: table): ()
 			local balance: table = bedwars.SummonerKitBalance;
 			local controller: table = bedwars.SummonerKitController;
-			local castStarted: number, releaseAt: number? = 0, nil;
-			local nextCheck: number = 0;
+			local castingUntil: number = 0;
 			local targetOptions: (range: number) -> table = function(range: number): table
 				return {
 					["Range"] = range,
+					["Wallcheck"] = autoKit.Options.Targets.Walls["Enabled"] or nil,
 					["Part"] = 'RootPart',
 					["Players"] = autoKit.Options.Targets.Players["Enabled"],
 					["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"],
-					["Wallcheck"] = autoKit.Options.Targets.Walls["Enabled"] or nil,
 					["Sort"] = sortMethods[Sort["Value"]]
 				};
 			end;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if not entitylib.isAlive then
-					return;
-				end;
-				local casting: boolean = controller:isPlayerCastingSpell(lplr);
-				if releaseAt and (tick() >= releaseAt or (not casting and tick() - castStarted > castGrace)) then
-					if casting then
-						bedwars.AbilityController:useAbility('summoner_finish_charging');
-					end;
-					releaseAt = nil;
-				end;
-				if tick() < nextCheck then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
+			local castSpell: () -> () = function(): ()
 				local origin: Vector3 = entitylib.character.RootPart.Position;
-				if Summon["Enabled"] and not releaseAt and not casting and tick() - castStarted > castTimeout and bedwars.AbilityController:canUseAbility('summoner_start_charging', quiet) then
-					local limit: number = math.min(SummonRange["Value"], balance.SPELL_CAST_RANGE);
-					local point: Vector3? = nil;
-					if SummonAt["Value"] == 'Camera' then
-						point = bedwars.AbilityIndicatorUtil:calculateBlockTargetPoint(gameCamera.CFrame.Position, gameCamera.CFrame.LookVector, 300, nil, {["allowArenaBarrierTarget"] = false});
-					else
-						local ent: table? = entitylib.EntityPosition(targetOptions(limit));
-						point = ent and (bedwars.AbilityIndicatorUtil:calculateBlockTargetPoint(ent.RootPart.Position + Vector3.new(0, 3, 0), Vector3.new(0, -1, 0), 30, nil, {["allowArenaBarrierTarget"] = false}) or ent.RootPart.Position);
-					end;
-					if point and (point - origin).Magnitude <= limit then
-						local level: number = bedwars.SummonerUtil.summoner_getPlayerSpellLevel(lplr) or 1;
-						castStarted = tick();
-						releaseAt = tick() + math.max(bedwars.SummonerUtil.summoner_getTotalCastTimeRequired(level) * Charge["Value"] / 100, balance.SPELL_MINIMUM_CAST_TIME);
-						bedwars.AbilityController:useAbility('summoner_start_charging', nil, {["targetPosition"] = point});
+				local limit: number = math.min(SummonRange["Value"], balance.SPELL_CAST_RANGE);
+				local point: Vector3? = nil;
+				if SummonAt["Value"] == 'Camera' then
+					local aim: Vector3? = bedwars.AbilityIndicatorUtil:calculateBlockTargetPoint(gameCamera.CFrame.Position, gameCamera.CFrame.LookVector, 300, nil, {["allowArenaBarrierTarget"] = false});
+					point = aim and (aim - origin).Magnitude <= limit and aim or nil;
+				else
+					local ent: table? = entitylib.EntityPosition(targetOptions(limit));
+					if ent then
+						local aim: Vector3? = bedwars.AbilityIndicatorUtil:calculateBlockTargetPoint(ent.RootPart.Position + Vector3.new(0, 3, 0), Vector3.new(0, -1, 0), 30, nil, {["allowArenaBarrierTarget"] = false});
+						point = aim and (aim - origin).Magnitude <= limit and aim or ent.RootPart.Position;
 					end;
 				end;
-				if (MouseDown["Enabled"] and not inputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)) or (MenuCheck["Enabled"] and bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN)) then
+				if not point or not bedwars.AbilityController:canUseAbility('summoner_start_charging', quiet) then
 					return;
 				end;
-				if (casting and not SwingWhileCasting["Enabled"]) or workspace:GetServerTimeNow() - bedwars.SummonerClawHandController.lastAttackTime <= balance.CLAW_COOLDOWN then
-					return;
+				castingUntil = tick() + castTimeout;
+				bedwars.AbilityController:useAbility('summoner_start_charging', nil, {["targetPosition"] = point});
+				local level: number = bedwars.SummonerUtil.summoner_getPlayerSpellLevel(lplr) or 1;
+				local deadline: number = tick() + math.max(bedwars.SummonerUtil.summoner_getTotalCastTimeRequired(level) * (Charge["Value"] / 100), balance.SPELL_MINIMUM_CAST_TIME);
+				repeat
+					task.wait();
+				until tick() >= deadline or not autoKit["Enabled"] or not entitylib.isAlive or not controller:isPlayerCastingSpell(lplr);
+				if autoKit["Enabled"] and entitylib.isAlive and controller:isPlayerCastingSpell(lplr) then
+					bedwars.AbilityController:useAbility('summoner_finish_charging');
 				end;
-				local claw: table? = store.hand.tool and bedwars.IsItemClaw(store.hand.tool.Name) and store.hand or nil;
-				for _: number, item: table in (not claw and not HeldOnly["Enabled"] and store.inventory.inventory.items or {}) do
-					if bedwars.IsItemClaw(item.itemType) then
-						claw = item;
-						break;
+				castingUntil = 0;
+			end;
+			autoKit:Clean(task.spawn(function(): ()
+				repeat
+					if entitylib.isAlive then
+						if Summon["Enabled"] and tick() > castingUntil and not controller:isPlayerCastingSpell(lplr) then
+							task.spawn(castSpell);
+						end;
+						local claw: table? = nil;
+						if (not MouseDown["Enabled"] or inputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)) and (not MenuCheck["Enabled"] or not bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN)) then
+							if HeldOnly["Enabled"] then
+								claw = store.hand.tool and bedwars.IsItemClaw(store.hand.tool.Name) and store.hand or nil;
+							else
+								for _: number, item: table in store.inventory.inventory.items do
+									if bedwars.IsItemClaw(item.itemType) then
+										claw = item;
+										break;
+									end;
+								end;
+							end;
+						end;
+						local ent: table? = claw and workspace:GetServerTimeNow() - bedwars.SummonerClawHandController.lastAttackTime > balance.CLAW_COOLDOWN and (SwingWhileCasting["Enabled"] or not controller:isPlayerCastingSpell(lplr)) and entitylib.EntityPosition(targetOptions(SwingRange["Value"])) or nil;
+						if claw and ent then
+							local origin: Vector3 = entitylib.character.RootPart.Position;
+							local delta: Vector3 = ent.RootPart.Position - origin;
+							local direction: Vector3 = CFrame.lookAt(origin, ent.RootPart.Position).LookVector;
+							targetinfo.Targets[ent] = tick() + 1;
+							switchItem(claw.tool, 0);
+							if delta.Magnitude <= AttackRange["Value"] then
+								fire('SummonerClawAttackRequest', nil, {
+									["position"] = origin + direction * math.max(delta.Magnitude - clawReach, 0),
+									["direction"] = direction,
+									["clientTime"] = workspace:GetServerTimeNow()
+								});
+							end;
+							bedwars.SummonerClawHandController.lastAttackTime = workspace:GetServerTimeNow();
+							bedwars.SummonerClawController:clawAttack(lplr, origin, direction, claw.tool.Name);
+						end;
 					end;
-				end;
-				local ent: table? = claw and entitylib.EntityPosition(targetOptions(SwingRange["Value"]));
-				if not ent then
-					return;
-				end;
-				local delta: Vector3 = ent.RootPart.Position - origin;
-				local direction: Vector3 = delta.Unit;
-				targetinfo.Targets[ent] = tick() + 1;
-				switchItem(claw.tool, 0);
-				if delta.Magnitude <= AttackRange["Value"] then
-					fire('SummonerClawAttackRequest', nil, {
-						["position"] = origin + direction * math.max(delta.Magnitude - clawReach, 0),
-						["direction"] = direction,
-						["clientTime"] = workspace:GetServerTimeNow()
-					});
-				end;
-				bedwars.SummonerClawHandController.lastAttackTime = workspace:GetServerTimeNow();
-				bedwars.SummonerClawController:clawAttack(lplr, origin, direction, claw.tool.Name);
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
 			end));
 		end
 	};
@@ -28777,6 +31715,8 @@ velo.run(function(): ()
 	local biteWindow: number = 2.5;
 	local rejectRadius: number = 4;
 	local markerTolerance: number = 0.2;
+	local markerSearch: number = 3;
+	local menuPoll: number = 0.1;
 	local Blacklist: table;
 	local ShowLoot: table;
 	local Minigame: table;
@@ -28812,102 +31752,86 @@ velo.run(function(): ()
 				return MenuCheck["Enabled"] and bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN);
 			end;
 			local bobber: () -> Instance? = function(): Instance?
-				for _: number, projectile: Instance in store.selfProjectiles do
-					if projectile.Name == 'fisherman_bobber' and projectile.Parent then
-						return projectile;
+				for _: number, child: Instance in workspace:GetChildren() do
+					if child.Name == 'fisherman_bobber' and child:GetAttribute('ProjectileShooter') == lplr.UserId then
+						return child;
 					end;
 				end;
 				return nil;
 			end;
 
+			local slideUp: (bar: GuiObject, duration: number) -> () = function(bar: GuiObject, duration: number): ()
+				tweenService:Create(bar, TweenInfo.new(duration, Enum.EasingStyle.Linear), {["Position"] = UDim2.new(math.min(bar.Position.X.Scale + util.markerIncrementAmount, 1 - bar.Size.X.Scale), 0, 0.5, 0)}):Play();
+			end;
+			local slideDown: (bar: GuiObject) -> () = function(bar: GuiObject): ()
+				tweenService:Create(bar, TweenInfo.new(util.totalDecaySpeedSec * (bar.Position.X.Scale + bar.Size.X.Scale), Enum.EasingStyle.Linear), {["Position"] = UDim2.new(0, 2, 0.5, 0)}):Play();
+			end;
 			local playBar: () -> () = function(): ()
 				local marker: GuiObject?, zone: GuiObject? = nil, nil;
-				local giveUp: number, nextStep: number = tick() + 3, 0;
-				local speed: number, aim: number, holding: boolean = util.startingMarkerIncrementSpeed, 0, false;
-				local slide: (marker: GuiObject, up: boolean, duration: number) -> () = function(bar: GuiObject, up: boolean, duration: number): ()
-					local goal: UDim2 = up and UDim2.new(math.min(bar.Position.X.Scale + util.markerIncrementAmount, 1 - bar.Size.X.Scale), 0, 0.5, 0) or UDim2.new(0, 2, 0.5, 0);
-					tweenService:Create(bar, TweenInfo.new(duration, Enum.EasingStyle.Linear), {["Position"] = goal}):Play();
-				end;
-				local decay: (bar: GuiObject) -> number = function(bar: GuiObject): number
-					return util.totalDecaySpeedSec * (bar.Position.X.Scale + bar.Size.X.Scale);
-				end;
-				local stepper: RBXScriptConnection;
-				stepper = runService.Heartbeat:Connect(function(): ()
-					if not autoKit["Enabled"] or not Minigame["Enabled"] then
-						stepper:Disconnect();
-						return;
+				local giveUp: number = tick() + markerSearch;
+				repeat
+					for _: number, object: Instance in lplr.PlayerGui:GetDescendants() do
+						local found: Instance? = object.Name == 'Marker' and object.Parent and object.Parent.Name == 'Minigame' and object.Parent:FindFirstChild('FishZone') or nil;
+						if found then
+							marker, zone = object, found;
+							break;
+						end;
 					end;
 					if not marker then
-						for _: number, object: Instance in lplr.PlayerGui:GetDescendants() do
-							if object.Name == 'Marker' and object.Parent and object.Parent.Name == 'Minigame' and object.Parent:FindFirstChild('FishZone') then
-								marker, zone = object, object.Parent.FishZone;
-								break;
-							end;
-						end;
-						if not marker and tick() > giveUp then
-							stepper:Disconnect();
-						end;
-						return;
+						task.wait();
 					end;
+				until marker or tick() > giveUp;
+				if not marker or not zone then
+					return;
+				end;
+				local speed: number, aim: number = util.startingMarkerIncrementSpeed, 0;
+				repeat
 					if not marker.Parent or not zone.Parent then
-						stepper:Disconnect();
-						return;
-					end;
-					if tick() < nextStep then
 						return;
 					end;
 					if menuOpen() then
-						slide(marker, false, decay(marker));
-						speed, holding, nextStep = util.startingMarkerIncrementSpeed, false, tick() + 0.1;
-						return;
-					end;
-					if holding then
-						local period: number = 1 / Clicks:GetRandomValue();
-						slide(marker, false, decay(marker));
-						speed, holding, aim = util.startingMarkerIncrementSpeed, false, (math.random() - 0.5) * marker.AbsoluteSize.X * 0.1;
-						nextStep = tick() + period * (0.35 + math.random() * 0.25);
-						return;
-					end;
-					local width: number = math.max(marker.AbsoluteSize.X, 1);
-					local offset: number = (zone.AbsolutePosition.X + zone.AbsoluteSize.X / 2 + aim - (marker.AbsolutePosition.X + width / 2)) / width;
-					if offset > markerTolerance then
-						slide(marker, true, math.max(speed, util.holdMinimumMarkerIncrementSpeed));
-						speed -= 0.01;
-						nextStep = tick() + 0.05;
-					elseif offset < -markerTolerance then
-						slide(marker, false, decay(marker));
-						speed, aim = util.startingMarkerIncrementSpeed, (math.random() - 0.5) * width * 0.1;
-						nextStep = tick() + Reaction:GetRandomValue();
+						slideDown(marker);
+						speed = util.startingMarkerIncrementSpeed;
+						repeat
+							task.wait(menuPoll);
+						until not menuOpen() or not marker.Parent or not autoKit["Enabled"] or not Minigame["Enabled"];
 					else
-						slide(marker, true, math.max(util.startingMarkerIncrementSpeed, util.holdMinimumMarkerIncrementSpeed));
-						holding = true;
-						nextStep = tick() + (1 / Clicks:GetRandomValue()) * (0.35 + math.random() * 0.25);
+						local width: number = marker.AbsoluteSize.X;
+						local offset: number = (zone.AbsolutePosition.X + zone.AbsoluteSize.X / 2 + aim - (marker.AbsolutePosition.X + width / 2)) / math.max(width, 1);
+						if offset > markerTolerance then
+							slideUp(marker, math.max(speed, util.holdMinimumMarkerIncrementSpeed));
+							speed -= 0.01;
+							task.wait(0.05);
+						elseif offset < -markerTolerance then
+							slideDown(marker);
+							speed, aim = util.startingMarkerIncrementSpeed, (math.random() - 0.5) * width * 0.1;
+							task.wait(Reaction:GetRandomValue());
+						else
+							local period: number = 1 / Clicks:GetRandomValue();
+							slideUp(marker, math.max(util.startingMarkerIncrementSpeed, util.holdMinimumMarkerIncrementSpeed));
+							task.wait(period * (0.35 + math.random() * 0.25));
+							slideDown(marker);
+							speed, aim = util.startingMarkerIncrementSpeed, (math.random() - 0.5) * width * 0.1;
+							task.wait(period * (0.35 + math.random() * 0.25));
+						end;
 					end;
-				end);
-				autoKit:Clean(stepper);
+				until not autoKit["Enabled"] or not Minigame["Enabled"];
 			end;
 
 			local startMinigame: (...any) -> ...any = minigames.startMinigame;
 			minigames.startMinigame = function(...: any): ...any
-				if not Minigame["Enabled"] then
-					return startMinigame(...);
-				end;
-				if MinigameMode["Value"] == 'Instant' then
-					local finish: (result: table) -> any = select(3, ...);
+				if Minigame["Enabled"] and MinigameMode["Value"] == 'Instant' then
 					local deadline: number = tick() + util.minigameDuration;
-					local settle: () -> ();
-					settle = function(): ()
-						if menuOpen() and tick() < deadline then
-							task.delay(0.1, settle);
-							return;
-						end;
-						finish({["win"] = true});
+					while menuOpen() and tick() < deadline do
+						task.wait(menuPoll);
 					end;
-					task.delay(CompleteDelay:GetRandomValue(), settle);
-					return nil;
+					task.wait(CompleteDelay:GetRandomValue());
+					return select(3, ...)({["win"] = true});
 				end;
 				local results: table = table.pack(startMinigame(...));
-				playBar();
+				if Minigame["Enabled"] then
+					task.spawn(playBar);
+				end;
 				return table.unpack(results, 1, results.n);
 			end;
 			autoKit:Clean(function(): ()
@@ -28921,13 +31845,13 @@ velo.run(function(): ()
 					local amount: number = tonumber(drop.amount) or 0;
 					if ShowLoot["Enabled"] then
 						local meta: table? = bedwars.ItemMeta[drop.itemType];
-						local label: string = (meta and meta.displayName or drop.itemType):lower();
-						notif('AutoKit', 'Next catch drops '..amount..' '..label..(amount >= 2 and 's' or ''), 20, 'info');
+						local label: string = meta and meta.displayName or drop.itemType;
+						notif('AutoFish', 'You can get '..amount..' '..label:lower()..(amount >= 2 and 's' or '')..' on ur next fish', 20, 'info');
 					end;
 					reroll = reroll and table.find(Blacklist.ListEnabled, drop.itemType) ~= nil;
 				end;
 				if reroll and entitylib.isAlive then
-					entitylib.character.Humanoid.Jump = true;
+					lplr.Character.Humanoid.Jump = true;
 				end;
 			end));
 
@@ -28943,59 +31867,51 @@ velo.run(function(): ()
 						for _: number, bad: Vector3 in rejected do
 							skip = skip or (bad - checked).Magnitude < rejectRadius;
 						end;
-						if not skip and hit and hit.Material == Enum.Material.Water then
+						if not hit then
+							open = open or (not skip and spot or nil);
+						elseif hit.Material == Enum.Material.Water and not skip then
 							return hit.Position;
 						end;
-						open = open or (not skip and not hit and spot or nil);
 					end;
 				end;
 				return open;
 			end;
 
-			local casting: boolean, nextCast: number = false, 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if casting or not AutoCast["Enabled"] or tick() < nextCast or not entitylib.isAlive or not store.airRay then
-					return;
-				end;
-				nextCast = tick() + castRate;
-				if not store.hand.tool or store.hand.tool.Name ~= 'fishing_rod' or bobber() or menuOpen() then
-					return;
-				end;
-				local spot: Vector3? = findSpot();
-				if not spot and #rejected > 0 then
-					table.clear(rejected);
-					spot = findSpot();
-				end;
-				if not spot then
-					return;
-				end;
-				casting = true;
-				task.delay(CastDelay:GetRandomValue(), function(): ()
-					local item: table? = autoKit["Enabled"] and not menuOpen() and rod:getHandItem() or nil;
-					if not item or rod.projectileHandler or not rod:canLaunch() then
-						casting = false;
-						return;
-					end;
-					rod:beginHolding(item, nil, rod.aimingMaid, false);
-					task.defer(function(): ()
-						local handler: table? = rod.projectileHandler;
-						if handler then
-							local meta: table = bedwars.ProjectileMeta.fisherman_bobber;
-							local launchFrom: Vector3 = (bedwars.ProjectileController:getLaunchPosition(item.tool) or entitylib.character.RootPart.Position) + handler.fromPositionOffset;
-							handler.targetPoint = prediction.SolveTrajectory(launchFrom, meta.launchVelocity, meta.gravitationalAcceleration, spot, Vector3.zero, workspace.Gravity, 0, 0) or spot;
+			autoKit:Clean(task.spawn(function(): ()
+				repeat
+					if entitylib.isAlive and AutoCast["Enabled"] and store.hand.tool and store.hand.tool.Name == 'fishing_rod' and not bobber() and not menuOpen() then
+						local spot: Vector3? = findSpot();
+						if not spot and #rejected > 0 then
+							table.clear(rejected);
+							spot = findSpot();
 						end;
-						rod:releaseChargeInput(rod.aimingMaid, function(): boolean
-							return true;
-						end, nil);
-						task.delay(biteWindow, function(): ()
-							local cast: Instance? = bobber();
-							if not cast or not cast:GetAttribute('WaitingForFish') then
-								table.insert(rejected, spot);
+						if spot then
+							task.wait(CastDelay:GetRandomValue());
+							if autoKit["Enabled"] and not menuOpen() then
+								local item: table? = rod:getHandItem();
+								if item and not rod.projectileHandler and rod:canLaunch() then
+									rod:beginHolding(item, nil, rod.aimingMaid, false);
+									task.wait();
+									local handler: table? = rod.projectileHandler;
+									if handler then
+										local meta: table = bedwars.ProjectileMeta.fisherman_bobber;
+										local launchFrom: Vector3 = (bedwars.ProjectileController:getLaunchPosition(item.tool) or entitylib.character.RootPart.Position) + handler.fromPositionOffset;
+										handler.targetPoint = prediction.SolveTrajectory(launchFrom, meta.launchVelocity, meta.gravitationalAcceleration, spot, Vector3.zero, workspace.Gravity, 0, 0) or spot;
+									end;
+									rod:releaseChargeInput(rod.aimingMaid, function(): boolean
+										return true;
+									end, nil);
+								end;
+								task.wait(biteWindow);
+								local cast: Instance? = bobber();
+								if not cast or not cast:GetAttribute('WaitingForFish') then
+									table.insert(rejected, spot);
+								end;
 							end;
-							casting = false;
-						end);
-					end);
-				end);
+						end;
+					end;
+					task.wait(castRate);
+				until not autoKit["Enabled"];
 			end));
 		end
 	};
@@ -29016,7 +31932,7 @@ velo.run(function(): ()
 		["Start"] = function(autoKit: table): ()
 			local nextCheck: number = 0;
 			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if not Drink["Enabled"] or tick() < nextCheck or not entitylib.isAlive then
+				if not Drink["Enabled"] or store.matchState == 0 or tick() < nextCheck or not entitylib.isAlive then
 					return;
 				end;
 				nextCheck = tick() + checkRate;
@@ -29051,16 +31967,15 @@ velo.run(function(): ()
 			local original: (...any) -> ...any = controller.getKickBlockProjectileOriginPosition;
 			local hooked: (...any) -> ...any = function(...: any): ...any
 				local origin: Vector3, direction: Vector3 = select(2, ...);
-				local targets: table = autoKit.Options.Targets;
-				local ent: table? = Aim["Enabled"] and entitylib.EntityMouse({
+				local ent: table? = Aim["Enabled"] and store.matchState ~= 0 and entitylib.EntityMouse({
 					["Part"] = 'RootPart',
 					["Range"] = mouseRange,
 					["Origin"] = origin,
-					["Players"] = targets.Players["Enabled"],
-					["NPCs"] = targets.NPCs["Enabled"],
-					["Wallcheck"] = targets.Walls["Enabled"] or nil
+					["Players"] = true,
+					["Wallcheck"] = true,
+					["Priority"] = false
 				}) or nil;
-				local aim: Vector3? = ent and ballistics.solve(origin, kickSpeed, kickGravity, ent);
+				local aim: Vector3? = ent and prediction.SolveTrajectory(origin, kickSpeed, kickGravity, ent.RootPart.Position, ent.RootPart.AssemblyLinearVelocity, workspace.Gravity, ent.HipHeight, ent.Jumping and config.JumpPower or nil);
 				if aim then
 					for index: number, value: any in debug.getstack(2) do
 						if value == direction then
@@ -29093,19 +32008,23 @@ velo.run(function(): ()
 		end,
 		["Start"] = function(autoKit: table): ()
 			local pinatas: table = collection(lplr.Name..':pinata', autoKit);
-			local nextCheck: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if not Deposit["Enabled"] or tick() < nextCheck or not entitylib.isAlive or not getItem('candy') then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				local reach: number = autoKit.Options['Legit Range']["Enabled"] and legitRange or math.huge;
-				for _: number, pinata: Instance in pinatas do
-					local part: BasePart? = pinata:IsA('BasePart') and pinata or pinata:FindFirstChildWhichIsA('BasePart', true);
-					if part and (part.Position - entitylib.character.RootPart.Position).Magnitude <= reach then
-						fire('DepositCoins', 'CallServer', pinata);
+			autoKit:Clean(task.spawn(function(): ()
+				repeat
+					if Deposit["Enabled"] and store.matchState ~= 0 and entitylib.isAlive then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						local reach: number = autoKit.Options['Legit Range']["Enabled"] and legitRange or math.huge;
+						for _: number, pinata: Instance in pinatas do
+							if (vape.Modules.InfiniteFly and vape.Modules.InfiniteFly["Enabled"]) or not autoKit["Enabled"] then
+								break;
+							end;
+							local part: BasePart? = not pinata:IsA('Model') and pinata or (pinata.PrimaryPart or pinata:FindFirstChildWhichIsA('BasePart', true));
+							if part and (part.Position - origin).Magnitude <= reach and getItem('candy') then
+								fire('DepositCoins', 'CallServer', pinata);
+							end;
+						end;
 					end;
-				end;
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
 			end));
 		end
 	};
@@ -29132,49 +32051,84 @@ velo.run(function(): ()
 			return {Heal, SelfHeal, TeammateHeal, Range, UseHotbar, SwitchBack};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextCheck: number, nextHeal: number = 0, 0;
-			local played: boolean, busy: boolean = false, false;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if busy or not Heal["Enabled"] or tick() < math.max(nextCheck, nextHeal) or not entitylib.isAlive then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				local me: table = entitylib.character;
-				local patient: table?, lowest: number = nil, math.huge;
-				if SelfHeal["Enabled"] and me.Health < me.MaxHealth then
-					patient, lowest = me, me.Health;
-				end;
-				for _: number, ent: table in (TeammateHeal["Enabled"] and entitylib.List or {}) do
-					if ent.Player and ent.Player:GetAttribute('Team') == lplr:GetAttribute('Team') and ent.Health > 0 and ent.Health < ent.MaxHealth and ent.Health < lowest and (ent.RootPart.Position - me.RootPart.Position).Magnitude <= Range["Value"] then
-						patient, lowest = ent, ent.Health;
-					end;
-				end;
-				local guitar: table? = patient and getItem('guitar');
-				if not guitar then
-					return;
-				end;
-				busy = true;
-				local previousSlot: number?, previousTool: Instance? = store.inventory.hotbarSlot, store.hand.tool;
-				if UseHotbar["Enabled"] then
-					hotbarSwitch(hotbarSlotOf(guitar.tool));
-				end;
-				nextHeal = tick() + bedwars.MelodyKitBalance.HEAL_COOLDOWN;
-				played = true;
-				fire('PlayGuitar', 'SendToServer', {["healTarget"] = patient.Character});
-				if UseHotbar["Enabled"] and SwitchBack["Enabled"] then
-					if previousSlot and previousSlot ~= store.inventory.hotbarSlot then
-						hotbarSwitch(previousSlot);
-					elseif previousTool then
-						switchItem(previousTool, 0);
-					end;
-				end;
-				busy = false;
-			end));
+			local stopped: boolean, stopGuitar: boolean = false, false;
 			autoKit:Clean(function(): ()
-				if played then
+				stopped, stopGuitar = true, Heal["Enabled"] and hasKit('melody');
+			end);
+			-- Not cancelled on disable, so a heal in progress still switches back before the guitar is stopped.
+			task.spawn(function(): ()
+				local nextHeal: number = 0;
+				repeat
+					local patient: table?, lowest: number = nil, math.huge;
+					if Heal["Enabled"] and entitylib.isAlive and tick() >= nextHeal then
+						local me: table = entitylib.character;
+						if SelfHeal["Enabled"] and me.Health < me.MaxHealth then
+							patient, lowest = me, me.Health;
+						end;
+						for _: number, ent: table in (TeammateHeal["Enabled"] and entitylib.List or {}) do
+							if ent.Player and ent.Player:GetAttribute('Team') == lplr:GetAttribute('Team') and ent.Health > 0 and ent.Health < ent.MaxHealth and ent.Health < lowest and (ent.RootPart.Position - me.RootPart.Position).Magnitude <= Range["Value"] then
+								patient, lowest = ent, ent.Health;
+							end;
+						end;
+					end;
+					local guitar: table? = patient and getItem('guitar');
+					if guitar then
+						local previousSlot: number?, previousTool: Instance? = store.inventory.hotbarSlot, store.hand.tool;
+						if UseHotbar["Enabled"] then
+							hotbarSwitch(hotbarSlotOf(guitar.tool));
+						end;
+						nextHeal = tick() + bedwars.MelodyKitBalance.HEAL_COOLDOWN;
+						fire('PlayGuitar', 'SendToServer', {["healTarget"] = patient.Character});
+						if UseHotbar["Enabled"] and SwitchBack["Enabled"] then
+							if previousSlot and previousSlot ~= store.inventory.hotbarSlot then
+								hotbarSwitch(previousSlot);
+							elseif previousTool then
+								switchItem(previousTool);
+							end;
+						end;
+					end;
+					task.wait(checkRate);
+				until stopped;
+				if stopGuitar then
 					fire('StopPlayingGuitar', 'SendToServer');
 				end;
 			end);
+		end
+	};
+
+	local genericReach: number = 30;
+	kitSpecs.MelodyKit = {
+		["Kits"] = {'melody'},
+		["MatchOnly"] = true,
+		["Options"] = function(): {table}
+			return {};
+		end,
+		["Start"] = function(autoKit: table): ()
+			autoKit:Clean(task.spawn(function(): ()
+				local nextHeal: number = 0;
+				repeat
+					local patient: table?, nearest: number, lowest: number = nil, genericReach, math.huge;
+					if not Heal["Enabled"] then
+						nextHeal = 0;
+					elseif entitylib.isAlive then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						for _: number, ent: table in entitylib.List do
+							if ent.Player and ent.Player:GetAttribute('Team') == lplr:GetAttribute('Team') then
+								local distance: number = (origin - ent.RootPart.Position).Magnitude;
+								-- catsix narrows the distance limit to each pick, so a later teammate must be both closer and lower.
+								if distance <= nearest and ent.Health < lowest and ent.Health < ent.MaxHealth then
+									patient, nearest, lowest = ent, distance, ent.Health;
+								end;
+							end;
+						end;
+					end;
+					if patient and tick() >= nextHeal and getItem('guitar') then
+						nextHeal = tick() + bedwars.MelodyKitBalance.HEAL_COOLDOWN;
+						fire('PlayGuitar', 'SendToServer', {["healTarget"] = patient.Character});
+					end;
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
+			end));
 		end
 	};
 end);
@@ -29201,7 +32155,7 @@ velo.run(function(): ()
 			StreamerMode = autoKit:CreateToggle({["Name"] = 'Metal Streamer mode', ["Tooltip"] = 'Holds the game prompt for you instead of collecting remotely'});
 			Animation = autoKit:CreateToggle({["Name"] = 'Metal Animation', ["Default"] = true, ["Tooltip"] = 'Plays the dig animation and sound'});
 			Range = autoKit:CreateSlider({["Name"] = 'Metal Range', ["Min"] = 1, ["Max"] = 20, ["Default"] = legitReach, ["Suffix"] = 'studs', ["Tooltip"] = 'Capped to the game prompt distance while Legit Range is on'});
-			Delay = autoKit:CreateSlider({["Name"] = 'Metal Delay', ["Min"] = 0, ["Max"] = 1, ["Default"] = 0.2, ["Decimal"] = 20, ["Suffix"] = 's', ["Tooltip"] = 'How long you stand on metal before it is dug'});
+			Delay = autoKit:CreateSlider({["Name"] = 'Metal Delay', ["Min"] = 0, ["Max"] = 1, ["Default"] = 0.2, ["Decimal"] = 5, ["Suffix"] = 's', ["Tooltip"] = 'Wait before each metal is dug'});
 			return {Collect, LimitItem, StreamerMode, Animation, Range, Delay};
 		end,
 		["Start"] = function(autoKit: table): ()
@@ -29210,43 +32164,71 @@ velo.run(function(): ()
 			end;
 			autoKit:Clean(proximityPromptService.PromptShown:Connect(function(prompt: ProximityPrompt): ()
 				if Collect["Enabled"] and StreamerMode["Enabled"] and prompt.Name == 'hidden-metal-prompt' and holding() then
-					task.delay(promptLag, function(): ()
-						if prompt.Parent then
-							prompt:InputHoldBegin();
-						end;
-					end);
+					task.delay(promptLag, prompt.InputHoldBegin, prompt);
 				end;
 			end));
-			local dueAt: {[Instance]: number} = {};
 			local cooldown: {[Instance]: number} = {};
 			autoKit:Clean(collectionService:GetInstanceRemovedSignal('hidden-metal'):Connect(function(metal: Instance): ()
-				dueAt[metal] = nil;
 				cooldown[metal] = nil;
 			end));
-			local nextCheck: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if not Collect["Enabled"] or StreamerMode["Enabled"] or tick() < nextCheck or not entitylib.isAlive or not holding() then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				local reach: number = autoKit.Options['Legit Range']["Enabled"] and math.min(Range["Value"], legitReach) or Range["Value"];
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				for _: number, metal: Instance in collectionService:GetTagged('hidden-metal') do
-					local part: BasePart? = metal:FindFirstChild('Part');
-					if not part or (part.Position - origin).Magnitude > reach or tick() < (cooldown[metal] or 0) then
-						dueAt[metal] = nil;
-					elseif not dueAt[metal] then
-						dueAt[metal] = tick() + Delay["Value"];
-					elseif tick() >= dueAt[metal] then
-						dueAt[metal] = nil;
-						cooldown[metal] = tick() + recollect;
-						if Animation["Enabled"] then
-							bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.SHOVEL_DIG);
-							bedwars.AudioManager:playAudio(bedwars.SoundList.SNAP_TRAP_CONSUME_MARK);
+			autoKit:Clean(function(): ()
+				table.clear(cooldown);
+			end);
+			autoKit:Clean(task.spawn(function(): ()
+				repeat
+					if Collect["Enabled"] and not StreamerMode["Enabled"] and entitylib.isAlive then
+						local reach: number = autoKit.Options['Legit Range']["Enabled"] and math.min(Range["Value"], legitReach) or Range["Value"];
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						for _: number, metal: Instance in collectionService:GetTagged('hidden-metal') do
+							local part: BasePart? = metal:FindFirstChild('Part');
+							if part and tick() > (cooldown[metal] or 0) and (origin - part.Position).Magnitude <= reach and holding() then
+								if Delay["Value"] > 0 then
+									task.wait(Delay["Value"]);
+								end;
+								-- Re-checked against the position sampled before the wait, so walking away during it does not cancel the dig.
+								if (origin - part.Position).Magnitude <= reach then
+									if Animation["Enabled"] then
+										bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.SHOVEL_DIG);
+										bedwars.AudioManager:playAudio(bedwars.SoundList.SNAP_TRAP_CONSUME_MARK);
+									end;
+									fire('CollectCollectableEntity', 'SendToServer', {["id"] = metal:GetAttribute('Id')});
+									cooldown[metal] = tick() + recollect;
+								end;
+							end;
 						end;
-						fire('CollectCollectableEntity', 'SendToServer', {["id"] = metal:GetAttribute('Id')});
 					end;
-				end;
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
+			end));
+		end
+	};
+
+	local genericReach: number = 20;
+	kitSpecs.MetalKit = {
+		["Kits"] = {'metal_detector'},
+		["MatchOnly"] = true,
+		["Options"] = function(): {table}
+			return {};
+		end,
+		["Start"] = function(autoKit: table): ()
+			local metals: table = collection('hidden-metal', autoKit);
+			autoKit:Clean(task.spawn(function(): ()
+				repeat
+					if Collect["Enabled"] and entitylib.isAlive then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						for _: number, metal: Instance in metals do
+							local infiniteFly: table? = vape.Modules.InfiniteFly;
+							if (infiniteFly and infiniteFly["Enabled"]) or not Collect["Enabled"] or not autoKit["Enabled"] then
+								break;
+							end;
+							local part: BasePart? = if metal:IsA('Model') then metal.PrimaryPart or metal:FindFirstChildWhichIsA('BasePart', true) elseif metal:IsA('BasePart') then metal else nil;
+							if part and (part.Position - origin).Magnitude <= genericReach then
+								fire('CollectCollectableEntity', 'SendToServer', {["id"] = metal:GetAttribute('Id')});
+							end;
+						end;
+					end;
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
 			end));
 		end
 	};
@@ -29320,55 +32302,59 @@ velo.run(function(): ()
 	local labelOf: (plr: Player) -> string = function(plr: Player): string
 		return plr.DisplayName..' ('..plr.Name..')';
 	end;
-	local refreshRoster: () -> () = function(): ()
-		if not Ally or not slimeTargets['Void Slime'] then
-			return;
-		end;
-		local allies: {string}, enemies: {string}, labels: {string} = {'None'}, {'None'}, {'None'};
-		for _: number, plr: Player in playersService:GetPlayers() do
-			if plr:GetAttribute('Team') == lplr:GetAttribute('Team') then
+	local allies: {string}, enemies: {string}, labels: {string} = {'None'}, {'None'}, {'None'};
+	local addToRoster: (plr: Player) -> () = function(plr: Player): ()
+		local label: string = labelOf(plr);
+		if plr:GetAttribute('Team') == lplr:GetAttribute('Team') then
+			if not table.find(allies, plr.Name) then
 				table.insert(allies, plr.Name);
-				table.insert(labels, labelOf(plr));
-			elseif plr.Team and plr.Team.Name ~= 'Spectators' then
-				table.insert(enemies, plr.Name);
+				if Ally then
+					Ally:Change(allies);
+				end;
 			end;
-		end;
-		Ally:Change(allies);
-		Enemy:Change(enemies);
-		for _: number, kind: string in slimeKinds do
-			slimeTargets[kind]:Change(labels);
+			if not table.find(labels, label) then
+				table.insert(labels, label);
+				for _: string, dropdown: table in slimeTargets do
+					dropdown:Change(labels);
+				end;
+			end;
+		elseif plr.Team and plr.Team.Name ~= 'Spectators' and not table.find(enemies, plr.Name) then
+			table.insert(enemies, plr.Name);
+			if Enemy then
+				Enemy:Change(enemies);
+			end;
 		end;
 	end;
 	local watchPlayer: (plr: Player) -> () = function(plr: Player): ()
-		vape:Clean(plr:GetAttributeChangedSignal('Team'):Connect(refreshRoster));
-		refreshRoster();
+		vape:Clean(plr:GetAttributeChangedSignal('Team'):Connect(function(): ()
+			addToRoster(plr);
+		end));
+		addToRoster(plr);
 	end;
 	for _: number, plr: Player in playersService:GetPlayers() do
-		vape:Clean(plr:GetAttributeChangedSignal('Team'):Connect(refreshRoster));
+		watchPlayer(plr);
 	end;
 	vape:Clean(playersService.PlayerAdded:Connect(watchPlayer));
-	vape:Clean(playersService.PlayerRemoving:Connect(function(): ()
-		task.defer(refreshRoster);
-	end));
 
 	kitSpecs.Lani = {
 		["Kits"] = {'paladin'},
 		["Options"] = function(autoKit: table): {table}
-			Ally = autoKit:CreateDropdown({["Name"] = 'Lani Selected Player', ["List"] = {'None'}, ["Tooltip"] = 'Teammate the scepter of light is cast on'});
-			Enemy = autoKit:CreateDropdown({["Name"] = 'Lani Selected Enemy', ["List"] = {'None'}, ["Tooltip"] = 'Enemy the scepter of light is cast on when Use enemy is on'});
+			Ally = autoKit:CreateDropdown({["Name"] = 'Lani Selected Player', ["List"] = allies, ["Tooltip"] = 'Teammate the scepter of light is cast on'});
+			Enemy = autoKit:CreateDropdown({["Name"] = 'Lani Selected Enemy', ["List"] = enemies, ["Tooltip"] = 'Enemy the scepter of light is cast on when Use enemy is on'});
 			UseEnemy = autoKit:CreateToggle({["Name"] = 'Lani Use enemy', ["Tooltip"] = 'Casts on the selected enemy instead of your teammate'});
 			Delay = autoKit:CreateSlider({["Name"] = 'Lani Delay', ["Min"] = 1, ["Max"] = 20, ["Default"] = 5, ["Decimal"] = 10, ["Suffix"] = 's', ["Tooltip"] = 'Wait after the scepter charges before casting'});
-			refreshRoster();
 			return {Ally, Enemy, UseEnemy, Delay};
 		end,
 		["Start"] = function(autoKit: table): ()
+			local previous: any = lplr:GetAttribute('PaladinStartTime');
 			autoKit:Clean(lplr:GetAttributeChangedSignal('PaladinStartTime'):Connect(function(): ()
-				local chosen: Instance? = playersService:FindFirstChild(UseEnemy["Enabled"] and Enemy["Value"] or Ally["Value"]);
-				if chosen and chosen:IsA('Player') then
+				local started: any = lplr:GetAttribute('PaladinStartTime');
+				local changed: boolean = previous ~= nil and previous ~= false and previous ~= started;
+				previous = started;
+				local chosen: Instance? = changed and (UseEnemy["Enabled"] and playersService:FindFirstChild(Enemy["Value"]) or not UseEnemy["Enabled"] and playersService:FindFirstChild(Ally["Value"])) or nil;
+				if chosen then
 					task.delay(Delay["Value"], function(): ()
-						if autoKit["Enabled"] and chosen.Parent then
-							fire('PaladinAbilityRequest', 'SendToServer', {["target"] = chosen});
-						end;
+						fire('PaladinAbilityRequest', 'SendToServer', {["target"] = chosen});
 					end);
 				end;
 			end));
@@ -29382,10 +32368,9 @@ velo.run(function(): ()
 			LimitItem = autoKit:CreateToggle({["Name"] = 'Noelle Limit to item', ["Tooltip"] = 'Only directs slimes while holding the flute'});
 			local created: {table} = {NotifyDirect, LimitItem};
 			for _: number, kind: string in slimeKinds do
-				slimeTargets[kind] = autoKit:CreateDropdown({["Name"] = 'Noelle '..kind..' Target', ["List"] = {'None'}, ["Tooltip"] = 'Teammate your '..kind:lower()..'s follow'});
+				slimeTargets[kind] = autoKit:CreateDropdown({["Name"] = 'Noelle '..kind..' Target', ["List"] = labels, ["Tooltip"] = 'Teammate your '..kind:lower()..'s follow'});
 				table.insert(created, slimeTargets[kind]);
 			end;
-			refreshRoster();
 			return created;
 		end,
 		["Start"] = function(autoKit: table): ()
@@ -29420,7 +32405,7 @@ velo.run(function(): ()
 							end;
 							data.Following.Value = owner.UserId;
 							if NotifyDirect["Enabled"] then
-								notif('AutoKit', 'Directed '..kind..' to '..labelOf(owner), 5, 'info');
+								notif('AutoNoelle', 'Directed '..kind..' to '..labelOf(owner), 5, 'info');
 							end;
 						end);
 					end;
@@ -29437,6 +32422,7 @@ velo.run(function(): ()
 	local Range: table;
 	local FireRate: table;
 	local SwitchDelay: table;
+	local lassoSession: table? = nil;
 	kitSpecs.Lasso = {
 		["Kits"] = {'cowgirl'},
 		["Options"] = function(autoKit: table): {table}
@@ -29446,59 +32432,54 @@ velo.run(function(): ()
 			return {Range, FireRate, SwitchDelay};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local active: boolean = true;
-			local busy: boolean = false;
-			local nextCheck: number, nextFire: number = 0, 0;
+			local session: table = {};
+			local stopped: boolean = false;
+			lassoSession = session;
 			autoKit:Clean(function(): ()
-				active = false;
+				stopped = true;
 			end);
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if busy or tick() < math.max(nextCheck, nextFire) or not entitylib.isAlive then
-					return;
+			local equip: (tool: Instance) -> () = function(tool: Instance): ()
+				local slot: number? = hotbarSlotOf(tool);
+				if slot then
+					bedwars.Store:dispatch({["type"] = 'InventorySelectHotbarSlot', ["slot"] = slot});
+				else
+					switchItem(tool);
 				end;
-				nextCheck = tick() + checkRate;
-				local sword: table = bedwars.SwordController;
-				local meleeing: boolean = tick() - sword.lastSwing < meleeWindow or store.attacking or workspace:GetServerTimeNow() - sword.lastAttack < meleeWindow;
-				local held: boolean = store.hand.toolType == 'sword' or (store.hand.tool ~= nil and store.hand.tool.Name == 'lasso');
-				local lasso: table? = meleeing and held and getItem('lasso') or nil;
-				local source: table? = lasso and bedwars.ItemMeta.lasso.projectileSource;
-				local targets: table = autoKit.Options.Targets;
-				local victim: table? = source and getFacingEntity({
-					["Part"] = 'RootPart',
-					["Range"] = Range["Value"],
-					["Players"] = targets.Players["Enabled"],
-					["NPCs"] = targets.NPCs["Enabled"],
-					["Wallcheck"] = targets.Walls["Enabled"] or nil,
-					["Limit"] = 10
-				}) or nil;
-				if not victim then
-					return;
-				end;
-				busy = true;
-				nextFire = tick() + retryGap;
-				local previous: Instance? = store.hand.tool;
-				local equip: (tool: Instance) -> () = function(tool: Instance): ()
-					local slot: number? = hotbarSlotOf(tool);
-					if slot then
-						bedwars.Store:dispatch({["type"] = 'InventorySelectHotbarSlot', ["slot"] = slot});
-					else
-						switchItem(tool, 0);
-					end;
-				end;
-				equip(lasso.tool);
-				task.delay(math.max(lplr:GetNetworkPing() * 2, store.ping.total, 0.05), function(): ()
-					local thrown: boolean = active and entitylib.isAlive and victim.RootPart.Parent ~= nil and store.hand.tool == lasso.tool and ballistics.fire(lasso, 'lasso', source.projectileType('lasso'), victim);
-					if thrown then
-						nextFire = tick() + source.fireDelaySec + FireRate:GetRandomValue();
-					end;
-					task.delay(thrown and SwitchDelay["Value"] or 0, function(): ()
-						busy = false;
-						if active and previous and previous.Parent and (not store.hand.tool or store.hand.tool == lasso.tool) then
+			end;
+			-- Not cancelled on disable, so a throw in progress still switches back to the previous item.
+			task.spawn(function(): ()
+				local nextFire: number = 0;
+				repeat
+					local sword: table = bedwars.SwordController;
+					local meleeing: boolean = tick() - sword.lastSwing < meleeWindow or store.attacking or workspace:GetServerTimeNow() - sword.lastAttack < meleeWindow;
+					local held: boolean = store.hand.toolType == 'sword' or (store.hand.tool ~= nil and store.hand.tool.Name == 'lasso');
+					local lasso: table? = entitylib.isAlive and held and meleeing and tick() >= nextFire and getItem('lasso') or nil;
+					local source: table? = lasso and bedwars.ItemMeta.lasso.projectileSource;
+					local targets: table = autoKit.Options.Targets;
+					local victim: table? = source and getFacingEntity({
+						["Part"] = 'RootPart',
+						["Range"] = Range["Value"],
+						["Players"] = targets.Players["Enabled"],
+						["NPCs"] = targets.NPCs["Enabled"],
+						["Wallcheck"] = targets.Walls["Enabled"] or nil,
+						["Limit"] = 10
+					}) or nil;
+					if victim then
+						nextFire = tick() + retryGap;
+						local previous: Instance? = store.hand.tool;
+						equip(lasso.tool);
+						task.wait(math.max(lplr:GetNetworkPing() * 2, store.ping.total, 0.05));
+						if not stopped and lassoSession == session and entitylib.isAlive and victim.RootPart.Parent and store.hand.tool == lasso.tool and ballistics.fire(lasso, 'lasso', source.projectileType('lasso'), victim) then
+							nextFire = tick() + source.fireDelaySec + FireRate:GetRandomValue();
+							task.wait(SwitchDelay["Value"]);
+						end;
+						if previous and previous.Parent and lassoSession == session and (not store.hand.tool or store.hand.tool == lasso.tool) then
 							equip(previous);
 						end;
-					end);
-				end);
-			end));
+					end;
+					task.wait(checkRate);
+				until stopped or lassoSession ~= session;
+			end);
 		end
 	};
 end);
@@ -29537,7 +32518,7 @@ velo.run(function(): ()
 					end;
 					started = nil;
 					charger:stopCharging(swordType);
-					cooldown = tick() + Delay["Value"];
+					nextCheck = tick() + checkRate;
 					local tool: Instance? = store.hand.tool;
 					if not entitylib.isAlive or not tool or tool.Name ~= swordType then
 						return;
@@ -29546,6 +32527,7 @@ velo.run(function(): ()
 						bedwars.SwordController:swingSwordAtMouse(held);
 					end;
 					bedwars.SyncEvents.SwordChargedSwing:fire(lplr, tool, {["chargeTime"] = held});
+					cooldown = tick() + Delay["Value"];
 					return;
 				end;
 				if tick() < math.max(nextCheck, cooldown) or not entitylib.isAlive or not store.hand.tool or store.hand.tool.Name ~= swordType then
@@ -29587,7 +32569,7 @@ velo.run(function(): ()
 		end,
 		["Start"] = function(autoKit: table): ()
 			local jellies: table = collection('jellyfish', autoKit, function(list: table, jelly: Instance): ()
-				task.defer(function(): ()
+				task.delay(0, function(): ()
 					if jelly:GetAttribute('PlacedByUserId') == lplr.UserId then
 						table.insert(list, jelly);
 					end;
@@ -29602,14 +32584,13 @@ velo.run(function(): ()
 				if not bedwars.AbilityController:canUseAbility('electrify_jellyfish', quiet) then
 					return;
 				end;
-				local targets: table = autoKit.Options.Targets;
 				for _: number, jelly: Model in jellies do
 					if jelly.PrimaryPart and entitylib.EntityPosition({
 						["Origin"] = jelly.PrimaryPart.Position,
 						["Range"] = Range["Value"],
 						["Part"] = 'RootPart',
-						["Players"] = targets.Players["Enabled"],
-						["NPCs"] = targets.NPCs["Enabled"]
+						["Players"] = true,
+						["Priority"] = false
 					}) then
 						bedwars.AbilityController:useAbility('electrify_jellyfish');
 						break;
@@ -29644,15 +32625,16 @@ velo.run(function(): ()
 				if not bedwars.AbilityController:canUseAbility('skeleton_ability', quiet) then
 					return;
 				end;
-				local me: table = entitylib.character;
-				local low: boolean = Mode["Value"] ~= 'Enemy Near' and me.Health <= me.MaxHealth * Health["Value"] / 100;
+				local humanoid: Humanoid = entitylib.character.Humanoid;
+				local low: boolean = Mode["Value"] ~= 'Enemy Near' and humanoid.Health <= humanoid.MaxHealth * Health["Value"] / 100;
 				local targets: table = autoKit.Options.Targets;
 				local near: boolean = Mode["Value"] ~= 'Low Health' and #entitylib.AllPosition({
 					["Range"] = Range["Value"],
 					["Part"] = 'RootPart',
 					["Players"] = targets.Players["Enabled"],
 					["NPCs"] = targets.NPCs["Enabled"],
-					["Wallcheck"] = targets.Walls["Enabled"] or nil
+					["Wallcheck"] = targets.Walls["Enabled"] or nil,
+					["Priority"] = false
 				}) > 0;
 				if low or near then
 					bedwars.AbilityController:useAbility('skeleton_ability');
@@ -29808,7 +32790,7 @@ velo.run(function(): ()
 				if not Empower["Enabled"] then
 					return;
 				end;
-				local wanted: boolean = entitylib.EntityPosition({["Range"] = Range["Value"], ["Part"] = 'RootPart', ["Players"] = true}) ~= nil;
+				local wanted: boolean = entitylib.EntityPosition({["Range"] = Range["Value"], ["Part"] = 'RootPart', ["Players"] = true, ["Priority"] = false}) ~= nil;
 				local ability: string = wanted and 'enable_life_force_attack' or 'disable_life_force_attack';
 				if wanted ~= empowered and bedwars.AbilityController:canUseAbility(ability, quiet) then
 					bedwars.AbilityController:useAbility(ability);
@@ -29829,7 +32811,7 @@ velo.run(function(): ()
 		end,
 		["Start"] = function(autoKit: table): ()
 			autoKit:Clean(vapeEvents.EntityDamageEvent.Event:Connect(function(damage: table): ()
-				if damage.damageType ~= 0 or not damage.fromEntity or damage.fromEntity ~= lplr.Character then
+				if damage.damageType ~= 0 or not damage.fromEntity or damage.fromEntity.Name ~= lplr.Name then
 					return;
 				end;
 				local targets: table = autoKit.Options.Targets;
@@ -29864,31 +32846,27 @@ velo.run(function(): ()
 			return created;
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextCheck: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				local flamethrower: table? = getItem('flamethrower');
-				for _: number, upgrade: string in (flamethrower and upgrades or {}) do
-					local key: string = upgrade:lower();
-					local level: number = flamethrower.tool:GetAttribute(key) or -1;
-					local tier: table? = buy[upgrade]["Enabled"] and level < maxTier and bedwars.PyroUpgradeMeta[key].tiers[level + 2] or nil;
-					local currency: table? = tier and getItem(tier.currency);
-					if currency and currency.amount >= tier.price then
-						nextCheck = tick() + math.max(Delay["Value"], checkRate);
-						fire('UpgradeFlamethrower', 'CallServer', key);
-						return;
+			autoKit:Clean(task.spawn(function(): ()
+				repeat
+					local flamethrower: table? = getItem('flamethrower');
+					for _: number, upgrade: string in (flamethrower and upgrades or {}) do
+						local key: string = upgrade:lower();
+						local level: number = flamethrower.tool:GetAttribute(key) or -1;
+						local tier: table? = buy[upgrade]["Enabled"] and level < maxTier and bedwars.PyroUpgradeMeta[key].tiers[level + 2] or nil;
+						local currency: table? = tier and getItem(tier.currency);
+						if currency and currency.amount >= tier.price then
+							fire('UpgradeFlamethrower', 'CallServer', key);
+							task.wait(Delay["Value"]);
+						end;
 					end;
-				end;
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
 			end));
 		end
 	};
 end);
 
 velo.run(function(): ()
-	local checkRate: number = 1 / 30;
 	local quiet: table = {["disableBlockedAbilityAlert"] = true};
 	local TargetMode: table;
 	local Range: table;
@@ -29910,12 +32888,10 @@ velo.run(function(): ()
 			return {TargetMode, Range, MovingTornado, TornadoRange};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextCheck: number = 0;
 			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or not entitylib.isAlive then
+				if not entitylib.isAlive then
 					return;
 				end;
-				nextCheck = tick() + checkRate;
 				local origin: Vector3 = entitylib.character.RootPart.Position;
 				local targets: table = autoKit.Options.Targets;
 				local ent: table? = entitylib.EntityPosition({
@@ -29941,7 +32917,6 @@ end);
 
 velo.run(function(): ()
 	local idleRate: number = 0.1;
-	local minimumGap: number = 0.02;
 	local Range: table;
 	local Infinite: table;
 	local Delay: table;
@@ -29955,25 +32930,26 @@ velo.run(function(): ()
 		end,
 		["Start"] = function(autoKit: table): ()
 			local tame: any = bedwars.Client:GetNamespace('SheepHerder'):Get('TameSheep');
-			local cursor: number, nextSend: number = 0, 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextSend or not entitylib.isAlive then
-					return;
-				end;
-				local folder: Instance? = workspace:FindFirstChild('SheepModel');
-				local flock: {Instance} = folder and folder:GetChildren() or {};
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				for step: number = 1, #flock do
-					local sheep: Instance = flock[(cursor + step - 1) % #flock + 1];
-					local data: ObjectValue? = sheep:FindFirstChild('SheepData');
-					if data and sheep:IsA('Model') and sheep.PrimaryPart and (Infinite["Enabled"] or (sheep.PrimaryPart.Position - origin).Magnitude <= Range["Value"]) then
-						cursor = (cursor + step) % #flock;
-						nextSend = tick() + math.max(Delay["Value"], minimumGap);
-						tame:SendToServer(data.Value);
-						return;
+			autoKit:Clean(task.spawn(function(): ()
+				repeat
+					local folder: Instance? = workspace:FindFirstChild('SheepModel');
+					if entitylib.isAlive and folder then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						for _: number, sheep: Instance in folder:GetChildren() do
+							local root: BasePart? = sheep:IsA('Model') and sheep.PrimaryPart or nil;
+							if root and (Infinite["Enabled"] or (origin - root.Position).Magnitude <= Range["Value"]) then
+								if Delay["Value"] > 0 then
+									task.wait(Delay["Value"]);
+								end;
+								local data: ObjectValue? = sheep:FindFirstChild('SheepData');
+								if data then
+									tame:SendToServer(data.Value);
+								end;
+							end;
+						end;
 					end;
-				end;
-				nextSend = tick() + idleRate;
+					task.wait(idleRate);
+				until not autoKit["Enabled"];
 			end));
 		end
 	};
@@ -29999,11 +32975,10 @@ velo.run(function(): ()
 					return;
 				end;
 				nextCheck = tick() + checkRate;
-				local targets: table = autoKit.Options.Targets;
 				local origin: Vector3 = entitylib.character.RootPart.Position;
 				local found: number = 0;
 				for _: number, ent: table in entitylib.List do
-					if ent.Targetable and (ent.NPC and targets.NPCs["Enabled"] or ent.Player and targets.Players["Enabled"]) and (ent.RootPart.Position - origin).Magnitude <= Range["Value"] then
+					if ent.Targetable and (ent.RootPart.Position - origin).Magnitude <= Range["Value"] then
 						found += 1;
 					end;
 				end;
@@ -30045,7 +33020,8 @@ velo.run(function(): ()
 					["Range"] = Range["Value"],
 					["Part"] = 'RootPart',
 					["Players"] = targets.Players["Enabled"],
-					["NPCs"] = targets.NPCs["Enabled"]
+					["NPCs"] = targets.NPCs["Enabled"],
+					["Priority"] = false
 				}) > 0) then
 					nextSummon = tick() + recast;
 					bedwars.AbilityController:useAbility('elk_summon');
@@ -30058,7 +33034,8 @@ velo.run(function(): ()
 					["Part"] = 'RootPart',
 					["Players"] = targets.Players["Enabled"],
 					["NPCs"] = targets.NPCs["Enabled"],
-					["Wallcheck"] = targets.Walls["Enabled"] or nil
+					["Wallcheck"] = targets.Walls["Enabled"] or nil,
+					["Priority"] = false
 				});
 				if ent then
 					local root: BasePart = entitylib.character.RootPart;
@@ -30102,7 +33079,7 @@ velo.run(function(): ()
 				end;
 				nextCheck = tick() + checkRate;
 				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local enemy: table? = entitylib.EntityPosition({["Origin"] = origin, ["Range"] = Range["Value"], ["Part"] = 'RootPart', ["Players"] = true});
+				local enemy: table? = entitylib.EntityPosition({["Origin"] = origin, ["Range"] = Range["Value"], ["Part"] = 'RootPart', ["Players"] = true, ["Priority"] = false});
 				if PressAttack["Enabled"] and enemy and bedwars.AbilityController:canUseAbility('rebellion_shield', quiet) then
 					bedwars.AbilityController:useAbility('rebellion_shield');
 				end;
@@ -30222,6 +33199,347 @@ end);
 
 velo.run(function(): ()
 	local checkRate: number = 0.1;
+	local quiet: table = {["disableBlockedAbilityAlert"] = true};
+	local beeReach: number = 18;
+	local orbReach: number = 12;
+	local cropReach: number = 10;
+	local victimReach: number = 30;
+	local soulReach: number = 120;
+	local statueReach: number = 6;
+	local spiritReach: number = 120;
+	local breakReach: number = 30;
+	local launchWindow: number = 0.4;
+	local clawRange: number = 31;
+	local clawReach: number = 16;
+	local linkRange: number = 30;
+	local Bees: table;
+	local Orbs: table;
+	local Cannons: table;
+	local Punch: table;
+	local Crops: table;
+	local Minigame: table;
+	local Pads: table;
+	local Execute: table;
+	local Souls: table;
+	local Statues: table;
+	local Spirits: table;
+	local Claw: table;
+	local Link: table;
+
+	local kitName: (kit: string, fallback: string) -> string = function(kit: string, fallback: string): string
+		local meta: table? = bedwars.BedwarsKitMeta[kit];
+		return meta and meta.name or fallback;
+	end;
+
+	local flying: () -> boolean = function(): boolean
+		local infiniteFly: table? = vape.Modules.InfiniteFly;
+		return infiniteFly ~= nil and infiniteFly["Enabled"] == true;
+	end;
+
+	local masterToggle: (autoKit: table, kit: string, fallback: string, tooltip: string) -> table = function(autoKit: table, kit: string, fallback: string, tooltip: string): table
+		return autoKit:CreateToggle({["Name"] = kitName(kit, fallback), ["Default"] = true, ["Tooltip"] = tooltip});
+	end;
+
+	local kitCollection: (autoKit: table, source: any, master: table, reach: number, anyDistance: boolean, callback: (object: any) -> ()) -> () = function(autoKit: table, source: any, master: table, reach: number, anyDistance: boolean, callback: (object: any) -> ()): ()
+		local objects: table = type(source) == 'table' and source or collection(source, autoKit);
+		autoKit:Clean(task.spawn(function(): ()
+			repeat
+				if master["Enabled"] and entitylib.isAlive then
+					local origin: Vector3 = entitylib.character.RootPart.Position;
+					for _: any, object: Instance in objects do
+						if flying() or not master["Enabled"] or not autoKit["Enabled"] then
+							break;
+						end;
+						local part: BasePart? = if object:IsA('Model') then object.PrimaryPart or object:FindFirstChildWhichIsA('BasePart', true) elseif object:IsA('BasePart') then object else nil;
+						local limit: number = anyDistance and not autoKit.Options['Legit Range']["Enabled"] and math.huge or reach;
+						if part and (part.Position - origin).Magnitude <= limit then
+							callback(object);
+						end;
+					end;
+				end;
+				task.wait(checkRate);
+			until not autoKit["Enabled"];
+		end));
+	end;
+
+	local breakOwnBlock: (block: BasePart?) -> () = function(block: BasePart?): ()
+		if block and block:GetAttribute('PlacedByUserId') == lplr.UserId and entitylib.isAlive and (block.Position - entitylib.character.RootPart.Position).Magnitude < breakReach then
+			task.spawn(breakBlock, block);
+		end;
+	end;
+
+	kitSpecs.BeekeeperKit = {
+		["Kits"] = {'beekeeper'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Bees = masterToggle(autoKit, 'beekeeper', 'Beekeeper', 'Picks up every bee within 18 studs');
+			return {Bees};
+		end,
+		["Start"] = function(autoKit: table): ()
+			kitCollection(autoKit, 'bee', Bees, beeReach, false, function(bee: Instance): ()
+				fire('PickUpBee', 'SendToServer', {["beeId"] = bee:GetAttribute('BeeId')});
+			end);
+		end
+	};
+
+	kitSpecs.ElderKit = {
+		["Kits"] = {'bigman'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Orbs = masterToggle(autoKit, 'bigman', 'Eldertree', 'Consumes every tree orb within 12 studs');
+			return {Orbs};
+		end,
+		["Start"] = function(autoKit: table): ()
+			kitCollection(autoKit, 'treeOrb', Orbs, orbReach, false, function(orb: Instance): ()
+				if fire('ConsumeTreeOrb', 'CallServer', {["treeOrbSecret"] = orb:GetAttribute('TreeOrbSecret')}) then
+					orb:Destroy();
+				end;
+			end);
+		end
+	};
+
+	kitSpecs.DaveyKit = {
+		["Kits"] = {'davey'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Cannons = masterToggle(autoKit, 'davey', 'Davey', 'Breaks your own cannon after it launches you');
+			return {Cannons};
+		end,
+		["Start"] = function(autoKit: table): ()
+			local controller: table = bedwars.CannonHandController;
+			local previous: (...any) -> ...any = controller.launchSelf;
+			local active: boolean = true;
+			local hooked: (self: table, cannon: BasePart?, ...any) -> ...any = function(self: table, cannon: BasePart?, ...: any): ...any
+				local results: table = table.pack(previous(self, cannon, ...));
+				if active and Cannons["Enabled"] then
+					breakOwnBlock(cannon);
+				end;
+				return table.unpack(results, 1, results.n);
+			end;
+			controller.launchSelf = hooked;
+			autoKit:Clean(function(): ()
+				active = false;
+				if controller.launchSelf == hooked then
+					controller.launchSelf = previous;
+				end;
+			end);
+		end
+	};
+
+	kitSpecs.KaliyahKit = {
+		["Kits"] = {'dragon_slayer'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Punch = masterToggle(autoKit, 'dragon_slayer', 'Kaliyah', 'Punches whenever the game reports an eligible punch target');
+			return {Punch};
+		end,
+		["Start"] = function(autoKit: table): ()
+			autoKit:Clean(task.spawn(function(): ()
+				repeat
+					if Punch["Enabled"] and entitylib.isAlive and not flying() and bedwars.DragonSlayerController:hasEligiblePunchTarget() and bedwars.AbilityController:canUseAbility('dragon_slayer_punch', quiet) then
+						bedwars.AbilityController:useAbility('dragon_slayer_punch');
+					end;
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
+			end));
+		end
+	};
+
+	kitSpecs.FarmerKit = {
+		["Kits"] = {'farmer_cletus'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Crops = masterToggle(autoKit, 'farmer_cletus', 'Farmer Cletus', 'Harvests every ripe crop within 10 studs');
+			return {Crops};
+		end,
+		["Start"] = function(autoKit: table): ()
+			kitCollection(autoKit, 'HarvestableCrop', Crops, cropReach, false, function(crop: BasePart): ()
+				if fire('CropHarvest', 'CallServer', {["position"] = bedwars.BlockController:getBlockPosition(crop.Position)}) then
+					bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.PUNCH);
+					bedwars.AudioManager:playAudio(bedwars.SoundList.CROP_HARVEST);
+				end;
+			end);
+		end
+	};
+
+	kitSpecs.FishermanKit = {
+		["Kits"] = {'fisherman'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Minigame = masterToggle(autoKit, 'fisherman', 'Fisherman', 'Wins every fishing minigame the moment it starts');
+			return {Minigame};
+		end,
+		["Start"] = function(autoKit: table): ()
+			local minigames: table = bedwars.FishingMinigameController;
+			local previous: (...any) -> ...any = minigames.startMinigame;
+			local active: boolean = true;
+			local hooked: (...any) -> ...any = function(...: any): ...any
+				if not active or not Minigame["Enabled"] then
+					return previous(...);
+				end;
+				local finish: (result: table) -> any = select(3, ...);
+				finish({["win"] = true});
+				return;
+			end;
+			minigames.startMinigame = hooked;
+			autoKit:Clean(function(): ()
+				active = false;
+				if minigames.startMinigame == hooked then
+					minigames.startMinigame = previous;
+				end;
+			end);
+		end
+	};
+
+	kitSpecs.GingerbreadKit = {
+		["Kits"] = {'gingerbread_man'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Pads = masterToggle(autoKit, 'gingerbread_man', 'Gingerbread Man', 'Breaks your own launch pad right after it launches you');
+			return {Pads};
+		end,
+		["Start"] = function(autoKit: table): ()
+			local launcher: table = bedwars.LaunchPadController;
+			local previous: (...any) -> ...any = launcher.attemptLaunch;
+			local active: boolean = true;
+			local hooked: (self: table, pad: BasePart?, ...any) -> ...any = function(self: table, pad: BasePart?, ...: any): ...any
+				local results: table = table.pack(previous(self, pad, ...));
+				if active and Pads["Enabled"] and workspace:GetServerTimeNow() - (self.lastLaunch or 0) < launchWindow then
+					breakOwnBlock(pad);
+				end;
+				return table.unpack(results, 1, results.n);
+			end;
+			launcher.attemptLaunch = hooked;
+			autoKit:Clean(function(): ()
+				active = false;
+				if launcher.attemptLaunch == hooked then
+					launcher.attemptLaunch = previous;
+				end;
+			end);
+		end
+	};
+
+	kitSpecs.HannahKit = {
+		["Kits"] = {'hannah'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Execute = masterToggle(autoKit, 'hannah', 'Hannah', 'Executes every marked victim (any distance unless Legit Range is on)');
+			return {Execute};
+		end,
+		["Start"] = function(autoKit: table): ()
+			kitCollection(autoKit, 'HannahExecuteInteraction', Execute, victimReach, true, function(victim: Instance): ()
+				local icon: Instance? = fire('HannahPromptTrigger', 'CallServer', {["user"] = lplr, ["victimEntity"] = victim}) and victim:FindFirstChild('Hannah Execution Icon') or nil;
+				if icon then
+					icon:Destroy();
+				end;
+			end);
+		end
+	};
+
+	kitSpecs.GrimKit = {
+		["Kits"] = {'grim_reaper'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Souls = masterToggle(autoKit, 'grim_reaper', 'Grim Reaper', 'Consumes souls within 120 studs while you are at a quarter health or less');
+			return {Souls};
+		end,
+		["Start"] = function(autoKit: table): ()
+			local souls: any = bedwars.GrimReaperController.soulsByPosition;
+			kitCollection(autoKit, type(souls) == 'table' and souls or {}, Souls, soulReach, false, function(soul: Instance): ()
+				local character: Model? = lplr.Character;
+				local health: number? = character and character:GetAttribute('Health');
+				local maxHealth: number? = character and character:GetAttribute('MaxHealth');
+				if entitylib.isAlive and health and maxHealth and health <= maxHealth / 4 and not character:GetAttribute('GrimReaperChannel') then
+					fire('ConsumeGrimReaperSoul', 'CallServer', {["secret"] = soul:GetAttribute('GrimReaperSoulSecret')});
+				end;
+			end);
+		end
+	};
+
+	kitSpecs.MinerKit = {
+		["Kits"] = {'miner'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Statues = masterToggle(autoKit, 'miner', 'Miner', 'Breaks every petrified player (any distance unless Legit Range is on)');
+			return {Statues};
+		end,
+		["Start"] = function(autoKit: table): ()
+			kitCollection(autoKit, 'petrified-player', Statues, statueReach, true, function(statue: Instance): ()
+				fire('DestroyPetrifiedPlayer', 'SendToServer', {["petrifyId"] = statue:GetAttribute('PetrifyId')});
+			end);
+		end
+	};
+
+	kitSpecs.EvelynnKit = {
+		["Kits"] = {'spirit_assassin'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Spirits = masterToggle(autoKit, 'spirit_assassin', 'Evelynn', 'Uses every spirit (any distance unless Legit Range is on)');
+			return {Spirits};
+		end,
+		["Start"] = function(autoKit: table): ()
+			kitCollection(autoKit, 'EvelynnSoul', Spirits, spiritReach, true, function(spirit: Instance): ()
+				bedwars.SpiritAssassinController:useSpirit(lplr, spirit);
+			end);
+		end
+	};
+
+	kitSpecs.KaidaKit = {
+		["Kits"] = {'summoner'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Claw = masterToggle(autoKit, 'summoner', 'Kaida', 'Claws the lowest health player within 31 studs');
+			return {Claw};
+		end,
+		["Start"] = function(autoKit: table): ()
+			autoKit:Clean(task.spawn(function(): ()
+				repeat
+					local ent: table? = Claw["Enabled"] and entitylib.EntityPosition({["Range"] = clawRange, ["Part"] = 'RootPart', ["Players"] = true, ["Sort"] = sortMethods.Health, ["Priority"] = false}) or nil;
+					local character: Model? = lplr.Character;
+					if ent and (not autoKit.Options['Legit Range']["Enabled"] or (character and character:GetAttribute('Health') or 0) > 0) then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						local direction: Vector3 = CFrame.lookAt(origin, ent.RootPart.Position).LookVector;
+						fire('SummonerClawAttackRequest', 'SendToServer', {
+							["position"] = origin + direction * math.max((origin - ent.RootPart.Position).Magnitude - clawReach, 0),
+							["direction"] = direction,
+							["clientTime"] = workspace:GetServerTimeNow()
+						});
+					end;
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
+			end));
+		end
+	};
+
+	kitSpecs.EldricKit = {
+		["Kits"] = {'warlock'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Link = masterToggle(autoKit, 'warlock', 'Eldric', 'Links the closest enemy within 30 studs while you hold the staff');
+			return {Link};
+		end,
+		["Start"] = function(autoKit: table): ()
+			autoKit:Clean(task.spawn(function(): ()
+				local linked: Model? = nil;
+				repeat
+					if Link["Enabled"] and store.hand.tool and store.hand.tool.Name == 'warlock_staff' then
+						local ent: table? = entitylib.EntityPosition({["Range"] = linkRange, ["Part"] = 'RootPart', ["Players"] = true, ["NPCs"] = true, ["Priority"] = false});
+						if ent and ent.Character ~= linked and not fire('WarlockLinkTarget', 'CallServer', {["target"] = ent.Character}) then
+							ent = nil;
+						end;
+						linked = ent and ent.Character or nil;
+					else
+						linked = nil;
+					end;
+					task.wait(checkRate);
+				until not autoKit["Enabled"];
+			end));
+		end
+	};
+end);
+
+velo.run(function(): ()
+	local checkRate: number = 0.1;
 	local Range: table;
 	local Health: table;
 	local Delay: table;
@@ -30245,8 +33563,7 @@ velo.run(function(): ()
 				if not bomb or me.Health > me.MaxHealth * Health["Value"] / 100 then
 					return;
 				end;
-				local targets: table = autoKit.Options.Targets;
-				if entitylib.EntityPosition({["Origin"] = me.RootPart.Position, ["Range"] = Range["Value"], ["Part"] = 'RootPart', ["Players"] = targets.Players["Enabled"], ["NPCs"] = targets.NPCs["Enabled"]}) then
+				if entitylib.EntityPosition({["Origin"] = me.RootPart.Position, ["Range"] = Range["Value"], ["Part"] = 'RootPart', ["Players"] = true, ["Priority"] = false}) then
 					nextBomb = tick() + Delay["Value"];
 					fire('ConsumeItem', 'CallServer', {["item"] = bomb.tool});
 				end;
@@ -30347,6 +33664,7 @@ velo.run(function(): ()
 					end;
 					return false;
 				end, SophiaDelay["Value"]);
+				nextCheck = tick() + checkRate;
 				busy = false;
 			end));
 		end
@@ -30366,35 +33684,49 @@ velo.run(function(): ()
 			return {WhimSpells, WhimRange, WhimRate, WhimDelay, WhimTomes, WhimTomeRange, WhimTomeDelay, WhimNotify};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextCheck: number, nextFire: number, nextTome: number = 0, 0, 0;
+			local nextCheck: number, nextFire: number = 0, 0;
 			local busy: boolean = false;
+			local running: boolean = true;
 			local retryAt: {[string]: number} = {};
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if WhimTomes["Enabled"] and tick() >= nextTome and entitylib.isAlive then
-					nextTome = tick() + WhimTomeDelay["Value"];
-					local origin: Vector3 = entitylib.character.RootPart.Position;
-					for _: number, tome: Instance in collectionService:GetTagged('ElementTome') do
-						local part: BasePart? = tome:IsA('BasePart') and tome or tome:IsA('Model') and (tome.PrimaryPart or tome:FindFirstChildWhichIsA('BasePart', true)) or nil;
-						local secret: any = tome:GetAttribute('TomeSecret');
-						if part and secret and tick() >= (retryAt[secret] or 0) and (part.Position - origin).Magnitude <= WhimTomeRange["Value"] then
-							retryAt[secret] = tick() + tomeRetry;
-							local result: any = fire('LearnElementTome', 'CallServer', {["secret"] = secret});
-							if type(result) == 'table' and result.element then
-								bedwars.MageController:destroyTomeGuidingBeam();
-								bedwars.MageController:playLearnTomeEffect(lplr, tome, result.element);
-								task.delay(bedwars.BalanceFile.LEARN_TOME_DURATION or 2, function(): ()
-									bedwars.MageController:fadeOutTome(tome);
-									if lplr.Character then
-										bedwars.MageKitUtil.changeMageKitAppearance(lplr, lplr.Character, result.element);
+			autoKit:Clean(function(): ()
+				running = false;
+			end);
+			task.spawn(function(): ()
+				repeat
+					if WhimTomes["Enabled"] and entitylib.isAlive then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						for _: number, tome: Instance in collectionService:GetTagged('ElementTome') do
+							local part: BasePart? = if tome:IsA('Model') then tome.PrimaryPart or tome:FindFirstChildWhichIsA('BasePart', true) elseif tome:IsA('BasePart') then tome else nil;
+							local secret: any = tome:GetAttribute('TomeSecret');
+							if part and (part.Position - origin).Magnitude <= WhimTomeRange["Value"] and secret and tick() >= (retryAt[secret] or 0) then
+								retryAt[secret] = tick() + tomeRetry;
+								local result: any = fire('LearnElementTome', 'CallServer', {["secret"] = secret});
+								if type(result) == 'table' and result.element then
+									local element: any = result.element;
+									-- Tome visuals are game internals that can throw on a stale tome; an error must not end the reading loop.
+									pcall(function(): ()
+										bedwars.MageController:destroyTomeGuidingBeam();
+										bedwars.MageController:playLearnTomeEffect(lplr, tome, element);
+									end);
+									task.delay(bedwars.BalanceFile.LEARN_TOME_DURATION or 2, function(): ()
+										pcall(function(): ()
+											bedwars.MageController:fadeOutTome(tome);
+											if lplr.Character then
+												bedwars.MageKitUtil.changeMageKitAppearance(lplr, lplr.Character, element);
+											end;
+										end);
+									end);
+									if WhimNotify["Enabled"] then
+										notif('AutoWhimElement', 'Learned the '..tostring(element)..' element', 5, 'info');
 									end;
-								end);
-								if WhimNotify["Enabled"] then
-									notif('AutoKit', 'Whim learned the '..tostring(result.element)..' element', 5, 'info');
 								end;
 							end;
 						end;
 					end;
-				end;
+					task.wait(WhimTomeDelay["Value"]);
+				until not running;
+			end);
+			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
 				if not WhimSpells["Enabled"] or busy or tick() < math.max(nextCheck, nextFire) then
 					return;
 				end;
@@ -30413,6 +33745,7 @@ velo.run(function(): ()
 					end;
 					return false;
 				end, WhimDelay["Value"]);
+				nextCheck = tick() + checkRate;
 				busy = false;
 			end));
 		end
@@ -30438,40 +33771,43 @@ velo.run(function(): ()
 			return {Streamer, Animation, Range, Delay};
 		end,
 		["Start"] = function(autoKit: table): ()
-			local nextCheck: number = 0;
-			local claimedUntil: {[Instance]: number} = {};
+			local running: boolean = true;
+			local cooldowns: {[Instance]: number} = {};
+			autoKit:Clean(function(): ()
+				running = false;
+			end);
 			autoKit:Clean(collectionService:GetInstanceRemovedSignal('stars'):Connect(function(star: Instance): ()
-				claimedUntil[star] = nil;
+				cooldowns[star] = nil;
 			end));
 			autoKit:Clean(proximityPrompts.PromptShown:Connect(function(prompt: ProximityPrompt): ()
 				if Streamer["Enabled"] and prompt.Name == 'stars_ProximityPrompt' then
-					task.delay(promptDelay, function(): ()
-						prompt:InputHoldBegin();
-					end);
+					task.wait(promptDelay);
+					prompt:InputHoldBegin();
 				end;
 			end));
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if Streamer["Enabled"] or tick() < nextCheck or not entitylib.isAlive then
-					return;
-				end;
-				nextCheck = tick() + checkRate;
-				local root: BasePart = entitylib.character.RootPart;
-				for _: number, star: Model in collectionService:GetTagged('stars') do
-					if star.PrimaryPart and tick() >= (claimedUntil[star] or 0) and (root.Position - star.PrimaryPart.Position).Magnitude <= Range["Value"] then
-						claimedUntil[star] = tick() + Delay["Value"] + collectCooldown;
-						task.delay(Delay["Value"], function(): ()
-							if not autoKit["Enabled"] or not entitylib.isAlive or not star.PrimaryPart or (entitylib.character.RootPart.Position - star.PrimaryPart.Position).Magnitude > Range["Value"] then
-								return;
+			task.spawn(function(): ()
+				repeat
+					if not Streamer["Enabled"] and entitylib.isAlive then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						for _: number, star: Model in collectionService:GetTagged('stars') do
+							if tick() > (cooldowns[star] or 0) and star.PrimaryPart and (origin - star.PrimaryPart.Position).Magnitude <= Range["Value"] then
+								if Delay["Value"] > 0 then
+									task.wait(Delay["Value"]);
+								end;
+								if star.PrimaryPart and (origin - star.PrimaryPart.Position).Magnitude <= Range["Value"] then
+									if Animation["Enabled"] then
+										bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.PUNCH);
+										bedwars.ViewmodelController:playAnimation(bedwars.AnimationType.FP_USE_ITEM);
+									end;
+									bedwars.StarCollectorController:collectEntity(lplr, star, star.Name);
+									cooldowns[star] = tick() + collectCooldown;
+								end;
 							end;
-							if Animation["Enabled"] then
-								bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.PUNCH);
-								bedwars.ViewmodelController:playAnimation(bedwars.AnimationType.FP_USE_ITEM);
-							end;
-							bedwars.StarCollectorController:collectEntity(lplr, star, star.Name);
-						end);
+						end;
 					end;
-				end;
-			end));
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
@@ -30616,9 +33952,6 @@ velo.run(function(): ()
 			return {Mode, TrapType, Target, Radius, Range, Amount, PlaceRange, Delay, IgnoreWalls, Detonate, SwitchBack, Notify, Traps, KitCheck};
 		end,
 		["Start"] = function(autoKit: table): ()
-			if KitCheck["Enabled"] and not hasKit('trapper') then
-				return;
-			end;
 			local folder: Instance? = replicatedStorage.TS.games.bedwars.kit.kits:FindFirstChild('trapper');
 			local constantsModule: Instance? = folder and folder:FindFirstChild('trapper-constants');
 			local utilModule: Instance? = folder and folder:FindFirstChild('trapper-util');
@@ -30684,15 +34017,25 @@ velo.run(function(): ()
 						end;
 						return false;
 					end;
-					if not bedwars.AbilityController:canUseAbility('trapper_throw', quiet) then
-						return false;
-					end;
 					local payload: table = {["trapType"] = item, ["target"] = position, ["normal"] = Vector3.yAxis};
 					ownAim = {["character"] = lplr.Character, ["trapType"] = item, ["source"] = 'binding', ["released"] = true, ["payload"] = payload};
 					controller.currentAim = ownAim;
-					bedwars.AbilityController:useAbility('trapper_throw', nil, payload);
+					-- The ability runs game code while our fake aim is installed; the aim has to be cancelled before any error propagates.
+					local ran: boolean, thrown: any = pcall(function(): boolean
+						if not bedwars.AbilityController:canUseAbility('trapper_throw', quiet) then
+							return false;
+						end;
+						bedwars.AbilityController:useAbility('trapper_throw', nil, payload);
+						return true;
+					end);
 					if controller.currentAim == ownAim then
 						controller:cancelAim();
+					end;
+					if not ran then
+						error(thrown);
+					end;
+					if not thrown then
+						return false;
 					end;
 				else
 					if not getPlacedBlock(position - Vector3.new(0, 3, 0)) or not canPlace() then
@@ -30706,7 +34049,7 @@ velo.run(function(): ()
 				end;
 				recent[position] = tick() + reuseDelay;
 				if Notify["Enabled"] then
-					notif('AutoKit', 'Trapper placed '..item, 3);
+					notif('AutoTrap', 'Placed '..item, 3);
 				end;
 				return true;
 			end;
@@ -30751,7 +34094,7 @@ velo.run(function(): ()
 				end;
 			end);
 			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or not entitylib.isAlive then
+				if tick() < nextCheck then
 					return;
 				end;
 				nextCheck = tick() + checkRate;
@@ -30759,6 +34102,9 @@ velo.run(function(): ()
 					if tick() >= expiry then
 						recent[position] = nil;
 					end;
+				end;
+				if not entitylib.isAlive or (KitCheck["Enabled"] and not hasKit('trapper')) then
+					return;
 				end;
 				local targets: table = autoKit.Options.Targets;
 				local armed: boolean = Detonate["Enabled"] and trapperUtil.getArmedTrapCount(lplr, 'explosive_trap') > 0;
@@ -30768,7 +34114,8 @@ velo.run(function(): ()
 					["Players"] = targets.Players["Enabled"],
 					["NPCs"] = targets.NPCs["Enabled"],
 					["Wallcheck"] = (IgnoreWalls["Enabled"] or targets.Walls["Enabled"]) or nil,
-					["Sort"] = sortMethods.Distance
+					["Sort"] = sortMethods.Distance,
+					["Priority"] = false
 				});
 				if armed and tick() >= nextDetonate and controller:canUseAbilities() and bedwars.AbilityController:canUseAbility('trapper_detonate', quiet) then
 					for _: number, trap: Instance in placedTraps do
@@ -30821,6 +34168,7 @@ velo.run(function(): ()
 	local groundDrop: number = 80;
 	local fallbackCooldown: number = 8;
 	local scanLift: number = 40;
+	local aimLift: Vector3 = Vector3.new(0, 0.5, 0);
 	local FallSpeed: table;
 	local Search: table;
 	local LegitSwitch: table;
@@ -30857,8 +34205,11 @@ velo.run(function(): ()
 				return nil;
 			end;
 			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if busy or tick() < math.max(nextCheck, nextFire) or not entitylib.isAlive or not store.map then
+				if busy or tick() < math.max(nextCheck, nextFire) or not entitylib.isAlive or not store.map or (LimitItem["Enabled"] and not (store.hand.tool and store.hand.tool.Name == 'harpoon')) then
 					return;
+				end;
+				if vape.ThreadFix then
+					setthreadidentity(8);
 				end;
 				nextCheck = tick() + checkRate;
 				local root: BasePart = entitylib.character.RootPart;
@@ -30868,7 +34219,7 @@ velo.run(function(): ()
 					lastGround = root.Position;
 				end;
 				local harpoon: table? = getItem('harpoon');
-				if not harpoon or (LimitItem["Enabled"] and store.hand.tool ~= harpoon.tool) or root.AssemblyLinearVelocity.Y >= -FallSpeed["Value"] or workspace:Raycast(root.Position, Vector3.new(0, -voidDepth, 0), ground) then
+				if not harpoon or root.AssemblyLinearVelocity.Y >= -FallSpeed["Value"] or workspace:Raycast(root.Position, Vector3.new(0, -voidDepth, 0), ground) then
 					return;
 				end;
 				local spot: Vector3? = landingNear(root.Position + Vector3.new(0, scanLift, 0)) or lastGround and landingNear(lastGround + Vector3.new(0, 5, 0));
@@ -30876,7 +34227,7 @@ velo.run(function(): ()
 				local source: table? = bedwars.ItemMeta.harpoon.projectileSource;
 				local offset: table = bedwars.BowConstantsTable;
 				local shootPosition: Vector3? = spot and (CFrame.new(root.Position, spot) * CFrame.new(-offset.RelX, -offset.RelY, -offset.RelZ)).Position;
-				local aim: Vector3? = shootPosition and prediction.SolveTrajectory(shootPosition, meta.launchVelocity, meta.gravitationalAcceleration or config.Gravity, spot, Vector3.zero, workspace.Gravity, 0);
+				local aim: Vector3? = shootPosition and prediction.SolveTrajectory(shootPosition, meta.launchVelocity, meta.gravitationalAcceleration or config.Gravity, spot + aimLift, Vector3.zero, workspace.Gravity, 0);
 				if not aim then
 					return;
 				end;
@@ -30931,7 +34282,7 @@ velo.run(function(): ()
 				end;
 				nextCheck = tick() + checkRate;
 				local me: table = entitylib.character;
-				if Rewind["Enabled"] and me.Health <= me.MaxHealth * Health["Value"] / 100 and bedwars.AbilityController:canUseAbility('void_walker_rewind', quiet) then
+				if Rewind["Enabled"] and me.Humanoid.Health <= me.Humanoid.MaxHealth * Health["Value"] / 100 and bedwars.AbilityController:canUseAbility('void_walker_rewind', quiet) then
 					nextCheck = tick() + abilityGap;
 					bedwars.AbilityController:useAbility('void_walker_rewind');
 					return;
@@ -30946,11 +34297,14 @@ velo.run(function(): ()
 					["Players"] = targets.Players["Enabled"],
 					["NPCs"] = targets.NPCs["Enabled"],
 					["Wallcheck"] = targets.Walls["Enabled"] or nil,
-					["Sort"] = sortMethods.Distance
+					["Sort"] = sortMethods.Distance,
+					["Priority"] = false
 				});
-				local flat: Vector3? = target and (target.RootPart.Position - me.RootPart.Position) * Vector3.new(1, 0, 1);
-				if flat and flat.Magnitude > 0 then
-					me.RootPart.CFrame = CFrame.lookAlong(me.RootPart.Position, flat);
+				if target then
+					local flat: Vector3 = (target.RootPart.Position - me.RootPart.Position) * Vector3.new(1, 0, 1);
+					if flat.Magnitude > 0 then
+						me.RootPart.CFrame = CFrame.lookAlong(me.RootPart.Position, flat);
+					end;
 					nextCheck = tick() + abilityGap;
 					bedwars.AbilityController:useAbility('void_walker_warp');
 				end;
@@ -30963,6 +34317,7 @@ velo.run(function(): ()
 	local checkRate: number = 0.1;
 	local throwCooldown: number = 1.5;
 	local castHeight: Vector3 = Vector3.new(0, 2, 0);
+	local aimLift: Vector3 = Vector3.new(0, 0.5, 0);
 	local Range: table;
 	local Animation: table;
 	local LimitItem: table;
@@ -30975,7 +34330,7 @@ velo.run(function(): ()
 	kitSpecs.Uma = {
 		["Kits"] = {'spirit_summoner'},
 		["Options"] = function(autoKit: table): {table}
-			Range = autoKit:CreateSlider({["Name"] = 'Uma Range', ["Min"] = 1, ["Max"] = 80, ["Default"] = 50, ["Suffix"] = 'studs'});
+			Range = autoKit:CreateSlider({["Name"] = 'Uma Range', ["Min"] = 1, ["Max"] = 80, ["Default"] = 50, ["Decimal"] = 5, ["Suffix"] = 'studs'});
 			Animation = autoKit:CreateToggle({["Name"] = 'Uma Animation', ["Default"] = true});
 			LimitItem = autoKit:CreateToggle({["Name"] = 'Uma Limit to item', ["Default"] = true, ["Tooltip"] = 'Only throws while you hold the spirit staff'});
 			AutoSummon = autoKit:CreateToggle({["Name"] = 'Uma Auto Summon', ["Tooltip"] = 'Summons spirits for you'});
@@ -30992,21 +34347,35 @@ velo.run(function(): ()
 			local mapOnly: RaycastParams = RaycastParams.new();
 			mapOnly.FilterType = Enum.RaycastFilterType.Include;
 			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or not entitylib.isAlive or not ItemDrops["Enabled"] then
+				if tick() < nextCheck or not entitylib.isAlive then
 					return;
 				end;
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
 				nextCheck = tick() + checkRate;
-				local staff: table? = getItem('spirit_staff');
-				if not staff or (LimitItem["Enabled"] and store.hand.tool ~= staff.tool) then
+				local staff: Instance? = nil;
+				if LimitItem["Enabled"] then
+					staff = store.hand.tool and store.hand.tool.Name == 'spirit_staff' and store.hand.tool or nil;
+				else
+					for _: number, item: table in store.inventory.inventory.items do
+						if item.itemType == 'spirit_staff' and item.tool then
+							switchItem(item.tool, 0);
+							staff = item.tool;
+							break;
+						end;
+					end;
+				end;
+				if not staff or not ItemDrops["Enabled"] then
 					return;
 				end;
 				local attackReady: number = lplr:GetAttribute('ReadySummonedAttackSpirits') or 0;
 				local healReady: number = lplr:GetAttribute('ReadySummonedHealSpirits') or 0;
-				if AutoSummon["Enabled"] and getItem('summon_stone') then
-					if AttackSpirit["Enabled"] and attackReady < 1 then
+				if AutoSummon["Enabled"] then
+					if AttackSpirit["Enabled"] and attackReady < 1 and getItem('summon_stone') then
 						bedwars.AbilityController:useAbility('summon_attack_spirit');
 					end;
-					if HealSpirit["Enabled"] and healReady < 1 then
+					if HealSpirit["Enabled"] and healReady < 1 and getItem('summon_stone') then
 						bedwars.AbilityController:useAbility('summon_heal_spirit');
 					end;
 				end;
@@ -31029,19 +34398,16 @@ velo.run(function(): ()
 				end;
 				mapOnly.FilterDescendantsInstances = store.map and {store.map} or {};
 				local shootPosition: Vector3 = origin + castHeight;
-				local aim: Vector3? = prediction.SolveTrajectory(shootPosition, meta.launchVelocity, meta.gravitationalAcceleration or config.Gravity, drop.Position, Vector3.zero, workspace.Gravity, 0, 0, mapOnly);
+				local aim: Vector3? = prediction.SolveTrajectory(shootPosition, meta.launchVelocity, meta.gravitationalAcceleration or config.Gravity, drop.Position + aimLift, Vector3.zero, workspace.Gravity, 0, 0, mapOnly);
 				if not aim then
 					return;
 				end;
-				if store.hand.tool ~= staff.tool then
-					switchItem(staff.tool, 0);
-				end;
-				fire('ProjectileFire', 'CallServerAsync', staff.tool, nil, spirit, shootPosition, origin, CFrame.lookAt(shootPosition, aim).LookVector * meta.launchVelocity, bedwars.IdUtil.generateId(8), ballistics.shotData(staff.itemType), workspace:GetServerTimeNow() - config.ShotLatency);
-				nextCheck = tick() + throwCooldown;
+				fire('ProjectileFire', 'CallServerAsync', staff, nil, spirit, shootPosition, origin, CFrame.lookAt(shootPosition, aim).LookVector * meta.launchVelocity, bedwars.IdUtil.generateId(8), ballistics.shotData(staff.Name), workspace:GetServerTimeNow() - config.ShotLatency);
 				if Animation["Enabled"] then
 					bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.WIZARD_BALL_CAST);
 					bedwars.AudioManager:playAudio(bedwars.SoundList.SPIRIT_SUMMONER_CHANGE_AFFINITY, {});
 				end;
+				nextCheck = tick() + throwCooldown + checkRate;
 			end));
 		end
 	};
@@ -31104,8 +34470,7 @@ velo.run(function(): ()
 				if not Ascend["Enabled"] or not bedwars.AbilityController:canUseAbility('void_knight_ascend', quiet) then
 					return;
 				end;
-				local targets: table = autoKit.Options.Targets;
-				if entitylib.EntityPosition({["Range"] = Range["Value"], ["Part"] = 'RootPart', ["Players"] = targets.Players["Enabled"], ["NPCs"] = targets.NPCs["Enabled"]}) then
+				if entitylib.EntityPosition({["Origin"] = entitylib.character.RootPart.Position, ["Range"] = Range["Value"], ["Part"] = 'RootPart', ["Players"] = true, ["Priority"] = false}) then
 					bedwars.AbilityController:useAbility('void_knight_ascend');
 				end;
 			end));
@@ -31137,7 +34502,7 @@ velo.run(function(): ()
 					return;
 				end;
 				local root: BasePart = entitylib.character.RootPart;
-				if root.AssemblyLinearVelocity.Y > -FallSpeed["Value"] or not bedwars.AbilityController:canUseAbility('void_axe_jump', quiet) or not bedwars.QueryUtil:raycast(root.Position, Vector3.new(0, -Height["Value"], 0), store.airRay) then
+				if root.AssemblyLinearVelocity.Y > -FallSpeed["Value"] or not bedwars.AbilityController:canUseAbility('void_axe_jump', quiet) or not workspace:Raycast(root.Position, Vector3.new(0, -Height["Value"], 0), store.airRay) then
 					return;
 				end;
 				local axe: table? = store.hand.tool and store.hand.tool.Name == 'void_axe' and store.hand or (not LimitItem["Enabled"] and getItem('void_axe')) or nil;
@@ -31145,6 +34510,9 @@ velo.run(function(): ()
 					return;
 				end;
 				nextSlam = tick() + bedwars.VoidRegentBalance.AXE_COOLDOWN;
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
 				if store.hand.tool ~= axe.tool then
 					if LegitSwitch["Enabled"] then
 						hotbarSwitch(hotbarSlotOf(axe.tool));
@@ -31221,12 +34589,79 @@ velo.run(function(): ()
 					["Part"] = 'RootPart',
 					["Players"] = targets.Players["Enabled"],
 					["NPCs"] = targets.NPCs["Enabled"],
-					["Wallcheck"] = targets.Walls["Enabled"] or nil
+					["Wallcheck"] = targets.Walls["Enabled"] or nil,
+					["Priority"] = false
 				});
 				if #near >= Amount["Value"] then
 					bedwars.AbilityController:useAbility('warrior_strike');
 				end;
 			end));
+		end
+	};
+end);
+
+velo.run(function(): ()
+	local checkRate: number = 0.1;
+	local reach: number = 20;
+	local Souls: table;
+	local Stars: table;
+
+	local kitName: (kit: string, fallback: string) -> string = function(kit: string, fallback: string): string
+		local meta: table? = bedwars.BedwarsKitMeta[kit];
+		return meta and meta.name or fallback;
+	end;
+
+	local collectNear: (autoKit: table, tag: string, master: table, callback: (object: Instance) -> ()) -> () = function(autoKit: table, tag: string, master: table, callback: (object: Instance) -> ()): ()
+		local objects: {Instance} = collection(tag, autoKit);
+		local running: boolean = true;
+		autoKit:Clean(function(): ()
+			running = false;
+		end);
+		task.spawn(function(): ()
+			repeat
+				if master["Enabled"] and entitylib.isAlive then
+					local origin: Vector3 = entitylib.character.RootPart.Position;
+					for _: number, object: Instance in objects do
+						local infiniteFly: table? = vape.Modules.InfiniteFly;
+						if (infiniteFly and infiniteFly["Enabled"]) or not running then
+							break;
+						end;
+						local part: BasePart? = if object:IsA('Model') then object.PrimaryPart or object:FindFirstChildWhichIsA('BasePart', true) elseif object:IsA('BasePart') then object else nil;
+						if part and (part.Position - origin).Magnitude <= reach then
+							callback(object);
+						end;
+					end;
+				end;
+				task.wait(checkRate);
+			until not running;
+		end);
+	end;
+
+	kitSpecs.JailorKit = {
+		["Kits"] = {'jailor'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Souls = autoKit:CreateToggle({["Name"] = kitName('jailor', 'Warden'), ["Default"] = true, ["Tooltip"] = 'Collects every soul within 20 studs (catsix AutoKit)'});
+			return {Souls};
+		end,
+		["Start"] = function(autoKit: table): ()
+			collectNear(autoKit, 'jailor_soul', Souls, function(soul: Instance): ()
+				bedwars.JailorController:collectEntity(lplr, soul, 'JailorSoul');
+			end);
+		end
+	};
+
+	kitSpecs.StarCollectorKit = {
+		["Kits"] = {'star_collector'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			Stars = autoKit:CreateToggle({["Name"] = kitName('star_collector', 'Stella'), ["Default"] = true, ["Tooltip"] = 'Collects every star within 20 studs (catsix AutoKit)'});
+			return {Stars};
+		end,
+		["Start"] = function(autoKit: table): ()
+			collectNear(autoKit, 'stars', Stars, function(star: Instance): ()
+				bedwars.StarCollectorController:collectEntity(lplr, star, star.Name);
+			end);
 		end
 	};
 end);
@@ -31251,30 +34686,27 @@ velo.run(function(): ()
 	local CircleTransparency: table;
 	local CircleThickness: table;
 	local CircleFilled: table;
+	local mapBottom: number = math.huge;
+	local footingOwner: Model?, footingY: number = nil, -math.huge;
 
-	local refreshTeammates: () -> () = function(): ()
-		table.clear(teammates);
-		table.insert(teammates, 'None');
-		for _: number, plr: Player in playersService:GetPlayers() do
-			if plr ~= lplr and plr:GetAttribute('Team') == lplr:GetAttribute('Team') then
-				table.insert(teammates, plr.Name);
+	local addTeammate: (plr: Player) -> () = function(plr: Player): ()
+		if plr ~= lplr and plr:GetAttribute('Team') == lplr:GetAttribute('Team') and not table.find(teammates, plr.Name) then
+			table.insert(teammates, plr.Name);
+			if Teammate then
+				Teammate:Change(teammates);
 			end;
-		end;
-		if Teammate then
-			Teammate:Change(teammates);
 		end;
 	end;
 	local watchTeam: (plr: Player) -> () = function(plr: Player): ()
-		vape:Clean(plr:GetAttributeChangedSignal('Team'):Connect(refreshTeammates));
-		refreshTeammates();
+		vape:Clean(plr:GetAttributeChangedSignal('Team'):Connect(function(): ()
+			addTeammate(plr);
+		end));
+		addTeammate(plr);
 	end;
 	for _: number, plr: Player in playersService:GetPlayers() do
 		watchTeam(plr);
 	end;
 	vape:Clean(playersService.PlayerAdded:Connect(watchTeam));
-	vape:Clean(playersService.PlayerRemoving:Connect(function(plr: Player): ()
-		task.defer(refreshTeammates);
-	end));
 
 	local mouseOrigin: () -> Vector2 = function(): Vector2
 		return inputService.TouchEnabled and gameCamera.ViewportSize / 2 or inputService:GetMouseLocation();
@@ -31284,6 +34716,9 @@ velo.run(function(): ()
 		local chosen: Player? = playersService:FindFirstChild(Teammate["Value"]);
 		if not FovCheck["Enabled"] then
 			return chosen;
+		end;
+		if not entitylib.isAlive then
+			return nil;
 		end;
 		local origin: Vector2, best: Player?, bestDistance: number = mouseOrigin(), nil, Fov["Value"];
 		for _: number, plr: Player in (chosen and {chosen} or playersService:GetPlayers()) do
@@ -31327,7 +34762,7 @@ velo.run(function(): ()
 			local original: (...any) -> ...any = controller.onAbilityUsed;
 			local hook: (...any) -> ...any = function(self: table, character: Model, data: table?, ...: any): ...any
 				if AutoOwl["Enabled"] and data and data.ability == 'SUMMON_OWL' and character == lplr.Character then
-					local target: Player? = entitylib.isAlive and pickTeammate() or nil;
+					local target: Player? = pickTeammate();
 					if target and target ~= lplr then
 						fire('SummonOwl', 'CallServer', target);
 						return nil;
@@ -31361,11 +34796,9 @@ velo.run(function(): ()
 				end));
 			end;
 
-			local mapBottom: number?;
-			local footingOwner: Model?, footingY: number = nil, -math.huge;
 			local nextCheck: number = 0;
 			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or store.matchState == 0 or not entitylib.isAlive then
+				if tick() < nextCheck or store.matchState == 0 then
 					return;
 				end;
 				nextCheck = tick() + checkRate;
@@ -31379,13 +34812,12 @@ velo.run(function(): ()
 				end;
 				local root: BasePart? = character.PrimaryPart;
 				if root then
-					if not mapBottom then
-						mapBottom = math.huge;
-						for _: number, block: BasePart in store.blocks do
-							mapBottom = math.min(mapBottom, block.Position.Y - block.Size.Y / 2);
-						end;
-					end;
 					if footingOwner ~= character then
+						if mapBottom == math.huge then
+							for _: number, block: BasePart in store.blocks do
+								mapBottom = math.min(mapBottom, block.Position.Y - block.Size.Y / 2);
+							end;
+						end;
 						footingOwner, footingY = character, (mapBottom == math.huge and -math.huge or mapBottom) + fallDepth;
 					end;
 					if math.abs(root.AssemblyLinearVelocity.Y) < 2 then
@@ -31475,34 +34907,35 @@ velo.run(function(): ()
 				if tick() < nextCheck or not entitylib.isAlive or (AfkCheck["Enabled"] and isAfk()) then
 					return;
 				end;
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
 				nextCheck = tick() + checkRate;
-				local staff: table? = nil;
-				local held: Instance? = store.hand.tool;
-				if held and bedwars.WizardUtil:isWizardStaff(held.Name) then
-					staff = {["tool"] = held, ["itemType"] = held.Name};
-				elseif not LimitItem["Enabled"] then
+				local staffType: string? = nil;
+				if LimitItem["Enabled"] then
+					local held: Instance? = store.hand.tool;
+					staffType = held and bedwars.WizardUtil:isWizardStaff(held.Name) and held.Name or nil;
+				else
 					for _: number, item: table in store.inventory.inventory.items do
-						if item.tool and bedwars.WizardUtil:isWizardStaff(item.itemType) then
-							staff = item;
+						if bedwars.WizardUtil:isWizardStaff(item.itemType) and item.tool then
 							switchItem(item.tool, 0);
+							staffType = item.itemType;
 							break;
 						end;
 					end;
 				end;
-				local wizard: table? = bedwars.WizardStaffController;
-				if not staff or not wizard then
+				if not staffType then
 					return;
 				end;
 				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local castRange: number = math.min(Range["Value"], bedwars.WizardUtil:getCastRange(staff.itemType));
-				local canShock: boolean = Shockwave["Enabled"] and bedwars.WizardUtil:hasAbility(staff.itemType, 'SHOCKWAVE');
+				local castRange: number = math.min(Range["Value"], bedwars.WizardUtil:getCastRange(staffType));
+				local canShock: boolean = Shockwave["Enabled"] and bedwars.WizardUtil:hasAbility(staffType, 'SHOCKWAVE');
 				local target: table? = entitylib.EntityPosition({
 					["Origin"] = origin,
 					["Range"] = math.max(castRange, canShock and ShockwaveRange["Value"] or 0),
 					["Part"] = 'RootPart',
 					["Players"] = autoKit.Options.Targets.Players["Enabled"],
 					["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"],
-					["Wallcheck"] = autoKit.Options.Targets.Walls["Enabled"] or nil,
 					["Sort"] = sortMethods[TargetMode["Value"]]
 				});
 				if not target then
@@ -31516,12 +34949,53 @@ velo.run(function(): ()
 					{'LIGHTNING_STRIKE', Strike["Enabled"] and distance <= castRange}
 				} do
 					local ability: string = cast[1];
-					if cast[2] and tick() >= (retryAt[ability] or 0) and bedwars.WizardUtil:hasAbility(staff.itemType, ability) and wizard:canCastAbility(ability) and bedwars.AbilityController:canUseAbility(ability, quiet) then
-						retryAt[ability] = tick() + math.max(Delay["Value"], minimumGap);
-						bedwars.AbilityController:useAbility(ability, newproxy(true), {["target"] = ability == 'SHOCKWAVE' and Vector3.zero or aimAt});
-						nextCheck = tick() + Delay["Value"];
+					local wizard: table? = bedwars.WizardStaffController;
+					if not cast[2] or (retryAt[ability] or 0) > tick() or not bedwars.WizardUtil:hasAbility(staffType, ability) or not wizard then
+						continue;
+					end;
+					-- Staff controller internals can throw; catsix skips that ability instead of stopping.
+					local checked: boolean, allowed: any = pcall(wizard.canCastAbility, wizard, ability);
+					if not checked or not allowed then
+						continue;
+					end;
+					checked, allowed = pcall(bedwars.AbilityController.canUseAbility, bedwars.AbilityController, ability, quiet);
+					if not checked or not allowed then
+						continue;
+					end;
+					retryAt[ability] = tick() + math.max(Delay["Value"], minimumGap);
+					if pcall(bedwars.AbilityController.useAbility, bedwars.AbilityController, ability, newproxy(true), {["target"] = ability == 'SHOCKWAVE' and Vector3.zero or aimAt}) then
+						nextCheck = tick() + Delay["Value"] + checkRate;
 						break;
 					end;
+				end;
+			end));
+		end
+	};
+
+	local genericRange: number = 50;
+	local Cast: table;
+	kitSpecs.Wizard = {
+		["Kits"] = {'wizard'},
+		["MatchOnly"] = true,
+		["Options"] = function(autoKit: table): {table}
+			local meta: table? = bedwars.BedwarsKitMeta.wizard;
+			Cast = autoKit:CreateToggle({["Name"] = meta and meta.name or 'Zeno', ["Default"] = true, ["Tooltip"] = 'Casts your wizard ability on the lowest health enemy within 50 studs'});
+			return {Cast};
+		end,
+		["Start"] = function(autoKit: table): ()
+			local nextCheck: number = 0;
+			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
+				if not Cast["Enabled"] or tick() < nextCheck then
+					return;
+				end;
+				nextCheck = tick() + checkRate;
+				local ability: any = lplr:GetAttribute('WizardAbility');
+				if not ability or not bedwars.AbilityController:canUseAbility(ability, quiet) then
+					return;
+				end;
+				local target: table? = entitylib.EntityPosition({["Range"] = genericRange, ["Part"] = 'RootPart', ["Players"] = true, ["Sort"] = sortMethods.Health, ["Priority"] = false});
+				if target then
+					bedwars.AbilityController:useAbility(ability, newproxy(true), {["target"] = target.RootPart.Position});
 				end;
 			end));
 		end
@@ -31530,20 +35004,24 @@ end);
 
 velo.run(function(): ()
 	local jumpGap: number = 0.25;
+	local flyLimit: number = 2;
 	local infiniteJumpLimit: number = 1.7;
 	local Lead: table;
 	local pullIn: () -> number? = function(): number?
 		local airborne: number = tick() - (entitylib.character.AirTime or tick());
 		local fly: table? = vape.Modules.Fly;
-		if fly and fly["Enabled"] and (fly.Options.Mode["Value"] == 'TP Down' or fly.Options['TP Down']["Enabled"]) then
-			return fly.Options['Air Time']["Value"] - airborne;
-		end;
 		local jump: table? = vape.Modules.InfiniteJump;
 		local jumpDown: table? = jump and jump.Options['TP Down'];
-		if jump and jump["Enabled"] and jumpDown and jumpDown["Enabled"] then
-			return infiniteJumpLimit - airborne;
+		local jumpPulls: boolean = jump ~= nil and jump["Enabled"] and jumpDown ~= nil and jumpDown["Enabled"];
+		local flying: boolean = fly ~= nil and fly["Enabled"];
+		-- Fly's 'TP Down' mode is catsix's TPDown module, whose PullIn stays nil while InfiniteJump's TP Down owns the pull.
+		if flying and fly.Options.Mode["Value"] == 'TP Down' then
+			return not jumpPulls and fly.Options['Air Time']["Value"] - airborne or nil;
 		end;
-		return nil;
+		if flying and fly.Options['TP Down']["Enabled"] then
+			return flyLimit - airborne;
+		end;
+		return jumpPulls and infiniteJumpLimit - airborne or nil;
 	end;
 	kitSpecs.Zephyr = {
 		["Kits"] = {'wind_walker'},
@@ -31560,7 +35038,7 @@ velo.run(function(): ()
 				end;
 			end);
 			autoKit:Clean(runService.PreSimulation:Connect(function(): ()
-				if not entitylib.isAlive then
+				if not entitylib.isAlive or vape.MovementOwner then
 					return;
 				end;
 				local humanoid: Humanoid = entitylib.character.Humanoid;
@@ -31580,11 +35058,11 @@ velo.run(function(): ()
 				if humanoid.FloorMaterial ~= Enum.Material.Air or tick() < nextJump then
 					return;
 				end;
-				local left: number? = pullIn();
 				local allowed: number = bedwars.JumpHeightController and bedwars.JumpHeightController.allowedAirJumps or 0;
-				if left and left <= Lead["Value"] and used < allowed then
+				local left: number? = pullIn();
+				if used < allowed and left and left <= Lead["Value"] then
 					nextJump = tick() + jumpGap;
-					fire('NotifyAirJump', 'SendToServer');
+					fire('NotifyAirJump');
 					humanoid:ChangeState(Enum.HumanoidStateType.Jumping);
 					entitylib.character.AirTime = tick();
 				end;
@@ -31653,7 +35131,7 @@ velo.run(function(): ()
 					return;
 				end;
 				nextCheck = tick() + checkRate;
-				for _: number, ent: table in entitylib.AllPosition({["Range"] = Range["Value"], ["Part"] = 'RootPart', ["Players"] = true, ["Wallcheck"] = true}) do
+				for _: number, ent: table in entitylib.AllPosition({["Range"] = Range["Value"], ["Part"] = 'RootPart', ["Players"] = true, ["Wallcheck"] = true, ["Priority"] = false}) do
 					if (links[ent.Character] or 0) <= tick() then
 						link(ent.Character);
 						break;
@@ -31677,38 +35155,38 @@ velo.run(function(): ()
 		end,
 		["Start"] = function(autoKit: table): ()
 			local claimed: {[Instance]: boolean} = {};
-			local graves: {Instance} = collection('Gravestone', autoKit, nil, function(list: {Instance}, grave: Instance, tag: string): ()
-				local index: number? = table.find(list, grave);
-				if index then
-					table.remove(list, index);
-				end;
-				claimed[grave] = nil;
-			end);
+			local running: boolean = true;
 			local nextClaim: number = 0;
-			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextClaim or not entitylib.isAlive then
-					return;
-				end;
-				nextClaim = tick() + checkRate;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				for _: number, grave: Instance in graves do
-					local secret: any = grave:GetAttribute('GravestoneSecret');
-					if secret and not claimed[grave] and (grave:GetPivot().Position - origin).Magnitude <= Range["Value"] then
-						claimed[grave], nextClaim = true, tick() + Delay["Value"];
-						fire('ActivateGravestone', 'CallServer', {
-							["secret"] = secret,
-							["position"] = grave:GetAttribute('GravestonePosition'),
-							["skeletonData"] = {
-								["associatedPlayerUserId"] = grave:GetAttribute('GravestonePlayerUserId'),
-								["armorType"] = grave:GetAttribute('ArmorType'),
-								["weaponType"] = grave:GetAttribute('SwordType'),
-								["bowType"] = grave:GetAttribute('BowType')
-							}
-						});
-						break;
-					end;
-				end;
+			autoKit:Clean(function(): ()
+				running = false;
+			end);
+			autoKit:Clean(collectionService:GetInstanceRemovedSignal('Gravestone'):Connect(function(grave: Instance): ()
+				claimed[grave] = nil;
 			end));
+			task.spawn(function(): ()
+				repeat
+					if entitylib.isAlive and tick() >= nextClaim then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						for _: number, grave: Instance in collectionService:GetTagged('Gravestone') do
+							if not claimed[grave] and grave:GetAttribute('GravestoneSecret') and (grave:GetPivot().Position - origin).Magnitude <= Range["Value"] then
+								claimed[grave], nextClaim = true, tick() + Delay["Value"];
+								fire('ActivateGravestone', 'CallServer', {
+									["secret"] = grave:GetAttribute('GravestoneSecret'),
+									["position"] = grave:GetAttribute('GravestonePosition'),
+									["skeletonData"] = {
+										["associatedPlayerUserId"] = grave:GetAttribute('GravestonePlayerUserId'),
+										["armorType"] = grave:GetAttribute('ArmorType'),
+										["weaponType"] = grave:GetAttribute('SwordType'),
+										["bowType"] = grave:GetAttribute('BowType')
+									}
+								});
+								break;
+							end;
+						end;
+					end;
+					task.wait(checkRate);
+				until not running;
+			end);
 		end
 	};
 end);
@@ -31730,18 +35208,19 @@ velo.run(function(): ()
 		["Start"] = function(autoKit: table): ()
 			local nextCheck: number, nextSend: number = 0, 0;
 			autoKit:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextCheck or not entitylib.isAlive then
+				if tick() < math.max(nextCheck, nextSend) or not entitylib.isAlive then
 					return;
 				end;
 				nextCheck = tick() + checkRate;
 				local target: table? = entitylib.EntityPosition({
+					["Origin"] = entitylib.character.RootPart.Position,
 					["Range"] = Range["Value"],
 					["Part"] = 'RootPart',
-					["Players"] = autoKit.Options.Targets.Players["Enabled"],
-					["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"],
-					["Wallcheck"] = autoKit.Options.Targets.Walls["Enabled"] or nil
+					["Players"] = true,
+					["Wallcheck"] = true,
+					["Priority"] = false
 				});
-				if target and tick() >= nextSend and bedwars.AbilityController:canUseAbility('SEND_FALCON', quiet) then
+				if target and bedwars.AbilityController:canUseAbility('SEND_FALCON', quiet) then
 					nextSend = tick() + Delay["Value"];
 					bedwars.AbilityController:useAbility('SEND_FALCON');
 				elseif not target and Recall["Enabled"] and bedwars.AbilityController:canUseAbility('RECALL_FALCON', quiet) then
@@ -31788,7 +35267,11 @@ velo.run(function(): ()
 	kitSpecs.TrixieWarp = {
 		["Kits"] = {'void_walker'},
 		["Options"] = function(autoKit: table): {table}
-			NoCooldown = autoKit:CreateToggle({["Name"] = 'Trixie Warp no cooldown', ["Tooltip"] = 'Removes the clientside cooldown of Rift Warp'});
+			NoCooldown = autoKit:CreateToggle({["Name"] = 'Trixie Warp no cooldown', ["Tooltip"] = 'Removes the clientside cooldown of Rift Warp', ["Function"] = function(callback: boolean): ()
+				if callback and autoKit["Enabled"] and hasKit('void_walker') then
+					bedwars.AbilityController.cooldownController:removeCooldown(warp);
+				end;
+			end});
 			return {NoCooldown};
 		end,
 		["Start"] = function(autoKit: table): ()
@@ -31854,7 +35337,7 @@ velo.run(function(): ()
 			end));
 			autoKit:Clean(bedwars.Client:Get('MimicBlockPickPocketReady'):Connect(function(event: table): ()
 				if event.player == lplr then
-					armed = event.ready == true;
+					armed = event.ready and true or false;
 				end;
 			end));
 			local nextCheck: number = 0;
@@ -31871,7 +35354,8 @@ velo.run(function(): ()
 					["Part"] = 'RootPart',
 					["Players"] = true,
 					["Wallcheck"] = autoKit.Options.Targets.Walls["Enabled"] or nil,
-					["Sort"] = sortMethods.Distance
+					["Sort"] = sortMethods.Distance,
+					["Priority"] = false
 				});
 				for _: number, ent: table in nearby do
 					if not armed then
@@ -31919,7 +35403,7 @@ velo.run(function(): ()
 					return;
 				end;
 				local root: BasePart = entitylib.character.RootPart;
-				if root.AssemblyLinearVelocity.Y >= -FallSpeed["Value"] or bedwars.QueryUtil:raycast(root.Position, Vector3.new(0, -Depth["Value"], 0), store.airRay) or not bedwars.AbilityController:canUseAbility('void_axe_jump', quiet) then
+				if root.AssemblyLinearVelocity.Y >= -FallSpeed["Value"] or workspace:Raycast(root.Position, Vector3.new(0, -Depth["Value"], 0), store.airRay) or not bedwars.AbilityController:canUseAbility('void_axe_jump', quiet) then
 					return;
 				end;
 				local ground: Vector3? = getNearGround(Range["Value"] / 3);
@@ -31971,7 +35455,8 @@ velo.run(function(): ()
 					["Wallcheck"] = autoKit.Options.Targets.Walls["Enabled"] or nil,
 					["Sort"] = sortMethods[TargetMode["Value"]]
 				});
-				local aim: Vector3? = target and ballistics.solve(pivot.Position, turretSpeed, turretGravity, target);
+				local motion: Vector3? = target and target.RootPart.AssemblyLinearVelocity;
+				local aim: Vector3? = target and prediction.SolveTrajectory(pivot.Position, turretSpeed, turretGravity, target.RootPart.Position, motion, workspace.Gravity, target.HipHeight, nil, store.airRay, target.Humanoid.FloorMaterial == Enum.Material.Air or math.abs(motion.Y) > 0.01, target.RootPart.Position, target.RootPart);
 				if aim then
 					local delta: Vector3 = aim - pivot.Position;
 					bedwars.TurretCameraController.angleX = math.atan2(-delta.X, -delta.Z);
@@ -31985,9 +35470,12 @@ end);
 velo.run(function(): ()
 	local quiet: table = {["disableBlockedAbilityAlert"] = true};
 	local flat: Vector3 = Vector3.new(1, 0, 1);
-	local lift: (height: number) -> (...any) -> Vector3 = function(height: number): (...any) -> Vector3
-		return function(...: any): Vector3
-			return Vector3.new(0, height, 0);
+	local ownRoot: () -> BasePart? = function(): BasePart?
+		return entitylib.isAlive and entitylib.character.RootPart or nil;
+	end;
+	local lift: (height: number) -> (...any) -> (Vector3?, BasePart?) = function(height: number): (...any) -> (Vector3?, BasePart?)
+		return function(...: any): (Vector3?, BasePart?)
+			return Vector3.new(0, height, 0), ownRoot();
 		end;
 	end;
 	local along: (direction: Vector3?) -> Vector3? = function(direction: Vector3?): Vector3?
@@ -31996,14 +35484,17 @@ velo.run(function(): ()
 	end;
 	local boosts: {[string]: table} = {
 		["Jade Hammer"] = {["Controller"] = 'JadeHammerController', ["Method"] = 'useJadeHammer', ["Ready"] = 'jade_hammer_jump', ["Push"] = lift(20.5)},
-		["Regent Dash"] = {["Controller"] = 'VoidAxeController', ["Method"] = 'useVoidAxe', ["Ready"] = 'void_axe_jump', ["Push"] = function(): Vector3
-			return entitylib.character.RootPart.CFrame.LookVector * flat * 70;
+		["Regent Dash"] = {["Controller"] = 'VoidAxeController', ["Method"] = 'useVoidAxe', ["Ready"] = 'void_axe_jump', ["Push"] = function(): (Vector3?, BasePart?)
+			local root: BasePart? = ownRoot();
+			return root and root.CFrame.LookVector * flat * 70, root;
 		end},
-		["Yamini Pounce"] = {["Controller"] = 'CatController', ["Method"] = 'leap', ["Push"] = function(character: Model?, direction: Vector3?): Vector3?
-			return along(direction);
+		["Yamini Pounce"] = {["Controller"] = 'CatController', ["Method"] = 'leap', ["Push"] = function(character: Model?, direction: Vector3?): (Vector3?, BasePart?)
+			return along(direction), character and character:FindFirstChild('HumanoidRootPart') :: BasePart?;
 		end},
 		["Yamini Wall Kick"] = {["Controller"] = 'CatController', ["Method"] = 'dismountWall', ["Push"] = lift(25)},
-		["Yuzi Dash"] = {["Controller"] = 'DaoController', ["Method"] = 'dashForward', ["Push"] = along},
+		["Yuzi Dash"] = {["Controller"] = 'DaoController', ["Method"] = 'dashForward', ["Push"] = function(direction: Vector3?): (Vector3?, BasePart?)
+			return along(direction), ownRoot();
+		end},
 		["Xurot Wing Flap"] = {["Controller"] = 'VoidDragonController', ["Method"] = 'flapWings', ["Push"] = lift(40)}
 	};
 
@@ -32025,10 +35516,11 @@ velo.run(function(): ()
 		local hook: (...any) -> ...any = function(self: table, ...: any): ...any
 			local primed: boolean = boost.Ready == nil or bedwars.AbilityController:canUseAbility(boost.Ready, quiet);
 			local results: table = table.pack(original(self, ...));
-			local push: Vector3? = primed and boost.Toggle["Enabled"] and entitylib.isAlive and boost.Push(...) or nil;
-			if push then
-				local root: BasePart = entitylib.character.RootPart;
-				root:ApplyImpulse(push * root.AssemblyMass * (boost.Multiplier["Value"] - 1));
+			if primed and boost.Toggle["Enabled"] then
+				local push: Vector3?, root: BasePart? = boost.Push(...);
+				if push and root then
+					root:ApplyImpulse(push * root.AssemblyMass * (boost.Multiplier["Value"] - 1));
+				end;
 			end;
 			return table.unpack(results, 1, results.n);
 		end;
@@ -32110,6 +35602,8 @@ velo.run(function(): ()
 
 	local checkRate: number = 0.05;
 	local wingSpeed: number = 2;
+	local formBreathRate: number = 0.1;
+	local formBreathRange: number = 30;
 	local Range: table;
 	local Delay: table;
 	local Wings: table;
@@ -32118,7 +35612,7 @@ velo.run(function(): ()
 		["Options"] = function(autoKit: table): {table}
 			Range = autoKit:CreateSlider({["Name"] = 'Xurot Range', ["Min"] = 1, ["Max"] = 200, ["Default"] = 120, ["Suffix"] = 'studs', ["Tooltip"] = 'Breathes on enemies in this range while you are a dragon'});
 			Delay = autoKit:CreateSlider({["Name"] = 'Xurot Delay', ["Min"] = 0.1, ["Max"] = 3, ["Default"] = 0.5, ["Decimal"] = 10, ["Suffix"] = 's'});
-			Wings = autoKit:CreateToggle({["Name"] = 'Xurot Wing Boost', ["Default"] = true, ["Tooltip"] = 'Each wing flap in dragon form gives a speed boost until it wears off', ["Function"] = function(): ()
+			Wings = autoKit:CreateToggle({["Name"] = 'Xurot Wing Boost', ["Default"] = true, ["Tooltip"] = 'catsix AutoKit Xurot: each wing flap gives a speed boost, and dragon breath hits players within 30 studs', ["Function"] = function(): ()
 				if autoKit["Enabled"] then
 					autoKit:Toggle();
 					autoKit:Toggle();
@@ -32137,21 +35631,18 @@ velo.run(function(): ()
 				local flap: table = boosts['Xurot Wing Flap'];
 				local flapped: boolean = false;
 				local hook: (...any) -> ...any = function(self: table, ...: any): ...any
-					if flapped then
-						return nil;
+					if not flapped and fire('DragonFlap', 'CallServer', {["player"] = lplr}) ~= false then
+						self.SpeedMaid:GiveTask(bedwars.SprintController:getMovementStatusModifier():addModifier({["blockSprint"] = true, ["constantSpeedMultiplier"] = wingSpeed}));
+						self.SpeedMaid:GiveTask(function(): ()
+							flapped = false;
+						end);
+						flapped = true;
 					end;
-					local result: any = fire('DragonFlap', 'CallServer', {["player"] = lplr});
-					if result == false then
-						return nil;
-					end;
-					flapped = true;
-					self.SpeedMaid:GiveTask(bedwars.SprintController:getMovementStatusModifier():addModifier({["blockSprint"] = true, ["constantSpeedMultiplier"] = wingSpeed}));
-					self.SpeedMaid:GiveTask(function(): ()
-						flapped = false;
-					end);
-					if flap.Toggle["Enabled"] and entitylib.isAlive then
-						local root: BasePart = entitylib.character.RootPart;
-						root:ApplyImpulse(flap.Push() * root.AssemblyMass * (flap.Multiplier["Value"] - 1));
+					if flap.Toggle["Enabled"] then
+						local push: Vector3?, root: BasePart? = flap.Push();
+						if push and root then
+							root:ApplyImpulse(push * root.AssemblyMass * (flap.Multiplier["Value"] - 1));
+						end;
 					end;
 					return nil;
 				end;
@@ -32161,6 +35652,17 @@ velo.run(function(): ()
 						controller.flapWings = original;
 					end;
 				end);
+				local nextFormBreath: number = 0;
+				autoKit:Clean(runService.Heartbeat:Connect(function(): ()
+					if tick() < nextFormBreath or store.matchState == 0 then
+						return;
+					end;
+					nextFormBreath = tick() + formBreathRate;
+					local target: table? = controller.inDragonForm and entitylib.EntityPosition({["Range"] = formBreathRange, ["Part"] = 'RootPart', ["Players"] = true, ["Priority"] = false}) or nil;
+					if target then
+						fire('DragonBreath', 'SendToServer', {["player"] = lplr, ["targetPoint"] = target.RootPart.Position});
+					end;
+				end));
 			else
 				hookBoost(autoKit, 'Xurot Wing Flap');
 			end;
@@ -32188,11 +35690,12 @@ velo.run(function(): ()
 				end;
 				nextCheck = tick() + checkRate;
 				local target: table? = entitylib.EntityPosition({
+					["Origin"] = entitylib.character.RootPart.Position,
 					["Range"] = Range["Value"],
 					["Part"] = 'RootPart',
-					["Players"] = autoKit.Options.Targets.Players["Enabled"],
-					["NPCs"] = autoKit.Options.Targets.NPCs["Enabled"],
-					["Wallcheck"] = autoKit.Options.Targets.Walls["Enabled"] or nil
+					["Players"] = true,
+					["Wallcheck"] = true,
+					["Priority"] = false
 				});
 				if target then
 					nextBreath = tick() + Delay["Value"];
@@ -32238,7 +35741,7 @@ end);
 velo.run(function(): ()
 	local AutoKit: table = {["Enabled"] = false};
 	local ShowAll: table = {["Enabled"] = false};
-	local Notify: table = {["Enabled"] = true};
+	local Notify: table = {["Enabled"] = false};
 	local specNames: {string} = {};
 	for name: string in kitSpecs do
 		table.insert(specNames, name);
@@ -32252,6 +35755,12 @@ velo.run(function(): ()
 			end;
 		end;
 		return spec.Kits == nil;
+	end;
+
+	local startSpec: (name: string) -> boolean = function(name: string): boolean
+		return xpcall(kitSpecs[name].Start, function(message: any): ()
+			velo.report('AutoKit '..name, message);
+		end, AutoKit);
 	end;
 
 	local refreshOptions: () -> () = function(): ()
@@ -32271,15 +35780,26 @@ velo.run(function(): ()
 				return;
 			end;
 			local started: {string} = {};
+			local deferred: {string} = {};
 			for _: number, name: string in specNames do
 				local spec: table = kitSpecs[name];
-				if spec.Objects and (appliesNow(spec) or spec.AnyKit) and xpcall(spec.Start, function(message: any): ()
-					velo.report('AutoKit '..name, message);
-				end, AutoKit) then
-					if spec.Kits and appliesNow(spec) then
+				if spec.Objects and (appliesNow(spec) or spec.AnyKit) then
+					if spec.MatchOnly and store.matchState == 0 then
+						table.insert(deferred, name);
+					elseif startSpec(name) and spec.Kits and appliesNow(spec) then
 						table.insert(started, name);
 					end;
 				end;
+			end;
+			if #deferred > 0 then
+				AutoKit:Clean(vapeEvents.MatchStarted.Event:Once(function(): ()
+					if vape.ThreadFix then
+						setthreadidentity(8);
+					end;
+					for _: number, name: string in deferred do
+						startSpec(name);
+					end;
+				end));
 			end;
 			if Notify["Enabled"] and #started > 0 then
 				local kitNames: {string} = {};
@@ -32315,7 +35835,6 @@ velo.run(function(): ()
 	});
 	Notify = AutoKit:CreateToggle({
 		["Name"] = 'Notify',
-		["Default"] = true,
 		["Tooltip"] = 'Notify which kit automations started.'
 	});
 	for _: number, name: string in specNames do
