@@ -5193,7 +5193,7 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				Phase:Clean(runService.Stepped:Connect(function()
-					if entitylib.isAlive then
+					if entitylib.isAlive and not vape.MovementOwner then
 						functions[Mode["Value"]]();
 					end;
 				end));
@@ -5427,7 +5427,7 @@ velo.run(function()
 					truss.Parent = gameCamera; 
 				end;
 				Spider:Clean(runService.PreSimulation:Connect(function(dt: any)
-					if entitylib.isAlive then
+					if entitylib.isAlive and not vape.MovementOwner then
 						local root: any = entitylib.character.RootPart;
 						local chars: any = {gameCamera, lplr.Character, truss};
 						for _, v: any in entitylib.List do
@@ -5588,6 +5588,13 @@ velo.run(function()
 		["Function"] = function(callback: boolean): void
 			if callback then
 				Swim:Clean(runService.PreSimulation:Connect(function(dt: any)
+					if vape.MovementOwner then
+						if terrain and lastpos.Size ~= Vector3.zero then
+							terrain:ReplaceMaterial(lastpos, 4, Enum.Material.Water, Enum.Material.Air);
+							lastpos = Region3.new(Vector3.zero, Vector3.zero);
+						end;
+						return;
+					end;
 					if entitylib.isAlive then
 						local root: any = entitylib.character.RootPart;
 						local moving: boolean = entitylib.character.Humanoid.MoveDirection ~= Vector3.zero;
@@ -5639,7 +5646,7 @@ velo.run(function()
 				local flymod: any, ang: any, oldent: any = vape.Modules.Fly or {["Enabled"] = false};
 				module.moveFunction = function(self: any, vec: any, face: any)
 					local wallcheck: boolean = Targets.Walls["Enabled"];
-					local ent: any = not inputService:IsKeyDown(Enum.KeyCode.S) and entitylib.EntityPosition({
+					local ent: any = not vape.MovementOwner and not inputService:IsKeyDown(Enum.KeyCode.S) and entitylib.EntityPosition({
 						["Range"] = SearchRange["Value"],
 						["Wallcheck"] = wallcheck,
 						["Part"] = 'RootPart',
