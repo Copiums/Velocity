@@ -8206,6 +8206,9 @@ velo.run(function(): ()
 				shadow.Parent = vape.gui;
 				label, shadowLabel = created, shadow;
 			else
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
 				if shadowLabel then
 					shadowLabel:Destroy();
 					shadowLabel = nil;
