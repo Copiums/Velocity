@@ -19009,6 +19009,8 @@ velo.run(function(): ()
 	local deviceHook: table? = nil;
 	local refreshQueued: boolean = false;
 	local refreshing: boolean = false;
+	local guiHolder: Instance? = vape.gui and vape.gui.Parent;
+	local hiddenUi: Instance? = guiHolder and guiHolder.ClassName ~= 'CoreGui' and guiHolder or nil;
 
 	local refresh: () -> () = function(): ()
 		if refreshQueued or not NickHider["Enabled"] then
@@ -19165,6 +19167,9 @@ velo.run(function(): ()
 				return;
 			end;
 
+			if vape.ThreadFix then
+				setthreadidentity(8);
+			end;
 			table.clear(patterns);
 			table.clear(plainNames);
 			shortest = math.huge;
@@ -19225,9 +19230,7 @@ velo.run(function(): ()
 
 			local roots: {Instance} = {coreGui};
 			table.insert(roots, lplr:FindFirstChildOfClass('PlayerGui'));
-			-- Potassium's gethui() throws from module threads; the GUI already parented itself to that container at load
-			local hiddenUi: Instance? = vape.gui and vape.gui.Parent;
-			if hiddenUi and hiddenUi.ClassName ~= 'CoreGui' then
+			if hiddenUi then
 				table.insert(roots, hiddenUi);
 			end;
 			if lplr.Character then
