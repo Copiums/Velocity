@@ -98,6 +98,7 @@ local contextService: ContextActionService = cloneref(game:GetService('ContextAc
 local debris: Debris = cloneref(game:GetService('Debris')); 
 local proximitypromptService: ProximityPromptService = cloneref(game:GetService('ProximityPromptService'));
 local coreGui: CoreGui = cloneref(game:GetService('CoreGui'));
+local statsService: Stats = cloneref(game:GetService('Stats'));
 local gameCamera: Camera = cloneref(workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera') or Instance.new('Camera'));
 local lplr: Player = playersService.LocalPlayer;
 local vapeConnections: any = {};
@@ -14008,7 +14009,6 @@ velo.run(function()
 	local ShowFPS: table = {["Enabled"] = true};
 	local ShowPing: table = {["Enabled"] = true};
 	local ShowMemory: table = {["Enabled"] = false};
-	local statsService: Stats = cloneref(game:GetService('Stats'));
 	local fonts: {string} = {'Gotham', 'GothamMedium', 'GothamBold', 'GothamBlack', 'SourceSans', 'SourceSansBold', 'Arial', 'ArialBold', 'Roboto', 'RobotoMono', 'Ubuntu', 'Code', 'Highway', 'Arcade', 'SciFi', 'Fantasy', 'Antique', 'Cartoon', 'Oswald', 'Michroma', 'FredokaOne', 'Nunito', 'Jura', 'Bangers'};
 	local panels: {Frame} = {};
 	local corners: {UICorner} = {};

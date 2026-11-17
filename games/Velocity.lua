@@ -19225,8 +19225,10 @@ velo.run(function(): ()
 
 			local roots: {Instance} = {coreGui};
 			table.insert(roots, lplr:FindFirstChildOfClass('PlayerGui'));
-			if gethui then
-				table.insert(roots, gethui());
+			-- Potassium's gethui() throws from module threads; the GUI already parented itself to that container at load
+			local hiddenUi: Instance? = vape.gui and vape.gui.Parent;
+			if hiddenUi and hiddenUi.ClassName ~= 'CoreGui' then
+				table.insert(roots, hiddenUi);
 			end;
 			if lplr.Character then
 				table.insert(roots, lplr.Character);
