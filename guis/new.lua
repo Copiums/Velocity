@@ -7016,6 +7016,38 @@ components = {
 			self.Bind:Save(data[props.Name])
 		end
 		
+		function component:Share(name: string): ()
+			local path: string = 'velo/profiles/'..name..'.share.json';
+			local last: string? = isfile(path) and readfile(path) or nil;
+			task.spawn(function(): ()
+				repeat
+					task.wait();
+				until vape.Loaded or vape.Loaded == nil;
+				if vape.Loaded and last then
+					-- the share file is hand-editable and written by another place, so it can be malformed
+					local decoded: boolean, result: any = pcall(httpService.JSONDecode, httpService, last);
+					if decoded and type(result) == 'table' and type(result.Options) == 'table' then
+						result.Visible = self.Visible;
+						self:Load(result);
+					end;
+				end;
+				while vape.Loaded ~= nil do
+					if vape.Loaded then
+						local saved: table = {};
+						self:Save(saved);
+						local data: table = saved[props.Name];
+						data.Visible = nil;
+						local encoded: string = httpService:JSONEncode(data);
+						if encoded ~= last then
+							last = encoded;
+							writefile(path, encoded);
+						end;
+					end;
+					task.wait(1);
+				end;
+			end);
+		end
+		
 		function component:SetVisible(isVisible, isLoad)
 			self.Visible = isVisible
 			editbox.BackgroundTransparency = isVisible and 0 or 1

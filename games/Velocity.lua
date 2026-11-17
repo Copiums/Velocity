@@ -19003,7 +19003,7 @@ velo.run(function(): ()
 	local fakeReplacement: string = 'hidden';
 	local writing: Instance? = nil;
 	local swapped: {[Instance]: string} = {};
-	local watched: {[Instance]: RBXScriptConnection} = {};
+	local watched: {[Instance]: {RBXScriptConnection}} = {};
 	local hiddenKits: {[Instance]: boolean} = {};
 	local playerHooks: table? = nil;
 	local deviceHook: table? = nil;
@@ -19043,6 +19043,15 @@ velo.run(function(): ()
 		end;
 	end;
 
+	local forget: (object: Instance) -> () = function(object: Instance): ()
+		for _: number, connection: RBXScriptConnection in watched[object] or {} do
+			connection:Disconnect();
+		end;
+		watched[object] = nil;
+		swapped[object] = nil;
+		hiddenKits[object] = nil;
+	end;
+
 	local replaceText: (object: Instance) -> ();
 	replaceText = function(object: Instance): ()
 		local text: any = object.Text;
@@ -19070,13 +19079,14 @@ velo.run(function(): ()
 		object.Text = replaced;
 		writing = nil;
 		if not watched[object] then
-			watched[object] = object:GetPropertyChangedSignal('Text'):Connect(function(): ()
-				replaceText(object);
-			end);
-			object.Destroying:Once(function(): ()
-				swapped[object] = nil;
-				watched[object] = nil;
-			end);
+			watched[object] = {
+				object:GetPropertyChangedSignal('Text'):Connect(function(): ()
+					replaceText(object);
+				end),
+				object.Destroying:Once(function(): ()
+					forget(object);
+				end)
+			};
 		end;
 	end;
 
@@ -19089,9 +19099,9 @@ velo.run(function(): ()
 				if NickHider["Enabled"] and label and label.Text:find(fakeName, 1, true) then
 					hiddenKits[object] = object.Visible;
 					object.Visible = false;
-					object.Destroying:Once(function(): ()
-						hiddenKits[object] = nil;
-					end);
+					watched[object] = {object.Destroying:Once(function(): ()
+						forget(object);
+					end)};
 				end;
 			end);
 		end;
@@ -19131,8 +19141,10 @@ velo.run(function(): ()
 				if vape.ThreadFix then
 					setthreadidentity(8);
 				end;
-				for _: Instance, connection: RBXScriptConnection in watched do
-					connection:Disconnect();
+				for _: Instance, connections: {RBXScriptConnection} in watched do
+					for _: number, connection: RBXScriptConnection in connections do
+						connection:Disconnect();
+					end;
 				end;
 				table.clear(watched);
 				for object: Instance, visible: boolean in hiddenKits do
@@ -19683,8 +19695,10 @@ velo.run(function(): ()
 				playing[key]:Destroy();
 			end;
 		end;
-		if playing.Follow then
-			playing.Follow:Disconnect();
+		for _: number, key: string in {'Follow', 'Moved'} do
+			if playing[key] then
+				playing[key]:Disconnect();
+			end;
 		end;
 		table.clear(playing);
 		if lplr.Character and lplr.Character:GetAttribute('PlayingEmote') then
@@ -19766,9 +19780,15 @@ velo.run(function(): ()
 				tweenService:Create(image, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {["Position"] = UDim2.fromScale(0.5, 0.5), ["Size"] = UDim2.fromScale(1, 1), ["ImageTransparency"] = 0}):Play();
 			end;
 			if meta.allowMovement then
-				task.delay(movingEmoteTime, stopEmote);
+				local token: table = {};
+				playing.Token = token;
+				task.delay(movingEmoteTime, function(): ()
+					if playing.Token == token then
+						stopEmote();
+					end;
+				end);
 			else
-				humanoid:GetPropertyChangedSignal('MoveDirection'):Once(stopEmote);
+				playing.Moved = humanoid:GetPropertyChangedSignal('MoveDirection'):Once(stopEmote);
 			end;
 		end,
 		["Tooltip"] = 'Plays the selected emote on your character, other players can see it too.'
@@ -20371,6 +20391,9 @@ velo.run(function(): ()
 		end,
 		["Tooltip"] = 'Turn off the regions you do not want. SG-03 counts as AS, AU/NZ as OCEANIA, US-CA as NA. Leaving every region on accepts anything'
 	});
+	if AutoMatchDodge.Share then
+		AutoMatchDodge:Share('matchdodge');
+	end;
 end);
 
 velo.run(function(): ()
