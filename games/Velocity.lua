@@ -8117,6 +8117,7 @@ velo.run(function(): ()
 			gameCamera.CameraSubject = humanoid;
 		end;
 		landing = false;
+		up, down = 0, 0;
 		if vape.MovementOwner == 'InfiniteFly' then
 			vape.MovementOwner = nil;
 		end;
@@ -8136,6 +8137,7 @@ velo.run(function(): ()
 					InfiniteFly:Toggle();
 					return;
 				end;
+				up, down = 0, 0;
 				hiddenPart.CFrame = entitylib.character.Character.Head.CFrame;
 				pcall(createFake);
 				gameCamera.CameraSubject = hiddenPart;
