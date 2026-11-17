@@ -5581,7 +5581,8 @@ end);
 	
 velo.run(function()
 	local Swim: table = {["Enabled"] = false};
-	local terrain: Terrain? = cloneref(workspace:FindFirstChildWhichIsA('Terrain'));
+	local foundTerrain: Terrain? = workspace:FindFirstChildWhichIsA('Terrain');
+	local terrain: Terrain? = foundTerrain and cloneref(foundTerrain) or nil;
 	local lastpos: Region3 = Region3.new(Vector3.zero, Vector3.zero);
 	Swim = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'Swim',

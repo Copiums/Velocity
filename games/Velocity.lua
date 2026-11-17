@@ -3940,7 +3940,7 @@ velo.run(function(): ()
 				return;
 			end;
 			local lastTarget: table?, lastSwing: number, killUntil: number, nextCheck: number = nil, 0, 0, 0;
-			TriggerBot:Clean(runService.Heartbeat:Connect(function(): ()
+			local triggerStep: () -> () = function(): ()
 				local now: number = tick();
 				if now < nextCheck then
 					return;
@@ -3990,6 +3990,15 @@ velo.run(function(): ()
 					end;
 				end;
 				nextCheck = now + (attack and 1 / ClickSpeed:GetRandomValue() or idleDelay);
+			end;
+			TriggerBot:Clean(task.spawn(function(): ()
+				repeat
+					if vape.ThreadFix then
+						setthreadidentity(8);
+					end;
+					triggerStep();
+					task.wait();
+				until false;
 			end));
 		end,
 		["Tooltip"] = 'Automatically swings when hovering over a entity'
@@ -6975,7 +6984,7 @@ velo.run(function(): ()
 						local cushion: Vector3 = Vector3.new(0, 2.5, 0);
 						root.AssemblyLinearVelocity = cushion;
 						entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed);
-						runService.PreRender:Wait();
+						runService.PreSimulation:Wait();
 						local current: Vector3 = root.AssemblyLinearVelocity;
 						local action: string = 'kept';
 						if current == cushion then
@@ -6985,13 +6994,14 @@ velo.run(function(): ()
 							root.AssemblyLinearVelocity = Vector3.new(current.X, velocity.Y, current.Z);
 							action = 'restored fall, horizontal was changed';
 						end;
-						local sent: any = nil;
+						local sent: boolean = false;
 						if os.clock() - lastHit >= 0.1 then
-							sent = fire('GroundHit', 'SendToServer', nil, Vector3.new(0, tracked, 0), workspace:GetServerTimeNow());
+							fire('GroundHit', 'SendToServer', nil, Vector3.new(0, tracked, 0), workspace:GetServerTimeNow());
 							lastHit = os.clock();
+							sent = true;
 						end;
 						if Debug["Enabled"] then
-							print(string.format('[NoFall] fall %.1f | at restore %s | %s | GroundHit %s', tracked, tostring(current), action, sent == nil and 'not due' or typeof(sent)));
+							print(string.format('[NoFall] fall %.1f | at restore %s | %s | GroundHit %s', tracked, tostring(current), action, sent and 'sent' or 'waiting (0.1 s gate)'));
 						end;
 					end;
 					tracked = velocity.Y;
@@ -17842,11 +17852,20 @@ velo.run(function(): ()
 					Selected:Change(playerNames());
 				end);
 			end));
-			InventoryOverlay:Clean(runService.Heartbeat:Connect(function(): ()
+			local overlayStep: () -> () = function(): ()
 				if tick() >= nextRefresh then
 					nextRefresh = tick() + refreshRate;
 					refresh();
 				end;
+			end;
+			InventoryOverlay:Clean(task.spawn(function(): ()
+				repeat
+					if vape.ThreadFix then
+						setthreadidentity(8);
+					end;
+					overlayStep();
+					task.wait();
+				until false;
 			end));
 		end
 	});
@@ -18023,7 +18042,7 @@ velo.run(function(): ()
 		setStat(stats[2], fight.Comparator);
 		setStat(stats[3], math.clamp(math.round((fight.DealtHits > 0 and fight.Dealt / fight.DealtHits or 0) - (fight.TakenHits > 0 and fight.Taken / fight.TakenHits or 0)), -9, 9));
 	end));
-	vape:Clean(runService.Heartbeat:Connect(function(): ()
+	local cardStep: () -> () = function(): ()
 		if tick() < nextCard then
 			return;
 		end;
@@ -18129,6 +18148,15 @@ velo.run(function(): ()
 		card.Row.Size = UDim2.fromOffset(cardColumns * (cardTile + cardGap) - cardGap, math.max(rows * (cardTile + cardGap) - cardGap, 0));
 		card.Row.Position = cardFrame and UDim2.fromOffset(cardFrame.Position.X.Offset, below + cardLift) or UDim2.new();
 		card.Row.Visible = #items > 0;
+	end;
+	vape:Clean(task.spawn(function(): ()
+		repeat
+			if vape.ThreadFix then
+				setthreadidentity(8);
+			end;
+			cardStep();
+			task.wait();
+		until false;
 	end));
 end);
 
