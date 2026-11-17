@@ -4415,6 +4415,15 @@ velo.run(function(): ()
 	};
 	local serverTick: number = 1 / 60;
 	local follow: table = {["Watch"] = {}, ["Stats"] = {}};
+	local statsFile: string = 'velo/killaura-stats.txt';
+	local writeStats: (line: string) -> () = function(line: string): ()
+		local stamped: string = os.date('%H:%M:%S')..' '..line..'\n';
+		if appendfile and isfile(statsFile) then
+			appendfile(statsFile, stamped);
+		else
+			writefile(statsFile, (isfile(statsFile) and readfile(statsFile) or '')..stamped);
+		end;
+	end;
 	local boxAnchors: {[BoxHandleAdornment]: Part} = {};
 	local hooks: table = {};
 
@@ -4565,6 +4574,7 @@ velo.run(function(): ()
 					stats.Landed += 1;
 					if stats.Landed == 1 then
 						notif('DoubleHit', 'Follow-up hits are landing'..(watch.Swap and ' with weapon swap.' or '.'), 4);
+						writeStats('Double hit: first follow-up landed ('..watch.Key..')');
 					end;
 					return;
 				end;
@@ -4853,6 +4863,7 @@ velo.run(function(): ()
 			if stats.Sent >= 12 and stats.Landed == 0 and not stats.Warned then
 				stats.Warned = true;
 				notif('DoubleHit', 'Server rejected 12 follow-ups'..(swapped and ' with weapon swap' or '')..' on '..main.itemType..', paused for that sword.', 6, 'warning');
+				writeStats('Double hit: paused ('..key..'), 12 follow-ups sent, none landed');
 			end;
 		end);
 	end;
@@ -5225,7 +5236,16 @@ velo.run(function(): ()
 		if tick() - state.StatClock >= 10 then
 			local span: number = tick() - state.StatClock;
 			if HitStats["Enabled"] and state.StatSent > 0 then
-				notif('Killaura', string.format('%d sent, %d landed (%d%%), %.2f landed/s, ghost +%dms, ping %dms', state.StatSent, state.StatLanded, math.floor(math.min(state.StatLanded / state.StatSent, 1) * 100), state.StatLanded / span, math.floor(hitreg.GhostDelay * 1000), math.floor(lplr:GetNetworkPing() * 1000)), 8);
+				local summary: string = string.format('%d sent, %d landed (%d%%), %.2f landed/s, ghost +%dms, ping %dms', state.StatSent, state.StatLanded, math.floor(math.min(state.StatLanded / state.StatSent, 1) * 100), state.StatLanded / span, math.floor(hitreg.GhostDelay * 1000), math.floor(lplr:GetNetworkPing() * 1000));
+				notif('Killaura', summary, 8);
+				writeStats('Hit stats: '..summary);
+			end;
+			if DoubleHit["Enabled"] then
+				for key: string, stats: table in follow.Stats do
+					if stats.Sent > 0 then
+						writeStats(string.format('Double hit %s: %d follow-ups sent, %d landed%s', key, stats.Sent, stats.Landed, (stats.Landed == 0 and stats.Sent >= 12) and ' (paused)' or ''));
+					end;
+				end;
 			end;
 			state.StatSent, state.StatLanded, state.StatClock = 0, 0, tick();
 		end;
@@ -5567,7 +5587,7 @@ velo.run(function(): ()
 	});
 	HitStats = Killaura:CreateToggle({
 		["Name"] = 'Hit stats',
-		["Tooltip"] = 'Every 10 seconds shows hits sent, hits the server confirmed, and confirmed hits per second.'
+		["Tooltip"] = 'Every 10 seconds shows hits sent, hits the server confirmed, and confirmed hits per second, and writes it to velo/killaura-stats.txt (Double hit results go there too).'
 	});
 	MaxTargets = Killaura:CreateSlider({
 		["Name"] = 'Entities',
@@ -6959,6 +6979,7 @@ velo.run(function(): ()
 	local Damage: table;
 	local Debug: table;
 	local safeFall: number = 45;
+	local debugFile: string = 'velo/nofall-debug.txt';
 	local Disabled: {[Humanoid]: {any}} = setmetatable({}, {__mode = "k"});
 	NoFall = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'NoFall',
@@ -6973,7 +6994,48 @@ velo.run(function(): ()
 					end;
 				end;
 				local tracked: number, lastHit: number = 0, 0;
+				local pending: table? = nil;
+				local settle: (stage: string) -> () = function(stage: string): ()
+					local cushioned: table? = pending;
+					if not cushioned then
+						return;
+					end;
+					pending = nil;
+					local root: BasePart = cushioned.Root;
+					local current: Vector3 = root.AssemblyLinearVelocity;
+					local action: string = 'kept';
+					if current == cushioned.Cushion then
+						root.AssemblyLinearVelocity = cushioned.Velocity;
+						action = 'restored';
+					elseif math.abs(current.Y - cushioned.Cushion.Y) < 0.01 then
+						root.AssemblyLinearVelocity = Vector3.new(current.X, cushioned.Velocity.Y, current.Z);
+						action = 'restored fall, horizontal was changed';
+					end;
+					local sent: boolean = false;
+					if os.clock() - lastHit >= 0.1 then
+						fire('GroundHit', 'SendToServer', nil, Vector3.new(0, cushioned.Tracked, 0), workspace:GetServerTimeNow());
+						lastHit = os.clock();
+						sent = true;
+					end;
+					if Debug["Enabled"] then
+						local line: string = string.format('[NoFall] fall %.1f | restored at %s | velocity there %s | %s | GroundHit %s', cushioned.Tracked, stage, tostring(current), action, sent and 'sent' or 'waiting (0.1 s gate)');
+						print(line);
+						local stamped: string = os.date('%H:%M:%S')..' '..line..'\n';
+						if appendfile and isfile(debugFile) then
+							appendfile(debugFile, stamped);
+						else
+							writefile(debugFile, (isfile(debugFile) and readfile(debugFile) or '')..stamped);
+						end;
+					end;
+				end;
+				NoFall:Clean(runService.PreRender:Connect(function(): ()
+					settle('render step');
+				end));
+				NoFall:Clean(runService.PreSimulation:Connect(function(): ()
+					settle('physics step');
+				end));
 				NoFall:Clean(runService.PostSimulation:Connect(function(): ()
+					settle('next frame');
 					if not entitylib.isAlive or store.matchState ~= 1 or store.cannonFlight or store.infinitefly then
 						tracked = 0;
 						return;
@@ -6984,25 +7046,7 @@ velo.run(function(): ()
 						local cushion: Vector3 = Vector3.new(0, 2.5, 0);
 						root.AssemblyLinearVelocity = cushion;
 						entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed);
-						runService.PreSimulation:Wait();
-						local current: Vector3 = root.AssemblyLinearVelocity;
-						local action: string = 'kept';
-						if current == cushion then
-							root.AssemblyLinearVelocity = velocity;
-							action = 'restored';
-						elseif math.abs(current.Y - cushion.Y) < 0.01 then
-							root.AssemblyLinearVelocity = Vector3.new(current.X, velocity.Y, current.Z);
-							action = 'restored fall, horizontal was changed';
-						end;
-						local sent: boolean = false;
-						if os.clock() - lastHit >= 0.1 then
-							fire('GroundHit', 'SendToServer', nil, Vector3.new(0, tracked, 0), workspace:GetServerTimeNow());
-							lastHit = os.clock();
-							sent = true;
-						end;
-						if Debug["Enabled"] then
-							print(string.format('[NoFall] fall %.1f | at restore %s | %s | GroundHit %s', tracked, tostring(current), action, sent and 'sent' or 'waiting (0.1 s gate)'));
-						end;
+						pending = {["Root"] = root, ["Cushion"] = cushion, ["Velocity"] = velocity, ["Tracked"] = tracked};
 					end;
 					tracked = velocity.Y;
 				end));
@@ -7039,7 +7083,7 @@ velo.run(function(): ()
 	});
 	Debug = NoFall:CreateToggle({
 		["Name"] = 'Debug',
-		["Tooltip"] = 'Prints every cushion to the F9 console: fall speed, velocity at the restore, and what NoFall did'
+		["Tooltip"] = 'Prints every cushion to the F9 console and velo/nofall-debug.txt: fall speed, where it was restored, the velocity there, and what NoFall did'
 	});
 end);
 
