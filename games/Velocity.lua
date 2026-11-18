@@ -5442,7 +5442,7 @@ velo.run(function(): ()
 			end);
 		end,
 		["ExtraText"] = function(): string
-			return 'Public';
+			return (whitelist.localprio or 0) > 0 and 'Velocity' or 'Public';
 		end,
 		["Tooltip"] = 'Attack players around you\nwithout aiming at them.'
 	});
