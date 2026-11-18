@@ -156,7 +156,9 @@ for _: number, name: string in {
 	'Disabler', 
 	'Invisible', 
 	'MurderMystery', 
-	'PlayerAttach', 
+	'PlayerAttach',
+	'TargetStrafe',
+	'Killaura', 
 	'MouseTP'} do
 	vape:Remove(name);
 end;
