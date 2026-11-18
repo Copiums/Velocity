@@ -151,8 +151,8 @@ for _: number, name: string in {
 	'AntiFall', 
 	'Hitboxes', 
 	'AntiRagoll', 
-	'Jesus,'
-	'Phase,'
+	'Jesus',
+	'Phase',
 	'Disabler', 
 	'Invisible', 
 	'MurderMystery', 
