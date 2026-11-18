@@ -5446,7 +5446,6 @@ velo.run(function(): ()
 		end,
 		["Tooltip"] = 'Attack players around you\nwithout aiming at them.'
 	});
-
 	Targets = Killaura:CreateTargets({
 		["Players"] = true,
 		["NPCs"] = true
@@ -5463,7 +5462,7 @@ velo.run(function(): ()
 	AttackRange = Killaura:CreateSlider({
 		["Name"] = 'Attack range',
 		["Min"] = 1,
-		["Max"] = 18.1,
+		["Max"] = 22.1,
 		["Default"] = 18.1,
 		["Suffix"] = function(value: number): string
 			return value == 1 and 'stud' or 'studs';
