@@ -305,7 +305,6 @@ for _: number, category: any in moduleHosts do
 					end, enabled);
 				end;
 			end;
-			-- The GUI calls vape:Remove(name) for every new module, which deletes a same-named category (Combat's Velocity vs the Velocity category).
 			local collided: any = not vape.Modules[props.Name] and not vape.Legit.Modules[props.Name] and vape.Categories[props.Name] or nil;
 			if not collided then
 				return create(self, props);
@@ -566,7 +565,6 @@ local inventorySlots: () -> table = function(): table
 end;
 
 local moveSlot: (operation: table) -> boolean = function(operation: table): boolean
-	-- sendTransaction can throw before it returns a promise; catsix pcalls it so callers (ArmorSwitch's loop) just see false.
 	local called: boolean, success: any, result: any = pcall(function(): (boolean, any)
 		return bedwars.InventoryDraggingController:sendTransaction(operation, nil):await();
 	end);
@@ -1053,7 +1051,6 @@ velo.run(function(): ()
 		return lplr:GetAttribute('Team') ~= ent.Player:GetAttribute('Team');
 	end;
 
-	-- catsix Targets default to Priority 'Players': its entity lib ranks players ahead of NPCs before applying Sort. ["Priority"] = false opts a query out (catsix callers that pass no Priority).
 	for _: number, name: string in {'EntityPosition', 'EntityMouse', 'AllPosition'} do
 		local query: (settings: table) -> any = entitylib[name];
 		entitylib[name] = function(settings: table): any
@@ -1338,7 +1335,6 @@ velo.run(function(): ()
 	fire = function(name: string, method: string?, ...: any): any
 		local budget: table? = remoteBudget[name];
 		if not budget then
-			-- net's Client:Get throws for names the game no longer defines; catsix reports those once and turns every call into a no-op.
 			local found: boolean, remote: any = pcall(client.Get, client, name);
 			budget = {["Used"] = 0, ["Reset"] = 0, ["Valid"] = found and remote ~= nil};
 			remoteBudget[name] = budget;
@@ -1923,7 +1919,6 @@ end;
 
 local kitSources: table = {["NextSwap"] = 0, ["Order"] = {'Sophia', 'Whim', 'Nazar', 'Umeko'}};
 kitSources.unlocked = function(): table?
-	-- getUnlockedMageElements throws when the mage kit data is not replicated yet; catsix treats that as "nothing unlocked".
 	local loaded: boolean, unlocked: any = pcall(bedwars.MageKitUtil.getUnlockedMageElements, lplr);
 	return loaded and type(unlocked) == 'table' and unlocked or nil;
 end;
@@ -2069,7 +2064,6 @@ ballistics.fallGravity = function(ent: table): number
 	end;
 	return gravity;
 end;
--- fall nil = full fallGravity(ent); params nil = store.airRay, false = no params (catsix callers passing nil).
 ballistics.solve = function(origin: Vector3, speed: number, gravity: number, ent: table, target: Vector3?, velocity: Vector3?, horizontal: number?, vertical: number?, fall: number?, params: (RaycastParams | boolean)?): (Vector3?, number?)
 	local goal: Vector3 = target or ent.RootPart.Position;
 	local motion: Vector3 = velocity or ent.RootPart.AssemblyLinearVelocity;
@@ -3738,7 +3732,6 @@ velo.run(function(): ()
 		["Darker"] = true,
 		["Suffix"] = studs,
 		["Function"] = function(value: number): ()
-			-- catsix writes the raw slider value here (no hitbox padding) until the next toggle re-applies value + 2.
 			bedwars.CombatConstant.RAYCAST_SWORD_CHARACTER_DISTANCE = Reach["Enabled"] and SwordReach["Enabled"] and value or store.swordDistance;
 		end
 	});
@@ -9452,7 +9445,6 @@ velo.run(function(): ()
 					end;
 				end;
 				if AimMode["Value"] == 'Trajectory' then
-					-- Runs inside the game's launch code: an aim error must fall back to the normal shot, as catsix does.
 					local solved: boolean, values: any = pcall(aimLaunch, self, launchData, worldMeta, origin, shootPosition);
 					if solved and values then
 						return values;
@@ -9567,12 +9559,10 @@ velo.run(function(): ()
 					return oldNamecall(self, ...);
 				end;
 				local arguments: table = table.pack(...);
-				-- Runs inside the game's shot request: a solve error must leave the shot untouched, as catsix does.
 				local solved: boolean, redirected: any = pcall(silentVelocity, arguments);
 				if solved and typeof(redirected) == 'Vector3' then
 					arguments[6] = redirected;
 				end;
-				-- The solve ran other namecalls, so the pending namecall method is no longer InvokeServer.
 				return self.InvokeServer(self, table.unpack(arguments, 1, arguments.n));
 			end));
 		end,
@@ -20039,7 +20029,6 @@ velo.run(function(): ()
 		entry.Pending, entry.Started, entry.Tries = true, now, entry.Tries + 1;
 		local attempt: number = entry.Tries;
 		AutoMatchDodge:Clean(task.spawn(function(): ()
-			-- CallServer rethrows server-side handler errors; catsix treats a failed fetch as "no data, retry in 5s".
 			local fetched: boolean, data: any = pcall(fire, 'RequestProfileData', 'CallServer', plr);
 			local ranked: boolean, ranks: any = pcall(fire, 'FetchRanks', 'CallServer', {plr.UserId});
 			if entry.Tries ~= attempt then
@@ -21094,7 +21083,6 @@ velo.run(function(): ()
 		local map: table? = bedwars.MapController;
 		if map then
 			local cell: Vector3 = bedwars.BlockController:getBlockPosition(target);
-			-- MapController lookups can throw while the map data is still loading; catsix counts a failed lookup as allowed.
 			local checkedDeny: boolean, denied: any = pcall(map.isInDenyRegion, map, cell);
 			local checkedBounds: boolean, outside: any = pcall(map.isOutOfBounds, map, cell);
 			if (checkedDeny and denied) or (checkedBounds and outside) then
@@ -23626,7 +23614,6 @@ velo.run(function(): ()
 			local item: table? = getItem(entry.Type);
 			if item then
 				task.spawn(function(): ()
-					-- CallServer rethrows server errors; catsix keeps the entry for another try instead of dropping it.
 					local sent: boolean, result: any = pcall(function(): any
 						return inventoryRemote('ChestGiveItem'):CallServer(personal, item.tool);
 					end);
@@ -27913,7 +27900,6 @@ velo.run(function(): ()
 
 	local plan: (from: Vector3, to: Vector3, radius: number?) -> ({PathWaypoint}?, string) = function(from: Vector3, to: Vector3, radius: number?): ({PathWaypoint}?, string)
 		local path: Path = pathfindingService:CreatePath({["AgentRadius"] = radius or 2, ["AgentHeight"] = 5, ["AgentCanJump"] = true, ["WaypointSpacing"] = 5, ["Costs"] = walk.Costs});
-		-- ComputeAsync reports throttling / unreachable endpoints only by throwing.
 		local computed: boolean, failure: any = pcall(path.ComputeAsync, path, from, to);
 		if not computed then
 			return nil, tostring(failure);
@@ -29371,7 +29357,6 @@ velo.run(function(): ()
 					log('upgrade '..chosen..' at level '..tostring(data.level));
 				end;
 			end));
-			-- Get throws for a remote the place does not define; the keeper hold is optional.
 			pcall(function(): ()
 				AutoHalloween:Clean(bedwars.Client:Get('GravekeeperDeath'):Connect(function(data: any): ()
 					if type(data) == 'table' and data.target == lplr then
@@ -29411,7 +29396,6 @@ velo.run(function(): ()
 						task.wait(2);
 						continue;
 					end;
-					-- Ensuring combat toggles other modules' options, whose callbacks can throw.
 					local combined: boolean, trouble: any = pcall(ensureCombat);
 					if not combined and os.clock() - brain.Warned > 5 then
 						brain.Warned = os.clock();
@@ -29457,7 +29441,6 @@ velo.run(function(): ()
 						if handler and sceneAssets then
 							local token: number = brain.Token;
 							task.spawn(function(): ()
-								-- A scene script that breaks must not take the director down with it.
 								local ran: boolean, failure: any = pcall(handler, token, sceneAssets);
 								if not ran then
 									log('handler '..sceneKey..' failed: '..tostring(failure));
@@ -31697,7 +31680,6 @@ velo.run(function(): ()
 				repeat
 					local choice: string = Kit["Value"];
 					if Timing["Value"] == 'Round end' and store.matchState == 2 and lastState == 1 and choice ~= 'None' and kitIds[choice] then
-						-- Not owned by autoKit: the kit swap fires KitChanged, which restarts AutoKit while the call is still pending.
 						task.spawn(function(): ()
 							fire('BedwarsActivateKit', 'CallServer', {["kit"] = kitIds[choice]});
 							notif('AutoEquipKit', 'Equipped '..choice..' for the next round.', 10, 'info');
@@ -32175,7 +32157,6 @@ velo.run(function(): ()
 			autoKit:Clean(function(): ()
 				stopped, stopGuitar = true, Heal["Enabled"] and hasKit('melody');
 			end);
-			-- Not cancelled on disable, so a heal in progress still switches back before the guitar is stopped.
 			task.spawn(function(): ()
 				local nextHeal: number = 0;
 				repeat
@@ -32235,7 +32216,6 @@ velo.run(function(): ()
 						for _: number, ent: table in entitylib.List do
 							if ent.Player and ent.Player:GetAttribute('Team') == lplr:GetAttribute('Team') then
 								local distance: number = (origin - ent.RootPart.Position).Magnitude;
-								-- catsix narrows the distance limit to each pick, so a later teammate must be both closer and lower.
 								if distance <= nearest and ent.Health < lowest and ent.Health < ent.MaxHealth then
 									patient, nearest, lowest = ent, distance, ent.Health;
 								end;
@@ -32305,7 +32285,6 @@ velo.run(function(): ()
 								if Delay["Value"] > 0 then
 									task.wait(Delay["Value"]);
 								end;
-								-- Re-checked against the position sampled before the wait, so walking away during it does not cancel the dig.
 								if (origin - part.Position).Magnitude <= reach then
 									if Animation["Enabled"] then
 										bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.SHOVEL_DIG);
@@ -32566,7 +32545,6 @@ velo.run(function(): ()
 					switchItem(tool);
 				end;
 			end;
-			-- Not cancelled on disable, so a throw in progress still switches back to the previous item.
 			task.spawn(function(): ()
 				local nextFire: number = 0;
 				repeat
@@ -33823,7 +33801,6 @@ velo.run(function(): ()
 								local result: any = fire('LearnElementTome', 'CallServer', {["secret"] = secret});
 								if type(result) == 'table' and result.element then
 									local element: any = result.element;
-									-- Tome visuals are game internals that can throw on a stale tome; an error must not end the reading loop.
 									pcall(function(): ()
 										bedwars.MageController:destroyTomeGuidingBeam();
 										bedwars.MageController:playLearnTomeEffect(lplr, tome, element);
@@ -34140,7 +34117,6 @@ velo.run(function(): ()
 					local payload: table = {["trapType"] = item, ["target"] = position, ["normal"] = Vector3.yAxis};
 					ownAim = {["character"] = lplr.Character, ["trapType"] = item, ["source"] = 'binding', ["released"] = true, ["payload"] = payload};
 					controller.currentAim = ownAim;
-					-- The ability runs game code while our fake aim is installed; the aim has to be cancelled before any error propagates.
 					local ran: boolean, thrown: any = pcall(function(): boolean
 						if not bedwars.AbilityController:canUseAbility('trapper_throw', quiet) then
 							return false;
@@ -35073,7 +35049,6 @@ velo.run(function(): ()
 					if not cast[2] or (retryAt[ability] or 0) > tick() or not bedwars.WizardUtil:hasAbility(staffType, ability) or not wizard then
 						continue;
 					end;
-					-- Staff controller internals can throw; catsix skips that ability instead of stopping.
 					local checked: boolean, allowed: any = pcall(wizard.canCastAbility, wizard, ability);
 					if not checked or not allowed then
 						continue;
@@ -35134,7 +35109,6 @@ velo.run(function(): ()
 		local jumpDown: table? = jump and jump.Options['TP Down'];
 		local jumpPulls: boolean = jump ~= nil and jump["Enabled"] and jumpDown ~= nil and jumpDown["Enabled"];
 		local flying: boolean = fly ~= nil and fly["Enabled"];
-		-- Fly's 'TP Down' mode is catsix's TPDown module, whose PullIn stays nil while InfiniteJump's TP Down owns the pull.
 		if flying and fly.Options.Mode["Value"] == 'TP Down' then
 			return not jumpPulls and fly.Options['Air Time']["Value"] - airborne or nil;
 		end;

@@ -147,6 +147,20 @@ for name: string, module: table in vape.Modules do
 	end;
 end;
 
+for _: number, name: string in {
+	'AntiFall', 
+	'Hitboxes', 
+	'AntiRagoll', 
+	'Jesus,'
+	'Phase,'
+	'Disabler', 
+	'Invisible', 
+	'MurderMystery', 
+	'PlayerAttach', 
+	'MouseTP'} do
+	vape:Remove(name);
+end;
+
 velo.run(function(): ()
 	local scanRate: number = 0.5;
 	local watched: {[TextLabel]: table} = {};
