@@ -7781,13 +7781,11 @@ velo.run(function(): ()
 		end,
 		["Tooltip"] = 'Makes you go zoom.\nHeatseeker: balloon fly with TP Down once the balloons run out.\nTP Down: only pulls you to the ground after too long in the air.'
 	});
-
 	local refreshOptions: () -> () = function(): ()
 		for option: table, modes: {string} in visibleIn do
 			option.Object.Visible = table.find(modes, Mode["Value"]) ~= nil and (option ~= AirOnly or ShowProgress["Enabled"]);
 		end;
 	end;
-
 	Mode = Fly:CreateDropdown({
 		["Name"] = 'Mode',
 		["List"] = {'Heatseeker', 'TP Down'},
@@ -7900,7 +7898,6 @@ velo.run(function(): ()
 	local lastRoot: Vector3?;
 	local rootVelocity: Vector3 = Vector3.zero;
 	local viewBound: boolean = false;
-
 	local hiddenPart: Part = Instance.new('Part');
 	hiddenPart.Parent = workspace;
 	hiddenPart.Transparency = 1;
@@ -7909,7 +7906,6 @@ velo.run(function(): ()
 	hiddenPart.CanCollide = false;
 	hiddenPart.Anchored = true;
 	vape:Clean(hiddenPart);
-
 	local findGround: () -> RaycastResult? = function(): RaycastResult?
 		for _: number, direction: Vector3 in {entitylib.character.Humanoid.MoveDirection, Vector3.new(1, 0, 0), Vector3.new(0, 0, 1), Vector3.new(-1, 0, 0), Vector3.new(0, 0, -1)} do
 			for step: number = 1, 4 do
@@ -7921,7 +7917,6 @@ velo.run(function(): ()
 		end;
 		return nil;
 	end;
-
 	local centerGround: (ground: RaycastResult) -> Vector3 = function(ground: RaycastResult): Vector3
 		local cell: Vector3 = bedwars.BlockController:getBlockPosition(ground.Position) * 3;
 		local center: RaycastResult? = workspace:Raycast(Vector3.new(cell.X, ground.Position.Y + 1, cell.Z), Vector3.new(0, -2, 0), store.airRay);
@@ -7930,7 +7925,6 @@ velo.run(function(): ()
 		end;
 		return ground.Position;
 	end;
-
 	local hide: (object: Instance) -> () = function(object: Instance): ()
 		if hidden[object] ~= nil then
 			return;
@@ -7943,7 +7937,6 @@ velo.run(function(): ()
 			object.Enabled = false;
 		end;
 	end;
-
 	local restore: (object: Instance, value: any) -> () = function(object: Instance, value: any): ()
 		if type(value) == 'boolean' then
 			(object :: BillboardGui).Enabled = value;
@@ -7951,7 +7944,6 @@ velo.run(function(): ()
 			(object :: BasePart).LocalTransparencyModifier = value;
 		end;
 	end;
-
 	local release: (object: Instance) -> () = function(object: Instance): ()
 		local twin: BasePart? = twins[object];
 		if twin then
@@ -7964,7 +7956,6 @@ velo.run(function(): ()
 			restore(object, value);
 		end;
 	end;
-
 	local match: (real: Instance, copy: Instance) -> ();
 	match = function(real: Instance, copy: Instance): ()
 		local copies: {Instance} = copy:GetChildren();
@@ -7980,7 +7971,6 @@ velo.run(function(): ()
 			end;
 		end;
 	end;
-
 	local createFake: () -> () = function(): ()
 		if fake then
 			fake:Destroy();
@@ -8023,12 +8013,11 @@ velo.run(function(): ()
 			humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff;
 			humanoid.EvaluateStateMachine = false;
 		end;
-		clone.Name = 'InfiniteFlyFake';
+		--clone.Name = 'InfiniteFlyFake';
 		clone.Parent = workspace;
 		fake = clone;
 		fakeVisible = true;
 	end;
-
 	local resetView: () -> () = function(): ()
 		simTime = 0;
 		lagAverage = nil;
@@ -9217,7 +9206,6 @@ velo.run(function(): ()
 	local Owl: table;
 	local OwlWalls: table;
 	local CrossbowChain: table;
-
 	local kickSpeed: number, kickGravity: number = 100, 20;
 	local sorcererSpeed: number = 70;
 	local attemptLimit: number, attemptBudget: number = 10, 0.0015;
@@ -9232,19 +9220,15 @@ velo.run(function(): ()
 	table.insert(aimPartList, 'Closest');
 	local auraPartList: {string} = table.clone(targetParts);
 	table.insert(auraPartList, 'Dynamic');
-
 	local screenOrigin: () -> Vector2 = function(): Vector2
 		return inputService.TouchEnabled and gameCamera.ViewportSize / 2 or inputService:GetMouseLocation();
 	end;
-
 	local headshot: (itemType: string?) -> boolean = function(itemType: string?): boolean
 		return itemType ~= nil and (itemType:find('headhunter', 1, true) ~= nil or itemType:find('tactical', 1, true) ~= nil or store.equippedKit == 'archer');
 	end;
-
 	local listed: (projectile: string, list: {string}) -> boolean = function(projectile: string, list: {string}): boolean
 		return table.find(list, (projectile == 'glue_trap' or projectile == 'glue_projectile') and 'gloop' or projectile) ~= nil;
 	end;
-
 	local aimPartOf: (ent: table, mode: string) -> BasePart = function(ent: table, mode: string): BasePart
 		if mode == 'Dynamic' then
 			local tool: Instance? = store.hand.tool;
@@ -9266,12 +9250,10 @@ velo.run(function(): ()
 		end;
 		return getTargetPart(ent, mode);
 	end;
-
 	local mapRay: RaycastParams = RaycastParams.new();
 	mapRay.FilterType = Enum.RaycastFilterType.Include;
 	local auraRay: RaycastParams = RaycastParams.new();
 	auraRay.FilterType = Enum.RaycastFilterType.Exclude;
-
 	local worldOnly: () -> {Instance} = function(): {Instance}
 		local ignore: {Instance} = {gameCamera, lplr.Character, store.antiFallPart};
 		for _: number, ent: table in entitylib.List do
@@ -9279,7 +9261,6 @@ velo.run(function(): ()
 		end;
 		return ignore;
 	end;
-
 	local pickTarget: (settings: table) -> table? = function(settings: table): table?
 		local started: number = os.clock();
 		if not entitylib.isAlive then
@@ -9319,7 +9300,6 @@ velo.run(function(): ()
 		end;
 		return nil;
 	end;
-
 	local aimLaunch: (controller: table, launchData: table, worldMeta: any, origin: any, shootPosition: Vector3?) -> table? = function(controller: table, launchData: table, worldMeta: any, origin: any, shootPosition: Vector3?): table?
 		local launchPosition: Vector3? = shootPosition or controller:getLaunchPosition(origin);
 		if not launchPosition then
@@ -9374,7 +9354,6 @@ velo.run(function(): ()
 		end;
 		return nil;
 	end;
-
 	local silentVelocity: (arguments: table) -> Vector3? = function(arguments: table): Vector3?
 		local projectile: any, origin: any, velocity: any = arguments[3], arguments[4], arguments[6];
 		if typeof(origin) ~= 'Vector3' or typeof(velocity) ~= 'Vector3' or type(projectile) ~= 'string' then
@@ -9457,7 +9436,6 @@ velo.run(function(): ()
 					projectileController.calculateImportantLaunchValues = oldLaunch;
 				end;
 			end);
-
 			local sorcerer: table? = bedwars.SorcererController;
 			if sorcerer then
 				local oldDirection: (...any) -> ...any = sorcerer.getProjectileDirection;
@@ -9498,7 +9476,6 @@ velo.run(function(): ()
 					end;
 				end);
 			end;
-
 			local kicker: table? = bedwars.BlockKickerKitController;
 			if kicker then
 				local oldKick: (...any) -> ...any = kicker.onAbilityUsed;
@@ -9547,7 +9524,6 @@ velo.run(function(): ()
 					end;
 				end);
 			end;
-
 			if namecallHooked then
 				return;
 			end;
@@ -9846,12 +9822,10 @@ velo.run(function(): ()
 	local swingStart: number?, swingNeed: number = nil, 0;
 	local swapped: boolean = false;
 	local chainThread: thread?;
-
 	local holding: (tool: Instance) -> boolean = function(tool: Instance): boolean
 		local hand: ObjectValue? = lplr.Character and lplr.Character:FindFirstChild('HandInvItem');
 		return store.hand.tool == tool or (hand ~= nil and hand.Value == tool);
 	end;
-
 	local auraPass: () -> () = function(): ()
 		if workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack <= swordLockout or (AfkCheck["Enabled"] and isAfk()) then
 			return;
@@ -9911,7 +9885,6 @@ velo.run(function(): ()
 			end;
 		end;
 	end;
-
 	local swingPass: () -> () = function(): ()
 		local swinging: boolean = entitylib.isAlive and store.hand.toolType == 'sword' and tick() - bedwars.SwordController.lastSwing < swingWindow;
 		if not swinging then
@@ -9982,14 +9955,12 @@ velo.run(function(): ()
 			end;
 		end;
 	end;
-
 	local stopOwl: () -> () = function(): ()
 		if lastOwl then
 			fire('OwlAiming', 'SendToServer', {["owl"] = lastOwl, ["starting"] = false});
 			lastOwl = nil;
 		end;
 	end;
-
 	local shootOwl: () -> () = function(): ()
 		local owl: Instance? = owls[1];
 		local owlPart: BasePart? = owl and owl:FindFirstChild('Part');
@@ -10025,7 +9996,6 @@ velo.run(function(): ()
 		});
 		task.wait(store.ping.total or 0);
 	end;
-
 	ProjectileAura = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'ProjectileAura',
 		["Function"] = function(callback: boolean): ()
