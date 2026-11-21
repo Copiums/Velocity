@@ -3502,20 +3502,20 @@ vape.Uninject = function(self: table): ()
 	shared.VeloIndependent = nil;
 end;
 
-local guiUpdate: RBXScriptConnection?;
+local guiUpdatePending: boolean = false;
 vape.UpdateGUI = function(self: table): ()
-	if guiUpdate then
-		return;
-	end;
-
-	guiUpdate = runService.RenderStepped:Once(function(): ()
-		if vape.Loaded ~= nil then
-			vape:UpdateGUIQueue(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value);
-		end;
-
-		guiUpdate = nil;
-	end);
+	guiUpdatePending = true;
 end;
+
+task.spawn(function(): ()
+	repeat
+		runService.RenderStepped:Wait();
+		if guiUpdatePending and vape.Loaded ~= nil and vape.GUIColor then
+			guiUpdatePending = false;
+			task.spawn(vape.UpdateGUIQueue, vape, vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value);
+		end;
+	until vape.Loaded == nil;
+end);
 
 vape.UpdateGUIQueue = function(self: table, hue: number, sat: number, val: number): ()
 	if TextGUI.Button.Enabled then
