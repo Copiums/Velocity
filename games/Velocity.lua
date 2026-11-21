@@ -18444,7 +18444,6 @@ velo.run(function(): ()
 	local mushroomTag: string = 'forest_environment_plant';
 	local recollectDelay: number = 1;
 	local cooldowns: {[Instance]: number} = {};
-	local nextEat: number = 0;
 
 	AutoEat = vape.Categories.Inventory:CreateModule({
 		["Name"] = 'AutoEat',
@@ -18453,40 +18452,41 @@ velo.run(function(): ()
 				table.clear(cooldowns);
 				return;
 			end;
-			AutoEat:Clean(runService.Heartbeat:Connect(function(): ()
-				if tick() < nextEat then
-					return;
-				end;
-				nextEat = tick() + Delay["Value"];
-				for object: Instance, expires: number in cooldowns do
-					if expires < tick() then
-						cooldowns[object] = nil;
+			AutoEat:Clean(task.spawn(function(): ()
+				repeat
+					if vape.ThreadFix then
+						setthreadidentity(8);
 					end;
-				end;
-				if not entitylib.isAlive then
-					return;
-				end;
-				local origin: Vector3 = entitylib.character.RootPart.Position;
-				local character: Model = lplr.Character;
-				local edible: {[number]: boolean} = {
-					[0] = HealMushrooms["Enabled"] and (character:GetAttribute('Health') or 0) < (character:GetAttribute('MaxHealth') or 0),
-					[1] = ShieldMushrooms["Enabled"],
-					[2] = SpeedMushrooms["Enabled"],
-					[3] = DizzyMushrooms["Enabled"]
-				};
-				for _: number, object: Instance in collectionService:GetTagged(mushroomTag) do
-					local part: BasePart? = object:IsA('Model') and object.PrimaryPart or (object:IsA('BasePart') and object or nil);
-					local id: any = object:GetAttribute('Id');
-					if not part or not id or tick() <= (cooldowns[object] or 0) or (origin - part.Position).Magnitude > Range["Value"] or not edible[object:GetAttribute('MushroomType')] then
-						continue;
+					for object: Instance, expires: number in cooldowns do
+						if expires < tick() then
+							cooldowns[object] = nil;
+						end;
 					end;
-					if Animation["Enabled"] then
-						bedwars.GameAnimationUtil:playAnimation(character, bedwars.AnimationType.PUNCH);
-						bedwars.ViewmodelController:playAnimation(bedwars.AnimationType.FP_USE_ITEM);
+					if entitylib.isAlive then
+						local origin: Vector3 = entitylib.character.RootPart.Position;
+						local character: Model = lplr.Character;
+						local edible: {[number]: boolean} = {
+							[0] = HealMushrooms["Enabled"] and (character:GetAttribute('Health') or 0) < (character:GetAttribute('MaxHealth') or 0),
+							[1] = ShieldMushrooms["Enabled"],
+							[2] = SpeedMushrooms["Enabled"],
+							[3] = DizzyMushrooms["Enabled"]
+						};
+						for _: number, object: Instance in collectionService:GetTagged(mushroomTag) do
+							local part: BasePart? = object:IsA('Model') and object.PrimaryPart or (object:IsA('BasePart') and object or nil);
+							local id: any = object:GetAttribute('Id');
+							if not part or not id or tick() <= (cooldowns[object] or 0) or (origin - part.Position).Magnitude > Range["Value"] or not edible[object:GetAttribute('MushroomType')] then
+								continue;
+							end;
+							if Animation["Enabled"] then
+								bedwars.GameAnimationUtil:playAnimation(character, bedwars.AnimationType.PUNCH);
+								bedwars.ViewmodelController:playAnimation(bedwars.AnimationType.FP_USE_ITEM);
+							end;
+							fire('CollectCollectableEntity', 'SendToServer', {["id"] = id, ["collectableName"] = object.Name});
+							cooldowns[object] = tick() + recollectDelay;
+						end;
 					end;
-					fire('CollectCollectableEntity', 'SendToServer', {["id"] = id, ["collectableName"] = object.Name});
-					cooldowns[object] = tick() + recollectDelay;
-				end;
+					task.wait(Delay["Value"]);
+				until not AutoEat["Enabled"];
 			end));
 		end,
 		["Tooltip"] = 'Eats the forest mushrooms near you without walking up to them, pick which kinds below.\nAutoCollect eats every kind too while forest_environment_plant is in its Collectables list.'
@@ -24617,34 +24617,87 @@ velo.run(function(): ()
 	local BuffItems: table;
 	local CombatOnly: table;
 	local BuffDelay: table;
+	local Debug: table;
 	local combatWindow: number = 6;
 	local speedAttempts: number = 4;
+	local settleTime: number = 1.5;
+	local recheckRate: number = 0.5;
+	local effectCheckDelay: number = 1;
+	local debugFile: string = 'velo/consume-debug.txt';
+	local pending: {[string]: number} = {};
+	local speedMeta: table? = bedwars.ItemMeta.speed_potion;
+	local speedStatus: table? = speedMeta and speedMeta.consumable and speedMeta.consumable.statusEffect;
+	local speedEffect: string = 'StatusEffect_'..(speedStatus and speedStatus.statusEffectType or 'speed');
+
+	local log: (text: string) -> () = function(text: string): ()
+		if not Debug["Enabled"] then
+			return;
+		end;
+		local line: string = '[AutoConsume] '..text;
+		print(line);
+		local stamped: string = os.date('%H:%M:%S')..' '..line..'\n';
+		if appendfile and isfile(debugFile) then
+			appendfile(debugFile, stamped);
+		else
+			writefile(debugFile, (isfile(debugFile) and readfile(debugFile) or '')..stamped);
+		end;
+	end;
+
+	local reportEffects: (kind: string) -> () = function(kind: string): ()
+		if not Debug["Enabled"] then
+			return;
+		end;
+		task.delay(effectCheckDelay, function(): ()
+			local effects: {string} = {};
+			for name: string in (lplr.Character and lplr.Character:GetAttributes() or {}) do
+				if name:find('StatusEffect_') then
+					table.insert(effects, name);
+				end;
+			end;
+			log(kind..' effects '..effectCheckDelay..'s later: '..(#effects > 0 and table.concat(effects, ', ') or 'none'));
+		end);
+	end;
+
+	local consume: (kind: string, item: table, method: string) -> any = function(kind: string, item: table, method: string): any
+		pending[kind] = math.huge;
+		local result: any = fire('ConsumeItem', method, {["item"] = item.tool});
+		pending[kind] = os.clock() + settleTime;
+		log(kind..': '..item.itemType..' via '..method..' returned '..tostring(result));
+		return result;
+	end;
+
+	local ready: (kind: string) -> boolean = function(kind: string): boolean
+		return os.clock() >= (pending[kind] or 0);
+	end;
 
 	local heal: (attribute: string?) -> () = function(attribute: string?): ()
 		if not entitylib.isAlive then
 			return;
 		end;
 		local character: Model = lplr.Character;
-		if SpeedPotion["Enabled"] and (not attribute or attribute == 'StatusEffect_speed') then
+		if SpeedPotion["Enabled"] and (not attribute or attribute == speedEffect) and ready('Speed') then
 			local potion: table? = getItem('speed_potion');
-			if potion and not character:GetAttribute('StatusEffect_speed') then
+			if potion and not character:GetAttribute(speedEffect) then
 				for _: number = 1, speedAttempts do
-					if fire('ConsumeItem', 'CallServer', {["item"] = potion.tool}) then
+					if consume('Speed', potion, 'CallServer') then
 						break;
 					end;
 				end;
+				reportEffects('Speed');
 			end;
 		end;
-		if Apple["Enabled"] and (not attribute or attribute:find('Health')) and character:GetAttribute('Health') / character:GetAttribute('MaxHealth') <= Health["Value"] / 100 then
+		local health: number = character:GetAttribute('Health') or 0;
+		local maxHealth: number = character:GetAttribute('MaxHealth') or 0;
+		if Apple["Enabled"] and (not attribute or attribute:find('Health')) and ready('Apple') and health < maxHealth and health / maxHealth <= Health["Value"] / 100 then
 			local food: table? = getItem('orange') or (not character:GetAttribute('StatusEffect_golden_apple') and getItem('golden_apple')) or getItem('apple');
 			if food then
-				fire('ConsumeItem', 'CallServerAsync', {["item"] = food.tool});
+				consume('Apple', food, 'CallServerAsync');
 			end;
 		end;
-		if ShieldPotion["Enabled"] and (not attribute or attribute:find('Shield')) and (character:GetAttribute('Shield_POTION') or 0) == 0 then
+		if ShieldPotion["Enabled"] and (not attribute or attribute:find('Shield')) and ready('Shield') and (character:GetAttribute('Shield_POTION') or 0) == 0 then
 			local shield: table? = getItem('big_shield') or getItem('mini_shield');
 			if shield then
-				fire('ConsumeItem', 'CallServerAsync', {["item"] = shield.tool});
+				consume('Shield', shield, 'CallServerAsync');
 			end;
 		end;
 	end;
@@ -24656,6 +24709,7 @@ velo.run(function(): ()
 	AutoConsume = vape.Categories.Inventory:CreateModule({
 		["Name"] = 'AutoConsume',
 		["Function"] = function(callback: boolean): ()
+			table.clear(pending);
 			if not callback then
 				return;
 			end;
@@ -24663,12 +24717,13 @@ velo.run(function(): ()
 				heal(nil);
 			end));
 			AutoConsume:Clean(vapeEvents.AttributeChanged.Event:Connect(function(attribute: string): ()
-				if attribute:find('Shield') or attribute:find('Health') or attribute == 'StatusEffect_speed' then
+				if attribute:find('Shield') or attribute:find('Health') or attribute == speedEffect then
 					heal(attribute);
 				end;
 			end));
 			AutoConsume:Clean(task.spawn(function(): ()
 				repeat
+					heal(nil);
 					local character: Model? = lplr.Character;
 					if UseBuffs["Enabled"] and entitylib.isAlive and character and store.matchState == 1 and not isCasting() and (not CombatOnly["Enabled"] or inCombat(character)) then
 						for _: number, itemType: string in BuffItems.ListEnabled do
@@ -24678,17 +24733,17 @@ velo.run(function(): ()
 							if consumable then
 								local effect: string = consumable.statusEffect and consumable.statusEffect.statusEffectType or (itemType:gsub('_potion', ''));
 								if not character:GetAttribute('StatusEffect_'..effect) then
-									fire('ConsumeItem', 'CallServerAsync', {["item"] = item.tool});
+									consume('Buff', item, 'CallServerAsync');
+									reportEffects('Buff');
 									task.wait(consumable.consumeTime or 1);
 									break;
 								end;
 							end;
 						end;
 					end;
-					task.wait(BuffDelay["Value"]);
+					task.wait(UseBuffs["Enabled"] and BuffDelay["Value"] or recheckRate);
 				until not AutoConsume["Enabled"];
 			end));
-			heal(nil);
 		end,
 		["Tooltip"] = 'Heals when health or shield is under threshold, and can keep your listed buff items active.'
 	});
@@ -24742,6 +24797,10 @@ velo.run(function(): ()
 		["Darker"] = true,
 		["Suffix"] = 'seconds'
 	});
+	Debug = AutoConsume:CreateToggle({
+		["Name"] = 'Debug',
+		["Tooltip"] = 'Prints every consume attempt, what the server answered, and which status effects you have a second later, to the F9 console and velo/consume-debug.txt'
+	});
 	for _: number, option: table in {BuffItems, CombatOnly, BuffDelay} do
 		option.Object.Visible = false;
 	end;
@@ -24749,8 +24808,7 @@ end);
 
 velo.run(function(): ()
 	local FastConsume: table = {["Enabled"] = false};
-	local Multiplier: table;
-	local normalSpeed: number = 40;
+	local Speed: table;
 	local serverTolerance: number = 0.2;
 
 	FastConsume = vape.Categories.Inventory:CreateModule({
@@ -24764,7 +24822,7 @@ velo.run(function(): ()
 			local oldShowProgress: (...any) -> ...any = clickHold.showProgress;
 			clickHold.startClick = function(self: table): ()
 				self.startedClickTime = tick();
-				local duration: number = math.max(self.durationSeconds * (Multiplier["Value"] / normalSpeed), self.durationSeconds - serverTolerance);
+				local duration: number = math.max(self.durationSeconds - serverTolerance * Speed["Value"] / 100, 0);
 				local handle: any = self:showProgress(duration);
 				local started: number = self.startedClickTime;
 				bedwars.RuntimeLib.Promise.defer(function(): ()
@@ -24817,11 +24875,13 @@ velo.run(function(): ()
 		end,
 		["Tooltip"] = 'Use/Consume items quicker.'
 	});
-	Multiplier = FastConsume:CreateSlider({
-		["Name"] = 'Multiplier',
+	Speed = FastConsume:CreateSlider({
+		["Name"] = 'Speed',
 		["Min"] = 0,
 		["Max"] = 100,
-		["Tooltip"] = '40 is normal speed, lower is faster\nThe server throws away anything finished more than about 0.25s early, so it never goes past 0.2s faster'
+		["Default"] = 100,
+		["Suffix"] = '%',
+		["Tooltip"] = 'How much of the 0.2 seconds the server allows gets cut off every eat and drink, 100% is the fastest it accepts\nThe server throws away anything finished more than about 0.25s early'
 	});
 end);
 
