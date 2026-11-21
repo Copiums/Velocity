@@ -1070,6 +1070,9 @@ vape.Load = function(self: table, skipgui: boolean?, profile: string?): any
 		for name: any, data: any in mainData.Modules do
 			local module: any = self.Modules[name];
 			if module then
+				if vape.ThreadFix then
+					setthreadidentity(8);
+				end;
 				module:Load(data);
 				toggleCount += module.Enabled and 1 or 0;
 			end;
@@ -1203,6 +1206,9 @@ vape.LoadOptions = function(self: table, obj: table, data: table): ()
 		local component: any = obj.Options[name];
 
 		if component then
+			if vape.ThreadFix then
+				setthreadidentity(8);
+			end;
 			component:Load(componentData);
 		end;
 	end;

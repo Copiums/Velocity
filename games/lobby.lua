@@ -81,18 +81,22 @@ velo.run = function(callback: () -> (), essential: boolean?): ()
 end;
 
 local waitForGameModule: (module: Instance) -> () = function(module: Instance): ()
-	if not getloadedmodules then
-		return;
-	end;
 	local started: number = os.clock();
-	repeat
+	local found: boolean = getloadedmodules == nil;
+	while not found and os.clock() - started <= 20 do
 		for _: number, loaded: Instance in getloadedmodules() do
 			if loaded == module or (loaded.Name == module.Name and loaded.Parent == module.Parent) then
-				return;
+				found = true;
+				break;
 			end;
 		end;
-		task.wait(0.1);
-	until os.clock() - started > 20;
+		if not found then
+			task.wait(0.1);
+		end;
+	end;
+	if vape.ThreadFix then
+		setthreadidentity(8);
+	end;
 end;
 
 velo.run(function(): ()
@@ -110,6 +114,9 @@ velo.run(function(): ()
 	until knit;
 	while not debug.getupvalue(knit.Start, 1) do
 		task.wait();
+	end;
+	if vape.ThreadFix then
+		setthreadidentity(8);
 	end;
 
 	local ts: Instance = replicatedStorage.TS;

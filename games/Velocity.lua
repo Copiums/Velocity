@@ -226,6 +226,7 @@ end;
 local store: table = {
 	["attackReach"] = 0,
 	["attackReachUpdate"] = tick(),
+	["consume"] = {["Until"] = 0},
 	["damageBlockFail"] = tick(),
 	["equippedKit"] = '',
 	["equippedKits"] = {},
@@ -534,6 +535,9 @@ local hotbarSlotOf: (tool: Instance?) -> number? = function(tool: Instance?): nu
 end;
 
 local switchItem: (tool: Instance, delayTime: number?) -> boolean = function(tool: Instance, delayTime: number?): boolean
+	if os.clock() < store.consume.Until and tool ~= store.consume.Tool then
+		return false;
+	end;
 	local hand: ObjectValue? = lplr.Character and lplr.Character:FindFirstChild('HandInvItem');
 	if not hand or hand.Value == tool or tool.Parent == nil then
 		return false;
@@ -551,6 +555,9 @@ local switchItem: (tool: Instance, delayTime: number?) -> boolean = function(too
 end;
 
 local hotbarSwitch: (slot: number?) -> boolean = function(slot: number?): boolean
+	if os.clock() < store.consume.Until then
+		return false;
+	end;
 	if not slot or store.inventory.hotbarSlot == slot then
 		return false;
 	end;
@@ -1132,18 +1139,22 @@ end);
 entitylib.start();
 
 local waitForGameModule: (module: Instance) -> () = function(module: Instance): ()
-	if not getloadedmodules then
-		return;
-	end;
 	local started: number = os.clock();
-	repeat
+	local found: boolean = getloadedmodules == nil;
+	while not found and os.clock() - started <= 20 do
 		for _: number, loaded: Instance in getloadedmodules() do
 			if loaded == module or (loaded.Name == module.Name and loaded.Parent == module.Parent) then
-				return;
+				found = true;
+				break;
 			end;
 		end;
-		task.wait(0.1);
-	until os.clock() - started > 20;
+		if not found then
+			task.wait(0.1);
+		end;
+	end;
+	if vape.ThreadFix then
+		setthreadidentity(8);
+	end;
 end;
 
 velo.run(function(): ()
@@ -1164,6 +1175,9 @@ velo.run(function(): ()
 		repeat
 			task.wait();
 		until debug.getupvalue(knit.Start, 1);
+	end;
+	if vape.ThreadFix then
+		setthreadidentity(8);
 	end;
 
 	local controllers: table = knit.Controllers;
@@ -1561,18 +1575,37 @@ velo.run(function(): ()
 		vape:Clean(entitylib.Events.EntityRemoved:Connect(forgetCharacter));
 		vape:Clean(entitylib.Events.LocalRemoved:Connect(forgetCharacter));
 	end;
-	for _: number, event: string in {'MatchEndEvent', 'EntityDeathEvent', 'BedwarsBedBreak', 'BalloonPopped', 'AngelProgress', 'GrapplingHookFunctions'} do
+	local definedRemote: (name: string) -> boolean = function(name: string): boolean
+		return next(bedwars.RemoteDefinitions) == nil or bedwars.RemoteDefinitions[name] ~= nil;
+	end;
+	local listenFor: (event: string) -> ();
+	listenFor = function(event: string): ()
 		client:WaitFor(event):andThen(function(connection: any): ()
 			vape:Clean(connection:Connect(function(...: any): ()
 				vapeEvents[event]:Fire(...);
 			end));
 		end):catch(function(): ()
-			if event == 'EntityDeathEvent' then
-				deathsFromHealth();
-			else
-				warn('Velocity: BedWars no longer defines the '..event..' remote');
+			if vape.Loaded ~= nil then
+				listenFor(event);
 			end;
 		end);
+	end;
+	for _: number, event: string in {'MatchEndEvent', 'BedwarsBedBreak', 'BalloonPopped', 'AngelProgress', 'GrapplingHookFunctions'} do
+		if definedRemote(event) then
+			listenFor(event);
+		else
+			warn('Velocity: BedWars no longer defines the '..event..' remote');
+		end;
+	end;
+	local deathZap: any = bedwars.ZapNetworking.EntityDeathEventZap;
+	if deathZap then
+		vape:Clean(deathZap.On(function(death: table): ()
+			vapeEvents.EntityDeathEvent:Fire(death);
+		end));
+	elseif definedRemote('EntityDeathEvent') then
+		listenFor('EntityDeathEvent');
+	else
+		deathsFromHealth();
 	end;
 
 	vape:Clean(bedwars.ZapNetworking.EntityDamageEventZap.On(function(...: any): ()
@@ -5114,6 +5147,9 @@ velo.run(function(): ()
 			end;
 
 			if #state.Entities > 0 then
+				if os.clock() < store.consume.Until then
+					return;
+				end;
 				if store.hand.tool ~= sword.tool then
 					local slot: number? = LegitSwitch["Enabled"] and hotbarSlotOf(sword.tool);
 					if slot then
@@ -24648,6 +24684,8 @@ velo.run(function(): ()
 	local combatWindow: number = 6;
 	local checkRate: number = 0.1;
 	local settleTime: number = 1.5;
+	local consumeMargin: number = 0.1;
+	local serverWait: number = 2;
 	local failLimit: number = 3;
 	local backoffTime: number = 30;
 	local effectCheckDelay: number = 1;
@@ -24661,6 +24699,7 @@ velo.run(function(): ()
 	local untrace: {() -> ()} = {};
 	local tracing: boolean = false;
 	local warned: boolean = false;
+	local handRequired: boolean = false;
 	local nextBuff: number = 0;
 	local speedMeta: table? = bedwars.ItemMeta.speed_potion;
 	local speedStatus: table? = speedMeta and speedMeta.consumable and speedMeta.consumable.statusEffect;
@@ -24863,16 +24902,52 @@ velo.run(function(): ()
 		return os.clock() >= (pending[kind] or 0);
 	end;
 
+	local release: () -> () = function(): ()
+		store.consume.Until = 0;
+		store.consume.Tool = nil;
+	end;
+
+	local attempt: (item: table, holdItem: boolean) -> any = function(item: table, holdItem: boolean): any
+		local meta: table? = bedwars.ItemMeta[item.itemType];
+		local waitTime: number = (meta and meta.consumable and meta.consumable.consumeTime or 0) + consumeMargin;
+		local previous: Instance? = store.hand.tool;
+		if holdItem then
+			store.consume.Tool = item.tool;
+			store.consume.Until = os.clock() + waitTime + serverWait;
+			switchItem(item.tool, 0);
+		end;
+		fire('StartConsume', 'SendToServer', {["item"] = item.tool});
+		task.wait(waitTime);
+		local result: any = false;
+		if item.tool.Parent then
+			result = fire('ConsumeItem', 'CallServer', {["item"] = item.tool});
+		end;
+		if holdItem then
+			release();
+			if previous and previous ~= item.tool and previous.Parent then
+				switchItem(previous, 0);
+			end;
+		end;
+		return result;
+	end;
+
 	local consume: (kind: string, item: table) -> boolean = function(kind: string, item: table): boolean
 		pending[kind] = math.huge;
-		local result: any = fire('ConsumeItem', 'CallServer', {["item"] = item.tool});
+		local result: any = attempt(item, handRequired);
 		local success: boolean = result ~= false and result ~= nil;
+		log(kind..': '..item.itemType..(handRequired and ' held' or '')..' returned '..tostring(result));
+		if not success and not handRequired and item.tool.Parent then
+			result = attempt(item, true);
+			success = result ~= false and result ~= nil;
+			handRequired = success;
+			log(kind..': '..item.itemType..' held returned '..tostring(result));
+		end;
 		failures[kind] = success and 0 or (failures[kind] or 0) + 1;
 		local backoff: boolean = failures[kind] >= failLimit;
 		pending[kind] = os.clock() + (backoff and backoffTime or settleTime);
-		log(kind..': '..item.itemType..' returned '..tostring(result)..(backoff and ', pausing '..backoffTime..'s' or ''));
 		if backoff then
 			failures[kind] = 0;
+			log(kind..': rejected '..failLimit..' times, pausing '..backoffTime..'s');
 			if not warned then
 				warned = true;
 				notif('AutoConsume', 'The server keeps rejecting consumes. Turn on Debug, drink one yourself, and send velo/consume-debug.txt', 10, 'warning');
@@ -24887,7 +24962,7 @@ velo.run(function(): ()
 	end;
 
 	local heal: () -> () = function(): ()
-		if not entitylib.isAlive then
+		if not entitylib.isAlive or isCasting() then
 			return;
 		end;
 		local character: Model = lplr.Character;
@@ -24939,9 +25014,11 @@ velo.run(function(): ()
 		["Function"] = function(callback: boolean): ()
 			table.clear(pending);
 			table.clear(failures);
+			release();
 			if not callback then
 				return;
 			end;
+			AutoConsume:Clean(release);
 			AutoConsume:Clean(task.spawn(function(): ()
 				repeat
 					heal();
@@ -25006,7 +25083,7 @@ velo.run(function(): ()
 		["Name"] = 'Debug',
 		["Function"] = function(enabled: boolean): ()
 			if enabled then
-				startTrace();
+				task.spawn(startTrace);
 			else
 				stopTrace();
 			end;
