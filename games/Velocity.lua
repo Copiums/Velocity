@@ -160,8 +160,12 @@ local config: table = {
 	["ProjectileLifetime"] = 2,
 	["PingRefresh"] = 1,
 	["BaseSpeed"] = 20,
-	["ErrorLog"] = 'velo/errors.txt'
+	["DebugFolder"] = 'velo/debug',
+	["ErrorLog"] = 'velo/debug/errors.txt'
 };
+if not isfolder(config.DebugFolder) then
+	makefolder(config.DebugFolder);
+end;
 
 local vapeEvents: {[string]: table} = setmetatable({}, {
 	__index = function(self: table, index: string): table
@@ -3453,7 +3457,7 @@ velo.run(function(): ()
 							end;
 						end;
 					end;
-				elseif hand.toolType == 'sword' then
+				elseif hand.toolType == 'sword' and not store.attacking then
 					if inputService.TouchEnabled then
 						bedwars.SwordController:mobileSwingPressed();
 					elseif canSwing() and not bedwars.SwordController.disableSwingState then
@@ -3994,6 +3998,7 @@ velo.run(function(): ()
 				end;
 				local ent: table?, attack: boolean = nil, false;
 				local ready: boolean = entitylib.isAlive
+					and not store.attacking
 					and not (GuiCheck["Enabled"] and bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN))
 					and (not RequireMouse["Enabled"] or inputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1))
 					and not (AfkCheck["Enabled"] and isAfk())
@@ -4348,7 +4353,6 @@ velo.run(function(): ()
 	local DoubleHit: table;
 	local DoubleDelay: table;
 	local DoubleChance: table;
-	local DoubleSwap: table;
 	local Projectiles: table;
 	local UseSophia: table;
 	local UseWhim: table;
@@ -4459,7 +4463,7 @@ velo.run(function(): ()
 	};
 	local serverTick: number = 1 / 60;
 	local follow: table = {["Watch"] = {}, ["Stats"] = {}};
-	local statsFile: string = 'velo/killaura-stats.txt';
+	local statsFile: string = config.DebugFolder..'/killaura.txt';
 	local writeStats: (line: string) -> () = function(line: string): ()
 		local stamped: string = os.date('%H:%M:%S')..' '..line..'\n';
 		if appendfile and isfile(statsFile) then
@@ -4617,7 +4621,7 @@ velo.run(function(): ()
 					local stats: table = follow.Stats[watch.Key];
 					stats.Landed += 1;
 					if stats.Landed == 1 then
-						notif('DoubleHit', 'Follow-up hits are landing'..(watch.Swap and ' with weapon swap.' or '.'), 4);
+						notif('DoubleHit', 'Follow-up hits are landing.', 4);
 						writeStats('Double hit: first follow-up landed ('..watch.Key..')');
 					end;
 					return;
@@ -4863,27 +4867,24 @@ velo.run(function(): ()
 
 	local followUp: (ent: table, sentAt: number, hitDelay: number) -> () = function(ent: table, sentAt: number, hitDelay: number): ()
 		local main: table = frame.Sword;
-		local weapon: table? = DoubleSwap["Enabled"] and altSword(main) or main;
-		if not weapon or (DoubleSwap["Enabled"] and weapon == main) then
+		local weapon: table? = altSword(main);
+		if not weapon then
 			return;
 		end;
-		local swapped: boolean = weapon ~= main;
-		local key: string = (swapped and 'swap:' or 'same:')..main.itemType;
+		local key: string = main.itemType..'+'..weapon.itemType;
 		local stats: table = follow.Stats[key] or {["Sent"] = 0, ["Landed"] = 0, ["Warned"] = false};
 		follow.Stats[key] = stats;
 		if (stats.Landed == 0 and stats.Sent >= 12) or rng:NextNumber(0, 100) > DoubleChance["Value"] then
 			return;
 		end;
-		local meta: table? = bedwars.ItemMeta[main.itemType];
-		local window: number = meta and meta.sword and meta.sword.multiHitCheckDurationSec or 0;
 		local delay: number = DoubleDelay["Value"] / 1000;
 		if delay <= 0 then
-			delay = (swapped or window <= serverTick * 2) and serverTick or window * 0.5;
+			delay = serverTick;
 		end;
 		delay = math.clamp(delay, serverTick, math.max(hitDelay - serverTick * 2, serverTick));
 		local victim: Model = ent.Character;
 		local tracked: boolean = type(victim:GetAttribute('LastDamageTakenTime')) == 'number';
-		local watch: table = {["Seen"] = 0, ["Sent"] = false, ["Key"] = key, ["Swap"] = swapped, ["Server"] = bedwars.SwordController.lastAttack, ["Expire"] = os.clock() + delay + lplr:GetNetworkPing() * 2 + 0.4};
+		local watch: table = {["Seen"] = 0, ["Sent"] = false, ["Key"] = key, ["Server"] = bedwars.SwordController.lastAttack, ["Expire"] = os.clock() + delay + lplr:GetNetworkPing() * 2 + 0.4};
 		if tracked then
 			follow.Watch[victim] = watch;
 		end;
@@ -4906,7 +4907,7 @@ velo.run(function(): ()
 			stats.Sent += 1;
 			if stats.Sent >= 12 and stats.Landed == 0 and not stats.Warned then
 				stats.Warned = true;
-				notif('DoubleHit', 'Server rejected 12 follow-ups'..(swapped and ' with weapon swap' or '')..' on '..main.itemType..', paused for that sword.', 6, 'warning');
+				notif('DoubleHit', 'Server rejected 12 follow-ups with '..weapon.itemType..' after '..main.itemType..', paused for that pair.', 6, 'warning');
 				writeStats('Double hit: paused ('..key..'), 12 follow-ups sent, none landed');
 			end;
 		end);
@@ -5007,6 +5008,7 @@ velo.run(function(): ()
 		end;
 		sendHit(ent, claim, hitPosition, direction);
 		state.StatSent += 1;
+		state.StatDistance += delta.Magnitude;
 		if DoubleHit["Enabled"] then
 			followUp(ent, state.LastHit, hitDelay);
 		end;
@@ -5283,7 +5285,7 @@ velo.run(function(): ()
 		if tick() - state.StatClock >= 10 then
 			local span: number = tick() - state.StatClock;
 			if HitStats["Enabled"] and state.StatSent > 0 then
-				local summary: string = string.format('%d sent, %d landed (%d%%), %.2f landed/s, ghost +%dms, ping %dms', state.StatSent, state.StatLanded, math.floor(math.min(state.StatLanded / state.StatSent, 1) * 100), state.StatLanded / span, math.floor(hitreg.GhostDelay * 1000), math.floor(lplr:GetNetworkPing() * 1000));
+				local summary: string = string.format('%d sent, %d landed (%d%%), %.2f landed/s, avg %.1f studs, ghost +%dms, ping %dms', state.StatSent, state.StatLanded, math.floor(math.min(state.StatLanded / state.StatSent, 1) * 100), state.StatLanded / span, state.StatDistance / state.StatSent, math.floor(hitreg.GhostDelay * 1000), math.floor(lplr:GetNetworkPing() * 1000));
 				notif('Killaura', summary, 8);
 				writeStats('Hit stats: '..summary);
 			end;
@@ -5294,7 +5296,7 @@ velo.run(function(): ()
 					end;
 				end;
 			end;
-			state.StatSent, state.StatLanded, state.StatClock = 0, 0, tick();
+			state.StatSent, state.StatLanded, state.StatDistance, state.StatClock = 0, 0, 0, tick();
 		end;
 		if #attacked > 0 then
 			state.ContinueUntil = tick() + ContinueSwing:GetRandomValue() / 1000;
@@ -5374,7 +5376,7 @@ velo.run(function(): ()
 				["LastEffect"] = 0, ["LastAttack"] = 0, ["EffectSwing"] = 0, ["SwingGap"] = 0.11, ["AnimDelay"] = 0, ["ContinueUntil"] = 0,
 				["SwingCooldown"] = 0, ["LastHit"] = 0, ["LastShot"] = 0, ["Shooting"] = false, ["ShotPending"] = false, ["ShotIndex"] = 1, ["FireRates"] = {},
 				["FrameTime"] = 0, ["FrameCount"] = 0, ["FrameWindow"] = 0, ["ScanClock"] = 0, ["Entities"] = {},
-				["StatSent"] = 0, ["StatLanded"] = 0, ["StatClock"] = tick()
+				["StatSent"] = 0, ["StatLanded"] = 0, ["StatDistance"] = 0, ["StatClock"] = tick()
 			};
 			resetHitreg();
 			hitBudget = 60 / (store.remoteLimits.SwordHit or config.RemoteLimit);
@@ -5588,13 +5590,13 @@ velo.run(function(): ()
 		["Function"] = function(callback: boolean): ()
 			table.clear(follow.Stats);
 			table.clear(follow.Watch);
-			for _: number, option: table? in {DoubleDelay, DoubleChance, DoubleSwap} do
+			for _: number, option: table? in {DoubleDelay, DoubleChance} do
 				if option then
 					option.Object.Visible = callback;
 				end;
 			end;
 		end,
-		["Tooltip"] = 'Sends a follow-up hit inside the sword\'s multi-hit window before the next swing. Pauses itself on a sword the server keeps rejecting.'
+		["Tooltip"] = 'Sends a follow-up hit with your second-best sword right after each hit. Needs two swords, same-sword follow-ups never land. Pauses itself on a pair the server keeps rejecting.'
 	});
 	DoubleDelay = Killaura:CreateSlider({
 		["Name"] = 'Follow delay',
@@ -5606,7 +5608,7 @@ velo.run(function(): ()
 		end,
 		["Darker"] = true,
 		["Visible"] = false,
-		["Tooltip"] = 'Time after the main hit. 0 picks it from the sword\'s multi-hit window.'
+		["Tooltip"] = 'Time after the main hit. 0 sends it on the next server tick.'
 	});
 	DoubleChance = Killaura:CreateSlider({
 		["Name"] = 'Follow chance',
@@ -5617,23 +5619,13 @@ velo.run(function(): ()
 		["Darker"] = true,
 		["Visible"] = false
 	});
-	DoubleSwap = Killaura:CreateToggle({
-		["Name"] = 'Weapon swap',
-		["Default"] = true,
-		["Function"] = function(): ()
-			table.clear(follow.Stats);
-		end,
-		["Darker"] = true,
-		["Visible"] = false,
-		["Tooltip"] = 'Sends the follow-up with your other sword, in case the server tracks cooldown per weapon.'
-	});
 	Focus = Killaura:CreateToggle({
 		["Name"] = 'Focus target',
 		["Tooltip"] = 'Keeps hitting one target until it dies or leaves range instead of splitting hits. A target one hit from death always goes first.'
 	});
 	HitStats = Killaura:CreateToggle({
 		["Name"] = 'Hit stats',
-		["Tooltip"] = 'Every 10 seconds shows hits sent, hits the server confirmed, and confirmed hits per second, and writes it to velo/killaura-stats.txt (Double hit results go there too).'
+		["Tooltip"] = 'Every 10 seconds shows hits sent, hits the server confirmed, and confirmed hits per second, and writes it to velo/debug/killaura.txt (Double hit results go there too).'
 	});
 	MaxTargets = Killaura:CreateSlider({
 		["Name"] = 'Entities',
@@ -7025,7 +7017,7 @@ velo.run(function(): ()
 	local Damage: table;
 	local Debug: table;
 	local safeFall: number = 45;
-	local debugFile: string = 'velo/nofall-debug.txt';
+	local debugFile: string = config.DebugFolder..'/nofall.txt';
 	local Disabled: {[Humanoid]: {any}} = setmetatable({}, {__mode = "k"});
 	NoFall = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'NoFall',
@@ -7129,7 +7121,7 @@ velo.run(function(): ()
 	});
 	Debug = NoFall:CreateToggle({
 		["Name"] = 'Debug',
-		["Tooltip"] = 'Prints every cushion to the F9 console and velo/nofall-debug.txt: fall speed, where it was restored, the velocity there, and what NoFall did'
+		["Tooltip"] = 'Prints every cushion to the F9 console and velo/debug/nofall.txt: fall speed, where it was restored, the velocity there, and what NoFall did'
 	});
 end);
 
@@ -24692,7 +24684,7 @@ velo.run(function(): ()
 	local traceThrottle: number = 1;
 	local traceDepth: number = 3;
 	local traceWidth: number = 12;
-	local debugFile: string = 'velo/consume-debug.txt';
+	local debugFile: string = config.DebugFolder..'/consume.txt';
 	local pending: {[string]: number} = {};
 	local failures: {[string]: number} = {};
 	local traced: {[string]: number} = {};
@@ -24950,7 +24942,7 @@ velo.run(function(): ()
 			log(kind..': rejected '..failLimit..' times, pausing '..backoffTime..'s');
 			if not warned then
 				warned = true;
-				notif('AutoConsume', 'The server keeps rejecting consumes. Turn on Debug, drink one yourself, and send velo/consume-debug.txt', 10, 'warning');
+				notif('AutoConsume', 'The server keeps rejecting consumes. Turn on Debug, drink one yourself, and send velo/debug/consume.txt', 10, 'warning');
 			end;
 		end;
 		reportEffects(kind);
@@ -25088,7 +25080,7 @@ velo.run(function(): ()
 				stopTrace();
 			end;
 		end,
-		["Tooltip"] = 'Logs every consume and what the server answered, and records the network calls the game makes (drink something yourself while it is on), to the F9 console and velo/consume-debug.txt'
+		["Tooltip"] = 'Logs every consume and what the server answered, and records the network calls the game makes (drink something yourself while it is on), to the F9 console and velo/debug/consume.txt'
 	});
 	for _: number, option: table in {BuffItems, CombatOnly, BuffDelay} do
 		option.Object.Visible = false;
@@ -28042,7 +28034,7 @@ velo.run(function(): ()
 
 	local pathfindingService: PathfindingService = cloneref(game:GetService('PathfindingService'));
 	local flatMask: Vector3 = Vector3.new(1, 0, 1);
-	local logFile: string = 'halloween-log.txt';
+	local logFile: string = config.DebugFolder..'/halloween.txt';
 	local walkBinding: string = 'AutoHalloweenMove';
 	local eventQueues: {[string]: string} = {["halloween_event"] = 'Marrow', ["halloween_2025_event_pve"] = 'Arachne'};
 	local eventChoices: {[string]: string} = {["Marrow's Madness"] = 'Marrow', ["Arachne's Lair"] = 'Arachne'};
@@ -28113,7 +28105,7 @@ velo.run(function(): ()
 				break;
 			end;
 		end;
-		writefile(file, table.concat(lines, '\n'));
+		writefile(config.DebugFolder..'/'..file, table.concat(lines, '\n'));
 		log('dump '..file..': '..#lines..' lines');
 	end;
 
@@ -29802,7 +29794,7 @@ velo.run(function(): ()
 	});
 	Debug = AutoHalloween:CreateToggle({
 		["Name"] = 'Debug',
-		["Tooltip"] = 'Prints the steps and writes halloween-log.txt'
+		["Tooltip"] = 'Prints the steps and writes velo/debug/halloween.txt'
 	});
 end);
 

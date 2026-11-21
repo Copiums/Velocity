@@ -229,6 +229,27 @@ if not isfolder("velo/profiles") then
 		makefolder("velo/profiles");
 end;
 
+if not isfolder('velo/debug') then
+		makefolder('velo/debug');
+end;
+for old: string, new: string in {
+		['velo/errors.txt'] = 'velo/debug/errors.txt',
+		['velo/killaura-stats.txt'] = 'velo/debug/killaura.txt',
+		['velo/nofall-debug.txt'] = 'velo/debug/nofall.txt',
+		['velo/consume-debug.txt'] = 'velo/debug/consume.txt',
+		['velo/chatlog.txt'] = 'velo/debug/chatlog.txt',
+		['velo/cw_audit.txt'] = 'velo/debug/cw_audit.txt',
+		['velo/cw_shots.csv'] = 'velo/debug/cw_shots.csv',
+		['velo/shots_live.txt'] = 'velo/debug/shots_live.txt',
+		['halloween-log.txt'] = 'velo/debug/halloween.txt',
+		['byfron_vape_teardown.txt'] = 'velo/debug/byfron-teardown.txt'
+} do
+		if isfile(old) then
+				writefile(new, (isfile(new) and readfile(new) or '')..readfile(old));
+				delfile(old);
+		end;
+end;
+
 veloc = loadstring(downloadFile('velo/guis/'..gui..'.lua'), 'gui')();
 shared.veloc = veloc;
 

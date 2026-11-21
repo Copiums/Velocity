@@ -2708,7 +2708,7 @@ velo.run(function()
 						try('cleardrawcache', cleardrawcache);
 					end;
 					if #errs > 0 then
-						pcall(writefile, 'byfron_vape_teardown.txt', table.concat(errs, '\n'));
+						pcall(writefile, 'velo/debug/byfron-teardown.txt', table.concat(errs, '\n'));
 					end;
 				end;
 				killVape();
