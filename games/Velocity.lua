@@ -226,7 +226,6 @@ end;
 local store: table = {
 	["attackReach"] = 0,
 	["attackReachUpdate"] = tick(),
-	["consume"] = {["Until"] = 0},
 	["damageBlockFail"] = tick(),
 	["equippedKit"] = '',
 	["equippedKits"] = {},
@@ -535,9 +534,6 @@ local hotbarSlotOf: (tool: Instance?) -> number? = function(tool: Instance?): nu
 end;
 
 local switchItem: (tool: Instance, delayTime: number?) -> boolean = function(tool: Instance, delayTime: number?): boolean
-	if os.clock() < store.consume.Until and tool ~= store.consume.Tool then
-		return false;
-	end;
 	local hand: ObjectValue? = lplr.Character and lplr.Character:FindFirstChild('HandInvItem');
 	if not hand or hand.Value == tool or tool.Parent == nil then
 		return false;
@@ -555,9 +551,6 @@ local switchItem: (tool: Instance, delayTime: number?) -> boolean = function(too
 end;
 
 local hotbarSwitch: (slot: number?) -> boolean = function(slot: number?): boolean
-	if os.clock() < store.consume.Until then
-		return false;
-	end;
 	if not slot or store.inventory.hotbarSlot == slot then
 		return false;
 	end;
@@ -1138,8 +1131,25 @@ velo.run(function(): ()
 end);
 entitylib.start();
 
+local waitForGameModule: (module: Instance) -> () = function(module: Instance): ()
+	if not getloadedmodules then
+		return;
+	end;
+	local started: number = os.clock();
+	repeat
+		for _: number, loaded: Instance in getloadedmodules() do
+			if loaded == module or (loaded.Name == module.Name and loaded.Parent == module.Parent) then
+				return;
+			end;
+		end;
+		task.wait(0.1);
+	until os.clock() - started > 20;
+end;
+
 velo.run(function(): ()
-	local knitModule: table = require(lplr.PlayerScripts.TS.knit);
+	local knitScript: Instance = lplr:WaitForChild('PlayerScripts'):WaitForChild('TS'):WaitForChild('knit');
+	waitForGameModule(knitScript);
+	local knitModule: table = require(knitScript);
 	local knit: table?;
 	for _: number, value: any in debug.getupvalues(knitModule.setup) do
 		if type(value) == 'table' and type(value.Controllers) == 'table' and value.Start then
@@ -1316,6 +1326,7 @@ velo.run(function(): ()
 	if type(registry) == 'table' then
 		construct, definitions = next(registry);
 	end;
+	bedwars.RemoteDefinitions = type(definitions) == 'table' and definitions or {};
 	local globalLimits: any = construct and construct.globalMiddleware and debug.getupvalue(construct.globalMiddleware[2], 1);
 	if type(globalLimits) == 'table' then
 		for name: string, limit: any in globalLimits do
@@ -5103,9 +5114,6 @@ velo.run(function(): ()
 			end;
 
 			if #state.Entities > 0 then
-				if os.clock() < store.consume.Until then
-					return;
-				end;
 				if store.hand.tool ~= sword.tool then
 					local slot: number? = LegitSwitch["Enabled"] and hotbarSlotOf(sword.tool);
 					if slot then
@@ -24639,12 +24647,20 @@ velo.run(function(): ()
 	local Debug: table;
 	local combatWindow: number = 6;
 	local checkRate: number = 0.1;
-	local holdMargin: number = 0.15;
-	local serverWait: number = 2;
 	local settleTime: number = 1.5;
+	local failLimit: number = 3;
+	local backoffTime: number = 30;
 	local effectCheckDelay: number = 1;
+	local traceThrottle: number = 1;
+	local traceDepth: number = 3;
+	local traceWidth: number = 12;
 	local debugFile: string = 'velo/consume-debug.txt';
 	local pending: {[string]: number} = {};
+	local failures: {[string]: number} = {};
+	local traced: {[string]: number} = {};
+	local untrace: {() -> ()} = {};
+	local tracing: boolean = false;
+	local warned: boolean = false;
 	local nextBuff: number = 0;
 	local speedMeta: table? = bedwars.ItemMeta.speed_potion;
 	local speedStatus: table? = speedMeta and speedMeta.consumable and speedMeta.consumable.statusEffect;
@@ -24664,6 +24680,170 @@ velo.run(function(): ()
 		end;
 	end;
 
+	local describe: (value: any, depth: number) -> string;
+	describe = function(value: any, depth: number): string
+		local kind: string = typeof(value);
+		if kind == 'Instance' then
+			return value.ClassName..' '..value:GetFullName();
+		elseif kind == 'string' then
+			return string.format('%q', value);
+		elseif kind ~= 'table' then
+			return kind == 'nil' and 'nil' or kind..' '..tostring(value);
+		elseif depth >= traceDepth then
+			return '{...}';
+		end;
+		local parts: {string} = {};
+		for key: any, entry: any in value do
+			if #parts >= traceWidth then
+				table.insert(parts, '...');
+				break;
+			end;
+			table.insert(parts, tostring(key)..' = '..describe(entry, depth + 1));
+		end;
+		return '{'..table.concat(parts, ', ')..'}';
+	end;
+
+	local trace: (label: string, ...any) -> () = function(label: string, ...: any): ()
+		local now: number = os.clock();
+		if not Debug["Enabled"] or now < (traced[label] or 0) then
+			return;
+		end;
+		traced[label] = now + traceThrottle;
+		local arguments: table = table.pack(...);
+		local parts: {string} = {};
+		for index: number = 1, arguments.n do
+			table.insert(parts, describe(arguments[index], 0));
+		end;
+		log((checkcaller() and '[velo] ' or '[game] ')..label..'('..table.concat(parts, ', ')..')');
+	end;
+
+	local functionStrings: (callback: any, into: {string}) -> () = function(callback: any, into: {string}): ()
+		if type(callback) ~= 'function' or not islclosure(callback) then
+			return;
+		end;
+		for _: number, constant: any in debug.getconstants(callback) do
+			if type(constant) == 'string' then
+				table.insert(into, constant);
+			end;
+		end;
+		for _: number, proto: any in debug.getprotos(callback) do
+			for _: number, constant: any in debug.getconstants(proto) do
+				if type(constant) == 'string' then
+					table.insert(into, constant);
+				end;
+			end;
+		end;
+	end;
+
+	local dumpNetwork: () -> () = function(): ()
+		local zap: any = bedwars.ZapNetworking;
+		local zapNames: {string} = {};
+		for name: any, entry: any in (type(zap) == 'table' and zap or {}) do
+			local keys: {string} = {};
+			for key: any in (type(entry) == 'table' and entry or {}) do
+				table.insert(keys, tostring(key));
+			end;
+			table.insert(zapNames, tostring(name)..'['..table.concat(keys, '/')..']');
+		end;
+		table.sort(zapNames);
+		log('zap entries: '..table.concat(zapNames, ', '));
+		local remoteNames: {string} = {};
+		for name: any in (bedwars.RemoteDefinitions or {}) do
+			table.insert(remoteNames, tostring(name));
+		end;
+		table.sort(remoteNames);
+		log('net remotes: '..table.concat(remoteNames, ', '));
+		log('speed_potion meta: '..describe(speedMeta, 0));
+		local controller: any = bedwars.ConsumeController;
+		if type(controller) ~= 'table' then
+			log('ConsumeController: missing');
+			return;
+		end;
+		local strings: {string} = {};
+		local meta: any = getmetatable(controller);
+		local class: any = type(meta) == 'table' and rawget(meta, '__index');
+		for _: number, source: any in {controller, type(class) == 'table' and class or {}} do
+			for key: any, value: any in source do
+				if type(value) == 'function' then
+					table.insert(strings, '<'..tostring(key)..'>');
+					functionStrings(value, strings);
+				end;
+			end;
+		end;
+		log('ConsumeController strings: '..table.concat(strings, ' '));
+	end;
+
+	local wrapCall: (owner: table, key: string, label: string, skipSelf: boolean) -> () = function(owner: table, key: string, label: string, skipSelf: boolean): ()
+		local original: any = rawget(owner, key);
+		if type(original) ~= 'function' or table.isfrozen(owner) then
+			return;
+		end;
+		local wrapper: (...any) -> ...any = function(...: any): ...any
+			if skipSelf then
+				local remote: any = ...;
+				local instance: any = type(remote) == 'table' and rawget(remote, 'instance');
+				trace('net '..(typeof(instance) == 'Instance' and instance.Name or '?')..':'..key, select(2, ...));
+			else
+				trace(label, ...);
+			end;
+			return original(...);
+		end;
+		owner[key] = wrapper;
+		table.insert(untrace, function(): ()
+			if rawget(owner, key) == wrapper then
+				owner[key] = original;
+			end;
+		end);
+	end;
+
+	local startTrace: () -> () = function(): ()
+		if tracing then
+			return;
+		end;
+		tracing = true;
+		table.clear(traced);
+		dumpNetwork();
+		local classes: {[table]: boolean} = {};
+		for _: number, name: string in {'ConsumeItem', 'SetInvItem', 'GroundHit'} do
+			local found: boolean, remote: any = pcall(bedwars.Client.Get, bedwars.Client, name);
+			local meta: any = found and type(remote) == 'table' and getmetatable(remote);
+			local class: any = type(meta) == 'table' and (rawget(meta, '__index') or meta);
+			if type(class) == 'table' and not classes[class] then
+				classes[class] = true;
+				for _: number, method: string in {'SendToServer', 'CallServer', 'CallServerAsync'} do
+					wrapCall(class, method, method, true);
+				end;
+			end;
+		end;
+		local zap: any = bedwars.ZapNetworking;
+		for name: any, entry: any in (type(zap) == 'table' and zap or {}) do
+			if type(entry) == 'table' then
+				for _: number, key: string in {'Fire', 'Call', 'Invoke'} do
+					wrapCall(entry, key, 'zap '..tostring(name)..'.'..key, false);
+				end;
+				local listen: any = rawget(entry, 'On');
+				if type(listen) == 'function' then
+					local disconnect: any = listen(function(...: any): ()
+						trace('zap recv '..tostring(name), ...);
+					end);
+					if type(disconnect) == 'function' then
+						table.insert(untrace, disconnect);
+					end;
+				end;
+			end;
+		end;
+		log('recording network calls, drink or eat something yourself now');
+	end;
+
+	local stopTrace: () -> () = function(): ()
+		tracing = false;
+		for _: number, undo: () -> () in untrace do
+			undo();
+		end;
+		table.clear(untrace);
+	end;
+	vape:Clean(stopTrace);
+
 	local reportEffects: (kind: string) -> () = function(kind: string): ()
 		if not Debug["Enabled"] then
 			return;
@@ -24679,36 +24859,27 @@ velo.run(function(): ()
 		end);
 	end;
 
-	local release: () -> () = function(): ()
-		store.consume.Until = 0;
-		store.consume.Tool = nil;
-	end;
-
 	local ready: (kind: string) -> boolean = function(kind: string): boolean
 		return os.clock() >= (pending[kind] or 0);
 	end;
 
-	local consume: (kind: string, item: table) -> any = function(kind: string, item: table): any
-		local meta: table? = bedwars.ItemMeta[item.itemType];
-		local holdTime: number = (meta and meta.consumable and meta.consumable.consumeTime or 0) + holdMargin;
-		local previous: Instance? = store.hand.tool;
+	local consume: (kind: string, item: table) -> boolean = function(kind: string, item: table): boolean
 		pending[kind] = math.huge;
-		store.consume.Tool = item.tool;
-		store.consume.Until = os.clock() + holdTime + serverWait;
-		switchItem(item.tool, 0);
-		task.wait(holdTime);
-		local result: any = false;
-		if item.tool.Parent then
-			result = fire('ConsumeItem', 'CallServer', {["item"] = item.tool});
+		local result: any = fire('ConsumeItem', 'CallServer', {["item"] = item.tool});
+		local success: boolean = result ~= false and result ~= nil;
+		failures[kind] = success and 0 or (failures[kind] or 0) + 1;
+		local backoff: boolean = failures[kind] >= failLimit;
+		pending[kind] = os.clock() + (backoff and backoffTime or settleTime);
+		log(kind..': '..item.itemType..' returned '..tostring(result)..(backoff and ', pausing '..backoffTime..'s' or ''));
+		if backoff then
+			failures[kind] = 0;
+			if not warned then
+				warned = true;
+				notif('AutoConsume', 'The server keeps rejecting consumes. Turn on Debug, drink one yourself, and send velo/consume-debug.txt', 10, 'warning');
+			end;
 		end;
-		release();
-		if previous and previous ~= item.tool and previous.Parent then
-			switchItem(previous, 0);
-		end;
-		pending[kind] = os.clock() + settleTime;
-		log(kind..': held '..item.itemType..' for '..string.format('%.2f', holdTime)..'s, server returned '..tostring(result));
 		reportEffects(kind);
-		return result;
+		return success;
 	end;
 
 	local inCombat: (character: Model) -> boolean = function(character: Model): boolean
@@ -24716,7 +24887,7 @@ velo.run(function(): ()
 	end;
 
 	local heal: () -> () = function(): ()
-		if not entitylib.isAlive or isCasting() then
+		if not entitylib.isAlive then
 			return;
 		end;
 		local character: Model = lplr.Character;
@@ -24726,14 +24897,12 @@ velo.run(function(): ()
 			local food: table? = getItem('orange') or (not character:GetAttribute('StatusEffect_golden_apple') and getItem('golden_apple')) or getItem('apple');
 			if food then
 				consume('Apple', food);
-				return;
 			end;
 		end;
 		if ShieldPotion["Enabled"] and ready('Shield') and (character:GetAttribute('Shield_POTION') or 0) == 0 then
 			local shield: table? = getItem('big_shield') or getItem('mini_shield');
 			if shield then
 				consume('Shield', shield);
-				return;
 			end;
 		end;
 		if SpeedPotion["Enabled"] and ready('Speed') and not character:GetAttribute(speedEffect) then
@@ -24754,11 +24923,11 @@ velo.run(function(): ()
 			local item: table? = getItem(itemType);
 			local meta: table? = item and bedwars.ItemMeta[itemType];
 			local consumable: table? = meta and meta.consumable;
-			if consumable then
+			if consumable and ready('Buff') then
 				local effect: string = consumable.statusEffect and consumable.statusEffect.statusEffectType or (itemType:gsub('_potion', ''));
 				if not character:GetAttribute('StatusEffect_'..effect) then
 					consume('Buff', item);
-					nextBuff = os.clock() + BuffDelay["Value"];
+					nextBuff = os.clock() + math.max(BuffDelay["Value"], consumable.consumeTime or 1);
 					return;
 				end;
 			end;
@@ -24769,11 +24938,10 @@ velo.run(function(): ()
 		["Name"] = 'AutoConsume',
 		["Function"] = function(callback: boolean): ()
 			table.clear(pending);
-			release();
+			table.clear(failures);
 			if not callback then
 				return;
 			end;
-			AutoConsume:Clean(release);
 			AutoConsume:Clean(task.spawn(function(): ()
 				repeat
 					heal();
@@ -24782,7 +24950,7 @@ velo.run(function(): ()
 				until not AutoConsume["Enabled"];
 			end));
 		end,
-		["Tooltip"] = 'Heals when health or shield is under threshold, keeps speed potions up, and can keep your listed buff items active.\nHolds the item for its eat time like a player would (the server rejects instant consumes), Killaura pauses meanwhile.'
+		["Tooltip"] = 'Heals when health or shield is under threshold, keeps speed potions up, and can keep your listed buff items active.'
 	});
 	Health = AutoConsume:CreateSlider({
 		["Name"] = 'Health Percent',
@@ -24836,7 +25004,14 @@ velo.run(function(): ()
 	});
 	Debug = AutoConsume:CreateToggle({
 		["Name"] = 'Debug',
-		["Tooltip"] = 'Prints every consume, how long the item was held, what the server answered, and which status effects you have a second later, to the F9 console and velo/consume-debug.txt'
+		["Function"] = function(enabled: boolean): ()
+			if enabled then
+				startTrace();
+			else
+				stopTrace();
+			end;
+		end,
+		["Tooltip"] = 'Logs every consume and what the server answered, and records the network calls the game makes (drink something yourself while it is on), to the F9 console and velo/consume-debug.txt'
 	});
 	for _: number, option: table in {BuffItems, CombatOnly, BuffDelay} do
 		option.Object.Visible = false;

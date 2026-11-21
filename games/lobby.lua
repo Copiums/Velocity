@@ -80,7 +80,23 @@ velo.run = function(callback: () -> (), essential: boolean?): ()
 	velo.halted = essential == true;
 end;
 
+local waitForGameModule: (module: Instance) -> () = function(module: Instance): ()
+	if not getloadedmodules then
+		return;
+	end;
+	local started: number = os.clock();
+	repeat
+		for _: number, loaded: Instance in getloadedmodules() do
+			if loaded == module or (loaded.Name == module.Name and loaded.Parent == module.Parent) then
+				return;
+			end;
+		end;
+		task.wait(0.1);
+	until os.clock() - started > 20;
+end;
+
 velo.run(function(): ()
+	waitForGameModule(lplr:WaitForChild('PlayerScripts'):WaitForChild('TS'):WaitForChild('knit'));
 	local knit: table? = nil;
 	repeat
 		-- knit's module errors when required before the game finishes setting it up

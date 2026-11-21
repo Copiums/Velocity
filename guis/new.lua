@@ -802,6 +802,10 @@ vape.CreateNotification = function(self: table, title: string, text: string, dur
 	end;
 
 	task.delay(0, function(): ()
+		if self.Loaded == nil then
+			return;
+		end;
+
 		if self.ThreadFix then
 			setthreadidentity(8);
 		end;
