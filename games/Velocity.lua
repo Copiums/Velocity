@@ -243,6 +243,7 @@ local store: table = {
 	["matchState"] = 0,
 	["ping"] = {["total"] = 0},
 	["queueType"] = 'bedwars_test',
+	["remoteBudget"] = {},
 	["remoteLimits"] = {},
 	["selfProjectiles"] = {},
 	["shopLoaded"] = false,
@@ -1367,7 +1368,7 @@ velo.run(function(): ()
 		notif('Velocity', 'Remote rate limits unavailable, using '..config.RemoteLimit..'/min', 30, 'alert');
 	end;
 
-	local remoteBudget: {[string]: table} = {};
+	local remoteBudget: {[string]: table} = store.remoteBudget;
 	fire = function(name: string, method: string?, ...: any): any
 		local budget: table? = remoteBudget[name];
 		if not budget then
@@ -4533,12 +4534,15 @@ velo.run(function(): ()
 		return seen - lagged(lag.Claim), distance, trailAt(now - lag.Self, fallback);
 	end;
 
+	local itemDrops: Instance? = nil;
 	local validTarget: (ent: table) -> boolean = function(ent: table): boolean
 		local character: Model? = ent.Character;
-		local drops: Instance? = workspace:FindFirstChild('ItemDrops');
+		if not (itemDrops and itemDrops.Parent) then
+			itemDrops = workspace:FindFirstChild('ItemDrops');
+		end;
 		return character ~= nil and character:IsA('Model') and character.Parent ~= nil and ent.RootPart ~= nil and ent.RootPart:IsDescendantOf(character)
 			and ent.Health > 0 and ent.Targetable == true and entitylib.isVulnerable(ent)
-			and not character:HasTag('ItemDrop') and not ent.RootPart:HasTag('ItemDrop') and not (drops and character:IsDescendantOf(drops));
+			and not character:HasTag('ItemDrop') and not ent.RootPart:HasTag('ItemDrop') and not (itemDrops and character:IsDescendantOf(itemDrops));
 	end;
 
 	local withinAngle: (delta: Vector3, facing: Vector3) -> boolean = function(delta: Vector3, facing: Vector3): boolean
@@ -4877,6 +4881,15 @@ velo.run(function(): ()
 		if (stats.Landed == 0 and stats.Sent >= 12) or rng:NextNumber(0, 100) > DoubleChance["Value"] then
 			return;
 		end;
+		local budget: table? = store.remoteBudget.SwordHit;
+		if budget then
+			local elapsed: number = os.clock() - budget.Reset;
+			local fresh: boolean = elapsed >= config.RemoteWindow;
+			local mainNeeded: number = math.ceil((fresh and config.RemoteWindow or config.RemoteWindow - elapsed) / math.max(hitDelay, 0.001));
+			if (fresh and 0 or budget.Used) + 1 + mainNeeded > (store.remoteLimits.SwordHit or config.RemoteLimit) then
+				return;
+			end;
+		end;
 		local delay: number = DoubleDelay["Value"] / 1000;
 		if delay <= 0 then
 			delay = serverTick;
@@ -4955,7 +4968,7 @@ velo.run(function(): ()
 		end;
 		local remaining: number = deadline - tick();
 		local frameSpan: number = locked and math.max(state.FrameTime, lock.Frame) or math.min(state.FrameTime, lock.Frame);
-		if frame.Stock and high and not waiting and remaining > 0 and remaining < math.min(frameSpan, 0.25) then
+		if frame.Stock and high and not waiting and remaining > 0 and remaining < math.min(frameSpan, 0.25) * 0.5 then
 			local finish: number = os.clock() + remaining;
 			repeat until os.clock() >= finish;
 		end;
@@ -5427,14 +5440,11 @@ velo.run(function(): ()
 			end;
 
 			refreshCircle();
-			Killaura:Clean(vapeEvents.EntityDamageEvent.Event:Connect(onDamage));
 			local hitSound: Sound = Instance.new('Sound');
 			hitSound.Parent = workspace;
 			Killaura:Clean(hitSound);
 			Killaura:Clean(vapeEvents.EntityDamageEvent.Event:Connect(function(damage: table): ()
-				if vape.ThreadFix then
-					setthreadidentity(8);
-				end;
+				onDamage(damage);
 				if not HitSound["Enabled"] or damage.fromEntity ~= lplr.Character or damage.entityInstance == lplr.Character then
 					return;
 				end;
@@ -5461,8 +5471,9 @@ velo.run(function(): ()
 				end;
 			end));
 			Killaura:Clean(runService.Heartbeat:Connect(step));
-			Killaura:Clean(runService.PostSimulation:Connect(aimStep));
+			runService:BindToRenderStep('KillauraAim', Enum.RenderPriority.Camera.Value + 1, aimStep);
 			Killaura:Clean(function(): ()
+				runService:UnbindFromRenderStep('KillauraAim');
 				store.KillauraTarget = nil;
 				store.attacking = false;
 				resetHitreg();
@@ -5521,9 +5532,13 @@ velo.run(function(): ()
 		["Max"] = 22.1,
 		["Default"] = 18.1,
 		["Suffix"] = function(value: number): string
+			local cap: number = (getReach(store.tools.sword and store.tools.sword.tool) or 0) + slack.Server - slack.Range;
+			if cap > slack.Server and value > cap then
+				return string.format('(%.1f)', cap);
+			end;
 			return value == 1 and 'stud' or 'studs';
 		end,
-		["Tooltip"] = 'Maximum distance to attack a target, measured where the server sees both of you.'
+		["Tooltip"] = string.format('Maximum distance to attack a target, measured where the server sees both of you.\nCapped at your sword\'s reach + %.1f studs, the server rejects anything farther. A number in brackets is that cap.', slack.Server - slack.Range)
 	});
 	Killaura:CreateButton({
 		["Name"] = 'Sync to legit ranges',
