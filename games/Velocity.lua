@@ -226,6 +226,7 @@ end;
 local store: table = {
 	["attackReach"] = 0,
 	["attackReachUpdate"] = tick(),
+	["consume"] = {["Until"] = 0},
 	["damageBlockFail"] = tick(),
 	["equippedKit"] = '',
 	["equippedKits"] = {},
@@ -534,6 +535,9 @@ local hotbarSlotOf: (tool: Instance?) -> number? = function(tool: Instance?): nu
 end;
 
 local switchItem: (tool: Instance, delayTime: number?) -> boolean = function(tool: Instance, delayTime: number?): boolean
+	if os.clock() < store.consume.Until and tool ~= store.consume.Tool then
+		return false;
+	end;
 	local hand: ObjectValue? = lplr.Character and lplr.Character:FindFirstChild('HandInvItem');
 	if not hand or hand.Value == tool or tool.Parent == nil then
 		return false;
@@ -551,6 +555,9 @@ local switchItem: (tool: Instance, delayTime: number?) -> boolean = function(too
 end;
 
 local hotbarSwitch: (slot: number?) -> boolean = function(slot: number?): boolean
+	if os.clock() < store.consume.Until then
+		return false;
+	end;
 	if not slot or store.inventory.hotbarSlot == slot then
 		return false;
 	end;
@@ -5096,6 +5103,9 @@ velo.run(function(): ()
 			end;
 
 			if #state.Entities > 0 then
+				if os.clock() < store.consume.Until then
+					return;
+				end;
 				if store.hand.tool ~= sword.tool then
 					local slot: number? = LegitSwitch["Enabled"] and hotbarSlotOf(sword.tool);
 					if slot then
@@ -9393,6 +9403,25 @@ velo.run(function(): ()
 		return CFrame.lookAt(origin, aim).LookVector * speed;
 	end;
 
+	local hookSilent: () -> () = function(): ()
+		if namecallHooked then
+			return;
+		end;
+		namecallHooked = true;
+		local oldNamecall: (...any) -> ...any;
+		oldNamecall = hookmetamethod(game, '__namecall', newcclosure(function(self: any, ...: any): ...any
+			if not ProjectileAimbot["Enabled"] or AimMode["Value"] ~= 'Silent' or checkcaller() or getnamecallmethod() ~= 'InvokeServer' or tostring(self) ~= 'ProjectileFire' then
+				return oldNamecall(self, ...);
+			end;
+			local arguments: table = table.pack(...);
+			local solved: boolean, redirected: any = pcall(silentVelocity, arguments);
+			if solved and typeof(redirected) == 'Vector3' then
+				arguments[6] = redirected;
+			end;
+			return self.InvokeServer(self, table.unpack(arguments, 1, arguments.n));
+		end));
+	end;
+
 	ProjectileAimbot = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'ProjectileAimbot',
 		["Function"] = function(callback: boolean): ()
@@ -9524,22 +9553,9 @@ velo.run(function(): ()
 					end;
 				end);
 			end;
-			if namecallHooked then
-				return;
+			if AimMode["Value"] == 'Silent' then
+				hookSilent();
 			end;
-			namecallHooked = true;
-			local oldNamecall: (...any) -> ...any;
-			oldNamecall = hookmetamethod(game, '__namecall', newcclosure(function(self: any, ...: any): ...any
-				if not ProjectileAimbot["Enabled"] or AimMode["Value"] ~= 'Silent' or checkcaller() or getnamecallmethod() ~= 'InvokeServer' or tostring(self) ~= 'ProjectileFire' then
-					return oldNamecall(self, ...);
-				end;
-				local arguments: table = table.pack(...);
-				local solved: boolean, redirected: any = pcall(silentVelocity, arguments);
-				if solved and typeof(redirected) == 'Vector3' then
-					arguments[6] = redirected;
-				end;
-				return self.InvokeServer(self, table.unpack(arguments, 1, arguments.n));
-			end));
 		end,
 		["Tooltip"] = 'Aims your projectiles (and Terra / Death Adder abilities) at enemies.\nTrajectory bends the shot you see, Silent only redirects what the server receives.'
 	});
@@ -9547,6 +9563,9 @@ velo.run(function(): ()
 		["Name"] = 'Mode',
 		["List"] = {'Trajectory', 'Silent'},
 		["Function"] = function(value: string): ()
+			if value == 'Silent' and ProjectileAimbot["Enabled"] then
+				hookSilent();
+			end;
 			if SilentBlacklist then
 				for _: number, option: table in {HitChance, HeadshotChance, SilentPrediction, SilentBlacklist} do
 					option.Object.Visible = value == 'Silent';
@@ -24619,12 +24638,14 @@ velo.run(function(): ()
 	local BuffDelay: table;
 	local Debug: table;
 	local combatWindow: number = 6;
-	local speedAttempts: number = 4;
+	local checkRate: number = 0.1;
+	local holdMargin: number = 0.15;
+	local serverWait: number = 2;
 	local settleTime: number = 1.5;
-	local recheckRate: number = 0.5;
 	local effectCheckDelay: number = 1;
 	local debugFile: string = 'velo/consume-debug.txt';
 	local pending: {[string]: number} = {};
+	local nextBuff: number = 0;
 	local speedMeta: table? = bedwars.ItemMeta.speed_potion;
 	local speedStatus: table? = speedMeta and speedMeta.consumable and speedMeta.consumable.statusEffect;
 	local speedEffect: string = 'StatusEffect_'..(speedStatus and speedStatus.statusEffectType or 'speed');
@@ -24658,94 +24679,110 @@ velo.run(function(): ()
 		end);
 	end;
 
-	local consume: (kind: string, item: table, method: string) -> any = function(kind: string, item: table, method: string): any
-		pending[kind] = math.huge;
-		local result: any = fire('ConsumeItem', method, {["item"] = item.tool});
-		pending[kind] = os.clock() + settleTime;
-		log(kind..': '..item.itemType..' via '..method..' returned '..tostring(result));
-		return result;
+	local release: () -> () = function(): ()
+		store.consume.Until = 0;
+		store.consume.Tool = nil;
 	end;
 
 	local ready: (kind: string) -> boolean = function(kind: string): boolean
 		return os.clock() >= (pending[kind] or 0);
 	end;
 
-	local heal: (attribute: string?) -> () = function(attribute: string?): ()
-		if not entitylib.isAlive then
-			return;
+	local consume: (kind: string, item: table) -> any = function(kind: string, item: table): any
+		local meta: table? = bedwars.ItemMeta[item.itemType];
+		local holdTime: number = (meta and meta.consumable and meta.consumable.consumeTime or 0) + holdMargin;
+		local previous: Instance? = store.hand.tool;
+		pending[kind] = math.huge;
+		store.consume.Tool = item.tool;
+		store.consume.Until = os.clock() + holdTime + serverWait;
+		switchItem(item.tool, 0);
+		task.wait(holdTime);
+		local result: any = false;
+		if item.tool.Parent then
+			result = fire('ConsumeItem', 'CallServer', {["item"] = item.tool});
 		end;
-		local character: Model = lplr.Character;
-		if SpeedPotion["Enabled"] and (not attribute or attribute == speedEffect) and ready('Speed') then
-			local potion: table? = getItem('speed_potion');
-			if potion and not character:GetAttribute(speedEffect) then
-				for _: number = 1, speedAttempts do
-					if consume('Speed', potion, 'CallServer') then
-						break;
-					end;
-				end;
-				reportEffects('Speed');
-			end;
+		release();
+		if previous and previous ~= item.tool and previous.Parent then
+			switchItem(previous, 0);
 		end;
-		local health: number = character:GetAttribute('Health') or 0;
-		local maxHealth: number = character:GetAttribute('MaxHealth') or 0;
-		if Apple["Enabled"] and (not attribute or attribute:find('Health')) and ready('Apple') and health < maxHealth and health / maxHealth <= Health["Value"] / 100 then
-			local food: table? = getItem('orange') or (not character:GetAttribute('StatusEffect_golden_apple') and getItem('golden_apple')) or getItem('apple');
-			if food then
-				consume('Apple', food, 'CallServerAsync');
-			end;
-		end;
-		if ShieldPotion["Enabled"] and (not attribute or attribute:find('Shield')) and ready('Shield') and (character:GetAttribute('Shield_POTION') or 0) == 0 then
-			local shield: table? = getItem('big_shield') or getItem('mini_shield');
-			if shield then
-				consume('Shield', shield, 'CallServerAsync');
-			end;
-		end;
+		pending[kind] = os.clock() + settleTime;
+		log(kind..': held '..item.itemType..' for '..string.format('%.2f', holdTime)..'s, server returned '..tostring(result));
+		reportEffects(kind);
+		return result;
 	end;
 
 	local inCombat: (character: Model) -> boolean = function(character: Model): boolean
 		return workspace:GetServerTimeNow() - (character:GetAttribute('LastDamageTakenTime') or 0) < combatWindow;
 	end;
 
+	local heal: () -> () = function(): ()
+		if not entitylib.isAlive or isCasting() then
+			return;
+		end;
+		local character: Model = lplr.Character;
+		local health: number = character:GetAttribute('Health') or 0;
+		local maxHealth: number = character:GetAttribute('MaxHealth') or 0;
+		if Apple["Enabled"] and ready('Apple') and health < maxHealth and health / maxHealth <= Health["Value"] / 100 then
+			local food: table? = getItem('orange') or (not character:GetAttribute('StatusEffect_golden_apple') and getItem('golden_apple')) or getItem('apple');
+			if food then
+				consume('Apple', food);
+				return;
+			end;
+		end;
+		if ShieldPotion["Enabled"] and ready('Shield') and (character:GetAttribute('Shield_POTION') or 0) == 0 then
+			local shield: table? = getItem('big_shield') or getItem('mini_shield');
+			if shield then
+				consume('Shield', shield);
+				return;
+			end;
+		end;
+		if SpeedPotion["Enabled"] and ready('Speed') and not character:GetAttribute(speedEffect) then
+			local potion: table? = getItem('speed_potion');
+			if potion then
+				consume('Speed', potion);
+			end;
+		end;
+	end;
+
+	local buff: () -> () = function(): ()
+		local character: Model? = lplr.Character;
+		if not UseBuffs["Enabled"] or os.clock() < nextBuff or not entitylib.isAlive or not character or store.matchState ~= 1 or isCasting() or (CombatOnly["Enabled"] and not inCombat(character)) then
+			return;
+		end;
+		nextBuff = os.clock() + BuffDelay["Value"];
+		for _: number, itemType: string in BuffItems.ListEnabled do
+			local item: table? = getItem(itemType);
+			local meta: table? = item and bedwars.ItemMeta[itemType];
+			local consumable: table? = meta and meta.consumable;
+			if consumable then
+				local effect: string = consumable.statusEffect and consumable.statusEffect.statusEffectType or (itemType:gsub('_potion', ''));
+				if not character:GetAttribute('StatusEffect_'..effect) then
+					consume('Buff', item);
+					nextBuff = os.clock() + BuffDelay["Value"];
+					return;
+				end;
+			end;
+		end;
+	end;
+
 	AutoConsume = vape.Categories.Inventory:CreateModule({
 		["Name"] = 'AutoConsume',
 		["Function"] = function(callback: boolean): ()
 			table.clear(pending);
+			release();
 			if not callback then
 				return;
 			end;
-			AutoConsume:Clean(vapeEvents.InventoryAmountChanged.Event:Connect(function(): ()
-				heal(nil);
-			end));
-			AutoConsume:Clean(vapeEvents.AttributeChanged.Event:Connect(function(attribute: string): ()
-				if attribute:find('Shield') or attribute:find('Health') or attribute == speedEffect then
-					heal(attribute);
-				end;
-			end));
+			AutoConsume:Clean(release);
 			AutoConsume:Clean(task.spawn(function(): ()
 				repeat
-					heal(nil);
-					local character: Model? = lplr.Character;
-					if UseBuffs["Enabled"] and entitylib.isAlive and character and store.matchState == 1 and not isCasting() and (not CombatOnly["Enabled"] or inCombat(character)) then
-						for _: number, itemType: string in BuffItems.ListEnabled do
-							local item: table? = getItem(itemType);
-							local meta: table? = item and bedwars.ItemMeta[itemType];
-							local consumable: table? = meta and meta.consumable;
-							if consumable then
-								local effect: string = consumable.statusEffect and consumable.statusEffect.statusEffectType or (itemType:gsub('_potion', ''));
-								if not character:GetAttribute('StatusEffect_'..effect) then
-									consume('Buff', item, 'CallServerAsync');
-									reportEffects('Buff');
-									task.wait(consumable.consumeTime or 1);
-									break;
-								end;
-							end;
-						end;
-					end;
-					task.wait(UseBuffs["Enabled"] and BuffDelay["Value"] or recheckRate);
+					heal();
+					buff();
+					task.wait(checkRate);
 				until not AutoConsume["Enabled"];
 			end));
 		end,
-		["Tooltip"] = 'Heals when health or shield is under threshold, and can keep your listed buff items active.'
+		["Tooltip"] = 'Heals when health or shield is under threshold, keeps speed potions up, and can keep your listed buff items active.\nHolds the item for its eat time like a player would (the server rejects instant consumes), Killaura pauses meanwhile.'
 	});
 	Health = AutoConsume:CreateSlider({
 		["Name"] = 'Health Percent',
@@ -24799,7 +24836,7 @@ velo.run(function(): ()
 	});
 	Debug = AutoConsume:CreateToggle({
 		["Name"] = 'Debug',
-		["Tooltip"] = 'Prints every consume attempt, what the server answered, and which status effects you have a second later, to the F9 console and velo/consume-debug.txt'
+		["Tooltip"] = 'Prints every consume, how long the item was held, what the server answered, and which status effects you have a second later, to the F9 console and velo/consume-debug.txt'
 	});
 	for _: number, option: table in {BuffItems, CombatOnly, BuffDelay} do
 		option.Object.Visible = false;

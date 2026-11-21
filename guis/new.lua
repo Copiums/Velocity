@@ -1129,7 +1129,66 @@ vape.createVapeButton = function(self: table): ()
 		addCorner(button, UDim.new(0, 8));
 		self.VapeButton = button;
 
+		local buttonPath: string = 'velo/profiles/vapebutton.txt';
+		local setPosition: (x: number, y: number) -> () = function(x: number, y: number): ()
+			local screen: Vector2 = gui.AbsoluteSize;
+			button.Position = UDim2.new(1, math.clamp(x, -math.max(screen.X, 32), -32), 0, math.clamp(y, 0, math.max(screen.Y - 32, 0)));
+		end;
+
+		local saved: any = isfile(buttonPath) and loadJson(buttonPath);
+		if type(saved) == 'table' and type(saved.X) == 'number' and type(saved.Y) == 'number' then
+			setPosition(saved.X, saved.Y);
+		end;
+
+		local dragInput: InputObject? = nil;
+		local dragStart: Vector3 = Vector3.zero;
+		local startOffset: Vector2 = Vector2.zero;
+		local dragged: boolean = false;
+
+		button.InputBegan:Connect(function(input: InputObject): ()
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				dragInput = input;
+				dragStart = input.Position;
+				startOffset = Vector2.new(button.Position.X.Offset, button.Position.Y.Offset);
+				dragged = false;
+			end;
+		end);
+
+		local moveConnection: RBXScriptConnection = inputService.InputChanged:Connect(function(input: InputObject): ()
+			if not dragInput then
+				return;
+			end;
+			if input == dragInput or dragInput.UserInputType == Enum.UserInputType.MouseButton1 and input.UserInputType == Enum.UserInputType.MouseMovement then
+				local delta: Vector3 = input.Position - dragStart;
+				if not dragged and delta.Magnitude < 6 then
+					return;
+				end;
+				dragged = true;
+				setPosition(startOffset.X + delta.X, startOffset.Y + delta.Y);
+			end;
+		end);
+
+		local endConnection: RBXScriptConnection = inputService.InputEnded:Connect(function(input: InputObject): ()
+			if not dragInput then
+				return;
+			end;
+			if input == dragInput or dragInput.UserInputType == Enum.UserInputType.MouseButton1 and input.UserInputType == Enum.UserInputType.MouseButton1 then
+				dragInput = nil;
+				if dragged then
+					writefile(buttonPath, httpService:JSONEncode({["X"] = button.Position.X.Offset, ["Y"] = button.Position.Y.Offset}));
+				end;
+			end;
+		end);
+
+		button.Destroying:Connect(function(): ()
+			moveConnection:Disconnect();
+			endConnection:Disconnect();
+		end);
+
 		button.MouseButton1Click:Connect(function(): ()
+			if dragged then
+				return;
+			end;
 			self.GUIBind.Triggered:Fire(true);
 		end);
 	end;
