@@ -243,7 +243,6 @@ local store: table = {
 	["matchState"] = 0,
 	["ping"] = {["total"] = 0},
 	["queueType"] = 'bedwars_test',
-	["remoteBudget"] = {},
 	["remoteLimits"] = {},
 	["selfProjectiles"] = {},
 	["shopLoaded"] = false,
@@ -1368,7 +1367,7 @@ velo.run(function(): ()
 		notif('Velocity', 'Remote rate limits unavailable, using '..config.RemoteLimit..'/min', 30, 'alert');
 	end;
 
-	local remoteBudget: {[string]: table} = store.remoteBudget;
+	local remoteBudget: {[string]: table} = {};
 	fire = function(name: string, method: string?, ...: any): any
 		local budget: table? = remoteBudget[name];
 		if not budget then
@@ -4880,15 +4879,6 @@ velo.run(function(): ()
 		follow.Stats[key] = stats;
 		if (stats.Landed == 0 and stats.Sent >= 12) or rng:NextNumber(0, 100) > DoubleChance["Value"] then
 			return;
-		end;
-		local budget: table? = store.remoteBudget.SwordHit;
-		if budget then
-			local elapsed: number = os.clock() - budget.Reset;
-			local fresh: boolean = elapsed >= config.RemoteWindow;
-			local mainNeeded: number = math.ceil((fresh and config.RemoteWindow or config.RemoteWindow - elapsed) / math.max(hitDelay, 0.001));
-			if (fresh and 0 or budget.Used) + 1 + mainNeeded > (store.remoteLimits.SwordHit or config.RemoteLimit) then
-				return;
-			end;
 		end;
 		local delay: number = DoubleDelay["Value"] / 1000;
 		if delay <= 0 then
