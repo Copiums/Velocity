@@ -104,6 +104,8 @@ local nearestToMouse: (targets: table, pixels: number) -> table? = function(targ
 	});
 end;
 
+--[[ (remove this line to uncomment)
+
 -- func header
 velo.run(function(): ()
 	-- enable toggle
@@ -152,3 +154,5 @@ velo.run(function(): ()
 		["Default"] = true
 	});
 end);
+
+]]--
