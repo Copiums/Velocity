@@ -4463,6 +4463,12 @@ velo.run(function(): ()
 	};
 	local serverTick: number = 1 / 60;
 	local follow: table = {["Watch"] = {}, ["Stats"] = {}};
+	local stacking: table = {["Last"] = {}, ["Groups"] = {}, ["Types"] = {}, ["Order"] = {'same attacker, same type', 'same attacker, other type', 'other attacker', 'no attacker'}};
+	for name: any, value: any in bedwars.DamageType do
+		if type(value) == 'number' then
+			stacking.Types[value] = tostring(name);
+		end;
+	end;
 	local statsFile: string = config.DebugFolder..'/killaura.txt';
 	local writeStats: (line: string) -> () = function(line: string): ()
 		local stamped: string = os.date('%H:%M:%S')..' '..line..'\n';
@@ -4727,6 +4733,35 @@ velo.run(function(): ()
 		hitreg.TransitMin = math.min(hitreg.TransitMin and hitreg.TransitMin + 0.001 or transit, transit);
 		hitreg.ConfirmMin = math.min(hitreg.ConfirmMin and hitreg.ConfirmMin + 0.001 or confirmation, confirmation);
 		hitreg.Deadline = math.max(hitreg.Deadline, entry.Sent + entry.Gap + math.clamp(transit - floor, 0, tuning.ExcessCap));
+	end;
+
+	local recordStack: (damage: table) -> () = function(damage: table): ()
+		local victim: any = damage.entityInstance;
+		if not HitStats["Enabled"] or typeof(victim) ~= 'Instance' or type(damage.damage) ~= 'number' or damage.damage == math.huge then
+			return;
+		end;
+		local now: number = os.clock();
+		local last: table? = stacking.Last[victim];
+		stacking.Last[victim] = {["Clock"] = now, ["From"] = damage.fromEntity, ["Type"] = damage.damageType};
+		if not last or now - last.Clock > 1 then
+			return;
+		end;
+		local gap: number = now - last.Clock;
+		local group: string = (damage.fromEntity == nil or last.From == nil) and 'no attacker'
+			or damage.fromEntity ~= last.From and 'other attacker'
+			or damage.damageType ~= last.Type and 'same attacker, other type'
+			or 'same attacker, same type';
+		local stats: table = stacking.Groups[group] or {["Pairs"] = 0, ["Fast"] = 0, ["Min"] = math.huge, ["Example"] = ''};
+		stacking.Groups[group] = stats;
+		stats.Pairs += 1;
+		if gap < 0.2 then
+			stats.Fast += 1;
+		end;
+		if gap < stats.Min then
+			stats.Min = gap;
+			local mine: boolean = damage.fromEntity == lplr.Character or last.From == lplr.Character;
+			stats.Example = string.format('%s then %s for %.1f%s', stacking.Types[last.Type] or tostring(last.Type), stacking.Types[damage.damageType] or tostring(damage.damageType), damage.damage, mine and ', yours' or '');
+		end;
 	end;
 
 	local fastHit: (ent: table, sendPosition: Vector3) -> () = function(ent: table, sendPosition: Vector3): ()
@@ -5299,6 +5334,16 @@ velo.run(function(): ()
 					end;
 				end;
 			end;
+			if HitStats["Enabled"] then
+				for _: number, group: string in stacking.Order do
+					local stats: table? = stacking.Groups[group];
+					if stats then
+						writeStats(string.format('Stacking, %s: %d hit pairs within 1s, %d under 200ms, fastest %dms (%s)', group, stats.Pairs, stats.Fast, math.floor(stats.Min * 1000), stats.Example));
+					end;
+				end;
+			end;
+			table.clear(stacking.Groups);
+			table.clear(stacking.Last);
 			state.StatSent, state.StatLanded, state.StatDistance, state.StatClock = 0, 0, 0, tick();
 		end;
 		if #attacked > 0 then
@@ -5435,6 +5480,7 @@ velo.run(function(): ()
 			Killaura:Clean(hitSound);
 			Killaura:Clean(vapeEvents.EntityDamageEvent.Event:Connect(function(damage: table): ()
 				onDamage(damage);
+				recordStack(damage);
 				if not HitSound["Enabled"] or damage.fromEntity ~= lplr.Character or damage.entityInstance == lplr.Character then
 					return;
 				end;
@@ -5477,6 +5523,8 @@ velo.run(function(): ()
 					boxAnchors[box].Parent = nil;
 				end;
 				table.clear(follow.Watch);
+				table.clear(stacking.Last);
+				table.clear(stacking.Groups);
 				for _: number, part: Part in particles do
 					part.Parent = nil;
 				end;
@@ -5630,7 +5678,129 @@ velo.run(function(): ()
 	});
 	HitStats = Killaura:CreateToggle({
 		["Name"] = 'Hit stats',
-		["Tooltip"] = 'Every 10 seconds shows hits sent, hits the server confirmed, and confirmed hits per second, and writes it to velo/debug/killaura.txt (Double hit results go there too).'
+		["Tooltip"] = 'Every 10 seconds shows hits sent, hits the server confirmed, and confirmed hits per second, and writes it to velo/debug/killaura.txt.\nAlso logs Double hit results and, for every fight in the server, how close together two hits on the same player can land.'
+	});
+	Killaura:CreateButton({
+		["Name"] = 'Scan damage remotes',
+		["Function"] = function(): ()
+			if vape.ThreadFix then
+				setthreadidentity(8);
+			end;
+			local started: number = os.clock();
+			local words: {string} = {'hit', 'attack', 'damage', 'strike', 'slash', 'swing', 'aura', 'blade', 'sword', 'hammer', 'scythe', 'axe', 'explod', 'blast', 'shock', 'slam', 'spin', 'punch', 'crit', 'charge', 'flame', 'stab'};
+			local wanted: {[string]: {string}} = {};
+			local definitions: {string} = {};
+			for name: any, definition: any in bedwars.RemoteDefinitions do
+				local remote: string = tostring(name);
+				for _: number, word: string in words do
+					if remote:lower():find(word, 1, true) then
+						wanted[remote] = {};
+						local fields: {string} = {};
+						for key: any, value: any in (type(definition) == 'table' and definition or {}) do
+							local simple: boolean = type(value) == 'string' or type(value) == 'number' or type(value) == 'boolean';
+							table.insert(fields, tostring(key)..'='..(simple and tostring(value) or type(value)));
+						end;
+						table.sort(fields);
+						table.insert(definitions, remote..' {'..table.concat(fields, ', ')..'}');
+						break;
+					end;
+				end;
+			end;
+			table.sort(definitions);
+
+			local pool: {any} = {};
+			if getgc then
+				for _: number, value: any in getgc(false) do
+					if type(value) == 'function' and islclosure(value) then
+						table.insert(pool, value);
+					end;
+				end;
+			else
+				for _: any, controller: any in bedwars.Knit.Controllers do
+					local meta: any = getmetatable(controller);
+					local class: any = type(meta) == 'table' and rawget(meta, '__index');
+					for _: number, source: any in {controller, type(class) == 'table' and class or {}} do
+						for _: any, value: any in source do
+							if type(value) == 'function' and islclosure(value) then
+								table.insert(pool, value);
+							end;
+						end;
+					end;
+				end;
+			end;
+
+			local seen: {[string]: boolean} = {};
+			local scanned: number = 0;
+			local scan: (func: any, depth: number) -> ();
+			scan = function(func: any, depth: number): ()
+				if type(func) ~= 'function' then
+					return;
+				end;
+				local source: string, line: number, name: string = debug.info(func, 'sln');
+				local key: string = source..':'..line;
+				if seen[key] or not (source:find('.TS.', 1, true) or source:find('rbxts_include', 1, true)) then
+					return;
+				end;
+				seen[key] = true;
+				scanned += 1;
+				local strings: {string} = {};
+				local hits: {string} = {};
+				for _: number, constant: any in debug.getconstants(func) do
+					if type(constant) == 'string' then
+						table.insert(strings, constant);
+						if wanted[constant] then
+							table.insert(hits, constant);
+						end;
+					end;
+				end;
+				for _: number, remote: string in hits do
+					table.insert(wanted[remote], string.format('%s:%d %s [%s]', source:match('[^%.]+%.[^%.]+$') or source, line, name ~= '' and name or '?', table.concat(strings, ' ', 1, math.min(#strings, 30))));
+				end;
+				if depth < 4 then
+					for _: number, proto: any in debug.getprotos(func) do
+						scan(proto, depth + 1);
+					end;
+				end;
+			end;
+			for _: number, func: any in pool do
+				scan(func, 0);
+			end;
+
+			local typeNames: {string} = {};
+			for value: number, name: string in stacking.Types do
+				table.insert(typeNames, name..'='..value);
+			end;
+			table.sort(typeNames);
+			local constants: {string} = {};
+			for key: any, value: any in bedwars.CombatConstant do
+				local simple: boolean = type(value) == 'string' or type(value) == 'number' or type(value) == 'boolean';
+				table.insert(constants, tostring(key)..'='..(simple and tostring(value) or type(value)));
+			end;
+			table.sort(constants);
+			local remotes: {string} = {};
+			for remote: string in wanted do
+				table.insert(remotes, remote);
+			end;
+			table.sort(remotes);
+			local lines: {string} = {
+				'damage types: '..table.concat(typeNames, ', '),
+				'combat constants: '..table.concat(constants, ', '),
+				'',
+				'remote definitions:'
+			};
+			for _: number, line: string in definitions do
+				table.insert(lines, line);
+			end;
+			table.insert(lines, '');
+			table.insert(lines, 'game code that names each remote:');
+			for _: number, remote: string in remotes do
+				local refs: {string} = wanted[remote];
+				table.insert(lines, remote..' <- '..(#refs > 0 and table.concat(refs, ' | ') or 'no game function names it'));
+			end;
+			writefile(config.DebugFolder..'/damage-remotes.txt', table.concat(lines, '\n'));
+			notif('Killaura', string.format('Scanned %d game functions for %d remotes in %.1fs, wrote velo/debug/damage-remotes.txt', scanned, #remotes, os.clock() - started), 8);
+		end,
+		["Tooltip"] = 'One-off debug. Lists every damage-related remote, which game code sends it, the damage types and the combat constants into velo/debug/damage-remotes.txt. Freezes the game for a moment.'
 	});
 	MaxTargets = Killaura:CreateSlider({
 		["Name"] = 'Entities',
