@@ -566,8 +566,19 @@ local hotbarSwitch: (slot: number?) -> boolean = function(slot: number?): boolea
 		return false;
 	end;
 	bedwars.Store:dispatch({["type"] = 'InventorySelectHotbarSlot', ["slot"] = slot});
-	vapeEvents.InventoryChanged.Event:Wait();
-	return true;
+	local waiting: thread = coroutine.running();
+	local woken: boolean = false;
+	local wake: () -> () = function(): ()
+		if not woken then
+			woken = true;
+			task.spawn(waiting);
+		end;
+	end;
+	local changed: RBXScriptConnection = vapeEvents.InventoryChanged.Event:Once(wake);
+	task.delay(0.5, wake);
+	coroutine.yield();
+	changed:Disconnect();
+	return store.inventory.hotbarSlot == slot;
 end;
 
 local inventorySlots: () -> table = function(): table
@@ -1085,6 +1096,7 @@ velo.run(function(): ()
 		end);
 	end;
 
+	local unblocking: table = collection('DontBlockSwordRaycast', vape);
 	local wallParams: RaycastParams = RaycastParams.new();
 	wallParams.FilterType = Enum.RaycastFilterType.Exclude;
 	entitylib.Wallcheck = function(origin: Vector3, position: Vector3, ignore: any, ent: table?): RaycastResult?
@@ -1115,7 +1127,7 @@ velo.run(function(): ()
 		local selfFeet: Vector3 = selfRoot.Position - Vector3.new(0, (humanoid and humanoid.HipHeight or 0) + (selfRoot.Size.Y / 2), 0);
 		local targetFeet: Vector3 = targetRoot.Position - Vector3.new(0, (targetHumanoid and targetHumanoid.HipHeight or 0) + (targetRoot.Size.Y / 2), 0);
 		local filter: {Instance} = {selfCharacter, character};
-		for _: number, object: Instance in collectionService:GetTagged('DontBlockSwordRaycast') do
+		for _: number, object: Instance in unblocking do
 			table.insert(filter, object);
 		end;
 		for _: number, object: Instance in (type(ignore) == 'table' and ignore or {}) do
@@ -4480,6 +4492,7 @@ velo.run(function(): ()
 	end;
 	local boxAnchors: {[BoxHandleAdornment]: Part} = {};
 	local hooks: table = {};
+	local gatedSlots: {table} = {};
 
 	local resetTiming: () -> () = function(): ()
 		hitreg.GhostDelay, hitreg.GhostHold, hitreg.GhostStep, hitreg.GhostCount, hitreg.GhostWindow = 0, 0, 0, 0, 0;
@@ -5470,8 +5483,13 @@ velo.run(function(): ()
 						}
 					}
 				};
-				debug.setupvalue(swordEffect, 7, viewmodelGate);
-				debug.setupvalue(bedwars.ScytheController.playLocalAnimation, 3, viewmodelGate);
+				for _: number, slot: table in {{swordEffect, 7}, {bedwars.ScytheController.playLocalAnimation, 3}} do
+					local original: any = debug.getupvalue(slot[1], slot[2]);
+					if original == bedwars.Knit or type(original) == 'table' and rawget(original, 'Controllers') ~= nil then
+						debug.setupvalue(slot[1], slot[2], viewmodelGate);
+						table.insert(gatedSlots, slot);
+					end;
+				end;
 			end;
 
 			refreshCircle();
@@ -5528,8 +5546,10 @@ velo.run(function(): ()
 				for _: number, part: Part in particles do
 					part.Parent = nil;
 				end;
-				debug.setupvalue(swordEffect, 7, bedwars.Knit);
-				debug.setupvalue(bedwars.ScytheController.playLocalAnimation, 3, bedwars.Knit);
+				for _: number, slot: table in gatedSlots do
+					debug.setupvalue(slot[1], slot[2], bedwars.Knit);
+				end;
+				table.clear(gatedSlots);
 				if bedwars.SwordController.playSwordEffect == effectHook then
 					bedwars.SwordController.playSwordEffect = previousEffect;
 				end;
@@ -7377,6 +7397,7 @@ velo.run(function(): ()
 	local AutoJump: table;
 	local AlwaysJump: table;
 	local modifier: table = {};
+	local windConstant: number = 7;
 	local wallRay: RaycastParams = RaycastParams.new();
 	wallRay.RespectCanCollide = true;
 
@@ -7386,7 +7407,11 @@ velo.run(function(): ()
 			local blatant: boolean = callback and Mode["Value"] == 'Blatant';
 			frictionUsers.Speed = blatant or nil;
 			updateFriction();
-			debug.setconstant(bedwars.WindWalkerController.updateSpeed, 7, blatant and 'constantSpeedMultiplier' or 'moveSpeedMultiplier');
+			local windSpeed: (...any) -> ...any = bedwars.WindWalkerController.updateSpeed;
+			local windField: any = debug.getconstant(windSpeed, windConstant);
+			if windField == 'moveSpeedMultiplier' or windField == 'constantSpeedMultiplier' then
+				debug.setconstant(windSpeed, windConstant, blatant and 'constantSpeedMultiplier' or 'moveSpeedMultiplier');
+			end;
 			bedwars.StatefulEntityKnockbackController.lastImpulseTime = blatant and math.huge or time();
 			if not callback then
 				return;
@@ -7578,8 +7603,12 @@ velo.run(function(): ()
 				end;
 			end));
 			if Mode["Value"] == 'Sword' then
-				debug.setconstant(bedwars.SwordController.swingSwordInRegion, 6, Expand["Value"] / 3);
-				swordPatched = true;
+				if debug.getconstant(bedwars.SwordController.swingSwordInRegion, 6) == swordRegionDefault then
+					debug.setconstant(bedwars.SwordController.swingSwordInRegion, 6, Expand["Value"] / 3);
+					swordPatched = true;
+				else
+					notif('HitBoxes', 'Sword mode is unavailable in this BedWars version', 5, 'warning');
+				end;
 			else
 				HitBoxes:Clean(entitylib.Events.EntityAdded:Connect(addBody));
 				for _: number, ent: table in entitylib.List do
@@ -9435,7 +9464,8 @@ velo.run(function(): ()
 	local swordLockout: number, swingWindow: number, swingRange: number, swapBack: number = 0.5, 0.2, 22, 0.5;
 	local random: Random = Random.new();
 	local circle: any;
-	local namecallHooked: boolean = false;
+	local silentHook: table = getgenv().veloSilentHook or {["Hooked"] = false};
+	getgenv().veloSilentHook = silentHook;
 	local aimPartList: {string} = table.clone(targetParts);
 	table.insert(aimPartList, 'Dynamic');
 	table.insert(aimPartList, 'Closest');
@@ -9615,23 +9645,30 @@ velo.run(function(): ()
 	end;
 
 	local hookSilent: () -> () = function(): ()
-		if namecallHooked then
+		silentHook.Module, silentHook.Mode, silentHook.Velocity = ProjectileAimbot, AimMode, silentVelocity;
+		if silentHook.Hooked then
 			return;
 		end;
-		namecallHooked = true;
+		silentHook.Hooked = true;
 		local oldNamecall: (...any) -> ...any;
 		oldNamecall = hookmetamethod(game, '__namecall', newcclosure(function(self: any, ...: any): ...any
-			if not ProjectileAimbot["Enabled"] or AimMode["Value"] ~= 'Silent' or checkcaller() or getnamecallmethod() ~= 'InvokeServer' or tostring(self) ~= 'ProjectileFire' then
+			local module: table? = silentHook.Module;
+			if not module or not module["Enabled"] or silentHook.Mode["Value"] ~= 'Silent' or checkcaller() or getnamecallmethod() ~= 'InvokeServer' or tostring(self) ~= 'ProjectileFire' then
 				return oldNamecall(self, ...);
 			end;
 			local arguments: table = table.pack(...);
-			local solved: boolean, redirected: any = pcall(silentVelocity, arguments);
+			local solved: boolean, redirected: any = pcall(silentHook.Velocity, arguments);
 			if solved and typeof(redirected) == 'Vector3' then
 				arguments[6] = redirected;
 			end;
 			return self.InvokeServer(self, table.unpack(arguments, 1, arguments.n));
 		end));
 	end;
+	vape:Clean(function(): ()
+		if silentHook.Module == ProjectileAimbot then
+			silentHook.Module, silentHook.Mode, silentHook.Velocity = nil, nil, nil;
+		end;
+	end);
 
 	ProjectileAimbot = vape.Categories.Blatant:CreateModule({
 		["Name"] = 'ProjectileAimbot',
@@ -12330,6 +12367,12 @@ velo.run(function(): ()
 	vape:Clean(panel.MouseButton1Click:Connect(function(): ()
 		expanded = not expanded;
 		drawViewer();
+	end));
+	vape:Clean(playersService.PlayerRemoving:Connect(function(plr: Player): ()
+		if totals[plr] then
+			totals[plr] = nil;
+			drawViewer();
+		end;
 	end));
 
 	local credit: (plr: Player, label: string, amount: number, quiet: boolean?) -> number = function(plr: Player, label: string, amount: number, quiet: boolean?): number
@@ -32681,41 +32724,6 @@ velo.run(function(): ()
 			end);
 		end
 	};
-
-	local genericReach: number = 30;
-	kitSpecs.MelodyKit = {
-		["Kits"] = {'melody'},
-		["MatchOnly"] = true,
-		["Options"] = function(): {table}
-			return {};
-		end,
-		["Start"] = function(autoKit: table): ()
-			autoKit:Clean(task.spawn(function(): ()
-				local nextHeal: number = 0;
-				repeat
-					local patient: table?, nearest: number, lowest: number = nil, genericReach, math.huge;
-					if not Heal["Enabled"] then
-						nextHeal = 0;
-					elseif entitylib.isAlive then
-						local origin: Vector3 = entitylib.character.RootPart.Position;
-						for _: number, ent: table in entitylib.List do
-							if ent.Player and ent.Player:GetAttribute('Team') == lplr:GetAttribute('Team') then
-								local distance: number = (origin - ent.RootPart.Position).Magnitude;
-								if distance <= nearest and ent.Health < lowest and ent.Health < ent.MaxHealth then
-									patient, nearest, lowest = ent, distance, ent.Health;
-								end;
-							end;
-						end;
-					end;
-					if patient and tick() >= nextHeal and getItem('guitar') then
-						nextHeal = tick() + bedwars.MelodyKitBalance.HEAL_COOLDOWN;
-						fire('PlayGuitar', 'SendToServer', {["healTarget"] = patient.Character});
-					end;
-					task.wait(checkRate);
-				until not autoKit["Enabled"];
-			end));
-		end
-	};
 end);
 
 velo.run(function(): ()
@@ -32778,36 +32786,6 @@ velo.run(function(): ()
 									fire('CollectCollectableEntity', 'SendToServer', {["id"] = metal:GetAttribute('Id')});
 									cooldown[metal] = tick() + recollect;
 								end;
-							end;
-						end;
-					end;
-					task.wait(checkRate);
-				until not autoKit["Enabled"];
-			end));
-		end
-	};
-
-	local genericReach: number = 20;
-	kitSpecs.MetalKit = {
-		["Kits"] = {'metal_detector'},
-		["MatchOnly"] = true,
-		["Options"] = function(): {table}
-			return {};
-		end,
-		["Start"] = function(autoKit: table): ()
-			local metals: table = collection('hidden-metal', autoKit);
-			autoKit:Clean(task.spawn(function(): ()
-				repeat
-					if Collect["Enabled"] and entitylib.isAlive then
-						local origin: Vector3 = entitylib.character.RootPart.Position;
-						for _: number, metal: Instance in metals do
-							local infiniteFly: table? = vape.Modules.InfiniteFly;
-							if (infiniteFly and infiniteFly["Enabled"]) or not Collect["Enabled"] or not autoKit["Enabled"] then
-								break;
-							end;
-							local part: BasePart? = if metal:IsA('Model') then metal.PrimaryPart or metal:FindFirstChildWhichIsA('BasePart', true) elseif metal:IsA('BasePart') then metal else nil;
-							if part and (part.Position - origin).Magnitude <= genericReach then
-								fire('CollectCollectableEntity', 'SendToServer', {["id"] = metal:GetAttribute('Id')});
 							end;
 						end;
 					end;
@@ -33783,31 +33761,15 @@ end);
 velo.run(function(): ()
 	local checkRate: number = 0.1;
 	local quiet: table = {["disableBlockedAbilityAlert"] = true};
-	local beeReach: number = 18;
-	local orbReach: number = 12;
-	local cropReach: number = 10;
 	local victimReach: number = 30;
 	local soulReach: number = 120;
 	local statueReach: number = 6;
 	local spiritReach: number = 120;
-	local breakReach: number = 30;
-	local launchWindow: number = 0.4;
-	local clawRange: number = 31;
-	local clawReach: number = 16;
-	local linkRange: number = 30;
-	local Bees: table;
-	local Orbs: table;
-	local Cannons: table;
 	local Punch: table;
-	local Crops: table;
-	local Minigame: table;
-	local Pads: table;
 	local Execute: table;
 	local Souls: table;
 	local Statues: table;
 	local Spirits: table;
-	local Claw: table;
-	local Link: table;
 
 	local kitName: (kit: string, fallback: string) -> string = function(kit: string, fallback: string): string
 		local meta: table? = bedwars.BedwarsKitMeta[kit];
@@ -33845,70 +33807,6 @@ velo.run(function(): ()
 		end));
 	end;
 
-	local breakOwnBlock: (block: BasePart?) -> () = function(block: BasePart?): ()
-		if block and block:GetAttribute('PlacedByUserId') == lplr.UserId and entitylib.isAlive and (block.Position - entitylib.character.RootPart.Position).Magnitude < breakReach then
-			task.spawn(breakBlock, block);
-		end;
-	end;
-
-	kitSpecs.BeekeeperKit = {
-		["Kits"] = {'beekeeper'},
-		["MatchOnly"] = true,
-		["Options"] = function(autoKit: table): {table}
-			Bees = masterToggle(autoKit, 'beekeeper', 'Beekeeper', 'Picks up every bee within 18 studs');
-			return {Bees};
-		end,
-		["Start"] = function(autoKit: table): ()
-			kitCollection(autoKit, 'bee', Bees, beeReach, false, function(bee: Instance): ()
-				fire('PickUpBee', 'SendToServer', {["beeId"] = bee:GetAttribute('BeeId')});
-			end);
-		end
-	};
-
-	kitSpecs.ElderKit = {
-		["Kits"] = {'bigman'},
-		["MatchOnly"] = true,
-		["Options"] = function(autoKit: table): {table}
-			Orbs = masterToggle(autoKit, 'bigman', 'Eldertree', 'Consumes every tree orb within 12 studs');
-			return {Orbs};
-		end,
-		["Start"] = function(autoKit: table): ()
-			kitCollection(autoKit, 'treeOrb', Orbs, orbReach, false, function(orb: Instance): ()
-				if fire('ConsumeTreeOrb', 'CallServer', {["treeOrbSecret"] = orb:GetAttribute('TreeOrbSecret')}) then
-					orb:Destroy();
-				end;
-			end);
-		end
-	};
-
-	kitSpecs.DaveyKit = {
-		["Kits"] = {'davey'},
-		["MatchOnly"] = true,
-		["Options"] = function(autoKit: table): {table}
-			Cannons = masterToggle(autoKit, 'davey', 'Davey', 'Breaks your own cannon after it launches you');
-			return {Cannons};
-		end,
-		["Start"] = function(autoKit: table): ()
-			local controller: table = bedwars.CannonHandController;
-			local previous: (...any) -> ...any = controller.launchSelf;
-			local active: boolean = true;
-			local hooked: (self: table, cannon: BasePart?, ...any) -> ...any = function(self: table, cannon: BasePart?, ...: any): ...any
-				local results: table = table.pack(previous(self, cannon, ...));
-				if active and Cannons["Enabled"] then
-					breakOwnBlock(cannon);
-				end;
-				return table.unpack(results, 1, results.n);
-			end;
-			controller.launchSelf = hooked;
-			autoKit:Clean(function(): ()
-				active = false;
-				if controller.launchSelf == hooked then
-					controller.launchSelf = previous;
-				end;
-			end);
-		end
-	};
-
 	kitSpecs.KaliyahKit = {
 		["Kits"] = {'dragon_slayer'},
 		["MatchOnly"] = true,
@@ -33925,80 +33823,6 @@ velo.run(function(): ()
 					task.wait(checkRate);
 				until not autoKit["Enabled"];
 			end));
-		end
-	};
-
-	kitSpecs.FarmerKit = {
-		["Kits"] = {'farmer_cletus'},
-		["MatchOnly"] = true,
-		["Options"] = function(autoKit: table): {table}
-			Crops = masterToggle(autoKit, 'farmer_cletus', 'Farmer Cletus', 'Harvests every ripe crop within 10 studs');
-			return {Crops};
-		end,
-		["Start"] = function(autoKit: table): ()
-			kitCollection(autoKit, 'HarvestableCrop', Crops, cropReach, false, function(crop: BasePart): ()
-				if fire('CropHarvest', 'CallServer', {["position"] = bedwars.BlockController:getBlockPosition(crop.Position)}) then
-					bedwars.GameAnimationUtil:playAnimation(lplr.Character, bedwars.AnimationType.PUNCH);
-					bedwars.AudioManager:playAudio(bedwars.SoundList.CROP_HARVEST);
-				end;
-			end);
-		end
-	};
-
-	kitSpecs.FishermanKit = {
-		["Kits"] = {'fisherman'},
-		["MatchOnly"] = true,
-		["Options"] = function(autoKit: table): {table}
-			Minigame = masterToggle(autoKit, 'fisherman', 'Fisherman', 'Wins every fishing minigame the moment it starts');
-			return {Minigame};
-		end,
-		["Start"] = function(autoKit: table): ()
-			local minigames: table = bedwars.FishingMinigameController;
-			local previous: (...any) -> ...any = minigames.startMinigame;
-			local active: boolean = true;
-			local hooked: (...any) -> ...any = function(...: any): ...any
-				if not active or not Minigame["Enabled"] then
-					return previous(...);
-				end;
-				local finish: (result: table) -> any = select(3, ...);
-				finish({["win"] = true});
-				return;
-			end;
-			minigames.startMinigame = hooked;
-			autoKit:Clean(function(): ()
-				active = false;
-				if minigames.startMinigame == hooked then
-					minigames.startMinigame = previous;
-				end;
-			end);
-		end
-	};
-
-	kitSpecs.GingerbreadKit = {
-		["Kits"] = {'gingerbread_man'},
-		["MatchOnly"] = true,
-		["Options"] = function(autoKit: table): {table}
-			Pads = masterToggle(autoKit, 'gingerbread_man', 'Gingerbread Man', 'Breaks your own launch pad right after it launches you');
-			return {Pads};
-		end,
-		["Start"] = function(autoKit: table): ()
-			local launcher: table = bedwars.LaunchPadController;
-			local previous: (...any) -> ...any = launcher.attemptLaunch;
-			local active: boolean = true;
-			local hooked: (self: table, pad: BasePart?, ...any) -> ...any = function(self: table, pad: BasePart?, ...: any): ...any
-				local results: table = table.pack(previous(self, pad, ...));
-				if active and Pads["Enabled"] and workspace:GetServerTimeNow() - (self.lastLaunch or 0) < launchWindow then
-					breakOwnBlock(pad);
-				end;
-				return table.unpack(results, 1, results.n);
-			end;
-			launcher.attemptLaunch = hooked;
-			autoKit:Clean(function(): ()
-				active = false;
-				if launcher.attemptLaunch == hooked then
-					launcher.attemptLaunch = previous;
-				end;
-			end);
 		end
 	};
 
@@ -34064,59 +33888,6 @@ velo.run(function(): ()
 			kitCollection(autoKit, 'EvelynnSoul', Spirits, spiritReach, true, function(spirit: Instance): ()
 				bedwars.SpiritAssassinController:useSpirit(lplr, spirit);
 			end);
-		end
-	};
-
-	kitSpecs.KaidaKit = {
-		["Kits"] = {'summoner'},
-		["MatchOnly"] = true,
-		["Options"] = function(autoKit: table): {table}
-			Claw = masterToggle(autoKit, 'summoner', 'Kaida', 'Claws the lowest health player within 31 studs');
-			return {Claw};
-		end,
-		["Start"] = function(autoKit: table): ()
-			autoKit:Clean(task.spawn(function(): ()
-				repeat
-					local ent: table? = Claw["Enabled"] and entitylib.EntityPosition({["Range"] = clawRange, ["Part"] = 'RootPart', ["Players"] = true, ["Sort"] = sortMethods.Health, ["Priority"] = false}) or nil;
-					local character: Model? = lplr.Character;
-					if ent and (not autoKit.Options['Legit Range']["Enabled"] or (character and character:GetAttribute('Health') or 0) > 0) then
-						local origin: Vector3 = entitylib.character.RootPart.Position;
-						local direction: Vector3 = CFrame.lookAt(origin, ent.RootPart.Position).LookVector;
-						fire('SummonerClawAttackRequest', 'SendToServer', {
-							["position"] = origin + direction * math.max((origin - ent.RootPart.Position).Magnitude - clawReach, 0),
-							["direction"] = direction,
-							["clientTime"] = workspace:GetServerTimeNow()
-						});
-					end;
-					task.wait(checkRate);
-				until not autoKit["Enabled"];
-			end));
-		end
-	};
-
-	kitSpecs.EldricKit = {
-		["Kits"] = {'warlock'},
-		["MatchOnly"] = true,
-		["Options"] = function(autoKit: table): {table}
-			Link = masterToggle(autoKit, 'warlock', 'Eldric', 'Links the closest enemy within 30 studs while you hold the staff');
-			return {Link};
-		end,
-		["Start"] = function(autoKit: table): ()
-			autoKit:Clean(task.spawn(function(): ()
-				local linked: Model? = nil;
-				repeat
-					if Link["Enabled"] and store.hand.tool and store.hand.tool.Name == 'warlock_staff' then
-						local ent: table? = entitylib.EntityPosition({["Range"] = linkRange, ["Part"] = 'RootPart', ["Players"] = true, ["NPCs"] = true, ["Priority"] = false});
-						if ent and ent.Character ~= linked and not fire('WarlockLinkTarget', 'CallServer', {["target"] = ent.Character}) then
-							ent = nil;
-						end;
-						linked = ent and ent.Character or nil;
-					else
-						linked = nil;
-					end;
-					task.wait(checkRate);
-				until not autoKit["Enabled"];
-			end));
 		end
 	};
 end);
@@ -35185,7 +34956,6 @@ velo.run(function(): ()
 	local checkRate: number = 0.1;
 	local reach: number = 20;
 	local Souls: table;
-	local Stars: table;
 
 	local kitName: (kit: string, fallback: string) -> string = function(kit: string, fallback: string): string
 		local meta: table? = bedwars.BedwarsKitMeta[kit];
@@ -35228,20 +34998,6 @@ velo.run(function(): ()
 		["Start"] = function(autoKit: table): ()
 			collectNear(autoKit, 'jailor_soul', Souls, function(soul: Instance): ()
 				bedwars.JailorController:collectEntity(lplr, soul, 'JailorSoul');
-			end);
-		end
-	};
-
-	kitSpecs.StarCollectorKit = {
-		["Kits"] = {'star_collector'},
-		["MatchOnly"] = true,
-		["Options"] = function(autoKit: table): {table}
-			Stars = autoKit:CreateToggle({["Name"] = kitName('star_collector', 'Stella'), ["Default"] = true, ["Tooltip"] = 'Collects every star within 20 studs (catsix AutoKit)'});
-			return {Stars};
-		end,
-		["Start"] = function(autoKit: table): ()
-			collectNear(autoKit, 'stars', Stars, function(star: Instance): ()
-				bedwars.StarCollectorController:collectEntity(lplr, star, star.Name);
 			end);
 		end
 	};
